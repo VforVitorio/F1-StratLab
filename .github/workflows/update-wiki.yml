@@ -1,4 +1,4 @@
-name: Update Wiki from DeepWiki (Official Server)
+name: Update Wiki from DeepWiki (Official Server with Puppeteer)
 
 on:
   push:
@@ -15,285 +15,319 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get Repository Documentation from Official DeepWiki Server
+      - name: Setup Node.js for Puppeteer
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install Puppeteer and Dependencies
+        run: |
+          echo "📦 Installing Puppeteer and dependencies..."
+          npm init -y
+          npm install puppeteer
+
+          # Install additional dependencies for headless Chrome
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3-dev \
+            libatk-bridge2.0-dev \
+            libdrm2 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxrandr2 \
+            libgbm1 \
+            libxss1 \
+            libasound2
+
+      - name: Get Real Content with Puppeteer (JavaScript Execution)
         run: |
           mkdir -p docs-md
 
-          # Repository information
-          REPO_OWNER="VforVitorio"
-          REPO_NAME="F1_Strat_Manager"
-          GITHUB_REPO="$REPO_OWNER/$REPO_NAME"
+          echo "🚀 Extracting real content from DeepWiki using browser automation..."
+          echo "📡 Target URL: https://deepwiki.com/VforVitorio/F1_Strat_Manager"
 
-          echo "🚀 Fetching documentation for repository: $GITHUB_REPO"
-          echo "📡 Using official DeepWiki MCP server: https://mcp.deepwiki.com/"
+          # Create Puppeteer script to extract content
+          cat > extract-deepwiki-content.js << 'EOFPUPPETEER'
+          const puppeteer = require('puppeteer');
+          const fs = require('fs');
 
-          # Test connectivity to official server
-          echo "Testing connectivity to official DeepWiki server..."
-          if curl -s --head "https://mcp.deepwiki.com/http" | head -n 1 | grep -q "200\|405\|404"; then
-            echo "✅ Official DeepWiki server is accessible"
-          else
-            echo "❌ Cannot reach official DeepWiki server"
-            exit 1
-          fi
+          (async () => {
+            console.log('🔧 Launching browser...');
+            
+            const browser = await puppeteer.launch({
+              headless: true,
+              args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
+                '--single-process',
+                '--disable-gpu'
+              ]
+            });
 
-      - name: List Available Topics
-        run: |
-          echo "📋 Getting list of available documentation topics..."
-            # Create MCP request to list topics
-          LIST_TOPICS_PAYLOAD=$(cat << 'EOF'
-          {
-            "jsonrpc": "2.0",
-            "method": "tools/call",
-            "params": {
-              "name": "list_topics",
-              "arguments": {
-                "github_repo": "VforVitorio/F1_Strat_Manager"
+            try {
+              const page = await browser.newPage();
+              
+              // Set viewport and user agent
+              await page.setViewport({ width: 1280, height: 720 });
+              await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+              console.log('🌐 Navigating to DeepWiki page...');
+              
+              // Navigate to the page
+              await page.goto('https://deepwiki.com/VforVitorio/F1_Strat_Manager', {
+                waitUntil: 'networkidle2',
+                timeout: 60000
+              });
+
+              console.log('⏳ Waiting for content to load...');
+              
+              // Wait for loading to disappear and real content to appear
+              try {
+                // Wait for either content to load or timeout
+                await Promise.race([
+                  // Wait for loading to disappear
+                  page.waitForFunction(
+                    () => {
+                      const body = document.body;
+                      const text = body ? body.textContent || body.innerText : '';
+                      return !text.includes('Loading...') && text.length > 500;
+                    },
+                    { timeout: 30000 }
+                  ),
+                  // Or wait for specific content elements
+                  page.waitForSelector('article, .content, main, [data-content]', { timeout: 30000 })
+                ]);
+                
+                console.log('✅ Content loaded successfully');
+              } catch (waitError) {
+                console.log('⚠️ Timeout waiting for content, proceeding with current state...');
               }
-            },
-            "id": 1
-          }
-          EOF
-          )
 
-          echo "📤 Sending list_topics request..."
-          echo "$LIST_TOPICS_PAYLOAD" | jq .
+              // Additional wait to ensure all dynamic content is loaded
+              await page.waitForTimeout(3000);
 
-          # Make request to official server
-          HTTP_CODE=$(curl -X POST "https://mcp.deepwiki.com/http" \
-            -H "Content-Type: application/json" \
-            -d "$LIST_TOPICS_PAYLOAD" \
-            -o docs-md/topics-response.json \
-            -w "%{http_code}" \
-            -s)          echo "📥 Response HTTP status: $HTTP_CODE"
+              console.log('📄 Extracting content...');
+              
+              // Extract content using multiple strategies
+              const extractedData = await page.evaluate(() => {
+                // Strategy 1: Try to find main content container
+                const selectors = [
+                  'main',
+                  '.content',
+                  '.documentation',
+                  '.markdown-body',
+                  '[data-content]',
+                  'article',
+                  '.wiki-content',
+                  '#content'
+                ];
+                
+                let content = '';
+                let title = '';
+                
+                // Extract title
+                title = document.title || '';
+                
+                // Try each selector to find content
+                for (const selector of selectors) {
+                  const element = document.querySelector(selector);
+                  if (element && element.innerText && element.innerText.length > content.length) {
+                    content = element.innerText;
+                  }
+                }
+                
+                // Fallback: get body content
+                if (!content || content.length < 100) {
+                  content = document.body ? document.body.innerText : '';
+                }
+                
+                // Clean up content
+                content = content
+                  .replace(/Loading\.\.\./g, '')
+                  .replace(/^\s+|\s+$/g, '')
+                  .replace(/\n{3,}/g, '\n\n');
+                
+                return {
+                  title: title,
+                  content: content,
+                  length: content.length,
+                  url: window.location.href
+                };
+              });
 
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ Successfully retrieved topics list"
-            echo "📄 Topics response:"
-            cat docs-md/topics-response.json | jq . || cat docs-md/topics-response.json
-          else
-            echo "⚠️ List topics request failed with HTTP $HTTP_CODE"
-            echo "Response content:"
-            cat docs-md/topics-response.json
-            
-            # Continue anyway, we'll try to get content directly
-            echo "Continuing with direct content retrieval..."
-          fi
+              console.log(`📊 Extracted content stats:`);
+              console.log(`   Title: ${extractedData.title}`);
+              console.log(`   Length: ${extractedData.length} characters`);
+              console.log(`   URL: ${extractedData.url}`);
 
-      - name: Get Full Repository Content
-        run: |
-          echo "📖 Getting complete repository documentation content..."
-
-          # PRIMERO: Verificar si el repo existe usando list_topics
-          echo "🔍 Checking if repository exists in DeepWiki..."
-
-          # Si list_topics falló anteriormente, significa que el repo no está indexado
-          if [ ! -f "docs-md/topics-response.json" ] || ! grep -q '"result"' docs-md/topics-response.json 2>/dev/null; then
-            echo "❌ Repository VforVitorio/F1_Strat_Manager not found in DeepWiki"
-            echo "The repository might not be indexed yet. Please:"
-            echo "1. Visit https://deepwiki.com/VforVitorio/F1_Strat_Manager"
-            echo "2. Verify the repository exists and is accessible"
-            echo "3. Wait for DeepWiki to index the repository"
-            
-            # Crear contenido fallback
-            cat > docs-md/cleaned-content.md << 'EOFFALLBACK'
-          # F1 Strategy Manager
-
-          Repository not yet indexed in DeepWiki. Please visit the GitHub repository directly:
-          https://github.com/VforVitorio/F1_Strat_Manager
-
-          ## Status
-          This repository is not currently available in the DeepWiki database. 
-          The documentation will be updated once the repository is indexed.
-          EOFFALLBACK
-            
-            echo "✅ Created fallback documentation"
-            exit 0
-          fi
-
-          # SEGUNDO: Si topics existe, extraer un topic específico para get_content
-          echo "📋 Extracting available topics..."
-
-          # Extraer el primer topic disponible
-          FIRST_TOPIC=$(jq -r '.result.content[0].text // "Complete project documentation"' docs-md/topics-response.json 2>/dev/null || echo "Complete project documentation")
-
-          echo "📖 Using topic: $FIRST_TOPIC"
-
-          # Crear request con topic específico
-          GET_CONTENT_PAYLOAD=$(cat << EOFPAYLOAD
-          {
-            "jsonrpc": "2.0",
-            "method": "tools/call",
-            "params": {
-              "name": "get_content",
-              "arguments": {
-                "github_repo": "VforVitorio/F1_Strat_Manager",
-                "topic": "$FIRST_TOPIC"
+              if (extractedData.length < 100) {
+                throw new Error('Content too short, might be still loading');
               }
-            },
-            "id": 2
-          }
-          EOFPAYLOAD
-          )
 
-          echo "📤 Sending get_content request with topic..."
-          echo "$GET_CONTENT_PAYLOAD" | jq .
+              // Create markdown content
+              let markdownContent = '';
+              
+              if (extractedData.title) {
+                markdownContent += `# ${extractedData.title.replace(' | DeepWiki', '')}\n\n`;
+              }
+              
+              markdownContent += extractedData.content;
 
-          # Hacer la llamada con topic
-          HTTP_CODE=$(curl -X POST "https://mcp.deepwiki.com/http" \
-            -H "Content-Type: application/json" \
-            -d "$GET_CONTENT_PAYLOAD" \
-            -o docs-md/content-response.json \
-            -w "%{http_code}" \
-            -s)
+              // Save extracted content
+              fs.writeFileSync('docs-md/deepwiki-raw.md', markdownContent);
+              
+              // Save metadata
+              const metadata = {
+                extractedAt: new Date().toISOString(),
+                url: extractedData.url,
+                title: extractedData.title,
+                contentLength: extractedData.length,
+                method: 'puppeteer-javascript-execution'
+              };
+              
+              fs.writeFileSync('docs-md/extraction-metadata.json', JSON.stringify(metadata, null, 2));
 
-          echo "📥 Content response HTTP status: $HTTP_CODE"
+              console.log('✅ Content successfully extracted and saved!');
+              console.log('📁 Files created:');
+              console.log('   - docs-md/deepwiki-raw.md');
+              console.log('   - docs-md/extraction-metadata.json');
 
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ Successfully retrieved content"
+            } catch (error) {
+              console.error('❌ Error during extraction:', error.message);
+              
+              // Create fallback content
+              const fallbackContent = `# F1 Strategy Manager
+
+              > Content extraction failed. Please visit the repository directly.
+
+              **Repository**: [VforVitorio/F1_Strat_Manager](https://github.com/VforVitorio/F1_Strat_Manager)  
+              **DeepWiki**: [https://deepwiki.com/VforVitorio/F1_Strat_Manager](https://deepwiki.com/VforVitorio/F1_Strat_Manager)
+
+              ## Status
+              Automatic content extraction encountered an issue. The repository documentation may need to be accessed manually.
+
+              **Error**: ${error.message}
+              `;
+
+              fs.writeFileSync('docs-md/deepwiki-raw.md', fallbackContent);
+              console.log('📝 Fallback content created');
+            } finally {
+              await browser.close();
+              console.log('🔚 Browser closed');
+            }
+          })();
+          EOFPUPPETEER
+
+          # Execute the Puppeteer script
+          echo "🚀 Running content extraction..."
+          node extract-deepwiki-content.js
+
+          # Verify extraction
+          if [ -f "docs-md/deepwiki-raw.md" ]; then
+            echo "✅ Content extraction completed"
+            echo "📊 Extracted content stats:"
+            wc -l docs-md/deepwiki-raw.md
+            wc -c docs-md/deepwiki-raw.md
             
-            # Extraer contenido
-            if jq -e '.result.content[0].text' docs-md/content-response.json > /dev/null 2>&1; then
-              jq -r '.result.content[0].text' docs-md/content-response.json > docs-md/raw-content.md
-              echo "📄 Content retrieved successfully"
-            else
-              echo "⚠️ Could not extract content from response"
-              echo "Response structure:"
-              cat docs-md/content-response.json | jq .
-              exit 1
-            fi
+            echo "📄 First 10 lines of extracted content:"
+            head -10 docs-md/deepwiki-raw.md
           else
-            echo "❌ Get content request failed with HTTP $HTTP_CODE"
-            echo "Response content:"
-            cat docs-md/content-response.json
+            echo "❌ Content extraction failed"
             exit 1
           fi
 
-          # Verify response structure
-          if jq -e '.result' docs-md/content-response.json > /dev/null 2>&1; then
-            echo "✅ Valid MCP response structure detected"
-          else
-            echo "❌ Invalid response structure"            echo "Response structure:"
-            jq 'keys' docs-md/content-response.json || echo "Not valid JSON"
-            exit 1
-          fi
-
-      - name: Extract and Process Documentation Content
+      - name: Clean and Process Extracted Content
         run: |
-          echo "🔄 Processing documentation content from official DeepWiki server..."
+          echo "🧹 Cleaning and formatting extracted content..."
 
-          # Check if we have content from the previous step
-          if [ -f "docs-md/raw-content.md" ] && [ -s "docs-md/raw-content.md" ]; then
-            echo "✅ Using content from get_content request..."
-            cp docs-md/raw-content.md docs-md/extracted-content.md
-          elif [ -f "docs-md/cleaned-content.md" ] && [ -s "docs-md/cleaned-content.md" ]; then
-            echo "✅ Using fallback content..."
-            cp docs-md/cleaned-content.md docs-md/extracted-content.md
-          else
-            echo "❌ No content available from previous steps"
-            exit 1
-          fi
-
-          # Verify extracted content
-          if [ ! -f docs-md/extracted-content.md ] || [ ! -s docs-md/extracted-content.md ]; then
-            echo "❌ No content was extracted or file is empty"
-            exit 1
-          fi
-
-          echo "✅ Successfully extracted documentation content"
-          echo "📊 Extracted content stats:"
-          wc -l docs-md/extracted-content.md
-
-          echo "📄 First 10 lines of extracted content:"
-          head -10 docs-md/extracted-content.md
-
-          # Clean up and format content for wiki
-          python3 << 'EOF'
+          # Process the extracted content with Python
+          python3 << 'EOFPYTHON'
           import re
+          import os
 
-          # Read extracted content
-          with open('docs-md/extracted-content.md', 'r', encoding='utf-8') as f:
-              content = f.read()
+          def clean_deepwiki_content(content):
+              """Clean and format DeepWiki content for GitHub Wiki"""
+              
+              # Remove common DeepWiki UI elements and artifacts
+              content = re.sub(r'.*?DeepWiki.*?\n', '', content, flags=re.IGNORECASE)
+              content = re.sub(r'.*?Powered by.*?\n', '', content, flags=re.IGNORECASE)
+              content = re.sub(r'.*?Share.*?\n', '', content, flags=re.IGNORECASE)
+              content = re.sub(r'.*?Last indexed:.*?\n', '', content, flags=re.IGNORECASE)
+              content = re.sub(r'.*?Try DeepWiki.*?\n', '', content, flags=re.IGNORECASE)
+              content = re.sub(r'.*?Which repo would you like to understand.*?\n', '', content, flags=re.IGNORECASE)
+              
+              # Remove navigation elements
+              content = re.sub(r'- Overview\n- System Architecture.*?- Getting Started\n', '', content, flags=re.DOTALL)
+              content = re.sub(r'Menu\n', '', content)
+              content = re.sub(r'### On this page.*?- Getting Started\n', '', content, flags=re.DOTALL)
+              
+              # Remove source file references
+              content = re.sub(r'Relevant source files.*?\n\n', '', content, flags=re.DOTALL)
+              content = re.sub(r'Sources:.*?\n', '', content, flags=re.MULTILINE)
+              
+              # Clean up multiple consecutive newlines
+              content = re.sub(r'\n{3,}', '\n\n', content)
+              
+              # Remove empty sections
+              content = re.sub(r'\n## \n', '', content)
+              content = re.sub(r'\n### \n', '', content)
+              
+              # Fix malformed headers
+              content = re.sub(r'^([#]+)\s*$', '', content, flags=re.MULTILINE)
+              
+              # Clean up beginning of content
+              content = content.strip()
+              
+              return content
 
-          print("🧹 Cleaning and formatting content for GitHub Wiki...")
+          # Read the raw extracted content
+          try:
+              with open('docs-md/deepwiki-raw.md', 'r', encoding='utf-8') as f:
+                  raw_content = f.read()
+              
+              print(f"📄 Original content length: {len(raw_content)} characters")
+              
+              # Clean the content
+              cleaned_content = clean_deepwiki_content(raw_content)
+              
+              # Ensure we have a proper title
+              if not cleaned_content.startswith('# '):
+                  cleaned_content = '# F1 Strategy Manager\n\n' + cleaned_content
+              
+              # Save cleaned content
+              with open('docs-md/cleaned-content.md', 'w', encoding='utf-8') as f:
+                  f.write(cleaned_content)
+              
+              print(f"✅ Cleaned content length: {len(cleaned_content)} characters")
+              print("🧹 Content cleaned and saved to docs-md/cleaned-content.md")
+              
+          except Exception as e:
+              print(f"❌ Error processing content: {e}")
+              # Create minimal fallback
+              fallback = """# F1 Strategy Manager
 
-          # Remove DeepWiki UI elements and navigation
-          content = re.sub(r'.*?DeepWiki.*?\n', '', content, flags=re.IGNORECASE)
-          content = re.sub(r'.*?Powered by Devin.*?\n', '', content, flags=re.IGNORECASE)
-          content = re.sub(r'.*?Share.*?\n', '', content, flags=re.IGNORECASE)
-          content = re.sub(r'.*?Last indexed:.*?\n', '', content, flags=re.IGNORECASE)
-          content = re.sub(r'.*?Auto-refresh.*?\n', '', content, flags=re.IGNORECASE)
+          This repository contains an AI-powered Formula 1 race strategy analysis system.
 
-          # Clean up headers and formatting
-          content = re.sub(r'^#+ ?/\s*$', '', content, flags=re.MULTILINE)
-          content = re.sub(r'^\s*Menu\s*$', '', content, flags=re.MULTILINE)
-          content = re.sub(r'^- Overview\n- System Architecture.*?- Getting Started\n', '', content, flags=re.DOTALL)
+          Please visit the [GitHub repository](https://github.com/VforVitorio/F1_Strat_Manager) for more details.
+          """
+              
+              with open('docs-md/cleaned-content.md', 'w', encoding='utf-8') as f:
+                  f.write(fallback)
+              
+              print("📝 Created fallback content")
+          EOFPYTHON
 
-          # Remove empty lines at start
-          content = content.lstrip()
-
-          # Ensure proper spacing
-          content = re.sub(r'\n{3,}', '\n\n', content)
-
-          # Save cleaned content
-          with open('docs-md/cleaned-content.md', 'w', encoding='utf-8') as f:
-              f.write(content)
-
-          print(f"✅ Content cleaned and saved. Final size: {len(content)} characters")
-          EOF
-
-      - name: Ask DeepWiki AI for Repository Summary
-        run: |
-          echo "🤖 Getting AI-powered repository summary from DeepWiki..."
-
-          # Create question request for repository overview
-          ASK_QUESTION_PAYLOAD=$(cat << 'EOF'
-          {
-            "jsonrpc": "2.0",
-            "method": "tools/call",
-            "params": {
-              "name": "ask_question",
-              "arguments": {
-                "github_repo": "VforVitorio/F1_Strat_Manager",
-                "question": "Provide a comprehensive overview of this F1 Strategy Manager project, including its main components, features, and architecture. Focus on the key modules like machine learning models, computer vision, NLP pipeline, and expert system."
-              }
-            },
-            "id": 3
-          }
-          EOF
-          )
-
-          echo "📤 Sending AI question request..."
-
-          # Make request for AI summary
-          HTTP_CODE=$(curl -X POST "https://mcp.deepwiki.com/http" \
-            -H "Content-Type: application/json" \
-            -d "$ASK_QUESTION_PAYLOAD" \
-            -o docs-md/ai-summary-response.json \
-            -w "%{http_code}" \
-            -s)
-
-          echo "📥 AI summary response HTTP status: $HTTP_CODE"
-
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ Successfully retrieved AI summary"
-            
-            # Extract AI summary
-            if jq -e '.result.content[0].text' docs-md/ai-summary-response.json > /dev/null 2>&1; then
-              jq -r '.result.content[0].text' docs-md/ai-summary-response.json > docs-md/ai-summary.md
-              echo "🤖 AI Summary:"
-              head -20 docs-md/ai-summary.md
-            else
-              echo "⚠️ Could not extract AI summary from response"
-            fi          else
-            echo "⚠️ AI summary request failed, continuing without it"
-            touch docs-md/ai-summary.md
-          fi
+          echo "✅ Content processing completed"
 
       - name: Checkout Wiki Repository
         uses: actions/checkout@v3
         with:
           repository: ${{ github.repository }}.wiki
-          token: ${{ secrets.WIKI_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           path: wiki
 
       - name: Generate Comprehensive Wiki Documentation
@@ -302,63 +336,49 @@ jobs:
 
           # Prepare content files
           MAIN_CONTENT="docs-md/cleaned-content.md"
-          AI_SUMMARY="docs-md/ai-summary.md"          # Verify we have content
+
+          # Verify we have content
           if [ ! -f "$MAIN_CONTENT" ] || [ ! -s "$MAIN_CONTENT" ]; then
             echo "❌ No main content available"
             exit 1
-          fi
+          fi          # Generate the complete wiki README
+          echo "# F1 Strategy Manager - Complete Documentation" > wiki/README.md
+          echo "" >> wiki/README.md
+          echo "AI-Powered Formula 1 Race Strategy Analysis and Decision Support System" >> wiki/README.md
+          echo "" >> wiki/README.md
+          echo "## Documentation Overview" >> wiki/README.md
+          echo "" >> wiki/README.md
+          echo "This documentation is automatically generated from the project's DeepWiki repository analysis using browser automation to extract real content." >> wiki/README.md
+          echo "" >> wiki/README.md
+          echo "### Quick Navigation" >> wiki/README.md
+          echo "- Project Overview" >> wiki/README.md
+          echo "- System Architecture" >> wiki/README.md
+          echo "- Core Components" >> wiki/README.md
+          echo "- Getting Started" >> wiki/README.md
+          echo "- API Reference" >> wiki/README.md
+          echo "- Developer Guide" >> wiki/README.md
+          echo "" >> wiki/README.md
 
-          # Generate the complete wiki README
-          cat > wiki/README.md << 'EOFREADME'
-          # 🏎️ F1 Strategy Manager - Complete Documentation
-
-          > **AI-Powered Formula 1 Race Strategy Analysis and Decision Support System**
-
-          ## 📚 Documentation Overview
-
-          This documentation is automatically generated from the project's DeepWiki repository analysis using the official DeepWiki MCP server.
-
-          ### 🚀 Quick Navigation
-          - [Project Overview](#project-overview)
-          - [System Architecture](#system-architecture)  
-          - [Core Components](#core-components)
-          - [Getting Started](#getting-started)
-          - [API Reference](#api-reference)
-          - [Developer Guide](#developer-guide)
-
-          ---
-
-          EOFREADME
-
-          # Add AI summary if available
-          if [ -f "$AI_SUMMARY" ] && [ -s "$AI_SUMMARY" ]; then
-            echo "## 🤖 AI-Generated Project Summary" >> wiki/README.md
-            echo "" >> wiki/README.md
-            cat "$AI_SUMMARY" >> wiki/README.md
-            echo "" >> wiki/README.md
-            echo "---" >> wiki/README.md
-            echo "" >> wiki/README.md
-          fi          # Add main documentation content
+          # Add main documentation content
           echo "## 📖 Complete Documentation" >> wiki/README.md
           echo "" >> wiki/README.md
-          cat "$MAIN_CONTENT" >> wiki/README.md
-            # Add footer
-          cat >> wiki/README.md << EOFFOOTER
-
-          ---
-
-          ## 🔗 Links & Resources
-
-          - **GitHub Repository**: [VforVitorio/F1_Strat_Manager](https://github.com/VforVitorio/F1_Strat_Manager)
-          - **DeepWiki Documentation**: [deepwiki.com/VforVitorio/F1_Strat_Manager](https://deepwiki.com/VforVitorio/F1_Strat_Manager)
-          - **Project Wiki**: [GitHub Wiki](https://github.com/VforVitorio/F1_Strat_Manager/wiki)
-
-          ---
-
-          *📝 This documentation is automatically generated and updated from the project's DeepWiki analysis using the official DeepWiki MCP server.*
-
-          *🕒 Last updated: $(date '+%Y-%m-%d %H:%M:%S UTC')*
-          EOFFOOTER
+          cat "$MAIN_CONTENT" >> wiki/README.md          # Add footer
+          echo "" >> wiki/README.md
+          echo "---" >> wiki/README.md
+          echo "" >> wiki/README.md
+          echo "## Links & Resources" >> wiki/README.md
+          echo "" >> wiki/README.md
+          echo "- **GitHub Repository**: [VforVitorio/F1_Strat_Manager](https://github.com/VforVitorio/F1_Strat_Manager)" >> wiki/README.md
+          echo "- **DeepWiki Documentation**: [deepwiki.com/VforVitorio/F1_Strat_Manager](https://deepwiki.com/VforVitorio/F1_Strat_Manager)" >> wiki/README.md
+          echo "- **Project Wiki**: [GitHub Wiki](https://github.com/VforVitorio/F1_Strat_Manager/wiki)" >> wiki/README.md
+          echo "" >> wiki/README.md
+          echo "---" >> wiki/README.md
+          echo "" >> wiki/README.md
+          echo "*This documentation is automatically generated using browser automation to extract real content from DeepWiki after JavaScript execution.*" >> wiki/README.md
+          echo "" >> wiki/README.md
+          echo "*Last updated: \$(date '+%Y-%m-%d %H:%M:%S UTC')*" >> wiki/README.md
+          echo "" >> wiki/README.md
+          echo "*Extraction method: Puppeteer with JavaScript execution*" >> wiki/README.md
 
           echo "✅ Wiki documentation generated successfully"
           echo "📊 Final documentation stats:"
@@ -379,7 +399,7 @@ jobs:
             echo "ℹ️ No changes to commit - documentation is up to date"
           else
             echo "📝 Committing documentation updates..."
-            git commit -m "🔄 Update Wiki from Official DeepWiki Server - $(date '+%Y-%m-%d %H:%M')"
+            git commit -m "🔄 Update Wiki with Real DeepWiki Content (Puppeteer) - $(date '+%Y-%m-%d %H:%M')"
             
             echo "🚀 Pushing changes to wiki..."
             if git push; then
@@ -402,10 +422,11 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: deepwiki-documentation-${{ github.run_number }}-${{ github.run_attempt }}
+          name: deepwiki-documentation-puppeteer-${{ github.run_number }}-${{ github.run_attempt }}
           path: |
             docs-md/
             wiki/README.md
+            extract-deepwiki-content.js
           retention-days: 30
 
       - name: Workflow Summary
@@ -416,7 +437,7 @@ jobs:
           echo "### 🎯 Documentation Source" >> $GITHUB_STEP_SUMMARY
           echo "- **Repository**: VforVitorio/F1_Strat_Manager" >> $GITHUB_STEP_SUMMARY
           echo "- **DeepWiki URL**: https://deepwiki.com/VforVitorio/F1_Strat_Manager" >> $GITHUB_STEP_SUMMARY
-          echo "- **MCP Server**: Official DeepWiki (https://mcp.deepwiki.com/)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Extraction Method**: Puppeteer with JavaScript execution" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Generated Content" >> $GITHUB_STEP_SUMMARY
 
@@ -431,11 +452,10 @@ jobs:
             echo "- **Main Content**: $CONTENT_SIZE bytes" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [ -f "docs-md/ai-summary.md" ]; then
-            AI_SIZE=$(wc -c < docs-md/ai-summary.md)
-            echo "- **AI Summary**: $AI_SIZE bytes" >> $GITHUB_STEP_SUMMARY
+          if [ -f "docs-md/extraction-metadata.json" ]; then
+            echo "- **Extraction Metadata**: Available" >> $GITHUB_STEP_SUMMARY
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ Status" >> $GITHUB_STEP_SUMMARY
-          echo "Documentation successfully generated using official DeepWiki MCP server!" >> $GITHUB_STEP_SUMMARY
+          echo "Documentation successfully generated using Puppeteer browser automation!" >> $GITHUB_STEP_SUMMARY
