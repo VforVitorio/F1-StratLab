@@ -375,10 +375,8 @@ jobs:
           # Create organized wiki structure using Python
           python3 << 'EOFWIKIGEN'
           import os
-          import re
-
-          def clean_content_advanced(content):
-              """Advanced cleaning for better markdown format"""
+          import re          def clean_content_advanced(content):
+              """Advanced cleaning + diagram filtering"""
               
               # 1. Remove complete DeepWiki header block
               content = re.sub(r'^.*?\|.*?VforVitorio/F1_Strat_Manager.*?DeepWiki.*?Try DeepWiki.*?Last indexed.*?Developer Guide', '', content, flags=re.DOTALL)
@@ -401,48 +399,109 @@ jobs:
               # 7. Clean multiple newlines
               content = re.sub(r'\n{3,}', '\n\n', content)
               
+              # 8. Filter diagram content (replace with references)
+              diagram_patterns = [
+                  r'Strategic Output.*?F1CompleteStrategyEngine.*?Fact Base.*?Data Transformation.*?ML Predictions.*?Rule Evaluation.*?Algorithm.*?resolve.*?conflicts.*?StrategyRecommendation',
+                  r'tire_predictions.*?DataFrame.*?lap_predictions.*?DataFrame.*?gap_data.*?DataFrame.*?transform_.*?Fact.*?TelemetryFact.*?DegradationFact',
+                  r'F1StrategyManager.*?DataProcessor.*?MLPredictor.*?ExpertSystem.*?StreamlitDashboard.*?NLPProcessor',
+                  r'fact_base.*?rules_engine.*?inference_engine.*?strategy_output.*?DataExtractor.*?ModelTrainer'
+              ]
+              
+              for pattern in diagram_patterns:
+                  content = re.sub(
+                      pattern, 
+                      '\n> **📊 Interactive System Diagram**  \n> View the complete system architecture diagram at [DeepWiki](https://deepwiki.com/VforVitorio/F1_Strat_Manager) for detailed visualization.\n\n', 
+                      content, 
+                      flags=re.DOTALL | re.IGNORECASE
+                  )
+              
+              # 9. Clean up final formatting
+              content = re.sub(r'\n{3,}', '\n\n', content)
+              
               return content.strip()
 
-          # Define page organization
-          wiki_pages = {
-              'Home.md': {
-                  'title': '🏎️ F1 Strategy Manager',
-                  'description': 'AI-Powered Formula 1 Race Strategy Analysis and Decision Support System',
-                  'files': ['main.md', '1-overview.md']
-              },
-              'System-Architecture.md': {
-                  'title': '🏗️ System Architecture & Setup',
-                  'description': 'Technical architecture, installation and setup procedures',
-                  'files': ['1-1-system-architecture.md', '1-2-installation-and-setup.md', '1-3-documentation-workflow.md']
-              },
-              'Streamlit-Dashboard.md': {
-                  'title': '📊 Streamlit Dashboard',
-                  'description': 'Interactive web interface for F1 strategy analysis',
-                  'files': ['2-streamlit-dashboard.md', '2-1-strategy-recommendations-view.md', '2-2-gap-analysis-view.md', '2-3-radio-analysis-view.md', '2-4-time-predictions-view.md', '2-5-strategy-chat-interface.md']
-              },
-              'Machine-Learning-Models.md': {
-                  'title': '🤖 Machine Learning Models',
-                  'description': 'AI models for lap time prediction, tire degradation, and gap calculation',
-                  'files': ['3-machine-learning-models.md', '3-1-lap-time-prediction.md', '3-2-tire-degradation-modeling.md', '3-3-vision-based-gap-calculation.md']
-              },
-              'NLP-Pipeline.md': {
-                  'title': '🗣️ Natural Language Processing',
-                  'description': 'Radio transcription, sentiment analysis, and entity recognition',
-                  'files': ['4-nlp-pipeline.md', '4-1-radio-transcription.md', '4-2-sentiment-and-intent-analysis.md', '4-3-named-entity-recognition.md', '4-4-integrated-nlp-pipeline.md']
-              },
-              'Expert-System.md': {
-                  'title': '🧠 Expert System',
-                  'description': 'Rule-based decision engine for race strategy recommendations',
-                  'files': ['5-expert-system.md', '5-1-facts-and-data-transformation.md', '5-2-degradation-rules.md', '5-3-gap-analysis-rules.md', '5-4-radio-message-rules.md', '5-5-integrated-rule-engine.md']
-              },
-              'Developer-Guide.md': {
-                  'title': '👨‍💻 Developer Guide',
-                  'description': 'Development environment, utilities, and deployment instructions',
-                  'files': ['6-developer-guide.md', '6-1-data-processing-utilities.md', '6-2-model-artifacts-and-deployment.md', '6-3-development-environment.md']
+          def create_dynamic_wiki_structure(all_content):
+              """Create wiki structure based on discovered content keys"""
+              
+              # Initialize base structure
+              wiki_structure = {
+                  'Home.md': {'files': [], 'title': '🏎️ F1 Strategy Manager', 'description': 'AI-Powered Formula 1 Race Strategy Analysis and Decision Support System'},
+                  '1-Overview.md': {'files': [], 'title': '🔍 Overview & Architecture', 'description': 'Project overview, system architecture, and installation procedures'},
+                  '2-Dashboard.md': {'files': [], 'title': '📊 Streamlit Dashboard', 'description': 'Interactive web interface for F1 strategy analysis and visualization'},
+                  '3-ML-Models.md': {'files': [], 'title': '🤖 Machine Learning', 'description': 'AI models for lap time prediction, tire degradation, and gap calculation'},
+                  '4-NLP-Pipeline.md': {'files': [], 'title': '🗣️ NLP Pipeline', 'description': 'Radio transcription, sentiment analysis, and entity recognition'},
+                  '5-Expert-System.md': {'files': [], 'title': '🧠 Expert System', 'description': 'Rule-based decision engine for race strategy recommendations'},
+                  '6-Developer.md': {'files': [], 'title': '👨‍💻 Developer Guide', 'description': 'Development environment, utilities, and deployment instructions'}
               }
-          }
+              
+              print(f"🔍 Auto-organizing {len(all_content)} content files...")
+              
+              # Automatically organize based on numbering and patterns
+              for page_name in sorted(all_content.keys()):
+                  print(f"  📄 Categorizing: {page_name}")
+                  
+                  if page_name == 'main':
+                      wiki_structure['Home.md']['files'].append(page_name)
+                      print(f"    → Home.md")
+                  elif page_name.startswith('1-') or 'overview' in page_name.lower() or 'architecture' in page_name.lower() or 'installation' in page_name.lower() or 'setup' in page_name.lower():
+                      wiki_structure['1-Overview.md']['files'].append(page_name)
+                      print(f"    → 1-Overview.md")
+                  elif page_name.startswith('2-') or 'streamlit' in page_name.lower() or 'dashboard' in page_name.lower() or 'view' in page_name.lower() or 'interface' in page_name.lower():
+                      wiki_structure['2-Dashboard.md']['files'].append(page_name)
+                      print(f"    → 2-Dashboard.md")
+                  elif page_name.startswith('3-') or 'machine' in page_name.lower() or 'learning' in page_name.lower() or 'model' in page_name.lower() or 'prediction' in page_name.lower() or 'tire' in page_name.lower() or 'gap' in page_name.lower():
+                      wiki_structure['3-ML-Models.md']['files'].append(page_name)
+                      print(f"    → 3-ML-Models.md")
+                  elif page_name.startswith('4-') or 'nlp' in page_name.lower() or 'radio' in page_name.lower() or 'transcription' in page_name.lower() or 'sentiment' in page_name.lower() or 'entity' in page_name.lower():
+                      wiki_structure['4-NLP-Pipeline.md']['files'].append(page_name)
+                      print(f"    → 4-NLP-Pipeline.md")
+                  elif page_name.startswith('5-') or 'expert' in page_name.lower() or 'rule' in page_name.lower() or 'fact' in page_name.lower() or 'engine' in page_name.lower():
+                      wiki_structure['5-Expert-System.md']['files'].append(page_name)
+                      print(f"    → 5-Expert-System.md")
+                  elif page_name.startswith('6-') or 'developer' in page_name.lower() or 'development' in page_name.lower() or 'deploy' in page_name.lower() or 'environment' in page_name.lower():
+                      wiki_structure['6-Developer.md']['files'].append(page_name)
+                      print(f"    → 6-Developer.md")
+                  else:
+                      # Default fallback - add to Overview if no clear category
+                      wiki_structure['1-Overview.md']['files'].append(page_name)
+                      print(f"    → 1-Overview.md (fallback)")
+              
+              # Print organization summary
+              print(f"\n📊 Auto-organization summary:")
+              for wiki_page, info in wiki_structure.items():
+                  if info['files']:
+                      print(f"  {wiki_page}: {len(info['files'])} files")
+                      for file in info['files']:
+                          print(f"    - {file}")
+              
+              return wiki_structure
 
-          # Generate each wiki page
+          # Read all available content files for auto-organization
+          print("🔍 Reading available content files...")
+          all_content = {}
+
+          if os.path.exists('docs-md'):
+              for filename in os.listdir('docs-md'):
+                  if filename.endswith('.md') and filename != 'extraction-metadata.json':
+                      filepath = f"docs-md/{filename}"
+                      try:
+                          with open(filepath, 'r', encoding='utf-8') as f:
+                              content = f.read()
+                              # Extract clean name (remove .md extension)
+                              clean_name = filename.replace('.md', '')
+                              all_content[clean_name] = {
+                                  'content': content,
+                                  'filename': filename,
+                                  'filepath': filepath
+                              }
+                              print(f"  ✅ Loaded: {clean_name}")
+                      except Exception as e:
+                          print(f"  ⚠️ Failed to load {filename}: {e}")
+
+          print(f"📊 Total content files loaded: {len(all_content)}")
+
+          # Create dynamic wiki structure based on discovered content
+          wiki_pages = create_dynamic_wiki_structure(all_content)          # Generate each wiki page using dynamic structure
           for page_name, page_info in wiki_pages.items():
               print(f"📄 Creating {page_name}...")
               
@@ -453,19 +512,18 @@ jobs:
                   # Special handling for main Home - add navigation
                   page_content += "## 📚 Documentation Pages\n\n"
                   for other_page, other_info in wiki_pages.items():
-                      if other_page != 'Home.md':
+                      if other_page != 'Home.md' and other_info['files']:  # Only show pages with content
                           clean_name = other_page.replace('.md', '').replace('-', ' ')
                           page_content += f"- **[{other_info['title']}]({other_page.replace('.md', '')})**  \n  {other_info['description']}\n\n"
                   
                   page_content += "---\n\n"
               
-              # Add content from individual files
-              for file_name in page_info['files']:
-                  file_path = f"docs-md/{file_name}"
-                  if os.path.exists(file_path):
-                      print(f"  📎 Adding content from {file_name}")
-                      with open(file_path, 'r', encoding='utf-8') as f:
-                          file_content = f.read()
+              # Add content from individual files (now using dynamic file names)
+              files_added = 0
+              for file_key in page_info['files']:
+                  if file_key in all_content:
+                      print(f"  📎 Adding content from {file_key}")
+                      file_content = all_content[file_key]['content']
                       
                       # Clean the content
                       cleaned_content = clean_content_advanced(file_content)
@@ -480,9 +538,18 @@ jobs:
                               page_content += f"## {section_title}\n\n"
                               page_content += content_without_header + "\n\n---\n\n"
                           else:
+                              # Generate section title from filename
+                              section_title = file_key.replace('-', ' ').replace('_', ' ').title()
+                              page_content += f"## {section_title}\n\n"
                               page_content += cleaned_content + "\n\n---\n\n"
+                          
+                          files_added += 1
                   else:
-                      print(f"  ⚠️ File {file_name} not found")
+                      print(f"  ⚠️ Content key {file_key} not found in available content")
+              
+              if files_added == 0:
+                  print(f"  ℹ️ No content files found for {page_name} - skipping page generation")
+                  continue
               
               # Add footer
               if page_name == 'Home.md':
@@ -492,14 +559,17 @@ jobs:
               
               page_content += f"\n*📝 This documentation is automatically generated using browser automation.*  \n"
               page_content += f"*🕒 Last updated: $(date '+%Y-%m-%d %H:%M:%S UTC')*\n"
+              page_content += f"*📊 Auto-organized from {files_added} content files*\n"
               
               # Write the page
               with open(f"wiki/{page_name}", 'w', encoding='utf-8') as f:
                   f.write(page_content)
               
-              print(f"✅ Created {page_name} ({len(page_content)} characters)")
+              print(f"✅ Created {page_name} ({len(page_content)} characters, {files_added} files)")
 
-          print(f"\n🎉 Generated {len(wiki_pages)} wiki pages successfully!")
+          # Count total pages generated
+          pages_generated = len([f for f in os.listdir('wiki') if f.endswith('.md')])
+          print(f"\n🎉 Generated {pages_generated} wiki pages successfully using auto-organization!")
           EOFWIKIGEN
 
           echo "✅ Wiki pages generation completed"
