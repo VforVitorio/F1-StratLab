@@ -35,15 +35,13 @@ jobs:
           mkdir -p docs-md
 
           echo "🚀 Extracting real content from DeepWiki using browser automation..."
-          echo "📡 Target URL: https://deepwiki.com/VforVitorio/F1_Strat_Manager"
-
-          # Create Puppeteer script to extract content
+          echo "📡 Target URL: https://deepwiki.com/VforVitorio/F1_Strat_Manager"          # Create Puppeteer script to extract content
           cat > extract-deepwiki-content.js << 'EOFPUPPETEER'
           const puppeteer = require('puppeteer');
           const fs = require('fs');
 
           (async () => {
-            console.log('🔧 Launching browser...');
+            console.log('🔧 Launching browser for complete DeepWiki extraction...');
             
             const browser = await puppeteer.launch({
               headless: true,
@@ -61,145 +59,194 @@ jobs:
 
             try {
               const page = await browser.newPage();
-              
-              // Set viewport and user agent
               await page.setViewport({ width: 1280, height: 720 });
               await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
 
-              console.log('🌐 Navigating to DeepWiki page...');
-              
-              // Navigate to the page
-              await page.goto('https://deepwiki.com/VforVitorio/F1_Strat_Manager', {
-                waitUntil: 'networkidle2',
-                timeout: 60000
-              });
+              const baseUrl = 'https://deepwiki.com/VforVitorio/F1_Strat_Manager';
+              console.log(`🌐 Starting complete extraction from: ${baseUrl}`);
 
-              console.log('⏳ Waiting for content to load...');
-              
-              // Wait for loading to disappear and real content to appear
-              try {
-                // Wait for either content to load or timeout
-                await Promise.race([
-                  // Wait for loading to disappear
-                  page.waitForFunction(
-                    () => {
-                      const body = document.body;
-                      const text = body ? body.textContent || body.innerText : '';
-                      return !text.includes('Loading...') && text.length > 500;
-                    },
-                    { timeout: 30000 }
-                  ),
-                  // Or wait for specific content elements
-                  page.waitForSelector('article, .content, main, [data-content]', { timeout: 30000 })
-                ]);
-                
-                console.log('✅ Content loaded successfully');
-              } catch (waitError) {
-                console.log('⚠️ Timeout waiting for content, proceeding with current state...');
-              }
+              // Step 1: Load main page and discover all subpages
+              console.log('📄 Loading main page to discover all sections...');
+              await page.goto(baseUrl, { waitUntil: 'networkidle2', timeout: 60000 });
 
-              // Additional wait to ensure all dynamic content is loaded
+              await Promise.race([
+                page.waitForFunction(() => {
+                  const text = document.body ? document.body.textContent || document.body.innerText : '';
+                  return !text.includes('Loading...') && text.length > 500;
+                }, { timeout: 30000 }),
+                page.waitForSelector('a[href*="/VforVitorio/F1_Strat_Manager/"]', { timeout: 30000 })
+              ]);
+
               await new Promise(resolve => setTimeout(resolve, 3000));
 
-              console.log('📄 Extracting content...');
-              
-              // Extract content using multiple strategies
-              const extractedData = await page.evaluate(() => {
-                // Strategy 1: Try to find main content container
-                const selectors = [
-                  'main',
-                  '.content',
-                  '.documentation',
-                  '.markdown-body',
-                  '[data-content]',
-                  'article',
-                  '.wiki-content',
-                  '#content'
-                ];
+              // Step 2: Discover all available pages
+              console.log('🔍 Discovering all available pages...');
+              const allPages = await page.evaluate((baseUrl) => {
+                const links = Array.from(document.querySelectorAll('a[href*="/VforVitorio/F1_Strat_Manager/"]'));
+                const pageSet = new Set();
                 
-                let content = '';
-                let title = '';
+                // Add main page
+                pageSet.add({ url: baseUrl, name: 'main' });
                 
-                // Extract title
-                title = document.title || '';
-                
-                // Try each selector to find content
-                for (const selector of selectors) {
-                  const element = document.querySelector(selector);
-                  if (element && element.innerText && element.innerText.length > content.length) {
-                    content = element.innerText;
+                // Extract unique page paths
+                links.forEach(link => {
+                  const href = link.getAttribute('href');
+                  if (href && href.includes('/VforVitorio/F1_Strat_Manager/')) {
+                    const fullUrl = href.startsWith('http') ? href : `https://deepwiki.com${href}`;
+                    const path = href.split('/VforVitorio/F1_Strat_Manager/')[1] || '';
+                    if (path && !path.includes('#') && !path.includes('?') && path.length > 0) {
+                      const pageName = path.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+                      pageSet.add({ url: fullUrl, name: pageName, path: path });
+                    }
                   }
+                });
+
+                return Array.from(pageSet);
+              }, baseUrl);
+
+              console.log(`� Found ${allPages.length} pages to extract:`);
+              allPages.forEach(page => console.log(`   - ${page.name}: ${page.url}`));
+
+              // Step 3: Extract content from each page
+              const allContent = {};
+              let totalCharacters = 0;
+
+              for (const pageInfo of allPages) {
+                console.log(`📄 Extracting content from: ${pageInfo.name}`);
+                
+                try {
+                  await page.goto(pageInfo.url, { waitUntil: 'networkidle2', timeout: 60000 });
+                  
+                  await Promise.race([
+                    page.waitForFunction(() => {
+                      const text = document.body ? document.body.textContent || document.body.innerText : '';
+                      return !text.includes('Loading...') && text.length > 500;
+                    }, { timeout: 30000 }),
+                    page.waitForSelector('article, .content, main', { timeout: 30000 })
+                  ]);
+
+                  await new Promise(resolve => setTimeout(resolve, 2000));
+
+                  const extractedData = await page.evaluate(() => {
+                    const selectors = ['main', '.content', '.documentation', '.markdown-body', '[data-content]', 'article'];
+                    let content = '';
+                    let title = document.title || '';
+                    
+                    for (const selector of selectors) {
+                      const element = document.querySelector(selector);
+                      if (element && element.innerText && element.innerText.length > content.length) {
+                        content = element.innerText;
+                      }
+                    }
+                    
+                    if (!content || content.length < 100) {
+                      content = document.body ? document.body.innerText : '';
+                    }
+                    
+                    content = content
+                      .replace(/Loading\.\.\./g, '')
+                      .replace(/^\s+|\s+$/g, '')
+                      .replace(/\n{3,}/g, '\n\n');
+                    
+                    return { title, content, length: content.length };
+                  });
+
+                  allContent[pageInfo.name] = {
+                    title: extractedData.title,
+                    content: extractedData.content,
+                    url: pageInfo.url,
+                    length: extractedData.length
+                  };
+
+                  totalCharacters += extractedData.length;
+                  console.log(`   ✅ Extracted ${extractedData.length} characters from ${pageInfo.name}`);
+                  
+                } catch (error) {
+                  console.log(`   ⚠️ Failed to extract from ${pageInfo.name}: ${error.message}`);
+                  allContent[pageInfo.name] = {
+                    title: pageInfo.name,
+                    content: `# ${pageInfo.name}\n\nContent extraction failed for this section.`,
+                    url: pageInfo.url,
+                    length: 0
+                  };
                 }
-                
-                // Fallback: get body content
-                if (!content || content.length < 100) {
-                  content = document.body ? document.body.innerText : '';
+              }
+
+              // Step 4: Combine all content into structured markdown
+              console.log('📝 Combining all extracted content...');
+              
+              let combinedMarkdown = '# F1 Strategy Manager - Complete Documentation\n\n';
+              combinedMarkdown += '> AI-Powered Formula 1 Race Strategy Analysis and Decision Support System\n\n';
+              combinedMarkdown += '## Table of Contents\n\n';
+              
+              // Add table of contents
+              Object.keys(allContent).forEach(pageName => {
+                if (pageName !== 'main') {
+                  const title = allContent[pageName].title.replace(' | DeepWiki', '').replace('VforVitorio/F1_Strat_Manager', '').trim();
+                  combinedMarkdown += `- [${title}](#${pageName})\n`;
                 }
-                
-                // Clean up content
-                content = content
-                  .replace(/Loading\.\.\./g, '')
-                  .replace(/^\s+|\s+$/g, '')
-                  .replace(/\n{3,}/g, '\n\n');
-                
-                return {
-                  title: title,
-                  content: content,
-                  length: content.length,
-                  url: window.location.href
-                };
+              });
+              
+              combinedMarkdown += '\n---\n\n';
+              
+              // Add main content first
+              if (allContent.main) {
+                combinedMarkdown += allContent.main.content + '\n\n---\n\n';
+              }
+              
+              // Add all other sections
+              Object.entries(allContent).forEach(([pageName, pageData]) => {
+                if (pageName !== 'main') {
+                  const cleanTitle = pageData.title.replace(' | DeepWiki', '').replace('VforVitorio/F1_Strat_Manager', '').trim();
+                  combinedMarkdown += `## ${cleanTitle} {#${pageName}}\n\n`;
+                  combinedMarkdown += pageData.content + '\n\n---\n\n';
+                }
               });
 
-              console.log(`📊 Extracted content stats:`);
-              console.log(`   Title: ${extractedData.title}`);
-              console.log(`   Length: ${extractedData.length} characters`);
-              console.log(`   URL: ${extractedData.url}`);
+              // Save individual files
+              Object.entries(allContent).forEach(([pageName, pageData]) => {
+                const filename = `docs-md/${pageName}.md`;
+                const content = `# ${pageData.title.replace(' | DeepWiki', '')}\n\n${pageData.content}`;
+                fs.writeFileSync(filename, content);
+              });
 
-              if (extractedData.length < 100) {
-                throw new Error('Content too short, might be still loading');
-              }
-
-              // Create markdown content
-              let markdownContent = '';
+              // Save combined file
+              fs.writeFileSync('docs-md/deepwiki-raw.md', combinedMarkdown);
               
-              if (extractedData.title) {
-                markdownContent += `# ${extractedData.title.replace(' | DeepWiki', '')}\n\n`;
-              }
-              
-              markdownContent += extractedData.content;
-
-              // Save extracted content
-              fs.writeFileSync('docs-md/deepwiki-raw.md', markdownContent);
-              
-              // Save metadata
+              // Save extraction metadata
               const metadata = {
                 extractedAt: new Date().toISOString(),
-                url: extractedData.url,
-                title: extractedData.title,
-                contentLength: extractedData.length,
-                method: 'puppeteer-javascript-execution'
+                totalPages: allPages.length,
+                totalCharacters: totalCharacters,
+                pagesExtracted: Object.keys(allContent).length,
+                method: 'puppeteer-multi-page-extraction',
+                pages: Object.keys(allContent)
               };
               
               fs.writeFileSync('docs-md/extraction-metadata.json', JSON.stringify(metadata, null, 2));
 
-              console.log('✅ Content successfully extracted and saved!');
+              console.log('✅ Complete extraction finished!');
+              console.log(`📊 Final stats:`);
+              console.log(`   - Total pages processed: ${allPages.length}`);
+              console.log(`   - Total characters extracted: ${totalCharacters}`);
+              console.log(`   - Individual files created: ${Object.keys(allContent).length}`);
               console.log('📁 Files created:');
-              console.log('   - docs-md/deepwiki-raw.md');
+              console.log('   - docs-md/deepwiki-raw.md (combined)');
               console.log('   - docs-md/extraction-metadata.json');
+              Object.keys(allContent).forEach(name => console.log(`   - docs-md/${name}.md`));
 
             } catch (error) {
               console.error('❌ Error during extraction:', error.message);
               
-              // Create fallback content
               const fallbackContent = `# F1 Strategy Manager
 
-              > Content extraction failed. Please visit the repository directly.
+              > Complete extraction failed. Please visit the repository directly.
 
               **Repository**: [VforVitorio/F1_Strat_Manager](https://github.com/VforVitorio/F1_Strat_Manager)  
               **DeepWiki**: [https://deepwiki.com/VforVitorio/F1_Strat_Manager](https://deepwiki.com/VforVitorio/F1_Strat_Manager)
 
               ## Status
-              Automatic content extraction encountered an issue. The repository documentation may need to be accessed manually.
+              Multi-page content extraction encountered an issue.
 
               **Error**: ${error.message}
               `;
