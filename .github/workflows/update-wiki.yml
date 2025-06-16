@@ -303,12 +303,11 @@ jobs:
 
           # Prepare content files
           MAIN_CONTENT="docs-md/cleaned-content.md"
-          AI_SUMMARY="docs-md/ai-summary.md"
-
-          # Verify we have content
+          AI_SUMMARY="docs-md/ai-summary.md"          # Verify we have content
           if [ ! -f "$MAIN_CONTENT" ] || [ ! -s "$MAIN_CONTENT" ]; then
             echo "❌ No main content available"
-            exit 1          fi
+            exit 1
+          fi
 
           # Generate the complete wiki README
           cat > wiki/README.md << 'EOFREADME'
@@ -340,14 +339,12 @@ jobs:
             echo "" >> wiki/README.md
             echo "---" >> wiki/README.md
             echo "" >> wiki/README.md
-          fi
-
-          # Add main documentation content
+          fi          # Add main documentation content
           echo "## 📖 Complete Documentation" >> wiki/README.md
           echo "" >> wiki/README.md
           cat "$MAIN_CONTENT" >> wiki/README.md
             # Add footer
-          cat >> wiki/README.md << 'EOFFOOTER'
+          cat >> wiki/README.md << EOFFOOTER
 
           ---
 
