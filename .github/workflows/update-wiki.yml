@@ -372,7 +372,8 @@ jobs:
         run: |
           echo "📝 Generating multiple organized wiki pages..."
 
-          # Create organized wiki structure using Python          python3 << 'EOFWIKIGEN'
+          # Create organized wiki structure using Python
+          python3 << 'EOFWIKIGEN'
           import os
           import re
 
