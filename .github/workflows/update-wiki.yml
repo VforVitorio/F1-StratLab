@@ -99,7 +99,7 @@ jobs:
               }
 
               // Additional wait to ensure all dynamic content is loaded
-              await page.awaitForDelay(3000);
+              await page.waitForDelay(3000);
 
               console.log('📄 Extracting content...');
               
