@@ -449,11 +449,11 @@ jobs:
               page_content = f"# {page_info['title']}\n\n"
               page_content += f"{page_info['description']}\n\n"
               
-              if page_name == 'README.md':
-                  # Special handling for main README - add navigation
+              if page_name == 'Home.md':
+                  # Special handling for main Home - add navigation
                   page_content += "## 📚 Documentation Pages\n\n"
                   for other_page, other_info in wiki_pages.items():
-                      if other_page != 'README.md':
+                      if other_page != 'Home.md':
                           clean_name = other_page.replace('.md', '').replace('-', ' ')
                           page_content += f"- **[{other_info['title']}]({other_page.replace('.md', '')})**  \n  {other_info['description']}\n\n"
                   
