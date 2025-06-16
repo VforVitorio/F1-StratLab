@@ -379,40 +379,33 @@ jobs:
 
           def clean_content_advanced(content):
               """Advanced cleaning for better markdown format"""
-              # Remove DeepWiki navigation clutter
-              content = re.sub(r'VforVitorio/F1_Strat_Manager.*?Devin Overview System Architecture.*?Developer Guide\s*', '', content, flags=re.DOTALL)
               
-              # Fix malformed headers
+              # 1. Remove complete DeepWiki header block
+              content = re.sub(r'^.*?\|.*?VforVitorio/F1_Strat_Manager.*?DeepWiki.*?Try DeepWiki.*?Last indexed.*?Developer Guide', '', content, flags=re.DOTALL)
+              
+              # 2. Remove repetitive navigation
+              content = re.sub(r'Overview System Architecture.*?Developer Guide', '', content, flags=re.DOTALL)
+              
+              # 3. Fix page titles (remove | VforVitorio/F1_Strat_Manager)
+              content = re.sub(r'^([^|\n]+)\s*\|\s*VforVitorio/F1_Strat_Manager.*?\n', r'# \1\n\n', content, flags=re.MULTILINE)
+              
+              # 4. Clean malformed headers
               content = re.sub(r'^([^#\n]*)\s*\|\s*\{#[^}]+\}', r'# \1', content, flags=re.MULTILINE)
               
-              # Remove repeated navigation blocks
-              content = re.sub(r'Devin Overview System Architecture.*?Developer Guide', '', content, flags=re.DOTALL)
-              
-              # Clean up multiple consecutive newlines
-              content = re.sub(r'\n{3,}', '\n\n', content)
-              
-              # Remove footer clutter
+              # 5. Remove footer clutter
               content = re.sub(r'This wiki is featured.*?Deep Research.*?$', '', content, flags=re.DOTALL)
               
-              # Clean up the beginning
-              lines = content.split('\n')
-              cleaned_lines = []
-              skip_until_content = True
+              # 6. Fix section headers (ensure proper markdown)
+              content = re.sub(r'\n([A-Z][^.\n]*)\n(?=[A-Z])', r'\n## \1\n\n', content)
               
-              for line in lines:
-                  if skip_until_content:
-                      # Look for actual content start
-                      if line.strip() and not any(x in line.lower() for x in ['devin', 'overview', 'try deepwiki']):
-                          skip_until_content = False
-                          cleaned_lines.append(line)
-                  else:
-                      cleaned_lines.append(line)
+              # 7. Clean multiple newlines
+              content = re.sub(r'\n{3,}', '\n\n', content)
               
-              return '\n'.join(cleaned_lines).strip()
+              return content.strip()
 
           # Define page organization
           wiki_pages = {
-              'README.md': {
+              'Home.md': {
                   'title': '🏎️ F1 Strategy Manager',
                   'description': 'AI-Powered Formula 1 Race Strategy Analysis and Decision Support System',
                   'files': ['main.md', '1-overview.md']
