@@ -68,6 +68,19 @@ Develop an **intelligent strategy recommender** that, based on processed race da
 
 ---
 
+[!WARNING]
+## Documentation & Wiki
+
+This repository has a wiki generated automatically with GitHub Actions, based on **DeepWiki**.
+
+However, the documentation on the **DeepWiki** page is much better structured and highly recommended for obtaining clearer and more navigable information about the project.
+
+👉 **Access the full documentation here**: [https://deepwiki.com/VforVitorio/F1_Strat_Manager](https://deepwiki.com/VforVitorio/F1_Strat_Manager)
+
+
+
+
+
 ## 🖥️ Environment Setup & Usage
 
 ### ⚙️ Requirements
