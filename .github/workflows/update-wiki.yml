@@ -64,14 +64,15 @@ jobs:
             -d "$LIST_TOPICS_PAYLOAD" \
             -o docs-md/topics-response.json \
             -w "%{http_code}" \
-            -s)
+            -s)          echo "📥 Response HTTP status: $HTTP_CODE"
 
-          echo "📥 Response HTTP status: $HTTP_CODE"          if [ "$HTTP_CODE" = "200" ]; then
+          if [ "$HTTP_CODE" = "200" ]; then
             echo "✅ Successfully retrieved topics list"
             echo "📄 Topics response:"
             cat docs-md/topics-response.json | jq . || cat docs-md/topics-response.json
           else
-            echo "⚠️ List topics request failed with HTTP $HTTP_CODE"            echo "Response content:"
+            echo "⚠️ List topics request failed with HTTP $HTTP_CODE"
+            echo "Response content:"
             cat docs-md/topics-response.json
             
             # Continue anyway, we'll try to get content directly
