@@ -20,24 +20,15 @@ jobs:
         with:
           node-version: "18"
 
-      - name: Install Puppeteer and Dependencies
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@latest
+
+      - name: Install Puppeteer
         run: |
-          echo "📦 Installing Puppeteer and dependencies..."
+          echo "📦 Installing Puppeteer..."
           npm init -y
           npm install puppeteer
-
-          # Install additional dependencies for headless Chrome
-          sudo apt-get update
-          sudo apt-get install -y \
-            libnss3-dev \
-            libatk-bridge2.0-dev \
-            libdrm2 \
-            libxcomposite1 \
-            libxdamage1 \
-            libxrandr2 \
-            libgbm1 \
-            libxss1 \
-            libasound2
+          echo "✅ Puppeteer installed"
 
       - name: Get Real Content with Puppeteer (JavaScript Execution)
         run: |
