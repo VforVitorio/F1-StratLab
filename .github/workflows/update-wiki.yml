@@ -485,7 +485,7 @@ jobs:
                       print(f"  ⚠️ File {file_name} not found")
               
               # Add footer
-              if page_name == 'README.md':
+              if page_name == 'Home.md':
                   page_content += "\n## 🔗 Links & Resources\n\n"
                   page_content += "- **[GitHub Repository](https://github.com/VforVitorio/F1_Strat_Manager)**\n"
                   page_content += "- **[DeepWiki Documentation](https://deepwiki.com/VforVitorio/F1_Strat_Manager)**\n\n"
@@ -544,7 +544,7 @@ jobs:
           name: deepwiki-documentation-puppeteer-${{ github.run_number }}-${{ github.run_attempt }}
           path: |
             docs-md/
-            wiki/README.md
+            wiki/Home.md
             extract-deepwiki-content.js
           retention-days: 30
 
@@ -560,10 +560,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Generated Content" >> $GITHUB_STEP_SUMMARY
 
-          if [ -f "wiki/README.md" ]; then
-            LINES=$(wc -l < wiki/README.md)
-            SIZE=$(wc -c < wiki/README.md)
-            echo "- **Wiki README**: $LINES lines, $SIZE bytes" >> $GITHUB_STEP_SUMMARY
+          if [ -f "wiki/Home.md" ]; then
+            LINES=$(wc -l < wiki/Home.md)
+            SIZE=$(wc -c < wiki/Home.md)
+            echo "- **Wiki Home**: $LINES lines, $SIZE bytes" >> $GITHUB_STEP_SUMMARY
           fi
 
           if [ -f "docs-md/cleaned-content.md" ]; then
