@@ -372,10 +372,11 @@ jobs:
         run: |
           echo "📝 Generating multiple organized wiki pages..."
 
-          # Create organized wiki structure using Python
-          python3 << 'EOFWIKIGEN'
+          # Create organized wiki structure using Python          python3 << 'EOFWIKIGEN'
           import os
-          import re          def clean_content_advanced(content):
+          import re
+
+          def clean_content_advanced(content):
               """Advanced cleaning + diagram filtering"""
               
               # 1. Remove complete DeepWiki header block
