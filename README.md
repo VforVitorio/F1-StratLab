@@ -20,6 +20,18 @@
 
 In Formula 1, strategic decisions must be made within seconds while considering complex, dynamic variables like weather, tire wear, track position, and fuel. The **F1 Strategy Manager** project proposes a solution by integrating advanced predictive models and expert systems to support real-time strategy recommendations.
 
+
+> [!WARNING]
+> **Documentation & Wiki**
+>
+> This repository has a wiki generated automatically with GitHub Actions, based on **DeepWiki**.
+>
+> However, the documentation on the **DeepWiki** page is much better structured and highly recommended for obtaining clearer and more navigable information about the project.
+>
+> 👉 **Access the full documentation here**: [https://deepwiki.com/VforVitorio/F1_Strat_Manager](https://deepwiki.com/VforVitorio/F1_Strat_Manager)
+
+
+
 ---
 
 ## 🧠 Main Objective
@@ -67,6 +79,11 @@ Develop an **intelligent strategy recommender** that, based on processed race da
   - Chatbot Q&A via LLM for post-race reports and image analysis using Llama3.2-vision
 
 ---
+
+
+
+
+
 
 ## 🖥️ Environment Setup & Usage
 
