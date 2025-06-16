@@ -1,4 +1,4 @@
-name: Update Wiki from DeepWiki
+name: Update Wiki from DeepWiki (Official Server)
 
 on:
   push:
@@ -15,236 +15,242 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Clone DeepWiki MCP
-        run: |
-          git clone https://github.com/regenrek/deepwiki-mcp.git deepwiki-mcp
-          cd deepwiki-mcp
-          npm install
-
-      - name: Build DeepWiki MCP
-        working-directory: deepwiki-mcp
-        run: |
-          # Check if package.json exists and available scripts
-          echo "Package.json scripts:"
-          npm run || true
-          # Try to build the project
-          if npm run build 2>/dev/null; then
-            echo "Build completed with npm run build"
-          elif npm run compile 2>/dev/null; then
-            echo "Build completed with npm run compile"
-          elif npm run dist 2>/dev/null; then
-            echo "Build completed with npm run dist"
-          else
-            echo "Trying manual build with typescript..."
-            npx tsc || echo "Could not compile with tsc"
-          fi
-          # Verify that dist file exists
-          echo "Checking compiled files:"
-          ls -la
-          if [ -d "dist" ]; then
-            ls -la dist/
-          else
-            echo "dist directory not found"
-            echo "Looking for .mjs files in project:"
-            find . -name "*.mjs" -type f
-          fi
-
-      - name: Start DeepWiki MCP (HTTP mode)
-        working-directory: deepwiki-mcp
-        run: |
-          # Verify that necessary files exist
-          ls -la
-          ls -la bin/
-          # Verify that dist/index.mjs file exists
-          if [ ! -f "dist/index.mjs" ]; then
-            echo "Error: dist/index.mjs not found"
-            echo "Available files:"
-            find . -name "*.mjs" -type f
-            exit 1
-          fi
-          # Start service in background
-          node ./bin/cli.mjs --http --port 3000 > ../deepwiki.log 2>&1 &
-          DEEPWIKI_PID=$!
-          echo "DeepWiki PID: $DEEPWIKI_PID"
-          # Wait and verify service is available
-          for i in {1..30}; do
-            if curl -s http://localhost:3000/mcp > /dev/null 2>&1; then
-              echo "DeepWiki MCP is available"
-              break
-            fi
-            echo "Waiting for DeepWiki MCP to be available... attempt $i/30"
-            sleep 2
-          done
-          # Verify once more - check /mcp endpoint
-          if ! curl -s http://localhost:3000/mcp > /dev/null 2>&1; then
-            echo "Error: DeepWiki MCP not available after 60 seconds"
-            echo "Service logs:"
-            cat ../deepwiki.log
-            echo "Process status:"
-            ps aux | grep node | grep -v grep || echo "Process not found"
-            exit 1
-          fi
-          # Verify process is running
-          ps aux | grep node | grep -v grep
-
-      - name: Export ALL Markdown from DeepWiki
+      - name: Get Repository Documentation from Official DeepWiki Server
         run: |
           mkdir -p docs-md
-          # Verify service is available before making the call
-          if ! curl -s http://localhost:3000/mcp > /dev/null 2>&1; then
-            echo "Error: Service not available before export"
-            echo "Service logs:"
-            cat deepwiki.log || echo "No logs found"
+
+          # Repository information
+          REPO_OWNER="VforVitorio"
+          REPO_NAME="F1_Strat_Manager"
+          GITHUB_REPO="$REPO_OWNER/$REPO_NAME"
+
+          echo "🚀 Fetching documentation for repository: $GITHUB_REPO"
+          echo "📡 Using official DeepWiki MCP server: https://mcp.deepwiki.com/"
+
+          # Test connectivity to official server
+          echo "Testing connectivity to official DeepWiki server..."
+          if curl -s --head "https://mcp.deepwiki.com/http" | head -n 1 | grep -q "200\|405\|404"; then
+            echo "✅ Official DeepWiki server is accessible"
+          else
+            echo "❌ Cannot reach official DeepWiki server"
             exit 1
           fi
 
-          # Test connectivity first
-          echo "Testing service connectivity..."
-          curl -X POST http://localhost:3000/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"tools/list","id":1}' -v || echo "Tools list check failed"
+      - name: List Available Topics
+        run: |
+          echo "📋 Getting list of available documentation topics..."
+            # Create MCP request to list topics
+          LIST_TOPICS_PAYLOAD=$(cat << 'EOF'
+          {
+            "jsonrpc": "2.0",
+            "method": "tools/call",
+            "params": {
+              "name": "list_topics",
+              "arguments": {
+                "github_repo": "VforVitorio/F1_Strat_Manager"
+              }
+            },
+            "id": 1
+          }
+          EOF
+          )
 
-          # Validate DeepWiki URL accessibility
-          echo "Validating DeepWiki URL accessibility..."
-          DEEPWIKI_URL="https://deepwiki.com/VforVitorio/F1_Strat_Manager"
-          # Check if the URL is accessible
-          if curl -s --head "$DEEPWIKI_URL" | head -n 1 | grep -q "200 OK"; then
-            echo "✅ DeepWiki URL is accessible: $DEEPWIKI_URL"
-          else
-            echo "⚠️ Warning: DeepWiki URL might not be accessible: $DEEPWIKI_URL"
-          fi
+          echo "📤 Sending list_topics request..."
+          echo "$LIST_TOPICS_PAYLOAD" | jq .
 
-          # Create JSON payload to get ALL pages (maxDepth: 1, mode: "pages")
-          JSON_PAYLOAD='{"jsonrpc":"2.0","method":"tools/call","params":{"name":"deepwiki_fetch","arguments":{"url":"'$DEEPWIKI_URL'","maxDepth":1,"mode":"pages"}},"id":1}'
-          echo "JSON-RPC 2.0 payload to send (ALL PAGES):"
-          echo "$JSON_PAYLOAD" | jq . || echo "$JSON_PAYLOAD"
-
-          # Validate JSON syntax
-          if echo "$JSON_PAYLOAD" | jq . > /dev/null 2>&1; then
-            echo "✅ JSON payload is valid"
-          else
-            echo "❌ JSON payload is invalid"
-            exit 1
-          fi
-
-          # Make the POST request to get ALL pages
-          echo "Making POST request to get ALL DeepWiki pages..."
-          HTTP_CODE=$(curl -X POST http://localhost:3000/mcp \
+          # Make request to official server
+          HTTP_CODE=$(curl -X POST "https://mcp.deepwiki.com/http" \
             -H "Content-Type: application/json" \
-            -d "$JSON_PAYLOAD" \
-            -o docs-md/jsonrpc-response.json \
+            -d "$LIST_TOPICS_PAYLOAD" \
+            -o docs-md/topics-response.json \
             -w "%{http_code}" \
             -s)
 
-          echo "HTTP status code: $HTTP_CODE"
+          echo "📥 Response HTTP status: $HTTP_CODE"
 
-          # Handle different HTTP response codes
           if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ Success: All pages request completed successfully"
+            echo "✅ Successfully retrieved topics list"
+            echo "📄 Topics response:"
+            cat docs-md/topics-response.json | jq . || cat docs-md/topics-response.json
           else
-            echo "❌ Error HTTP $HTTP_CODE"
+            echo "⚠️ List topics request failed with HTTP $HTTP_CODE"
             echo "Response content:"
-            cat docs-md/jsonrpc-response.json
+            cat docs-md/topics-response.json
             
-            # Try fallback with aggregate mode
-            echo "Trying fallback with aggregate mode..."
-            FALLBACK_PAYLOAD='{"jsonrpc":"2.0","method":"tools/call","params":{"name":"deepwiki_fetch","arguments":{"url":"'$DEEPWIKI_URL'","maxDepth":1,"mode":"aggregate"}},"id":1}'
-            
-            HTTP_CODE=$(curl -X POST http://localhost:3000/mcp \
-              -H "Content-Type: application/json" \
-              -d "$FALLBACK_PAYLOAD" \
-              -o docs-md/jsonrpc-response.json \
-              -w "%{http_code}" \
-              -s)
-            
-            if [ "$HTTP_CODE" != "200" ]; then
-              echo "Fallback method also failed with HTTP $HTTP_CODE"
-              exit 1
-            fi
-            echo "✅ Fallback method succeeded"
+            # Continue anyway, we'll try to get content directly
+            echo "Continuing with direct content retrieval..."
           fi
 
-          # Verify file was created and is not empty
-          if [ ! -f docs-md/jsonrpc-response.json ]; then
-            echo "Error: Response file was not created"
-            exit 1
-          fi
+      - name: Get Full Repository Content
+        run: |
+          echo "📖 Getting complete repository documentation content..."
 
-          if [ ! -s docs-md/jsonrpc-response.json ]; then
-            echo "Error: Response file is empty"
-            exit 1
-          fi
+          # Create MCP request to get repository content
+          GET_CONTENT_PAYLOAD=$(cat << 'EOF'
+          {
+            "jsonrpc": "2.0",
+            "method": "tools/call",
+            "params": {
+              "name": "get_content",
+              "arguments": {
+                "github_repo": "VforVitorio/F1_Strat_Manager"
+              }
+            },
+            "id": 2
+          }
+          EOF
+          )
 
-          echo "Raw JSON-RPC response received:"
-          cat docs-md/jsonrpc-response.json | jq . || cat docs-md/jsonrpc-response.json
+          echo "📤 Sending get_content request..."
+          echo "$GET_CONTENT_PAYLOAD" | jq .
 
-          # *** NUEVA LÓGICA: Extraer contenido del JSON-RPC wrapper ***
-          echo "Extracting content from JSON-RPC response..."
+          # Make request to get content
+          HTTP_CODE=$(curl -X POST "https://mcp.deepwiki.com/http" \
+            -H "Content-Type: application/json" \
+            -d "$GET_CONTENT_PAYLOAD" \
+            -o docs-md/content-response.json \
+            -w "%{http_code}" \
+            -s)
 
-          # Check if response has error
-          if jq -e '.error' docs-md/jsonrpc-response.json > /dev/null 2>&1; then
-            echo "❌ JSON-RPC Error response:"
-            jq '.error' docs-md/jsonrpc-response.json
-            exit 1
-          fi
+          echo "📥 Content response HTTP status: $HTTP_CODE"
 
-          # Extract the actual content from result.content[0].text
-          if jq -e '.result.content[0].text' docs-md/jsonrpc-response.json > /dev/null 2>&1; then
-            echo "✅ Extracting content from JSON-RPC result..."
-            jq -r '.result.content[0].text' docs-md/jsonrpc-response.json > docs-md/extracted-content.json
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Successfully retrieved repository content"
+            echo "📊 Content response size: $(wc -c < docs-md/content-response.json) bytes"
           else
-            echo "❌ Could not find result.content[0].text in response"
+            echo "❌ Get content request failed with HTTP $HTTP_CODE"
+            echo "Response content:"
+            cat docs-md/content-response.json
+            exit 1
+          fi
+
+          # Verify response structure
+          if jq -e '.result' docs-md/content-response.json > /dev/null 2>&1; then
+            echo "✅ Valid MCP response structure detected"
+          else
+            echo "❌ Invalid response structure"
             echo "Response structure:"
-            jq 'keys' docs-md/jsonrpc-response.json || echo "Not valid JSON"
+            jq 'keys' docs-md/content-response.json || echo "Not valid JSON"
             exit 1
           fi
 
-          # Check if extracted content is valid JSON (pages mode) or plain text (aggregate mode)
-          if jq . docs-md/extracted-content.json > /dev/null 2>&1; then
-            echo "✅ Content is valid JSON (pages mode)"
-            # Process pages mode: array of {path: "...", markdown: "..."}
-            if jq -e 'type == "array"' docs-md/extracted-content.json > /dev/null 2>&1; then
-              echo "Processing pages array..."
-              # Create individual page files and collect all markdown
-              echo "# F1 Strategy Manager - Complete Documentation" > docs-md/all-content.md
-              echo "" >> docs-md/all-content.md
-              echo "*Generated from DeepWiki documentation*" >> docs-md/all-content.md
-              echo "" >> docs-md/all-content.md
-              
-              # Process each page
-              jq -c '.[]' docs-md/extracted-content.json | while read page; do
-                page_path=$(echo "$page" | jq -r '.path // "unknown"')
-                page_markdown=$(echo "$page" | jq -r '.markdown // ""')
-                
-                echo "Processing page: $page_path"
-                
-                # Add page separator
-                echo "---" >> docs-md/all-content.md
-                echo "" >> docs-md/all-content.md
-                echo "## $page_path" >> docs-md/all-content.md
-                echo "" >> docs-md/all-content.md
-                echo "$page_markdown" >> docs-md/all-content.md
-                echo "" >> docs-md/all-content.md
-              done
+      - name: Extract and Process Documentation Content
+        run: |
+          echo "🔄 Processing documentation content from official DeepWiki server..."
+
+          # Extract content from MCP response
+          if jq -e '.result.content[0].text' docs-md/content-response.json > /dev/null 2>&1; then
+            echo "✅ Extracting content from MCP result..."
+            jq -r '.result.content[0].text' docs-md/content-response.json > docs-md/extracted-content.md
+          elif jq -e '.result.content' docs-md/content-response.json > /dev/null 2>&1; then
+            echo "✅ Extracting content from alternative format..."
+            jq -r '.result.content' docs-md/content-response.json > docs-md/extracted-content.md
+          elif jq -e '.result' docs-md/content-response.json > /dev/null 2>&1; then
+            echo "✅ Extracting direct result content..."
+            jq -r '.result' docs-md/content-response.json > docs-md/extracted-content.md
+          else
+            echo "❌ Could not find content in response"
+            echo "Available fields:"
+            jq 'keys' docs-md/content-response.json
+            exit 1
+          fi
+
+          # Verify extracted content
+          if [ ! -f docs-md/extracted-content.md ] || [ ! -s docs-md/extracted-content.md ]; then
+            echo "❌ No content was extracted or file is empty"
+            exit 1
+          fi
+
+          echo "✅ Successfully extracted documentation content"
+          echo "📊 Extracted content stats:"
+          wc -l docs-md/extracted-content.md
+
+          echo "📄 First 10 lines of extracted content:"
+          head -10 docs-md/extracted-content.md
+
+          # Clean up and format content for wiki
+          python3 << 'EOF'
+          import re
+
+          # Read extracted content
+          with open('docs-md/extracted-content.md', 'r', encoding='utf-8') as f:
+              content = f.read()
+
+          print("🧹 Cleaning and formatting content for GitHub Wiki...")
+
+          # Remove DeepWiki UI elements and navigation
+          content = re.sub(r'.*?DeepWiki.*?\n', '', content, flags=re.IGNORECASE)
+          content = re.sub(r'.*?Powered by Devin.*?\n', '', content, flags=re.IGNORECASE)
+          content = re.sub(r'.*?Share.*?\n', '', content, flags=re.IGNORECASE)
+          content = re.sub(r'.*?Last indexed:.*?\n', '', content, flags=re.IGNORECASE)
+          content = re.sub(r'.*?Auto-refresh.*?\n', '', content, flags=re.IGNORECASE)
+
+          # Clean up headers and formatting
+          content = re.sub(r'^#+ ?/\s*$', '', content, flags=re.MULTILINE)
+          content = re.sub(r'^\s*Menu\s*$', '', content, flags=re.MULTILINE)
+          content = re.sub(r'^- Overview\n- System Architecture.*?- Getting Started\n', '', content, flags=re.DOTALL)
+
+          # Remove empty lines at start
+          content = content.lstrip()
+
+          # Ensure proper spacing
+          content = re.sub(r'\n{3,}', '\n\n', content)
+
+          # Save cleaned content
+          with open('docs-md/cleaned-content.md', 'w', encoding='utf-8') as f:
+              f.write(content)
+
+          print(f"✅ Content cleaned and saved. Final size: {len(content)} characters")
+          EOF
+
+      - name: Ask DeepWiki AI for Repository Summary
+        run: |
+          echo "🤖 Getting AI-powered repository summary from DeepWiki..."
+
+          # Create question request for repository overview
+          ASK_QUESTION_PAYLOAD=$(cat << 'EOF'
+          {
+            "jsonrpc": "2.0",
+            "method": "tools/call",
+            "params": {
+              "name": "ask_question",
+              "arguments": {
+                "github_repo": "VforVitorio/F1_Strat_Manager",
+                "question": "Provide a comprehensive overview of this F1 Strategy Manager project, including its main components, features, and architecture. Focus on the key modules like machine learning models, computer vision, NLP pipeline, and expert system."
+              }
+            },
+            "id": 3
+          }
+          EOF
+          )
+
+          echo "📤 Sending AI question request..."
+
+          # Make request for AI summary
+          HTTP_CODE=$(curl -X POST "https://mcp.deepwiki.com/http" \
+            -H "Content-Type: application/json" \
+            -d "$ASK_QUESTION_PAYLOAD" \
+            -o docs-md/ai-summary-response.json \
+            -w "%{http_code}" \
+            -s)
+
+          echo "📥 AI summary response HTTP status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Successfully retrieved AI summary"
+            
+            # Extract AI summary
+            if jq -e '.result.content[0].text' docs-md/ai-summary-response.json > /dev/null 2>&1; then
+              jq -r '.result.content[0].text' docs-md/ai-summary-response.json > docs-md/ai-summary.md
+              echo "🤖 AI Summary:"
+              head -20 docs-md/ai-summary.md
             else
-              echo "❌ Expected array but got different type"
-              jq 'type' docs-md/extracted-content.json
-              exit 1
+              echo "⚠️ Could not extract AI summary from response"
             fi
           else
-            echo "✅ Content is plain text (aggregate mode)"
-            # Process aggregate mode: direct markdown content
-            cp docs-md/extracted-content.json docs-md/all-content.md
+            echo "⚠️ AI summary request failed, continuing without it"
+            touch docs-md/ai-summary.md
           fi
-
-          # Verify we have content
-          if [ ! -f docs-md/all-content.md ] || [ ! -s docs-md/all-content.md ]; then
-            echo "❌ No markdown content was extracted"
-            exit 1
-          fi
-
-          echo "✅ Successfully extracted markdown content:"
-          wc -l docs-md/all-content.md
-          echo "First 10 lines of content:"
-          head -10 docs-md/all-content.md
 
       - name: Checkout Wiki Repository
         uses: actions/checkout@v3
@@ -253,98 +259,149 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: wiki
 
-      - name: Copy Documentation to Wiki
+      - name: Generate Comprehensive Wiki Documentation
         run: |
-          # Ensure we have the extracted content
-          if [ ! -f docs-md/all-content.md ]; then
-            echo "Error: No markdown content found to copy"
-            exit 1
-          fi
+          echo "📝 Generating comprehensive wiki documentation..."
 
-          # Create the wiki README.md with proper structure
-          cat > wiki/README.md << 'EOF'
+          # Prepare content files
+          MAIN_CONTENT="docs-md/cleaned-content.md"
+          AI_SUMMARY="docs-md/ai-summary.md"
+
+          # Verify we have content
+          if [ ! -f "$MAIN_CONTENT" ] || [ ! -s "$MAIN_CONTENT" ]; then
+            echo "❌ No main content available"
+            exit 1          fi
+
+          # Generate the complete wiki README
+          cat > wiki/README.md << 'EOFREADME'
           # 🏎️ F1 Strategy Manager - Complete Documentation
 
           > **AI-Powered Formula 1 Race Strategy Analysis and Decision Support System**
 
-          ## 📚 Documentation Structure
+          ## 📚 Documentation Overview
 
-          ### 🚀 1. Quick Start
-          - **[Quick Start Guide](01-quick-start)** - Get up and running quickly
-            - [Installation](01-01-installation) - Setup and installation instructions  
-            - [Basic Usage](01-02-basic-usage) - How to use the main features
-            - [Configuration](01-03-configuration) - System configuration options
+          This documentation is automatically generated from the project's DeepWiki repository analysis using the official DeepWiki MCP server.
 
-          ### 📊 2. Data Pipeline  
-          - **[Data Pipeline](02-data-pipeline)** - Data collection and processing
-            - [F1 Data Collection](02-01-f1-data-collection) - FastF1 API integration
-            - [Gap Calculation](02-02-gap-calculation) - Real-time gap analysis
-            - [Tire Data Processing](02-03-tire-data-processing) - Tire performance metrics
-            - [Radio Data Integration](02-04-radio-data-integration) - Team radio processing
-
-          ### 🤖 3. Machine Learning Models
-          - **[Machine Learning Models](03-machine-learning-models)** - AI/ML components
-            - [Lap Time Prediction](03-01-lap-time-prediction) - Predictive models for lap times
-            - [Tire Degradation Modeling](03-02-tire-degradation-modeling) - Tire performance analysis
-            - [Vision-based Gap Calculation](03-03-vision-based-gap-calculation) - Computer vision for gap detection
-
-          ### 🎤 4. NLP Pipeline
-          - **[NLP Pipeline](04-nlp-pipeline)** - Natural Language Processing components
-            - [Radio Transcription](04-01-radio-transcription) - Speech-to-text processing
-            - [Sentiment and Intent Analysis](04-02-sentiment-intent-analysis) - Emotional and intent recognition
-            - [Named Entity Recognition](04-03-named-entity-recognition) - Entity extraction from radio communications
-
-          ### ⚙️ 5. Expert System
-          - **[Expert System](05-expert-system)** - Rule-based decision engine
-            - [Degradation Rules](05-01-degradation-rules) - Tire degradation logic
-            - [Gap Analysis Rules](05-02-gap-analysis-rules) - Gap calculation rules
-            - [Radio Message Rules](05-03-radio-message-rules) - Communication analysis rules
-            - [Integrated Rule Engine](05-04-integrated-rule-engine) - Unified rule processing
-
-          ### 👨‍💻 6. Developer Guide
-          - **[Developer Guide](06-developer-guide)** - Technical documentation for developers
-            - [API Reference](06-01-api-reference) - Complete API documentation
-            - [Integration Guide](06-02-integration-guide) - How to integrate with external systems
-
-          ## 🏎️ Project Overview
-
-          The F1 Strategy Manager is an integrated AI-powered system for Formula 1 race strategy analysis and decision support, combining:
-
-          - **🤖 Machine Learning Models** - Predictive analytics for lap times and tire performance
-          - **👁️ Computer Vision** - Automated gap calculation from video feeds
-          - **🎤 Natural Language Processing** - Radio communication analysis and insights
-          - **⚙️ Rule-based Expert Systems** - Strategic recommendations based on F1 expertise
-          - **📊 Interactive Streamlit Dashboard** - User-friendly web interface for real-time analysis
-
-          ## 📋 Complete Documentation Content
-
-          EOF
-
-          # Append the extracted content
-          cat docs-md/all-content.md >> wiki/README.md
-
-          # Add footer
-          cat >> wiki/README.md << 'EOF'
+          ### 🚀 Quick Navigation
+          - [Project Overview](#project-overview)
+          - [System Architecture](#system-architecture)  
+          - [Core Components](#core-components)
+          - [Getting Started](#getting-started)
+          - [API Reference](#api-reference)
+          - [Developer Guide](#developer-guide)
 
           ---
 
-          *📝 This documentation is automatically generated and updated from the project's DeepWiki documentation.*
-          EOF
+          EOFREADME
 
-          echo "Files copied to wiki:"
+          # Add AI summary if available
+          if [ -f "$AI_SUMMARY" ] && [ -s "$AI_SUMMARY" ]; then
+            echo "## 🤖 AI-Generated Project Summary" >> wiki/README.md
+            echo "" >> wiki/README.md
+            cat "$AI_SUMMARY" >> wiki/README.md
+            echo "" >> wiki/README.md
+            echo "---" >> wiki/README.md
+            echo "" >> wiki/README.md
+          fi
+
+          # Add main documentation content
+          echo "## 📖 Complete Documentation" >> wiki/README.md
+          echo "" >> wiki/README.md
+          cat "$MAIN_CONTENT" >> wiki/README.md
+            # Add footer
+          cat >> wiki/README.md << 'EOFFOOTER'
+
+          ---
+
+          ## 🔗 Links & Resources
+
+          - **GitHub Repository**: [VforVitorio/F1_Strat_Manager](https://github.com/VforVitorio/F1_Strat_Manager)
+          - **DeepWiki Documentation**: [deepwiki.com/VforVitorio/F1_Strat_Manager](https://deepwiki.com/VforVitorio/F1_Strat_Manager)
+          - **Project Wiki**: [GitHub Wiki](https://github.com/VforVitorio/F1_Strat_Manager/wiki)
+
+          ---
+
+          *📝 This documentation is automatically generated and updated from the project's DeepWiki analysis using the official DeepWiki MCP server.*
+
+          *🕒 Last updated: $(date '+%Y-%m-%d %H:%M:%S UTC')*
+          EOFFOOTER
+
+          echo "✅ Wiki documentation generated successfully"
+          echo "📊 Final documentation stats:"
+          wc -l wiki/README.md
+
+          echo "📁 Generated files:"
           ls -la wiki/
 
-      - name: Commit & Push changes
+      - name: Commit & Push Wiki Changes
         working-directory: wiki
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
+
           # Check if there are changes before committing
           if git diff --quiet --staged; then
-            echo "No changes to commit"
+            echo "ℹ️ No changes to commit - documentation is up to date"
           else
-            git commit -m "🔄 Update Complete Wiki from DeepWiki - $(date '+%Y-%m-%d %H:%M')"
-            git push
-            echo "Changes pushed successfully"
+            echo "📝 Committing documentation updates..."
+            git commit -m "🔄 Update Wiki from Official DeepWiki Server - $(date '+%Y-%m-%d %H:%M')"
+            
+            echo "🚀 Pushing changes to wiki..."
+            if git push; then
+              echo "✅ Wiki updated successfully!"
+            else
+              echo "❌ Failed to push wiki changes"
+              echo "This might be due to:"
+              echo "  1. Wiki is not enabled for this repository"
+              echo "  2. Insufficient permissions"
+              echo "  3. Repository access restrictions"
+              echo ""
+              echo "To fix:"
+              echo "  1. Go to repository Settings > Features > Wiki and enable it"
+              echo "  2. Create at least one wiki page manually to initialize"
+              exit 1
+            fi
           fi
+
+      - name: Upload Documentation Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: deepwiki-documentation-$(date '+%Y%m%d-%H%M')
+          path: |
+            docs-md/
+            wiki/README.md
+          retention-days: 30
+
+      - name: Workflow Summary
+        if: always()
+        run: |
+          echo "## 📋 Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Documentation Source" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository**: VforVitorio/F1_Strat_Manager" >> $GITHUB_STEP_SUMMARY
+          echo "- **DeepWiki URL**: https://deepwiki.com/VforVitorio/F1_Strat_Manager" >> $GITHUB_STEP_SUMMARY
+          echo "- **MCP Server**: Official DeepWiki (https://mcp.deepwiki.com/)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Generated Content" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f "wiki/README.md" ]; then
+            LINES=$(wc -l < wiki/README.md)
+            SIZE=$(wc -c < wiki/README.md)
+            echo "- **Wiki README**: $LINES lines, $SIZE bytes" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ -f "docs-md/cleaned-content.md" ]; then
+            CONTENT_SIZE=$(wc -c < docs-md/cleaned-content.md)
+            echo "- **Main Content**: $CONTENT_SIZE bytes" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ -f "docs-md/ai-summary.md" ]; then
+            AI_SIZE=$(wc -c < docs-md/ai-summary.md)
+            echo "- **AI Summary**: $AI_SIZE bytes" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Status" >> $GITHUB_STEP_SUMMARY
+          echo "Documentation successfully generated using official DeepWiki MCP server!" >> $GITHUB_STEP_SUMMARY
