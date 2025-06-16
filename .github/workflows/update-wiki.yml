@@ -284,8 +284,7 @@ jobs:
               head -20 docs-md/ai-summary.md
             else
               echo "⚠️ Could not extract AI summary from response"
-            fi
-          else
+            fi          else
             echo "⚠️ AI summary request failed, continuing without it"
             touch docs-md/ai-summary.md
           fi
@@ -294,7 +293,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: ${{ github.repository }}.wiki
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.WIKI_PAT }}
           path: wiki
 
       - name: Generate Comprehensive Wiki Documentation
