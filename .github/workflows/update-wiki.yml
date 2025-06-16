@@ -66,15 +66,12 @@ jobs:
             -w "%{http_code}" \
             -s)
 
-          echo "📥 Response HTTP status: $HTTP_CODE"
-
-          if [ "$HTTP_CODE" = "200" ]; then
+          echo "📥 Response HTTP status: $HTTP_CODE"          if [ "$HTTP_CODE" = "200" ]; then
             echo "✅ Successfully retrieved topics list"
             echo "📄 Topics response:"
             cat docs-md/topics-response.json | jq . || cat docs-md/topics-response.json
           else
-            echo "⚠️ List topics request failed with HTTP $HTTP_CODE"
-            echo "Response content:"
+            echo "⚠️ List topics request failed with HTTP $HTTP_CODE"            echo "Response content:"
             cat docs-md/topics-response.json
             
             # Continue anyway, we'll try to get content directly
@@ -85,26 +82,62 @@ jobs:
         run: |
           echo "📖 Getting complete repository documentation content..."
 
-          # Create MCP request to get repository content
-          GET_CONTENT_PAYLOAD=$(cat << 'EOF'
+          # PRIMERO: Verificar si el repo existe usando list_topics
+          echo "🔍 Checking if repository exists in DeepWiki..."
+
+          # Si list_topics falló anteriormente, significa que el repo no está indexado
+          if [ ! -f "docs-md/topics-response.json" ] || ! grep -q '"result"' docs-md/topics-response.json 2>/dev/null; then
+            echo "❌ Repository VforVitorio/F1_Strat_Manager not found in DeepWiki"
+            echo "The repository might not be indexed yet. Please:"
+            echo "1. Visit https://deepwiki.com/VforVitorio/F1_Strat_Manager"
+            echo "2. Verify the repository exists and is accessible"
+            echo "3. Wait for DeepWiki to index the repository"
+            
+            # Crear contenido fallback
+            cat > docs-md/cleaned-content.md << 'EOFFALLBACK'
+          # F1 Strategy Manager
+
+          Repository not yet indexed in DeepWiki. Please visit the GitHub repository directly:
+          https://github.com/VforVitorio/F1_Strat_Manager
+
+          ## Status
+          This repository is not currently available in the DeepWiki database. 
+          The documentation will be updated once the repository is indexed.
+          EOFFALLBACK
+            
+            echo "✅ Created fallback documentation"
+            exit 0
+          fi
+
+          # SEGUNDO: Si topics existe, extraer un topic específico para get_content
+          echo "📋 Extracting available topics..."
+
+          # Extraer el primer topic disponible
+          FIRST_TOPIC=$(jq -r '.result.content[0].text // "Complete project documentation"' docs-md/topics-response.json 2>/dev/null || echo "Complete project documentation")
+
+          echo "📖 Using topic: $FIRST_TOPIC"
+
+          # Crear request con topic específico
+          GET_CONTENT_PAYLOAD=$(cat << EOFPAYLOAD
           {
             "jsonrpc": "2.0",
             "method": "tools/call",
             "params": {
               "name": "get_content",
               "arguments": {
-                "github_repo": "VforVitorio/F1_Strat_Manager"
+                "github_repo": "VforVitorio/F1_Strat_Manager",
+                "topic": "$FIRST_TOPIC"
               }
             },
             "id": 2
           }
-          EOF
+          EOFPAYLOAD
           )
 
-          echo "📤 Sending get_content request..."
+          echo "📤 Sending get_content request with topic..."
           echo "$GET_CONTENT_PAYLOAD" | jq .
 
-          # Make request to get content
+          # Hacer la llamada con topic
           HTTP_CODE=$(curl -X POST "https://mcp.deepwiki.com/http" \
             -H "Content-Type: application/json" \
             -d "$GET_CONTENT_PAYLOAD" \
@@ -115,8 +148,18 @@ jobs:
           echo "📥 Content response HTTP status: $HTTP_CODE"
 
           if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ Successfully retrieved repository content"
-            echo "📊 Content response size: $(wc -c < docs-md/content-response.json) bytes"
+            echo "✅ Successfully retrieved content"
+            
+            # Extraer contenido
+            if jq -e '.result.content[0].text' docs-md/content-response.json > /dev/null 2>&1; then
+              jq -r '.result.content[0].text' docs-md/content-response.json > docs-md/raw-content.md
+              echo "📄 Content retrieved successfully"
+            else
+              echo "⚠️ Could not extract content from response"
+              echo "Response structure:"
+              cat docs-md/content-response.json | jq .
+              exit 1
+            fi
           else
             echo "❌ Get content request failed with HTTP $HTTP_CODE"
             echo "Response content:"
@@ -128,8 +171,7 @@ jobs:
           if jq -e '.result' docs-md/content-response.json > /dev/null 2>&1; then
             echo "✅ Valid MCP response structure detected"
           else
-            echo "❌ Invalid response structure"
-            echo "Response structure:"
+            echo "❌ Invalid response structure"            echo "Response structure:"
             jq 'keys' docs-md/content-response.json || echo "Not valid JSON"
             exit 1
           fi
@@ -138,20 +180,15 @@ jobs:
         run: |
           echo "🔄 Processing documentation content from official DeepWiki server..."
 
-          # Extract content from MCP response
-          if jq -e '.result.content[0].text' docs-md/content-response.json > /dev/null 2>&1; then
-            echo "✅ Extracting content from MCP result..."
-            jq -r '.result.content[0].text' docs-md/content-response.json > docs-md/extracted-content.md
-          elif jq -e '.result.content' docs-md/content-response.json > /dev/null 2>&1; then
-            echo "✅ Extracting content from alternative format..."
-            jq -r '.result.content' docs-md/content-response.json > docs-md/extracted-content.md
-          elif jq -e '.result' docs-md/content-response.json > /dev/null 2>&1; then
-            echo "✅ Extracting direct result content..."
-            jq -r '.result' docs-md/content-response.json > docs-md/extracted-content.md
+          # Check if we have content from the previous step
+          if [ -f "docs-md/raw-content.md" ] && [ -s "docs-md/raw-content.md" ]; then
+            echo "✅ Using content from get_content request..."
+            cp docs-md/raw-content.md docs-md/extracted-content.md
+          elif [ -f "docs-md/cleaned-content.md" ] && [ -s "docs-md/cleaned-content.md" ]; then
+            echo "✅ Using fallback content..."
+            cp docs-md/cleaned-content.md docs-md/extracted-content.md
           else
-            echo "❌ Could not find content in response"
-            echo "Available fields:"
-            jq 'keys' docs-md/content-response.json
+            echo "❌ No content available from previous steps"
             exit 1
           fi
 
