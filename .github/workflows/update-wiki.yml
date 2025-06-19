@@ -60,11 +60,11 @@ jobs:
               const tools = await client.listTools();
               console.log('Available tools:', tools.tools.map(t => t.name));
 
-              const repo = 'VforVitorio/F1_Strat_Manager';
+              const repoUrl = 'https://github.com/VforVitorio/F1_Strat_Manager';
 
               // Get wiki structure
               const structureResult = await client.callTool('read_wiki_structure', {
-                repository: repo
+                repo_url: repoUrl
               });
 
               const structure = JSON.parse(structureResult.content[0].text);
@@ -78,7 +78,7 @@ jobs:
                 
                 try {
                   const contentResult = await client.callTool('read_wiki_contents', {
-                    repository: repo,
+                    repo_url: repoUrl,
                     page: page.title
                   });
 
