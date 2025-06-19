@@ -70,7 +70,8 @@ jobs:
                   method: 'POST',
                   headers: { 
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json, text/event-stream'
+                    'Accept': 'application/json, text/event-stream',
+                    'Mcp-Session-Id': 'wiki-extractor-' + Date.now()
                   },
                   body: JSON.stringify({
                     "jsonrpc": "2.0",
