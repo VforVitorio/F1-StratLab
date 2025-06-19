@@ -56,12 +56,15 @@ jobs:
 
               await client.connect(transport);
               console.log('Connected to DeepWiki MCP');
+              // Debug: List available tools
+              const tools = await client.listTools();
+              console.log('Available tools:', tools.tools.map(t => t.name));
 
-              const repoUrl = 'https://github.com/VforVitorio/F1_Strat_Manager';
+              const repo = 'VforVitorio/F1_Strat_Manager';
 
               // Get wiki structure
               const structureResult = await client.callTool('read_wiki_structure', {
-                repo_url: repoUrl
+                repo: repo
               });
 
               const structure = JSON.parse(structureResult.content[0].text);
@@ -75,8 +78,8 @@ jobs:
                 
                 try {
                   const contentResult = await client.callTool('read_wiki_contents', {
-                    repo_url: repoUrl,
-                    page_path: page.path || page.title
+                    repo: repo,
+                    page: page.title
                   });
 
                   const cleanName = page.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
