@@ -56,6 +56,7 @@ jobs:
 
               await client.connect(transport);
               console.log('Connected to DeepWiki MCP');
+              const repo = 'VforVitorio/F1_Strat_Manager';
               // Debug: List available tools
               const tools = await client.listTools();
               console.log('Available tools:', tools.tools.map(t => t.name));
@@ -71,7 +72,7 @@ jobs:
               } catch (error) {
                 console.log('Ask question failed:', error.message);
               }
-              const repo = 'VforVitorio/F1_Strat_Manager';
+              
 
               // Get wiki structure
               const structureResult = await client.callTool('read_wiki_structure', {
