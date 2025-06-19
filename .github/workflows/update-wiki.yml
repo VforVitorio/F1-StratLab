@@ -68,7 +68,7 @@ jobs:
                 // Try minimal parameters first - no mode
                 console.log('Attempting read_wiki_structure with minimal params...');
                 const structureResult = await client.callTool('read_wiki_structure', {
-                  repo: 'VforVitorio/F1_Strat_Manager'
+                  repoName: 'VforVitorio/F1_Strat_Manager'
                 });
                 
                 console.log('SUCCESS! Structure extracted');
@@ -83,7 +83,7 @@ jobs:
                   
                   try {
                     const contentResult = await client.callTool('read_wiki_contents', {
-                      repo: 'VforVitorio/F1_Strat_Manager',
+                      repoName: 'VforVitorio/F1_Strat_Manager',
                       page: page.title
                     });
                     
