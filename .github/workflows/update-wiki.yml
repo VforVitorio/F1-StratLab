@@ -33,7 +33,8 @@ jobs:
         run: |
           echo "📦 Installing MCP client and tools..."
           npm init -y
-          npm install @modelcontextprotocol/sdk puppeteer
+          npm init -y
+          npm install puppeteer
           pip install requests beautifulsoup4 markdownify
 
       - name: Extract Content via DeepWiki MCP
@@ -54,100 +55,62 @@ jobs:
               const { SSEClientTransport } = require('@modelcontextprotocol/sdk/client/sse.js');
               const transport = new SSEClientTransport(new URL('https://mcp.deepwiki.com/sse'));
 
+              await client.connect(transport);
+              console.log('Connected to DeepWiki MCP');
 
+              const repoUrl = 'https://github.com/VforVitorio/F1_Strat_Manager';
 
-              const repo = 'VforVitorio/F1_Strat_Manager';
-              // Debug: List available tools
-              const tools = await client.listTools();
-              console.log('Available tools:', tools.tools.map(t => t.name));
+              // Get wiki structure
+              const structureResult = await client.callTool('read_wiki_structure', {
+                repo_url: repoUrl
+              });
 
-              // Use existing MCP connection correctly
-              console.log('Using MCP connection for extraction...');
-              
-              try {
-                // Deep debugging of SSE transport
-                console.log('Attempting read_wiki_structure with deep debugging...');
+              const structure = JSON.parse(structureResult.content[0].text);
+              console.log('Found', structure.pages.length, 'pages');
+
+              const allContent = {};
+
+              // Extract each page
+              for (const page of structure.pages) {
+                console.log('Extracting:', page.title);
                 
                 try {
-                  // Log transport state before call
-                  console.log('Transport URL:', transport.url);
-                  console.log('Transport state:', {
-                    url: transport.url,
-                    connected: !!transport._eventSource,
-                    readyState: transport._eventSource?.readyState
+                  const contentResult = await client.callTool('read_wiki_contents', {
+                    repo: repo,
+                    page: page.title,
+                    mode: 'markdown'
                   });
+
+                  const cleanName = page.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
                   
-                  // Make the call with minimal error handling to see raw error
-                  console.log('Making callTool request...');
-                  // Test with known working repository first
-                  const structureResult = await client.callTool('read_wiki_structure', {
-                    repoName: 'microsoft/vscode'
-                  });
-                  
-                  console.log('SUCCESS! Structure extracted');
-                  
+                  allContent[cleanName] = {
+                    title: page.title,
+                    content: contentResult.content[0].text,
+                    order: page.order || 999
+                  };
+
+                  console.log('Extracted:', cleanName);
                 } catch (error) {
-                  console.log('=== DEEP ERROR ANALYSIS ===');
-                  console.log('Error type:', error.constructor.name);
-                  console.log('Error message:', error.message);
-                  console.log('Error properties:', Object.keys(error));
-                  console.log('Transport _eventSource state:', transport._eventSource?.readyState);
-                  console.log('Transport URL after error:', transport.url);
-                  
-                  // Try to get more details from the error
-                  if (error.response) {
-                    console.log('Response status:', error.response.status);
-                    console.log('Response headers:', error.response.headers);
-                  }
-                  
-                  console.log('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
-                  console.log('============================');
-                  
-                  throw error;
+                  console.log('Failed to extract:', page.title);
+                  allContent[page.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()] = {
+                    title: page.title,
+                    content: 'Content extraction failed.',
+                    order: 999
+                  };
                 }
-                
-                console.log('SUCCESS! Structure extracted');
-                const structure = JSON.parse(structureResult.content[0].text);
-                console.log('Found', structure.pages.length, 'pages');
-                
-                const allContent = {};
-                
-                // Extract each page
-                for (const page of structure.pages) {
-                  console.log('Extracting:', page.title);
-                  
-                  try {
-                    const contentResult = await client.callTool('read_wiki_contents', {
-                      repoName: 'VforVitorio/F1_Strat_Manager',
-                      page: page.title
-                    });
-                    
-                    const cleanName = page.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-                    
-                    allContent[cleanName] = {
-                      title: page.title,
-                      content: contentResult.content[0].text,
-                      order: page.order || 999
-                    };
-                    
-                    console.log('Extracted:', cleanName);
-                  } catch (error) {
-                    console.log('Failed to extract:', page.title, error.message);
-                  }
-                }
-                
-                // Save all content
-                for (const [name, data] of Object.entries(allContent)) {
-                  fs.writeFileSync(`docs-md/${name}.md`, `# ${data.title}\n\n${data.content}`);
-                }
-                
-                console.log('Real MCP extraction completed with', Object.keys(allContent).length, 'pages');
-                
-              } catch (error) {
-                console.log('MCP structure extraction failed:', error.message);
-                throw error; // Stop execution if we can't get real content
               }
 
+              // Save all content
+              for (const [name, data] of Object.entries(allContent)) {
+                fs.writeFileSync(`docs-md/${name}.md`, `# ${data.title}\n\n${data.content}`);
+              }
+
+              // Save metadata
+              fs.writeFileSync('docs-md/metadata.json', JSON.stringify({
+                extractedAt: new Date().toISOString(),
+                totalPages: Object.keys(allContent).length,
+                pages: Object.keys(allContent)
+              }, null, 2));
 
               await client.disconnect();
               console.log('MCP extraction completed');
