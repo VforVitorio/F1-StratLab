@@ -61,16 +61,28 @@ jobs:
               const tools = await client.listTools();
               console.log('Available tools:', tools.tools.map(t => t.name));
 
-              // Test simple call first
-              console.log('Testing simple ask_question...');
+             // Test direct JSON-RPC
+              console.log('Testing direct JSON-RPC...');
               try {
-                const testResult = await client.callTool('ask_question', {
-                  question: 'What is this repository?',
-                  repo: repo
+                const directResult = await fetch('https://mcp.deepwiki.com/sse', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "read_wiki_structure",
+                    "params": {
+                      "repo": "VforVitorio/F1_Strat_Manager",
+                      "mode": "pages"
+                    }
+                  })
                 });
-                console.log('Ask question success:', testResult.content[0].text.substring(0, 100));
+                
+                console.log('Direct call status:', directResult.status);
+                const responseText = await directResult.text();
+                console.log('Direct call response:', responseText.substring(0, 200));
               } catch (error) {
-                console.log('Ask question failed:', error.message);
+                console.log('Direct call failed:', error.message);
               }
               
 
