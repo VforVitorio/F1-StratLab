@@ -57,7 +57,7 @@ jobs:
               await client.connect(transport);
               console.log('Connected to DeepWiki MCP');
 
-              const repoUrl = 'https://github.com/VforVitorio/F1_Strat_Manager';
+              const repo = 'VforVitorio/F1_Strat_Manager';
 
               // Get wiki structure
               const structureResult = await client.callTool('read_wiki_structure', {
