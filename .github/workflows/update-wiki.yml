@@ -33,7 +33,7 @@ jobs:
         run: |
           echo "📦 Installing MCP client and tools..."
           npm init -y
-          npm install @modelcontextprotocol/remote-client puppeteer
+          npm install @modelcontextprotocol/sdk puppeteer
           pip install requests beautifulsoup4 markdownify
 
       - name: Extract Content via DeepWiki MCP
@@ -41,17 +41,21 @@ jobs:
           mkdir -p docs-md diagrams wiki
 
           cat > extract-mcp.js << 'EOF'
-          const { RemoteClient } = require('@modelcontextprotocol/remote-client');
+          const { Client } = require('@modelcontextprotocol/sdk/client/index.js');
           const fs = require('fs');
 
           async function main() {
             try {
-              const client = new RemoteClient({
-                url: 'https://mcp.deepwiki.com/sse',
-                timeout: 60000
+              const client = new Client({
+                name: "wiki-extractor",
+                version: "1.0.0"
               });
 
-              await client.connect();
+              const transport = new (require('@modelcontextprotocol/sdk/client/streamableHttp.js')).StreamableHTTPClientTransport(
+                new URL('https://mcp.deepwiki.com/sse')
+              );
+
+              await client.connect(transport);
               console.log('Connected to DeepWiki MCP');
 
               const repoUrl = 'https://github.com/VforVitorio/F1_Strat_Manager';
