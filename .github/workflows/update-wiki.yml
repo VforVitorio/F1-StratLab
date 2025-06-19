@@ -64,7 +64,7 @@ jobs:
 
               // Get wiki structure
               const structureResult = await client.callTool('read_wiki_structure', {
-                repo: repo
+                repository: repo
               });
 
               const structure = JSON.parse(structureResult.content[0].text);
@@ -78,7 +78,7 @@ jobs:
                 
                 try {
                   const contentResult = await client.callTool('read_wiki_contents', {
-                    repo: repo,
+                    repository: repo,
                     page: page.title
                   });
 
