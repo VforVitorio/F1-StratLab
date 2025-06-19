@@ -61,103 +61,59 @@ jobs:
               const tools = await client.listTools();
               console.log('Available tools:', tools.tools.map(t => t.name));
 
-              // Use existing MCP connection instead of direct calls
+              // Use existing MCP connection correctly
               console.log('Using MCP connection for extraction...');
               
               try {
-                // Get session info from existing connection
-                console.log('Connected transport:', typeof transport);
-                
-                // Try to extract with minimal parameters
-                console.log('Attempting read_wiki_structure...');
+                // Try minimal parameters first - no mode
+                console.log('Attempting read_wiki_structure with minimal params...');
                 const structureResult = await client.callTool('read_wiki_structure', {
                   repo: 'VforVitorio/F1_Strat_Manager'
                 });
                 
-                console.log('SUCCESS! MCP call worked');
+                console.log('SUCCESS! Structure extracted');
                 const structure = JSON.parse(structureResult.content[0].text);
                 console.log('Found', structure.pages.length, 'pages');
                 
                 const allContent = {};
-                // Continue with normal extraction flow...
                 
-              } catch (error) {
-                console.log('MCP extraction failed, creating fallback content...');
-                
-                // Create mock content for testing the rest of the pipeline
-                const allContent = {
-                  'overview': {
-                    title: 'F1 Strategy Manager Overview',
-                    content: 'AI-powered Formula 1 race strategy analysis and management system.',
-                    order: 1
-                  },
-                  'installation': {
-                    title: 'Installation Guide', 
-                    content: 'Installation instructions for F1 Strategy Manager.',
-                    order: 2
+                // Extract each page
+                for (const page of structure.pages) {
+                  console.log('Extracting:', page.title);
+                  
+                  try {
+                    const contentResult = await client.callTool('read_wiki_contents', {
+                      repo: 'VforVitorio/F1_Strat_Manager',
+                      page: page.title
+                    });
+                    
+                    const cleanName = page.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+                    
+                    allContent[cleanName] = {
+                      title: page.title,
+                      content: contentResult.content[0].text,
+                      order: page.order || 999
+                    };
+                    
+                    console.log('Extracted:', cleanName);
+                  } catch (error) {
+                    console.log('Failed to extract:', page.title, error.message);
                   }
-                };
+                }
                 
-                // Save mock content to continue pipeline
+                // Save all content
                 for (const [name, data] of Object.entries(allContent)) {
                   fs.writeFileSync(`docs-md/${name}.md`, `# ${data.title}\n\n${data.content}`);
                 }
                 
-                console.log('Mock content created for pipeline testing');
-              }
-
-              // Get wiki structure
-              const structureResult = await client.callTool('read_wiki_structure', {
-                repo: repo,
-                mode: 'pages'  // ← PARÁMETRO OBLIGATORIO AÑADIDO
-              });
-
-              const structure = JSON.parse(structureResult.content[0].text);
-              console.log('Found', structure.pages.length, 'pages');
-
-              const allContent = {};
-
-              // Extract each page
-              for (const page of structure.pages) {
-                console.log('Extracting:', page.title);
+                console.log('Real MCP extraction completed with', Object.keys(allContent).length, 'pages');
                 
-                try {
-                  const contentResult = await client.callTool('read_wiki_contents', {
-                    repo: repo,
-                    page: page.title,
-                    mode: 'markdown'
-                  });
-
-                  const cleanName = page.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-                  
-                  allContent[cleanName] = {
-                    title: page.title,
-                    content: contentResult.content[0].text,
-                    order: page.order || 999
-                  };
-
-                  console.log('Extracted:', cleanName);
-                } catch (error) {
-                  console.log('Failed to extract:', page.title);
-                  allContent[page.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()] = {
-                    title: page.title,
-                    content: 'Content extraction failed.',
-                    order: 999
-                  };
-                }
+              } catch (error) {
+                console.log('MCP structure extraction failed:', error.message);
+                throw error; // Stop execution if we can't get real content
               }
 
-              // Save all content
-              for (const [name, data] of Object.entries(allContent)) {
-                fs.writeFileSync(`docs-md/${name}.md`, `# ${data.title}\n\n${data.content}`);
-              }
 
-              // Save metadata
-              fs.writeFileSync('docs-md/metadata.json', JSON.stringify({
-                extractedAt: new Date().toISOString(),
-                totalPages: Object.keys(allContent).length,
-                pages: Object.keys(allContent)
-              }, null, 2));
 
               await client.disconnect();
               console.log('MCP extraction completed');
