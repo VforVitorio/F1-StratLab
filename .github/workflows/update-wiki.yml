@@ -51,8 +51,8 @@ jobs:
                 version: "1.0.0"
               });
 
-              const { StreamableHTTPClientTransport } = require('@modelcontextprotocol/sdk/client/streamableHttp.js');
-              const transport = new StreamableHTTPClientTransport(new URL('https://mcp.deepwiki.com/mcp'));
+              const { SSEClientTransport } = require('@modelcontextprotocol/sdk/client/sse.js');
+              const transport = new SSEClientTransport(new URL('https://mcp.deepwiki.com/sse'));
               
               await client.connect(transport);
               console.log('Connected to DeepWiki MCP');
@@ -112,7 +112,6 @@ jobs:
                 console.log('MCP structure extraction failed:', error.message);
                 throw error; // Stop execution if we can't get real content
               }
-
 
 
               await client.disconnect();
