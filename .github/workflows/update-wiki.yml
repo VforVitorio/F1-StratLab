@@ -53,15 +53,12 @@ jobs:
 
               const { SSEClientTransport } = require('@modelcontextprotocol/sdk/client/sse.js');
               const transport = new SSEClientTransport(new URL('https://mcp.deepwiki.com/sse'));
-              // WORKAROUND: Fix SDK bug by preserving URL
-              const originalUrl = transport.url || new URL('https://mcp.deepwiki.com/sse');
-              transport.url = originalUrl;
-              // WORKAROUND: Restore URL after connection (SDK bug fix)
-              if (!transport.url) {
-                transport.url = new URL('https://mcp.deepwiki.com/sse');
-                console.log('Fixed transport URL bug');
-              }
 
+
+
+              // WORKAROUND: Restore URL after connection (SDK bug fix)
+              transport.url = new URL('https://mcp.deepwiki.com/sse');
+              console.log('Fixed transport URL bug - forced URL restoration');
               const repo = 'VforVitorio/F1_Strat_Manager';
               // Debug: List available tools
               const tools = await client.listTools();
