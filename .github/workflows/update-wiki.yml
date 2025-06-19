@@ -65,11 +65,31 @@ jobs:
               console.log('Using MCP connection for extraction...');
               
               try {
-                // Try minimal parameters first - no mode
-                console.log('Attempting read_wiki_structure with minimal params...');
-                const structureResult = await client.callTool('read_wiki_structure', {
-                  repoName: 'VforVitorio/F1_Strat_Manager'
-                });
+                // Capture the exact JSON-RPC being sent
+                console.log('Attempting read_wiki_structure with detailed logging...');
+                
+                // Override the transport's request method to log payloads
+                const originalRequest = transport.request;
+                transport.request = function(message) {
+                  console.log('=== OUTGOING JSON-RPC ===');
+                  console.log('Message:', JSON.stringify(message, null, 2));
+                  console.log('Headers:', this.headers || 'No custom headers');
+                  console.log('========================');
+                  return originalRequest.call(this, message);
+                };
+                
+                try {
+                  const structureResult = await client.callTool('read_wiki_structure', {
+                    repoName: 'VforVitorio/F1_Strat_Manager'
+                  });
+                  console.log('SUCCESS! Structure extracted');
+                } catch (error) {
+                  console.log('=== ERROR DETAILS ===');
+                  console.log('Error message:', error.message);
+                  console.log('Error stack:', error.stack);
+                  console.log('====================');
+                  throw error;
+                }
                 
                 console.log('SUCCESS! Structure extracted');
                 const structure = JSON.parse(structureResult.content[0].text);
