@@ -51,9 +51,8 @@ jobs:
                 version: "1.0.0"
               });
 
-              const transport = new (require('@modelcontextprotocol/sdk/client/streamableHttp.js')).StreamableHTTPClientTransport(
-                new URL('https://mcp.deepwiki.com/sse')
-              );
+              const { SSEClientTransport } = require('@modelcontextprotocol/sdk/client/sse.js');
+              const transport = new SSEClientTransport(new URL('https://mcp.deepwiki.com/sse'));
 
               await client.connect(transport);
               console.log('Connected to DeepWiki MCP');
