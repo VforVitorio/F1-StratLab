@@ -61,31 +61,43 @@ jobs:
               const tools = await client.listTools();
               console.log('Available tools:', tools.tools.map(t => t.name));
 
-            // Test different parameter formats
-            console.log('Testing different parameter formats...');
-            
-            // Format 1: Solo repo
-            try {
-              console.log('Trying format 1: solo repo...');
-              const result1 = await client.callTool('read_wiki_structure', {
-                repo: 'VforVitorio/F1_Strat_Manager'
-              });
-              console.log('Format 1 success!');
-            } catch (error) {
-              console.log('Format 1 failed:', error.message);
-            }
-            
-            // Format 2: URL completa
-            try {
-              console.log('Trying format 2: URL completa...');
-              const result2 = await client.callTool('read_wiki_structure', {
-                repository_url: 'https://github.com/VforVitorio/F1_Strat_Manager'
-              });
-              console.log('Format 2 success!');
-            } catch (error) {
-              console.log('Format 2 failed:', error.message);
-            }
+              // Direct JSON-RPC calls (bypass problematic SDK)
+              console.log('Using direct JSON-RPC...');
               
+              try {
+                // Call read_wiki_structure directly
+                const response = await fetch('https://mcp.deepwiki.com/mcp', {
+                  method: 'POST',
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "read_wiki_structure",
+                    "params": {
+                      "repo": "VforVitorio/F1_Strat_Manager",
+                      "mode": "pages"
+                    }
+                  })
+                });
+              
+                console.log('Direct call status:', response.status);
+                if (response.ok) {
+                  const result = await response.json();
+                  console.log('SUCCESS! Structure result:', JSON.stringify(result, null, 2));
+                  
+                  // If successful, continue with the normal flow
+                  const structure = result.result;
+                  console.log('Found', structure.pages?.length || 0, 'pages');
+                } else {
+                  const errorText = await response.text();
+                  console.log('Direct call failed:', errorText);
+                }
+              } catch (error) {
+                console.log('Direct call error:', error.message);
+              }
 
               // Get wiki structure
               const structureResult = await client.callTool('read_wiki_structure', {
