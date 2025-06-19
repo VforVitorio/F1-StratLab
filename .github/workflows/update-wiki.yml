@@ -63,10 +63,7 @@ jobs:
               const repoUrl = 'https://github.com/VforVitorio/F1_Strat_Manager';
 
               // Get wiki structure
-              const structureResult = await client.callTool('read_wiki_structure', {
-                owner: owner,
-                name: name
-              });
+              const structureResult = await client.callTool('read_wiki_structure', {});
 
               const structure = JSON.parse(structureResult.content[0].text);
               console.log('Found', structure.pages.length, 'pages');
@@ -79,8 +76,6 @@ jobs:
                 
                 try {
                   const contentResult = await client.callTool('read_wiki_contents', {
-                    owner: owner,
-                    name: name,
                     page: page.title
                   });
 
