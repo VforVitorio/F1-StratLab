@@ -65,29 +65,43 @@ jobs:
               console.log('Using MCP connection for extraction...');
               
               try {
-                // Capture the exact JSON-RPC being sent
-                console.log('Attempting read_wiki_structure with detailed logging...');
-                
-                // Override the transport's request method to log payloads
-                const originalRequest = transport.request;
-                transport.request = function(message) {
-                  console.log('=== OUTGOING JSON-RPC ===');
-                  console.log('Message:', JSON.stringify(message, null, 2));
-                  console.log('Headers:', this.headers || 'No custom headers');
-                  console.log('========================');
-                  return originalRequest.call(this, message);
-                };
+                // Deep debugging of SSE transport
+                console.log('Attempting read_wiki_structure with deep debugging...');
                 
                 try {
+                  // Log transport state before call
+                  console.log('Transport URL:', transport.url);
+                  console.log('Transport state:', {
+                    url: transport.url,
+                    connected: !!transport._eventSource,
+                    readyState: transport._eventSource?.readyState
+                  });
+                  
+                  // Make the call with minimal error handling to see raw error
+                  console.log('Making callTool request...');
                   const structureResult = await client.callTool('read_wiki_structure', {
                     repoName: 'VforVitorio/F1_Strat_Manager'
                   });
+                  
                   console.log('SUCCESS! Structure extracted');
+                  
                 } catch (error) {
-                  console.log('=== ERROR DETAILS ===');
+                  console.log('=== DEEP ERROR ANALYSIS ===');
+                  console.log('Error type:', error.constructor.name);
                   console.log('Error message:', error.message);
-                  console.log('Error stack:', error.stack);
-                  console.log('====================');
+                  console.log('Error properties:', Object.keys(error));
+                  console.log('Transport _eventSource state:', transport._eventSource?.readyState);
+                  console.log('Transport URL after error:', transport.url);
+                  
+                  // Try to get more details from the error
+                  if (error.response) {
+                    console.log('Response status:', error.response.status);
+                    console.log('Response headers:', error.response.headers);
+                  }
+                  
+                  console.log('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+                  console.log('============================');
+                  
                   throw error;
                 }
                 
