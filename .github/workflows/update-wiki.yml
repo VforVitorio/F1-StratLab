@@ -56,9 +56,6 @@ jobs:
 
 
 
-              // WORKAROUND: Restore URL after connection (SDK bug fix)
-              transport.url = new URL('https://mcp.deepwiki.com/sse');
-              console.log('Fixed transport URL bug - forced URL restoration');
               const repo = 'VforVitorio/F1_Strat_Manager';
               // Debug: List available tools
               const tools = await client.listTools();
@@ -82,8 +79,9 @@ jobs:
                   
                   // Make the call with minimal error handling to see raw error
                   console.log('Making callTool request...');
+                  // Test with known working repository first
                   const structureResult = await client.callTool('read_wiki_structure', {
-                    repoName: 'VforVitorio/F1_Strat_Manager'
+                    repoName: 'microsoft/vscode'
                   });
                   
                   console.log('SUCCESS! Structure extracted');
