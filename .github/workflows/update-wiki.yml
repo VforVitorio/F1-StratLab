@@ -61,29 +61,30 @@ jobs:
               const tools = await client.listTools();
               console.log('Available tools:', tools.tools.map(t => t.name));
 
-             // Test direct JSON-RPC
-              console.log('Testing direct JSON-RPC...');
-              try {
-                const directResult = await fetch('https://mcp.deepwiki.com/sse', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "read_wiki_structure",
-                    "params": {
-                      "repo": "VforVitorio/F1_Strat_Manager",
-                      "mode": "pages"
-                    }
-                  })
-                });
-                
-                console.log('Direct call status:', directResult.status);
-                const responseText = await directResult.text();
-                console.log('Direct call response:', responseText.substring(0, 200));
-              } catch (error) {
-                console.log('Direct call failed:', error.message);
-              }
+            // Test different parameter formats
+            console.log('Testing different parameter formats...');
+            
+            // Format 1: Solo repo
+            try {
+              console.log('Trying format 1: solo repo...');
+              const result1 = await client.callTool('read_wiki_structure', {
+                repo: 'VforVitorio/F1_Strat_Manager'
+              });
+              console.log('Format 1 success!');
+            } catch (error) {
+              console.log('Format 1 failed:', error.message);
+            }
+            
+            // Format 2: URL completa
+            try {
+              console.log('Trying format 2: URL completa...');
+              const result2 = await client.callTool('read_wiki_structure', {
+                repository_url: 'https://github.com/VforVitorio/F1_Strat_Manager'
+              });
+              console.log('Format 2 success!');
+            } catch (error) {
+              console.log('Format 2 failed:', error.message);
+            }
               
 
               // Get wiki structure
