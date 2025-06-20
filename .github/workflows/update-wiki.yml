@@ -1,4 +1,4 @@
-name: Update Wiki from DeepWiki (Official Server with Puppeteer)
+name: Update Wiki from DeepWiki (Optimized Extraction)
 
 on:
   push:
@@ -29,16 +29,20 @@ jobs:
           npm init -y
           npm install puppeteer
           echo "✅ Puppeteer installed"
-      - name: Get Real Content with Puppeteer (JavaScript Execution)
+
+      - name: Get Real Content with Puppeteer (Optimized DeepWiki Extraction)
         run: |
           mkdir -p docs-md
-          echo "🚀 Extracting real content from DeepWiki using browser automation..."
-          echo "📡 Target URL: https://deepwiki.com/VforVitorio/F1_Strat_Manager"          # Create Puppeteer script to extract content
+          echo "🚀 Extracting content from DeepWiki with optimized selectors..."
+          echo "📡 Target URL: https://deepwiki.com/VforVitorio/F1_Strat_Manager"
+
+          # Create optimized Puppeteer script for DeepWiki
           cat > extract-deepwiki-content.js << 'EOFPUPPETEER'
           const puppeteer = require('puppeteer');
           const fs = require('fs');
+
           (async () => {
-            console.log('🔧 Launching browser for complete DeepWiki extraction...');
+            console.log('🔧 Launching optimized browser for DeepWiki extraction...');
             
             const browser = await puppeteer.launch({
               headless: true,
@@ -50,77 +54,159 @@ jobs:
                 '--no-first-run',
                 '--no-zygote',
                 '--single-process',
-                '--disable-gpu'
+                '--disable-gpu',
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor'
               ]
             });
+            
             try {
               const page = await browser.newPage();
               await page.setViewport({ width: 1280, height: 720 });
-              await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+              
+              // Optimized headers for DeepWiki
+              await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+              await page.setExtraHTTPHeaders({
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1'
+              });
+              
               const baseUrl = 'https://deepwiki.com/VforVitorio/F1_Strat_Manager';
-              console.log(`🌐 Starting complete extraction from: ${baseUrl}`);
-              // Step 1: Load main page and discover all subpages
-              console.log('📄 Loading main page to discover all sections...');
-              await page.goto(baseUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-              await Promise.race([
-                page.waitForFunction(() => {
+              console.log(`🌐 Starting optimized extraction from: ${baseUrl}`);
+              
+              // Step 1: Load main page with intelligent detection
+              console.log('📄 Loading main page with optimized selectors...');
+              await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+              
+              // Optimized content detection for DeepWiki
+              try {
+                await page.waitForSelector('[data-wiki-content], .documentation-content, .wiki-content, main .content:not(.sidebar):not(.navigation)', { 
+                  visible: true, 
+                  timeout: 15000 
+                });
+                
+                await page.waitForFunction(() => {
+                  const loadingElements = document.querySelectorAll('[data-loading="true"], .loading, .spinner, .loading-indicator');
+                  const text = document.body ? document.body.textContent || document.body.innerText : '';
+                  return loadingElements.length === 0 && !text.includes('Loading...') && text.length > 500;
+                }, { timeout: 15000 });
+                
+              } catch (e) {
+                console.log('⚠️ Advanced selectors failed, falling back to basic detection...');
+                await page.waitForFunction(() => {
                   const text = document.body ? document.body.textContent || document.body.innerText : '';
                   return !text.includes('Loading...') && text.length > 500;
-                }, { timeout: 30000 }),
-                page.waitForSelector('a[href*="/VforVitorio/F1_Strat_Manager/"]', { timeout: 30000 })
-              ]);
-              await new Promise(resolve => setTimeout(resolve, 3000));
-              // Step 2: Discover all available pages
-              console.log('🔍 Discovering all available pages...');
+                }, { timeout: 20000 });
+              }
+              
+              // Short wait after intelligent detection
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              
+              // Step 2: Discover pages with optimized selector
+              console.log('🔍 Discovering pages with enhanced navigation selectors...');
               const allPages = await page.evaluate((baseUrl) => {
-                const links = Array.from(document.querySelectorAll('a[href*="/VforVitorio/F1_Strat_Manager/"]'));
-                const pageSet = new Set();
+                // Optimized selectors for DeepWiki navigation
+                const linkSelectors = [
+                  'nav a[href*="/VforVitorio/F1_Strat_Manager/"]:not([href*="#"]):not([href*="edit"]):not([href*="raw"])',
+                  'a[href*="/VforVitorio/F1_Strat_Manager/"]',
+                  '.navigation a[href*="/VforVitorio/F1_Strat_Manager/"]',
+                  '.sidebar a[href*="/VforVitorio/F1_Strat_Manager/"]'
+                ];
                 
-                // Add main page
+                const pageSet = new Set();
                 pageSet.add({ url: baseUrl, name: 'main' });
                 
-                // Extract unique page paths
-                links.forEach(link => {
-                  const href = link.getAttribute('href');
-                  if (href && href.includes('/VforVitorio/F1_Strat_Manager/')) {
-                    const fullUrl = href.startsWith('http') ? href : `https://deepwiki.com${href}`;
-                    const path = href.split('/VforVitorio/F1_Strat_Manager/')[1] || '';
-                    if (path && !path.includes('#') && !path.includes('?') && path.length > 0) {
-                      const pageName = path.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-                      pageSet.add({ url: fullUrl, name: pageName, path: path });
+                for (const selector of linkSelectors) {
+                  const links = Array.from(document.querySelectorAll(selector));
+                  links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && href.includes('/VforVitorio/F1_Strat_Manager/')) {
+                      const fullUrl = href.startsWith('http') ? href : `https://deepwiki.com${href}`;
+                      const path = href.split('/VforVitorio/F1_Strat_Manager/')[1] || '';
+                      if (path && !path.includes('#') && !path.includes('?') && path.length > 0) {
+                        const pageName = path.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+                        pageSet.add({ url: fullUrl, name: pageName, path: path });
+                      }
                     }
-                  }
-                });
+                  });
+                }
+                
                 return Array.from(pageSet);
               }, baseUrl);
-              console.log(`� Found ${allPages.length} pages to extract:`);
-              allPages.forEach(page => console.log(`   - ${page.name}: ${page.url}`));
-              // Step 3: Extract content from each page
+              
+              console.log(`📊 Found ${allPages.length} pages to extract:`);
+              allPages.forEach(pageInfo => console.log(`   - ${pageInfo.name}: ${pageInfo.url}`));
+              
+              // Step 3: Extract content with optimized rate limiting
               const allContent = {};
               let totalCharacters = 0;
-              for (const pageInfo of allPages) {
-                console.log(`📄 Extracting content from: ${pageInfo.name}`);
+              const extractionStartTime = Date.now();
+              
+              for (let i = 0; i < allPages.length; i++) {
+                const pageInfo = allPages[i];
+                console.log(`📄 [${i+1}/${allPages.length}] Extracting: ${pageInfo.name}`);
                 
                 try {
-                  await page.goto(pageInfo.url, { waitUntil: 'networkidle2', timeout: 60000 });
+                  // Optimized rate limiting: 1 request per 4 seconds
+                  if (i > 0) {
+                    const delay = 4000;
+                    console.log(`   ⏱️ Rate limiting delay: ${delay}ms`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                  }
                   
-                  await Promise.race([
-                    page.waitForFunction(() => {
+                  await page.goto(pageInfo.url, { waitUntil: 'domcontentloaded', timeout: 25000 });
+                  
+                  // Optimized content detection
+                  try {
+                    await page.waitForSelector('[data-wiki-content], .documentation-content, .wiki-content, main .content:not(.sidebar):not(.navigation)', { 
+                      visible: true, 
+                      timeout: 12000 
+                    });
+                    
+                    await page.waitForFunction(() => {
+                      const loadingElements = document.querySelectorAll('[data-loading="true"], .loading, .spinner');
                       const text = document.body ? document.body.textContent || document.body.innerText : '';
-                      return !text.includes('Loading...') && text.length > 500;
-                    }, { timeout: 30000 }),
-                    page.waitForSelector('article, .content, main', { timeout: 30000 })
-                  ]);
-                  await new Promise(resolve => setTimeout(resolve, 2000));
+                      return loadingElements.length === 0 && !text.includes('Loading...') && text.length > 300;
+                    }, { timeout: 10000 });
+                    
+                  } catch (e) {
+                    console.log(`   ⚠️ Advanced detection failed for ${pageInfo.name}, using fallback...`);
+                    await page.waitForFunction(() => {
+                      const text = document.body ? document.body.textContent || document.body.innerText : '';
+                      return !text.includes('Loading...') && text.length > 300;
+                    }, { timeout: 15000 });
+                  }
+                  
+                  await new Promise(resolve => setTimeout(resolve, 1500));
+                  
                   const extractedData = await page.evaluate(() => {
-                    const selectors = ['main', '.content', '.documentation', '.markdown-body', '[data-content]', 'article'];
+                    // Optimized selectors for DeepWiki content extraction
+                    const contentSelectors = [
+                      '[data-wiki-content] .prose',
+                      '.documentation-content .markdown-body',
+                      'main .content:not(.sidebar):not(.navigation)',
+                      '.wiki-content',
+                      '.repo-content',
+                      'main',
+                      '.content',
+                      '.documentation',
+                      '.markdown-body',
+                      '[data-content]',
+                      'article'
+                    ];
+                    
                     let content = '';
                     let title = document.title || '';
                     
-                    for (const selector of selectors) {
+                    for (const selector of contentSelectors) {
                       const element = document.querySelector(selector);
                       if (element && element.innerText && element.innerText.length > content.length) {
                         content = element.innerText;
+                        break; // Use first good match with optimized selectors
                       }
                     }
                     
@@ -128,19 +214,31 @@ jobs:
                       content = document.body ? document.body.innerText : '';
                     }
                     
+                    // Enhanced content cleaning for DeepWiki
                     content = content
                       .replace(/Loading\.\.\./g, '')
+                      .replace(/\[AI GENERATED\]/gi, '')
+                      .replace(/Generated documentation for:/gi, '')
+                      .replace(/\*\*Analysis by DeepWiki AI\*\*/gi, '')
                       .replace(/^\s+|\s+$/g, '')
                       .replace(/\n{3,}/g, '\n\n');
                     
                     return { title, content, length: content.length };
                   });
+                  
+                  // Content validation
+                  if (extractedData.length < 100 || extractedData.content.includes('Loading...')) {
+                    console.log(`   ⚠️ Content quality check failed for ${pageInfo.name} (${extractedData.length} chars)`);
+                    throw new Error('Insufficient content extracted');
+                  }
+                  
                   allContent[pageInfo.name] = {
                     title: extractedData.title,
                     content: extractedData.content,
                     url: pageInfo.url,
                     length: extractedData.length
                   };
+                  
                   totalCharacters += extractedData.length;
                   console.log(`   ✅ Extracted ${extractedData.length} characters from ${pageInfo.name}`);
                   
@@ -154,7 +252,11 @@ jobs:
                   };
                 }
               }
-              // Step 4: Combine all content into structured markdown
+              
+              const extractionTime = ((Date.now() - extractionStartTime) / 1000).toFixed(2);
+              console.log(`⏱️ Total extraction time: ${extractionTime} seconds`);
+              
+              // Step 4: Combine content (unchanged from original)
               console.log('📝 Combining all extracted content...');
               
               let combinedMarkdown = '# F1 Strategy Manager - Complete Documentation\n\n';
@@ -184,44 +286,61 @@ jobs:
                   combinedMarkdown += pageData.content + '\n\n---\n\n';
                 }
               });
+              
               // Save individual files
               Object.entries(allContent).forEach(([pageName, pageData]) => {
                 const filename = `docs-md/${pageName}.md`;
                 const content = `# ${pageData.title.replace(' | DeepWiki', '')}\n\n${pageData.content}`;
                 fs.writeFileSync(filename, content);
               });
+              
               // Save combined file
               fs.writeFileSync('docs-md/deepwiki-raw.md', combinedMarkdown);
               
-              // Save extraction metadata
+              // Enhanced extraction metadata
               const metadata = {
                 extractedAt: new Date().toISOString(),
                 totalPages: allPages.length,
                 totalCharacters: totalCharacters,
                 pagesExtracted: Object.keys(allContent).length,
-                method: 'puppeteer-multi-page-extraction',
-                pages: Object.keys(allContent)
+                extractionTimeSeconds: parseFloat(extractionTime),
+                method: 'puppeteer-optimized-deepwiki-extraction',
+                optimizations: [
+                  'Enhanced CSS selectors for DeepWiki',
+                  'Intelligent loading detection',
+                  'Optimized rate limiting (4s intervals)',
+                  'Content quality validation',
+                  'DeepWiki-specific header filtering'
+                ],
+                pages: Object.keys(allContent),
+                averagePageSize: Math.round(totalCharacters / Object.keys(allContent).length),
+                successRate: `${Math.round((Object.keys(allContent).filter(key => allContent[key].length > 0).length / allPages.length) * 100)}%`
               };
               
               fs.writeFileSync('docs-md/extraction-metadata.json', JSON.stringify(metadata, null, 2));
-              console.log('✅ Complete extraction finished!');
-              console.log(`📊 Final stats:`);
+              
+              console.log('✅ Optimized extraction finished!');
+              console.log(`📊 Performance stats:`);
+              console.log(`   - Total extraction time: ${extractionTime}s`);
+              console.log(`   - Average time per page: ${(parseFloat(extractionTime) / allPages.length).toFixed(2)}s`);
               console.log(`   - Total pages processed: ${allPages.length}`);
               console.log(`   - Total characters extracted: ${totalCharacters}`);
-              console.log(`   - Individual files created: ${Object.keys(allContent).length}`);
+              console.log(`   - Success rate: ${metadata.successRate}`);
+              console.log(`   - Average page size: ${metadata.averagePageSize} chars`);
               console.log('📁 Files created:');
               console.log('   - docs-md/deepwiki-raw.md (combined)');
               console.log('   - docs-md/extraction-metadata.json');
               Object.keys(allContent).forEach(name => console.log(`   - docs-md/${name}.md`));
+              
             } catch (error) {
-              console.error('❌ Error during extraction:', error.message);
+              console.error('❌ Error during optimized extraction:', error.message);
               
               const fallbackContent = `# F1 Strategy Manager
-              > Complete extraction failed. Please visit the repository directly.
+              > Optimized extraction failed. Please visit the repository directly.
               **Repository**: [VforVitorio/F1_Strat_Manager](https://github.com/VforVitorio/F1_Strat_Manager)  
               **DeepWiki**: [https://deepwiki.com/VforVitorio/F1_Strat_Manager](https://deepwiki.com/VforVitorio/F1_Strat_Manager)
               ## Status
-              Multi-page content extraction encountered an issue.
+              Optimized multi-page content extraction encountered an issue.
               **Error**: ${error.message}
               `;
               fs.writeFileSync('docs-md/deepwiki-raw.md', fallbackContent);
@@ -232,33 +351,42 @@ jobs:
             }
           })();
           EOFPUPPETEER
-          # Execute the Puppeteer script
-          echo "🚀 Running content extraction..."
+
+          # Execute the optimized Puppeteer script
+          echo "🚀 Running optimized content extraction..."
           node extract-deepwiki-content.js
+
           # Verify extraction
           if [ -f "docs-md/deepwiki-raw.md" ]; then
-            echo "✅ Content extraction completed"
+            echo "✅ Optimized content extraction completed"
             echo "📊 Extracted content stats:"
             wc -l docs-md/deepwiki-raw.md
             wc -c docs-md/deepwiki-raw.md
             
             echo "📄 First 10 lines of extracted content:"
             head -10 docs-md/deepwiki-raw.md
+            
+            if [ -f "docs-md/extraction-metadata.json" ]; then
+              echo "📈 Extraction performance metrics:"
+              cat docs-md/extraction-metadata.json | grep -E '"extractionTimeSeconds"|"successRate"|"averagePageSize"'
+            fi
           else
-            echo "❌ Content extraction failed"
+            echo "❌ Optimized content extraction failed"
             exit 1
           fi
+
       - name: Clean and Process Extracted Content
         run: |
           echo "🧹 Cleaning and formatting extracted content..."
-          # Process the extracted content with Python
+          # Process the extracted content with Python (PRESERVED - unchanged from original)
           python3 << 'EOFPYTHON'
           import re
           import os
+
           def clean_deepwiki_content(content):
               """Clean and format DeepWiki content for GitHub Wiki"""
               
-              # Remove common DeepWiki UI elements and artifacts
+              # Remove common DeepWiki UI elements and artifacts (PRESERVED)
               content = re.sub(r'.*?DeepWiki.*?\n', '', content, flags=re.IGNORECASE)
               content = re.sub(r'.*?Powered by.*?\n', '', content, flags=re.IGNORECASE)
               content = re.sub(r'.*?Share.*?\n', '', content, flags=re.IGNORECASE)
@@ -266,29 +394,35 @@ jobs:
               content = re.sub(r'.*?Try DeepWiki.*?\n', '', content, flags=re.IGNORECASE)
               content = re.sub(r'.*?Which repo would you like to understand.*?\n', '', content, flags=re.IGNORECASE)
               
-              # Remove navigation elements
+              # ADDED: New DeepWiki-specific patterns from technical research
+              content = re.sub(r'.*?\[AI GENERATED\].*?\n', '', content, flags=re.IGNORECASE)
+              content = re.sub(r'.*?Generated documentation for:.*?\n', '', content, flags=re.IGNORECASE)
+              content = re.sub(r'.*?\*\*Analysis by DeepWiki AI\*\*.*?\n', '', content, flags=re.IGNORECASE)
+              
+              # Remove navigation elements (PRESERVED)
               content = re.sub(r'- Overview\n- System Architecture.*?- Getting Started\n', '', content, flags=re.DOTALL)
               content = re.sub(r'Menu\n', '', content)
               content = re.sub(r'### On this page.*?- Getting Started\n', '', content, flags=re.DOTALL)
               
-              # Remove source file references
+              # Remove source file references (PRESERVED)
               content = re.sub(r'Relevant source files.*?\n\n', '', content, flags=re.DOTALL)
               content = re.sub(r'Sources:.*?\n', '', content, flags=re.MULTILINE)
               
-              # Clean up multiple consecutive newlines
+              # Clean up multiple consecutive newlines (PRESERVED)
               content = re.sub(r'\n{3,}', '\n\n', content)
               
-              # Remove empty sections
+              # Remove empty sections (PRESERVED)
               content = re.sub(r'\n## \n', '', content)
               content = re.sub(r'\n### \n', '', content)
               
-              # Fix malformed headers
+              # Fix malformed headers (PRESERVED)
               content = re.sub(r'^([#]+)\s*$', '', content, flags=re.MULTILINE)
               
-              # Clean up beginning of content
+              # Clean up beginning of content (PRESERVED)
               content = content.strip()
               
               return content
+
           # Read the raw extracted content
           try:
               with open('docs-md/deepwiki-raw.md', 'r', encoding='utf-8') as f:
@@ -324,6 +458,7 @@ jobs:
               print("📝 Created fallback content")
           EOFPYTHON
           echo "✅ Content processing completed"
+
       - name: Checkout Wiki Repository
         uses: actions/checkout@v3
         with:
@@ -334,35 +469,36 @@ jobs:
       - name: Generate Multiple Wiki Pages
         run: |
           echo "📝 Generating multiple organized wiki pages..."
-          # Create organized wiki structure using Python
+          # Create organized wiki structure using Python (PRESERVED - unchanged from original)
           python3 << 'EOFWIKIGEN'
           import os
           import re
+
           def clean_content_advanced(content):
-              """Advanced cleaning + diagram filtering"""
+              """Advanced cleaning + diagram filtering (PRESERVED)"""
               
-              # 1. Remove complete DeepWiki header block
+              # 1. Remove complete DeepWiki header block (PRESERVED)
               content = re.sub(r'^.*?\|.*?VforVitorio/F1_Strat_Manager.*?DeepWiki.*?Try DeepWiki.*?Last indexed.*?Developer Guide', '', content, flags=re.DOTALL)
               
-              # 2. Remove repetitive navigation
+              # 2. Remove repetitive navigation (PRESERVED)
               content = re.sub(r'Overview System Architecture.*?Developer Guide', '', content, flags=re.DOTALL)
               
-              # 3. Fix page titles (remove | VforVitorio/F1_Strat_Manager)
+              # 3. Fix page titles (remove | VforVitorio/F1_Strat_Manager) (PRESERVED)
               content = re.sub(r'^([^|\n]+)\s*\|\s*VforVitorio/F1_Strat_Manager.*?\n', r'# \1\n\n', content, flags=re.MULTILINE)
               
-              # 4. Clean malformed headers
+              # 4. Clean malformed headers (PRESERVED)
               content = re.sub(r'^([^#\n]*)\s*\|\s*\{#[^}]+\}', r'# \1', content, flags=re.MULTILINE)
               
-              # 5. Remove footer clutter
+              # 5. Remove footer clutter (PRESERVED)
               content = re.sub(r'This wiki is featured.*?Deep Research.*?$', '', content, flags=re.DOTALL)
               
-              # 6. Fix section headers (ensure proper markdown)
+              # 6. Fix section headers (ensure proper markdown) (PRESERVED)
               content = re.sub(r'\n([A-Z][^.\n]*)\n(?=[A-Z])', r'\n## \1\n\n', content)
               
-              # 7. Clean multiple newlines
+              # 7. Clean multiple newlines (PRESERVED)
               content = re.sub(r'\n{3,}', '\n\n', content)
               
-              # 8. Filter diagram content (replace with references)
+              # 8. Filter diagram content (replace with references) (PRESERVED)
               diagram_patterns = [
                   r'Strategic Output.*?F1CompleteStrategyEngine.*?Fact Base.*?Data Transformation.*?ML Predictions.*?Rule Evaluation.*?Algorithm.*?resolve.*?conflicts.*?StrategyRecommendation',
                   r'tire_predictions.*?DataFrame.*?lap_predictions.*?DataFrame.*?gap_data.*?DataFrame.*?transform_.*?Fact.*?TelemetryFact.*?DegradationFact',
@@ -378,14 +514,15 @@ jobs:
                       flags=re.DOTALL | re.IGNORECASE
                   )
               
-              # 9. Clean up final formatting
+              # 9. Clean up final formatting (PRESERVED)
               content = re.sub(r'\n{3,}', '\n\n', content)
               
               return content.strip()
+
           def create_dynamic_wiki_structure(all_content):
-              """Create wiki structure based on discovered content keys"""
+              """Create wiki structure based on discovered content keys (PRESERVED)"""
               
-              # Initialize base structure
+              # Initialize base structure (PRESERVED)
               wiki_structure = {
                   'Home.md': {'files': [], 'title': '🏎️ F1 Strategy Manager', 'description': 'AI-Powered Formula 1 Race Strategy Analysis and Decision Support System'},
                   '1-Overview.md': {'files': [], 'title': '🔍 Overview & Architecture', 'description': 'Project overview, system architecture, and installation procedures'},
@@ -398,7 +535,7 @@ jobs:
               
               print(f"🔍 Auto-organizing {len(all_content)} content files...")
               
-              # Automatically organize based on numbering and patterns
+              # Automatically organize based on numbering and patterns (PRESERVED)
               for page_name in sorted(all_content.keys()):
                   print(f"  📄 Categorizing: {page_name}")
                   
@@ -424,11 +561,11 @@ jobs:
                       wiki_structure['6-Developer.md']['files'].append(page_name)
                       print(f"    → 6-Developer.md")
                   else:
-                      # Default fallback - add to Overview if no clear category
+                      # Default fallback - add to Overview if no clear category (PRESERVED)
                       wiki_structure['1-Overview.md']['files'].append(page_name)
                       print(f"    → 1-Overview.md (fallback)")
               
-              # Print organization summary
+              # Print organization summary (PRESERVED)
               print(f"\n📊 Auto-organization summary:")
               for wiki_page, info in wiki_structure.items():
                   if info['files']:
@@ -437,7 +574,8 @@ jobs:
                           print(f"    - {file}")
               
               return wiki_structure
-          # Read all available content files for auto-organization
+
+          # Read all available content files for auto-organization (PRESERVED)
           print("🔍 Reading available content files...")
           all_content = {}
           if os.path.exists('docs-md'):
@@ -458,8 +596,11 @@ jobs:
                       except Exception as e:
                           print(f"  ⚠️ Failed to load {filename}: {e}")
           print(f"📊 Total content files loaded: {len(all_content)}")
-          # Create dynamic wiki structure based on discovered content
-          wiki_pages = create_dynamic_wiki_structure(all_content)          # Generate each wiki page using dynamic structure
+
+          # Create dynamic wiki structure based on discovered content (PRESERVED)
+          wiki_pages = create_dynamic_wiki_structure(all_content)
+
+          # Generate each wiki page using dynamic structure (PRESERVED)
           for page_name, page_info in wiki_pages.items():
               print(f"📄 Creating {page_name}...")
               
@@ -467,7 +608,7 @@ jobs:
               page_content += f"{page_info['description']}\n\n"
               
               if page_name == 'Home.md':
-                  # Special handling for main Home - add navigation
+                  # Special handling for main Home - add navigation (PRESERVED)
                   page_content += "## 📚 Documentation Pages\n\n"
                   for other_page, other_info in wiki_pages.items():
                       if other_page != 'Home.md' and other_info['files']:  # Only show pages with content
@@ -476,18 +617,18 @@ jobs:
                   
                   page_content += "---\n\n"
               
-              # Add content from individual files (now using dynamic file names)
+              # Add content from individual files (now using dynamic file names) (PRESERVED)
               files_added = 0
               for file_key in page_info['files']:
                   if file_key in all_content:
                       print(f"  📎 Adding content from {file_key}")
                       file_content = all_content[file_key]['content']
                       
-                      # Clean the content
+                      # Clean the content (PRESERVED)
                       cleaned_content = clean_content_advanced(file_content)
                       
                       if cleaned_content.strip():
-                          # Remove the first # header if it exists (we'll add our own section header)
+                          # Remove the first # header if it exists (we'll add our own section header) (PRESERVED)
                           lines = cleaned_content.split('\n')
                           if lines[0].startswith('# '):
                               section_title = lines[0][2:].strip()
@@ -496,7 +637,7 @@ jobs:
                               page_content += f"## {section_title}\n\n"
                               page_content += content_without_header + "\n\n---\n\n"
                           else:
-                              # Generate section title from filename
+                              # Generate section title from filename (PRESERVED)
                               section_title = file_key.replace('-', ' ').replace('_', ' ').title()
                               page_content += f"## {section_title}\n\n"
                               page_content += cleaned_content + "\n\n---\n\n"
@@ -509,28 +650,31 @@ jobs:
                   print(f"  ℹ️ No content files found for {page_name} - skipping page generation")
                   continue
               
-              # Add footer
+              # Add footer (PRESERVED)
               if page_name == 'Home.md':
                   page_content += "\n## 🔗 Links & Resources\n\n"
                   page_content += "- **[GitHub Repository](https://github.com/VforVitorio/F1_Strat_Manager)**\n"
                   page_content += "- **[DeepWiki Documentation](https://deepwiki.com/VforVitorio/F1_Strat_Manager)**\n\n"
               
-              page_content += f"\n*📝 This documentation is automatically generated using browser automation.*  \n"
+              # Enhanced footer with optimization info
+              page_content += f"\n*📝 This documentation is automatically generated using optimized browser automation.*  \n"
               page_content += f"*🕒 Last updated: $(date '+%Y-%m-%d %H:%M:%S UTC')*\n"
-              page_content += f"*📊 Auto-organized from {files_added} content files*\n"
+              page_content += f"*📊 Auto-organized from {files_added} content files using enhanced DeepWiki extraction*\n"
               
-              # Write the page
+              # Write the page (PRESERVED)
               with open(f"wiki/{page_name}", 'w', encoding='utf-8') as f:
                   f.write(page_content)
               
               print(f"✅ Created {page_name} ({len(page_content)} characters, {files_added} files)")
-          # Count total pages generated
+
+          # Count total pages generated (PRESERVED)
           pages_generated = len([f for f in os.listdir('wiki') if f.endswith('.md')])
-          print(f"\n🎉 Generated {pages_generated} wiki pages successfully using auto-organization!")
+          print(f"\n🎉 Generated {pages_generated} wiki pages successfully using optimized auto-organization!")
           EOFWIKIGEN
           echo "✅ Wiki pages generation completed"
           echo "📁 Generated wiki files:"
           ls -la wiki/
+
       - name: Commit & Push Wiki Changes
         working-directory: wiki
         run: |
@@ -542,7 +686,7 @@ jobs:
             echo "ℹ️ No changes to commit - documentation is up to date"
           else
             echo "📝 Committing documentation updates..."
-            git commit -m "🔄 Update Wiki with Real DeepWiki Content (Puppeteer) - $(date '+%Y-%m-%d %H:%M')"
+            git commit -m "🔄 Update Wiki with Optimized DeepWiki Content (Enhanced Puppeteer) - $(date '+%Y-%m-%d %H:%M')"
             
             echo "🚀 Pushing changes to wiki..."
             if git push; then
@@ -560,11 +704,12 @@ jobs:
               exit 1
             fi
           fi
+
       - name: Upload Documentation Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: deepwiki-documentation-puppeteer-${{ github.run_number }}-${{ github.run_attempt }}
+          name: deepwiki-documentation-optimized-${{ github.run_number }}-${{ github.run_attempt }}
           path: |
             docs-md/
             wiki/Home.md
@@ -574,12 +719,19 @@ jobs:
       - name: Workflow Summary
         if: always()
         run: |
-          echo "## 📋 Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 📋 Optimized Workflow Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🎯 Documentation Source" >> $GITHUB_STEP_SUMMARY
           echo "- **Repository**: VforVitorio/F1_Strat_Manager" >> $GITHUB_STEP_SUMMARY
           echo "- **DeepWiki URL**: https://deepwiki.com/VforVitorio/F1_Strat_Manager" >> $GITHUB_STEP_SUMMARY
-          echo "- **Extraction Method**: Puppeteer with JavaScript execution" >> $GITHUB_STEP_SUMMARY
+          echo "- **Extraction Method**: Optimized Puppeteer with DeepWiki-specific enhancements" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ⚡ Performance Optimizations" >> $GITHUB_STEP_SUMMARY
+          echo "- **Enhanced CSS Selectors**: DeepWiki-specific content extraction" >> $GITHUB_STEP_SUMMARY
+          echo "- **Intelligent Loading Detection**: Reduced timeouts from 60s to 15-30s" >> $GITHUB_STEP_SUMMARY
+          echo "- **Optimized Rate Limiting**: 4-second intervals between requests" >> $GITHUB_STEP_SUMMARY
+          echo "- **Content Quality Validation**: Automatic validation of extracted content" >> $GITHUB_STEP_SUMMARY
+          echo "- **Additional AI-Generated Content Filtering**: Enhanced DeepWiki cleanup" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Generated Content" >> $GITHUB_STEP_SUMMARY
           if [ -f "wiki/Home.md" ]; then
@@ -592,8 +744,14 @@ jobs:
             echo "- **Main Content**: $CONTENT_SIZE bytes" >> $GITHUB_STEP_SUMMARY
           fi
           if [ -f "docs-md/extraction-metadata.json" ]; then
-            echo "- **Extraction Metadata**: Available" >> $GITHUB_STEP_SUMMARY
+            echo "- **Enhanced Extraction Metadata**: Available with performance metrics" >> $GITHUB_STEP_SUMMARY
+            if command -v jq &> /dev/null; then
+              EXTRACTION_TIME=$(cat docs-md/extraction-metadata.json | jq -r '.extractionTimeSeconds // "N/A"')
+              SUCCESS_RATE=$(cat docs-md/extraction-metadata.json | jq -r '.successRate // "N/A"')
+              echo "- **Extraction Time**: ${EXTRACTION_TIME}s" >> $GITHUB_STEP_SUMMARY
+              echo "- **Success Rate**: $SUCCESS_RATE" >> $GITHUB_STEP_SUMMARY
+            fi
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ Status" >> $GITHUB_STEP_SUMMARY
-          echo "Documentation successfully generated using Puppeteer browser automation!" >> $GITHUB_STEP_SUMMARY
+          echo "Documentation successfully generated using optimized Puppeteer automation with DeepWiki-specific enhancements!" >> $GITHUB_STEP_SUMMARY
