@@ -183,7 +183,7 @@ jobs:
                   
                   await new Promise(resolve => setTimeout(resolve, 1500));
                   
-                  const extractedData = await page.evaluate(() => {
+                  const extractedData = await page.evaluate((currentPageName) => {
                     // Optimized selectors for DeepWiki content extraction
                     const contentSelectors = [
                       '[data-wiki-content] .prose',
@@ -199,23 +199,180 @@ jobs:
                       'article'
                     ];
                     
+                    let contentElement = null;
                     let content = '';
                     let title = document.title || '';
                     
+                    // Find the best content element
                     for (const selector of contentSelectors) {
                       const element = document.querySelector(selector);
                       if (element && element.innerText && element.innerText.length > content.length) {
+                        contentElement = element;
                         content = element.innerText;
                         break; // Use first good match with optimized selectors
                       }
                     }
                     
-                    if (!content || content.length < 100) {
-                      content = document.body ? document.body.innerText : '';
+                    if (!contentElement && document.body) {
+                      contentElement = document.body;
+                      content = document.body.innerText || '';
+                    }
+                    
+                    // === ENHANCED: CAPTURE LINKS AND DIAGRAMS ===
+                    let links = [];
+                    let diagrams = [];
+                    let markdownContent = content;
+                    
+                    if (contentElement) {
+                      // 1. CAPTURE ALL LINKS with context
+                      const linkElements = contentElement.querySelectorAll('a[href]');
+                      links = Array.from(linkElements).map(link => {
+                        const href = link.getAttribute('href');
+                        const text = link.textContent.trim();
+                        const context = link.closest('p, li, div, section')?.textContent?.slice(0, 100) || '';
+                        
+                        // Classify link types
+                        let linkType = 'external';
+                        if (href.startsWith('#')) linkType = 'anchor';
+                        else if (href.includes('github.com')) linkType = 'github';
+                        else if (href.includes('deepwiki.com')) linkType = 'deepwiki';
+                        else if (href.startsWith('/')) linkType = 'relative';
+                        
+                        return {
+                          text: text,
+                          url: href,
+                          type: linkType,
+                          context: context.replace(/\s+/g, ' ').trim()
+                        };
+                      }).filter(link => link.text && link.url);
+                      
+                      // 2. CAPTURE SVG DIAGRAMS (generated dynamically)
+                      const svgElements = contentElement.querySelectorAll('svg');
+                      diagrams = Array.from(svgElements).map((svg, index) => {
+                        const svgData = svg.outerHTML;
+                        const title = svg.querySelector('title')?.textContent || `Diagram ${index + 1}`;
+                        const desc = svg.querySelector('desc')?.textContent || '';
+                        
+                        // Get SVG dimensions and viewBox
+                        const width = svg.getAttribute('width') || svg.viewBox?.baseVal?.width || 'auto';
+                        const height = svg.getAttribute('height') || svg.viewBox?.baseVal?.height || 'auto';
+                        const viewBox = svg.getAttribute('viewBox') || '';
+                        
+                        // Find surrounding context
+                        const container = svg.closest('figure, div, section') || svg.parentElement;
+                        const context = container?.textContent?.replace(svgData, '').slice(0, 200) || '';
+                        
+                        return {
+                          index: index,
+                          title: title,
+                          description: desc,
+                          width: width,
+                          height: height,
+                          viewBox: viewBox,
+                          svgContent: svgData,
+                          context: context.replace(/\s+/g, ' ').trim()
+                        };
+                      });
+                      
+                      // 3. CONVERT HTML TO MARKDOWN while preserving structure and EXACT diagram positions
+                      try {
+                        const htmlContent = contentElement.innerHTML;
+                        let workingHtml = htmlContent;
+                        
+                        // STEP 1: Mark each SVG with a unique placeholder BEFORE any conversion
+                        const svgMatches = [];
+                        workingHtml = workingHtml.replace(/<svg[^>]*>.*?<\/svg>/gis, (match, offset) => {
+                          const svgIndex = svgMatches.length;
+                          svgMatches.push({
+                            originalSvg: match,
+                            index: svgIndex,
+                            offset: offset
+                          });
+                          // Use unique marker that won't be affected by other replacements
+                          return `___SVG_PLACEHOLDER_${svgIndex}___`;
+                        });
+                        
+                        // STEP 2: Convert HTML to Markdown normally
+                        markdownContent = workingHtml
+                          // Convert headers
+                          .replace(/<h([1-6])[^>]*>(.*?)<\/h[1-6]>/gi, (match, level, text) => {
+                            const hashes = '#'.repeat(parseInt(level));
+                            return `\n${hashes} ${text.replace(/<[^>]*>/g, '').trim()}\n`;
+                          })
+                          // Convert links
+                          .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
+                          // Convert code blocks
+                          .replace(/<code[^>]*>(.*?)<\/code>/gi, '`$1`')
+                          .replace(/<pre[^>]*><code[^>]*>(.*?)<\/code><\/pre>/gis, '```\n$1\n```')
+                          // Convert lists
+                          .replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\n')
+                          .replace(/<ul[^>]*>(.*?)<\/ul>/gis, '$1\n')
+                          .replace(/<ol[^>]*>(.*?)<\/ol>/gis, '$1\n')
+                          // Convert paragraphs
+                          .replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n\n')
+                          // Convert line breaks
+                          .replace(/<br[^>]*>/gi, '\n')
+                          // Remove remaining HTML tags
+                          .replace(/<[^>]*>/g, '')
+                          // Clean up entities
+                          .replace(/&nbsp;/g, ' ')
+                          .replace(/&amp;/g, '&')
+                          .replace(/&lt;/g, '<')
+                          .replace(/&gt;/g, '>')
+                          .replace(/&quot;/g, '"');
+                        
+                        // STEP 3: Replace SVG placeholders with proper markdown at EXACT positions
+                        svgMatches.forEach((svgMatch, index) => {
+                          const diagram = diagrams[index];
+                          if (diagram) {
+                            let diagramMarkdown = '';
+                            
+                            // Create a comprehensive diagram representation in markdown
+                            diagramMarkdown += `\n\n---\n`;
+                            diagramMarkdown += `### 📊 ${diagram.title}\n\n`;
+                            
+                            if (diagram.description) {
+                              diagramMarkdown += `> ${diagram.description}\n\n`;
+                            }
+                            
+                            // Option 1: Embed SVG directly as base64 (for maximum compatibility)
+                            // Note: btoa is available in browser context, Buffer is not
+                            const svgBase64 = btoa(unescape(encodeURIComponent(diagram.svgContent)));
+                            diagramMarkdown += `![${diagram.title}](data:image/svg+xml;base64,${svgBase64})\n\n`;
+                            
+                            // Option 2: Reference to external SVG file
+                            const svgFileName = `${currentPageName}-diagram-${index + 1}.svg`;
+                            diagramMarkdown += `*[📄 Download SVG](${svgFileName}) | `;
+                            diagramMarkdown += `Dimensions: ${diagram.width}×${diagram.height}`;
+                            if (diagram.viewBox) {
+                              diagramMarkdown += ` | ViewBox: ${diagram.viewBox}`;
+                            }
+                            diagramMarkdown += `*\n`;
+                            
+                            if (diagram.context) {
+                              diagramMarkdown += `\n*Context: ${diagram.context}*\n`;
+                            }
+                            
+                            diagramMarkdown += `\n---\n\n`;
+                            
+                            // Replace the placeholder with the complete diagram markdown
+                            markdownContent = markdownContent.replace(`___SVG_PLACEHOLDER_${index}___`, diagramMarkdown);
+                          }
+                        });
+                        
+                        // Clean up any remaining whitespace issues
+                        markdownContent = markdownContent
+                          .replace(/\n{3,}/g, '\n\n')
+                          .trim();
+                          
+                      } catch (e) {
+                        // Fallback to plain text if HTML conversion fails
+                        markdownContent = content;
+                      }
                     }
                     
                     // Enhanced content cleaning for DeepWiki
-                    content = content
+                    markdownContent = markdownContent
                       .replace(/Loading\.\.\./g, '')
                       .replace(/\[AI GENERATED\]/gi, '')
                       .replace(/Generated documentation for:/gi, '')
@@ -223,8 +380,22 @@ jobs:
                       .replace(/^\s+|\s+$/g, '')
                       .replace(/\n{3,}/g, '\n\n');
                     
-                    return { title, content, length: content.length };
-                  });
+                    return { 
+                      title, 
+                      content: markdownContent, 
+                      length: markdownContent.length,
+                      links: links,
+                      diagrams: diagrams,
+                      stats: {
+                        linksFound: links.length,
+                        diagramsFound: diagrams.length,
+                        linkTypes: links.reduce((acc, link) => {
+                          acc[link.type] = (acc[link.type] || 0) + 1;
+                          return acc;
+                        }, {})
+                      }
+                    };
+                  }, pageInfo.name);
                   
                   // Content validation
                   if (extractedData.length < 100 || extractedData.content.includes('Loading...')) {
@@ -236,11 +407,16 @@ jobs:
                     title: extractedData.title,
                     content: extractedData.content,
                     url: pageInfo.url,
-                    length: extractedData.length
+                    length: extractedData.length,
+                    links: extractedData.links || [],
+                    diagrams: extractedData.diagrams || [],
+                    stats: extractedData.stats || {}
                   };
                   
                   totalCharacters += extractedData.length;
-                  console.log(`   ✅ Extracted ${extractedData.length} characters from ${pageInfo.name}`);
+                  const linksInfo = extractedData.stats.linksFound > 0 ? ` | ${extractedData.stats.linksFound} links` : '';
+                  const diagramsInfo = extractedData.stats.diagramsFound > 0 ? ` | ${extractedData.stats.diagramsFound} diagrams` : '';
+                  console.log(`   ✅ Extracted ${extractedData.length} characters from ${pageInfo.name}${linksInfo}${diagramsInfo}`);
                   
                 } catch (error) {
                   console.log(`   ⚠️ Failed to extract from ${pageInfo.name}: ${error.message}`);
@@ -287,10 +463,58 @@ jobs:
                 }
               });
               
-              // Save individual files
+              // Save individual files with enhanced content
               Object.entries(allContent).forEach(([pageName, pageData]) => {
                 const filename = `docs-md/${pageName}.md`;
-                const content = `# ${pageData.title.replace(' | DeepWiki', '')}\n\n${pageData.content}`;
+                let content = `# ${pageData.title.replace(' | DeepWiki', '')}\n\n${pageData.content}`;
+                
+                // Add links section if any found
+                if (pageData.links && pageData.links.length > 0) {
+                  content += '\n\n## 🔗 Links Found\n\n';
+                  
+                  // Group links by type
+                  const linksByType = pageData.links.reduce((acc, link) => {
+                    if (!acc[link.type]) acc[link.type] = [];
+                    acc[link.type].push(link);
+                    return acc;
+                  }, {});
+                  
+                  Object.entries(linksByType).forEach(([type, links]) => {
+                    content += `### ${type.charAt(0).toUpperCase() + type.slice(1)} Links\n\n`;
+                    links.forEach(link => {
+                      content += `- [${link.text}](${link.url})`;
+                      if (link.context) {
+                        content += `  \n  *Context: ${link.context}*`;
+                      }
+                      content += '\n';
+                    });
+                    content += '\n';
+                  });
+                }
+                
+                // Add diagrams section if any found
+                if (pageData.diagrams && pageData.diagrams.length > 0) {
+                  content += '\n\n## 📊 Diagrams Found\n\n';
+                  pageData.diagrams.forEach((diagram, index) => {
+                    content += `### ${diagram.title}\n\n`;
+                    if (diagram.description) {
+                      content += `*${diagram.description}*\n\n`;
+                    }
+                    content += `- **Dimensions:** ${diagram.width} x ${diagram.height}\n`;
+                    if (diagram.viewBox) {
+                      content += `- **ViewBox:** ${diagram.viewBox}\n`;
+                    }
+                    if (diagram.context) {
+                      content += `- **Context:** ${diagram.context}\n`;
+                    }
+                    content += `- **SVG File:** [${pageName}-diagram-${index + 1}.svg](${pageName}-diagram-${index + 1}.svg)\n\n`;
+                    
+                    // Save individual SVG file
+                    const svgFilename = `docs-md/${pageName}-diagram-${index + 1}.svg`;
+                    fs.writeFileSync(svgFilename, diagram.svgContent);
+                  });
+                }
+                
                 fs.writeFileSync(filename, content);
               });
               
@@ -298,28 +522,47 @@ jobs:
               fs.writeFileSync('docs-md/deepwiki-raw.md', combinedMarkdown);
               
               // Enhanced extraction metadata
+              const totalLinks = Object.values(allContent).reduce((sum, page) => sum + (page.links?.length || 0), 0);
+              const totalDiagrams = Object.values(allContent).reduce((sum, page) => sum + (page.diagrams?.length || 0), 0);
+              
               const metadata = {
                 extractedAt: new Date().toISOString(),
                 totalPages: allPages.length,
                 totalCharacters: totalCharacters,
                 pagesExtracted: Object.keys(allContent).length,
                 extractionTimeSeconds: parseFloat(extractionTime),
-                method: 'puppeteer-optimized-deepwiki-extraction',
+                totalLinksFound: totalLinks,
+                totalDiagramsFound: totalDiagrams,
+                method: 'puppeteer-optimized-deepwiki-extraction-enhanced',
                 optimizations: [
                   'Enhanced CSS selectors for DeepWiki',
                   'Intelligent loading detection',
                   'Optimized rate limiting (4s intervals)',
                   'Content quality validation',
-                  'DeepWiki-specific header filtering'
+                  'DeepWiki-specific header filtering',
+                  'Dynamic links extraction and categorization',
+                  'SVG diagrams capture and export'
                 ],
                 pages: Object.keys(allContent),
                 averagePageSize: Math.round(totalCharacters / Object.keys(allContent).length),
-                successRate: `${Math.round((Object.keys(allContent).filter(key => allContent[key].length > 0).length / allPages.length) * 100)}%`
+                successRate: `${Math.round((Object.keys(allContent).filter(key => allContent[key].length > 0).length / allPages.length) * 100)}%`,
+                linkStatistics: Object.values(allContent).reduce((acc, page) => {
+                  if (page.stats?.linkTypes) {
+                    Object.entries(page.stats.linkTypes).forEach(([type, count]) => {
+                      acc[type] = (acc[type] || 0) + count;
+                    });
+                  }
+                  return acc;
+                }, {}),
+                diagramStatistics: {
+                  totalSvgFiles: totalDiagrams,
+                  pagesWithDiagrams: Object.values(allContent).filter(page => page.diagrams?.length > 0).length
+                }
               };
               
               fs.writeFileSync('docs-md/extraction-metadata.json', JSON.stringify(metadata, null, 2));
               
-              console.log('✅ Optimized extraction finished!');
+              console.log('✅ Enhanced extraction finished!');
               console.log(`📊 Performance stats:`);
               console.log(`   - Total extraction time: ${extractionTime}s`);
               console.log(`   - Average time per page: ${(parseFloat(extractionTime) / allPages.length).toFixed(2)}s`);
@@ -327,10 +570,22 @@ jobs:
               console.log(`   - Total characters extracted: ${totalCharacters}`);
               console.log(`   - Success rate: ${metadata.successRate}`);
               console.log(`   - Average page size: ${metadata.averagePageSize} chars`);
+              console.log(`📈 Enhanced content stats:`);
+              console.log(`   - Total links found: ${totalLinks}`);
+              console.log(`   - Total diagrams captured: ${totalDiagrams}`);
+              console.log(`   - SVG files created: ${totalDiagrams}`);
+              if (Object.keys(metadata.linkStatistics).length > 0) {
+                console.log(`   - Link types: ${JSON.stringify(metadata.linkStatistics)}`);
+              }
               console.log('📁 Files created:');
               console.log('   - docs-md/deepwiki-raw.md (combined)');
               console.log('   - docs-md/extraction-metadata.json');
-              Object.keys(allContent).forEach(name => console.log(`   - docs-md/${name}.md`));
+              Object.keys(allContent).forEach(name => {
+                const pageData = allContent[name];
+                const diagramCount = pageData.diagrams?.length || 0;
+                const diagramInfo = diagramCount > 0 ? ` + ${diagramCount} SVG diagrams` : '';
+                console.log(`   - docs-md/${name}.md${diagramInfo}`);
+              });
               
             } catch (error) {
               console.error('❌ Error during optimized extraction:', error.message);
@@ -731,6 +986,7 @@ jobs:
           echo "- **Intelligent Loading Detection**: Reduced timeouts from 60s to 15-30s" >> $GITHUB_STEP_SUMMARY
           echo "- **Optimized Rate Limiting**: 4-second intervals between requests" >> $GITHUB_STEP_SUMMARY
           echo "- **Content Quality Validation**: Automatic validation of extracted content" >> $GITHUB_STEP_SUMMARY
+          echo "- **Enhanced Content Capture**: Links extraction and SVG diagrams export" >> $GITHUB_STEP_SUMMARY
           echo "- **Additional AI-Generated Content Filtering**: Enhanced DeepWiki cleanup" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Generated Content" >> $GITHUB_STEP_SUMMARY
@@ -748,10 +1004,14 @@ jobs:
             if command -v jq &> /dev/null; then
               EXTRACTION_TIME=$(cat docs-md/extraction-metadata.json | jq -r '.extractionTimeSeconds // "N/A"')
               SUCCESS_RATE=$(cat docs-md/extraction-metadata.json | jq -r '.successRate // "N/A"')
+              TOTAL_LINKS=$(cat docs-md/extraction-metadata.json | jq -r '.totalLinksFound // 0')
+              TOTAL_DIAGRAMS=$(cat docs-md/extraction-metadata.json | jq -r '.totalDiagramsFound // 0')
               echo "- **Extraction Time**: ${EXTRACTION_TIME}s" >> $GITHUB_STEP_SUMMARY
               echo "- **Success Rate**: $SUCCESS_RATE" >> $GITHUB_STEP_SUMMARY
+              echo "- **Links Captured**: $TOTAL_LINKS" >> $GITHUB_STEP_SUMMARY
+              echo "- **SVG Diagrams Exported**: $TOTAL_DIAGRAMS" >> $GITHUB_STEP_SUMMARY
             fi
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ Status" >> $GITHUB_STEP_SUMMARY
-          echo "Documentation successfully generated using optimized Puppeteer automation with DeepWiki-specific enhancements!" >> $GITHUB_STEP_SUMMARY
+          echo "Documentation successfully generated using enhanced Puppeteer automation with DeepWiki-specific optimizations, including links extraction and SVG diagrams capture!" >> $GITHUB_STEP_SUMMARY
