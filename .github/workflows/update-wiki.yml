@@ -5,6 +5,9 @@ name: Sync DeepWiki to GitHub Wiki (Pandoc)
 # New approach: Native HTML parsing, automatic media extraction, community-maintained
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch: # Manual trigger
   schedule:
     - cron: "0 */6 * * *" # Every 6 hours
