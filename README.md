@@ -22,6 +22,10 @@
 
 In Formula 1, strategic decisions must be made within seconds while considering complex, dynamic variables like weather, tire wear, track position, and fuel. The **F1 Strategy Manager** project proposes a solution by integrating advanced predictive models and expert systems to support real-time strategy recommendations.
 
+---
+
+## 📚 Docs
+
 > [!WARNING] > **Documentation & Wiki**
 >
 > This repository has a wiki generated automatically with GitHub Actions, based on **DeepWiki**.
