@@ -26,7 +26,8 @@ In Formula 1, strategic decisions must be made within seconds while considering 
 
 ## 📚 Docs
 
-> [!WARNING] > **Documentation & Wiki**
+> [!WARNING]
+> **Documentation & Wiki**
 >
 > This repository has a wiki generated automatically with GitHub Actions, based on **DeepWiki**.
 >
