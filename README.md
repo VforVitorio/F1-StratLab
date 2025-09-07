@@ -22,7 +22,7 @@
 
 In Formula 1, strategic decisions must be made within seconds while considering complex, dynamic variables like weather, tire wear, track position, and fuel. The **F1 Strategy Manager** project proposes a solution by integrating advanced predictive models and expert systems to support real-time strategy recommendations.
 
-> [!WARNING] > **Documentation & Wiki**
+> [!WARNING] **Documentation & Wiki**
 >
 > This repository has a wiki generated automatically with GitHub Actions, based on **DeepWiki**.
 >
@@ -58,10 +58,12 @@ Develop an **intelligent strategy recommender** that, based on processed race da
 
 ### 🎯 Machine Learning Models
 
-- **XGBoost**: Lap time prediction with MAE = 0.09s and RMSE = 0.15s
-- **TCN (Temporal Convolutional Networks)**: For tire degradation modeling
-- **YOLOv8**: Team identification from race footage with >90% mAP50
-- **Whisper Turbo + BERT**: NLP pipeline for radio communication analysis
+- **XGBoost** : Lap time prediction with MAE = 0.09s and RMSE = 0.15s
+- **TCN (Temporal Convolutional Networks)** : For tire degradation modeling
+- **YOLOv8** : Team identification from race footage with >90% mAP50
+  > ⚠️ This section is no longer updated. Further development continues in an independent repository, now using YOLOv12.  
+  > See: [VforVitorio/F1_AI_team_detection](https://github.com/VforVitorio/F1_AI_team_detection)
+- **Whisper Turbo + BERT** : NLP pipeline for radio communication analysis
 
 ### 🧠 Expert System
 
