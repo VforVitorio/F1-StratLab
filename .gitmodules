@@ -1,0 +1,3 @@
+[submodule "src/telemetry"]
+	path = src/telemetry
+	url = https://github.com/VforVitorio/F1_Telemetry_Manager.git
