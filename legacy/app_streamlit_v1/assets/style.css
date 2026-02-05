@@ -1,0 +1,270 @@
+/* Main color palette – dark theme */
+:root {
+    --background-dark: #121212;
+    --sidebar-dark: #111827;
+    --accent-primary: #6c5ce7; /* morado principal */
+    --accent-secondary: #7f6ff0;
+    --accent-hover: #a29bfe;
+    --text-light: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --sidebar-selected: #6c5ce7;
+    --sidebar-hover: #23234a;
+    --divider: rgba(255, 255, 255, 0.12);
+}
+
+/* Global styles */
+.main .block-container {
+    background-color: var(--background-dark);
+    color: var(--text-light);
+    padding-top: 2rem;
+}
+
+/* Sidebar – base */
+[data-testid="stSidebar"] {
+    background-color: var(--sidebar-dark);
+    color: var(--text-light);
+    border-right: 1px solid var(--divider);
+}
+
+/* Sidebar header – increase title size to match h2 */
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] .sidebar-title {
+    text-align: center;
+    font-size: 1.5rem !important;  /* Igual que "Team Radio Analysis" */
+    font-weight: 600 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100%;
+    color: var(--text-light);
+}
+
+/* Modernized navigation container */
+[data-testid="stSidebar"] .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--divider);
+}
+
+/* Hide native radio circles */
+[data-testid="stSidebar"] .stRadio input[type="radio"] {
+    display: none !important;
+}
+
+/* Remove any pseudo-icon or circle before label */
+[data-testid="stSidebar"] .stRadio label span:first-child {
+    display: none !important;
+}
+
+/* --- OCULTAR EL PRIMER LABEL VACÍO DEL RADIO (la caja extra) --- */
+[data-testid="stSidebar"] .stRadio > label:first-child {
+    display: none !important;
+}
+
+/* Radio buttons as purple boxes with centered text, no icon/circle */
+[data-testid="stSidebar"] .stRadio > div {
+    display: flex;
+    flex-direction: column;
+    gap: 1.7rem; /* MÁS SEPARACIÓN ENTRE CAJAS */
+}
+
+[data-testid="stSidebar"] .stRadio label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 54px;
+    padding: 1rem 1.1rem;
+    border-radius: 14px;
+    background-color: #23234a;
+    border: 2px solid transparent;
+    color: var(--text-light) !important;
+    font-weight: 600;
+    font-size: 1.32rem; /* UN POCO MÁS GRANDE */
+    cursor: pointer;
+    transition: background 0.2s, border 0.2s, color 0.2s;
+    box-shadow: none;
+    margin: 0;
+}
+
+/* Selected state: solid purple background and border */
+[data-testid="stSidebar"] .stRadio input:checked + label {
+    background-color: var(--accent-primary);
+    border: 2px solid var(--accent-primary);
+    color: #fff !important;
+    font-weight: 700;
+}
+
+/* Hover state: lighter purple */
+[data-testid="stSidebar"] .stRadio label:hover {
+    background-color: var(--accent-hover);
+    border: 2px solid var(--accent-secondary);
+    color: #fff;
+}
+
+/* Remove margin between radio groups */
+[data-testid="stSidebar"] .stRadio {
+    margin-bottom: 0 !important;
+}
+
+/* —— NUEVAS REGLAS PARA ELIMINAR LOS “PUNTITOS” —— */
+
+/* 1. Oculta cualquier <svg> que BaseWeb inyecta para el círculo */
+[data-testid="stSidebar"] .stRadio label svg {
+    display: none !important;
+}
+
+/* 2. Oculta el primer div que puede contener el mark del radio */
+[data-testid="stSidebar"] .stRadio label > div:first-child {
+    display: none !important;
+}
+
+/* 3. Centra el texto ahora que ya no hay icono */
+[data-testid="stSidebar"] .stRadio label {
+    justify-content: center !important;
+}
+
+/* Selectbox styling */
+[data-testid="stSidebar"] .stSelectbox > div > div {
+    background-color: var(--sidebar-dark);
+    border: 1px solid var(--divider);
+    border-radius: 12px;
+    padding: 0.25rem;
+    color: var(--text-light);
+    min-width: 120px !important;
+    width: 200px !important;
+    max-width: 100% !important;
+}
+
+/* Slider styling */
+[data-testid="stSidebar"] .stSlider {
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+[data-testid="stSidebar"] .stSlider > div {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+[data-testid="stSidebar"] .stSlider [data-baseweb="slider"] {
+    margin-top: 0.5rem;
+}
+
+/* Card styles */
+.css-card {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Button styles */
+.stButton > button {
+    background-color: var(--accent-primary);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    transition: background-color 0.3s;
+}
+
+.stButton > button:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Headers and main text */
+h1, h2, h3, .main p {
+    color: var(--text-light);
+}
+
+h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+}
+
+h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+/* Markdown/text elements */
+.stMarkdown,
+.stText {
+    color: var(--text-light);
+}
+
+/* Footer styling */
+footer {
+    border-top: 1px solid var(--divider);
+    padding-top: 1rem;
+    margin-top: 2rem;
+    color: var(--text-secondary);
+}
+
+
+
+/* Add this CSS snippet to your style.css file for the stat cards */
+
+.stat-card {
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.stat-label {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.blue {
+    background-color: #3385FF;
+    color: white;
+}
+
+.green {
+    background-color: #33FF57;
+    color: white;
+}
+
+.orange {
+    background-color: #FF8833;
+    color: white;
+}
+
+.purple {
+    background-color: #BD33FF;
+    color: white;
+}
+
+
+/* Make the file uploader wide and visually integrated */
+[data-testid="stFileUploader"] > div {
+    width: 100% !important;
+    min-width: 350px;
+    max-width: 700px;
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 12px !important;
+    background: #23234a !important;
+    border: 1.5px solid #6c5ce7 !important;
+}
