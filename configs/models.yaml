@@ -1,0 +1,47 @@
+# Machine Learning Models Configuration
+
+lap_time:
+  model_type: xgboost
+  model_path: data/models/lap_time/xgboost_v1.pkl
+  params:
+    max_depth: 6
+    learning_rate: 0.1
+    n_estimators: 100
+  features:
+    - Speed
+    - RPM
+    - Throttle
+    - Brake
+    - Gear
+    - DRS
+
+tire_degradation:
+  model_type: tcn
+  model_path: data/models/tire_degradation/tcn_v1.pth
+  params:
+    kernel_size: 3
+    num_filters: 64
+    dropout: 0.3
+  window_size: 60
+
+sector_time:
+  model_type: xgboost
+  model_path: data/models/sector_time/xgboost_v1.pkl
+  params:
+    max_depth: 5
+    learning_rate: 0.1
+    n_estimators: 150
+
+overtake_probability:
+  model_type: random_forest
+  model_path: data/models/overtake_probability/rf_v1.pkl
+  params:
+    n_estimators: 200
+    max_depth: 10
+
+safety_car_probability:
+  model_type: gradient_boosting
+  model_path: data/models/safety_car_probability/gb_v1.pkl
+  params:
+    n_estimators: 100
+    learning_rate: 0.05

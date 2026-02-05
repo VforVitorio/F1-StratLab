@@ -1,9 +1,0 @@
-{
-    "workbench.editorAssociations": {
-        "*.copilotmd": "vscode.markdown.preview.editor",
-        "*.xls": "default",
-        "{git,gitlens,git-graph}:/**/*.{md,csv,svg}": "default",
-        "file:/**/*.parquet": "jupyter-data-wrangler"
-    },
-    "CodeGPT.apiKey": "LM Studio"
-}

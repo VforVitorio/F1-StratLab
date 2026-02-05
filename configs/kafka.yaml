@@ -1,0 +1,27 @@
+# Apache Kafka Configuration
+
+kafka:
+  bootstrap_servers: "localhost:9092"
+  topics:
+    telemetry: "telemetry_stream"
+    predictions: "ml_predictions"
+    radio: "radio_events"
+    strategy: "strategy_recommendations"
+
+producer:
+  batch_size: 16384
+  linger_ms: 10
+  compression_type: "gzip"
+  acks: "all"
+
+consumer:
+  group_id: "f1_strategy_consumer"
+  auto_offset_reset: "latest"
+  enable_auto_commit: true
+  max_poll_records: 500
+
+# Stream processing settings
+streams:
+  processing_guarantee: "exactly_once"
+  replication_factor: 1
+  num_partitions: 3

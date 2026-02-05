@@ -1,0 +1,45 @@
+# Logging Configuration
+
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  default:
+    format: "[%(asctime)s] %(levelname)s in %(module)s: %(message)s"
+  detailed:
+    format: "[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: default
+    stream: ext://sys.stdout
+
+  file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: detailed
+    filename: logs/f1_digital_twin.log
+    maxBytes: 10485760  # 10MB
+    backupCount: 5
+
+loggers:
+  src:
+    level: DEBUG
+    handlers: [console, file]
+    propagate: false
+
+  src.strategy:
+    level: INFO
+    handlers: [console, file]
+    propagate: false
+
+  src.agents:
+    level: DEBUG
+    handlers: [console, file]
+    propagate: false
+
+root:
+  level: INFO
+  handlers: [console]

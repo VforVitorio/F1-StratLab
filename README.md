@@ -1,12 +1,12 @@
 <div align="center">
 
-# 🏎️ F1 Strategy Manager
+# F1 Strategy Manager
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/) [![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-red)](https://streamlit.io/) [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-orange)](https://pytorch.org/) [![Pandas](https://img.shields.io/badge/Pandas-2.0%2B-purple)](https://pandas.pydata.org/) [![XGBoost](https://img.shields.io/badge/XGBoost-1.7%2B-green)](https://xgboost.readthedocs.io/) [![OpenCV](https://img.shields.io/badge/OpenCV-4.8%2B-blue)](https://opencv.org/) [![FastF1](https://img.shields.io/badge/FastF1-3.1%2B-red)](https://github.com/theOehrly/Fast-F1) [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/VforVitorio/F1_Strat_Manager)
 
 </div>
 
-**Revolutionizing strategic decision-making in Formula 1 through AI-powered models, computer vision, and expert systems. For a deeper insight, see the project's [paper here](documents/F1_Strategy_Manager_AI.pdf).**
+**Revolutionizing strategic decision-making in Formula 1 through AI-powered models, computer vision, and expert systems. For a deeper insight, see the project's [paper here](documents/docs_legacy_strat_manager/F1_Strategy_Manager_AI.pdf).**
 
 <p align="center">
   <img
@@ -18,13 +18,13 @@
 
 ---
 
-## 🚀 Project Overview
+## Project Overview
 
 In Formula 1, strategic decisions must be made within seconds while considering complex, dynamic variables like weather, tire wear, track position, and fuel. The **F1 Strategy Manager** project proposes a solution by integrating advanced predictive models and expert systems to support real-time strategy recommendations.
 
 ---
 
-## 📚 Docs
+## Docs
 
 > [!WARNING]
 > **Documentation & Wiki**
@@ -33,19 +33,46 @@ In Formula 1, strategic decisions must be made within seconds while considering 
 >
 > However, the documentation on the **DeepWiki** page is much better structured and highly recommended for obtaining clearer and more navigable information about the project.
 >
-> 👉 **Access the full documentation here**: [https://deepwiki.com/VforVitorio/F1_Strat_Manager](https://deepwiki.com/VforVitorio/F1_Strat_Manager)
+> Access the full documentation here: [https://deepwiki.com/VforVitorio/F1_Strat_Manager](https://deepwiki.com/VforVitorio/F1_Strat_Manager)
 
 ---
 
-## 🧠 Main Objective
+## Main Objective
 
 Develop an **intelligent strategy recommender** that, based on processed race data, can offer optimized strategic decisions to the team in real time.
 
 ---
 
-## 🧩 Project Structure
+## Project Structure
 
-### 📦 Data Extraction & Preparation
+```
+F1_Strat_Manager/
+├── src/                        # Production code
+│   ├── telemetry/              # Main app (FastAPI + Streamlit submodule)
+│   ├── strategy/               # ML models (lap time, tire degradation)
+│   │   ├── models/
+│   │   ├── training/
+│   │   └── inference/
+│   ├── agents/                 # Expert system + rules
+│   │   └── rules/
+│   ├── nlp/                    # Radio processing (sentiment, NER)
+│   ├── vision/                 # Computer vision
+│   └── shared/                 # Common utilities
+│       └── data_extraction/
+├── notebooks/                  # Experimentation
+├── data/                       # Datasets by year/race
+│   ├── raw/
+│   ├── processed/
+│   ├── models/
+│   └── cache/
+├── configs/                    # YAML configurations
+├── legacy/                     # Old code reference
+│   ├── notebooks/
+│   └── app_streamlit_v1/
+└── documents/                  # TFG documentation
+```
+
+### Data Extraction & Preparation
 
 - **Sources**: FastF1, OpenF1, Roboflow
 - **Data Types**:
@@ -61,21 +88,21 @@ Develop an **intelligent strategy recommender** that, based on processed race da
   - Generated synthetic variables and filtered irrelevant ones
   - Divided data by stint and lap sequences
 
-### 🎯 Machine Learning Models
+### Machine Learning Models
 
 - **XGBoost** : Lap time prediction with MAE = 0.09s and RMSE = 0.15s
 - **TCN (Temporal Convolutional Networks)** : For tire degradation modeling
 - **YOLOv8** : Team identification from race footage with >90% mAP50
-  > ⚠️ This section is no longer updated. Further development continues in an independent repository, now using YOLOv12.  
+  > This section is no longer updated. Further development continues in an independent repository, now using YOLOv12.
   > See: [VforVitorio/F1_AI_team_detection](https://github.com/VforVitorio/F1_AI_team_detection)
 - **Whisper Turbo + BERT** : NLP pipeline for radio communication analysis
 
-### 🧠 Expert System
+### Expert System
 
 - Developed using the **Experta** framework.
 - Integrates all processed data and model results for strategy suggestion.
 
-### 📊 App Interface
+### App Interface
 
 - Built using **Streamlit**.
 - Allows:
@@ -85,62 +112,58 @@ Develop an **intelligent strategy recommender** that, based on processed race da
 
 ---
 
-## 🖥️ Environment Setup & Usage
+## Environment Setup & Usage
 
-### ⚙️ Requirements
+### Requirements
 
-- Python 3.10+
+- Python 3.10 or 3.11 (NOT 3.12+ due to dependency compatibility)
 - CUDA-compatible GPU (for local training and video inference)
-- Pipenv or venv (recommended)
+- venv recommended
 
-### 📦 Main Libraries
-
-```bash
-pip install -r requirements.txt
-```
-
-If `requirements.txt` is not available, some key dependencies are:
-
-- `pandas`, `numpy`, `matplotlib`, `seaborn`
-- `fastf1`, `openf1`
-- `opencv-python`, `roboflow`
-- `torch`, `pytorch-lightning`, `xgboost`
-- `transformers`, `whisper`, `experta`
-- `streamlit`, `plotly`
-
-### 🧪 Running the Project
-
-1. Clone the repository:
+### Quick Setup
 
 ```bash
-git clone https://github.com/VforVitorio/F1_Strat_Manager.git
+# 1. Clone repository with submodule
+git clone --recursive https://github.com/VforVitorio/F1_Strat_Manager.git
 cd F1_Strat_Manager
+
+# 2. Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# 3. Install PyTorch with CUDA (RTX 50xx series need cu128)
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+
+# 4. Install project
+pip install -e ".[dev]"
+
+# 5. Verify installation
+python -c "from src.strategy.models import *; print('OK')"
 ```
 
-2. Activate your environment:
+### Running the App
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows use venv\Scripts\activate
+streamlit run src/telemetry/frontend/app/main.py
 ```
 
-3. Install dependencies:
+### Troubleshooting
 
+**Windows: DLL load failed (scikit-learn)**
 ```bash
-pip install -r requirements.txt
+# Add .venv/ folder to Windows Defender exclusions, then:
+pip install --no-cache-dir --force-reinstall scikit-learn
 ```
 
-4. Run the app:
-
+**Python 3.10+ AttributeError: collections.Mapping**
 ```bash
-streamlit run app/main.py
+# Ensure frozendict>=2.4.0 is installed
+pip install --upgrade frozendict>=2.4.0
 ```
-
-> Each major module (NLP, Vision, ML) is in its own subfolder with Jupyter notebooks and utility scripts.
 
 ---
 
-## 🤝 About This Project
+## About This Project
 
 This is a **personal project** that will serve as my **Final Degree Project (Thesis)**. While this is primarily an academic endeavor, I welcome feedback, suggestions, and collaboration from the F1 and AI community.
 
