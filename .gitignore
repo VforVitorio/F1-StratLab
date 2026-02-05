@@ -1,17 +1,109 @@
+# ===========================
+# F1 Digital Twin - .gitignore
+# ===========================
+
+# Old project specific
 zoom_links.md
 IS Project Proposal Vega Sobral Víctor.pdf
-# Excluir datos y caché
-data/
-models/
-outputs/
-f1_cache/
 f1-dataset/
 f1-strategy/weights
 yolo-files
-# Excluir archivos de entorno virtual y IDE
-venv/
-.env
-.idea/
+
+documents/dev_docs/tasks
+
+# ===========================
+# Data & Models
+# ===========================
+data/raw/**/*
+data/processed/**/*
+data/models/**/*
+data/cache/**/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/models/.gitkeep
+!data/cache/.gitkeep
+
+# Old data folders
+models/
+outputs/
+f1_cache/
+
+# ===========================
+# Notebooks
+# ===========================
+**/.ipynb_checkpoints/
+notebooks/outputs/
+
+# ===========================
+# Python
+# ===========================
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ===========================
+# IDE & Editors
+# ===========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+.spyderproject
+.spyproject
+
+# ===========================
+# Environment
+# ===========================
+.env
+.env.local
+.env.*.local
 environment.yml
+*.env
+
+# ===========================
+# Logs
+# ===========================
+logs/
+*.log
+
+# ===========================
+# OS
+# ===========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===========================
+# Testing
+# ===========================
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+
+# ===========================
+# Docker
+# ===========================
+*.log
+docker-compose.override.yml
+
+# ===========================
+# Misc
+# ===========================
+*.bak
+*.tmp
+*.temp
+.cache/
+uv.lock
