@@ -1,0 +1,39 @@
+services:
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./src/telemetry
+      dockerfile: backend/Dockerfile
+    container_name: f1_telemetry_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./src/telemetry:/app
+    networks:
+      - f1_network
+    restart: unless-stopped
+
+  # Streamlit Frontend
+  frontend:
+    build:
+      context: ./src/telemetry
+      dockerfile: frontend/Dockerfile
+    container_name: f1_telemetry_frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - BACKEND_URL=http://backend:8000
+    volumes:
+      - ./src/telemetry:/app
+    depends_on:
+      - backend
+    networks:
+      - f1_network
+    restart: unless-stopped
+
+networks:
+  f1_network:
+    driver: bridge
