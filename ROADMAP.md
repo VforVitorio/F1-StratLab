@@ -47,101 +47,163 @@ Integrated F1_Telemetry_Manager submodule and established modular project struct
 
 ---
 
-## v0.2.0 - Refactoring & Testing (Weeks 2-5)
+## v0.2.0 - Data Engineering (Weeks 2-4)
 
 - [ ] **Status:** In Progress
 - [ ] **Target:** Late February 2025
 
-Code cleanup, test coverage, and CI/CD implementation. Audit and eliminate duplicate code between repositories. Extend FastAPI with new ML prediction endpoints.
+Prepare and organize all datasets needed for ML model development. Exploratory data analysis, circuit clustering, and feature engineering.
 
 **Goals:**
 
-- [ ] Eliminate code duplication across modules
-- [ ] Add FastAPI endpoints for predictions and agent recommendations
-- [ ] Complete YAML configurations for all components
-- [ ] Implement pytest suite with minimum 70% coverage
-- [ ] Set up GitHub Actions CI/CD pipeline
+- [ ] Download and organize 2023-2024 seasons data (46 GPs, ~110k laps)
+- [ ] Master EDA: data exploration, cleaning, validation
+- [ ] Circuit clustering using K-Means (4 clusters)
+- [ ] Feature engineering: circuit and temporal features
+- [ ] Document all findings in notebooks/data_engineering/
+
+**Deliverables:**
+
+- [ ] Clean datasets in data/processed/
+- [ ] Circuit clusters defined and validated
+- [ ] notebooks/data_engineering/ with all EDA notebooks
+- [ ] Feature engineering pipeline documented
 
 **Success Metrics:**
 
-- [ ] Test coverage exceeds 70%
-- [ ] All linting checks pass (black, ruff)
-- [ ] CI/CD pipeline operational
-- [ ] Zero code duplication
+- [ ] All 46 GPs downloaded and validated
+- [ ] 4 circuit clusters identified with clear characteristics
+- [ ] Data quality checks pass (no missing critical fields)
+- [ ] Feature engineering pipeline reproducible
 
 ---
 
-## v0.3.0 - ML Foundation (Weeks 4-8.5)
+## v0.3.0 - Code Refactoring (Weeks 4-7)
+
+- [ ] **Status:** Not Started
+- [ ] **Target:** Early March 2025
+
+Clean and modularize existing codebase (excluding telemetry submodule). Eliminate code duplication, centralize configurations, and implement testing infrastructure.
+
+**Scope:**
+
+- Refactor: src/strategy/, src/agents/, src/nlp/, src/vision/, src/shared/
+- Do NOT modify: src/telemetry/ (independent submodule)
+
+**Goals:**
+
+- [ ] Audit code duplication across modules
+- [ ] Extract shared utilities to src/shared/
+- [ ] Refactor functions for modularity and reusability
+- [ ] Centralize YAML configurations
+- [ ] Implement structured logging
+- [ ] Unit tests with >50% coverage (initial target)
+
+**Success Metrics:**
+
+- [ ] Zero code duplication detected
+- [ ] All configurations in configs/ directory
+- [ ] Test coverage >50%
+- [ ] Linting passes (black, ruff)
+- [ ] Code review checklist completed
+
+---
+
+## v0.4.0 - ML Foundation: Lap Time & Tire Degradation (Weeks 7-11)
 
 - [ ] **Status:** Not Started
 - [ ] **Target:** Late March 2025
 - [ ] **Critical Milestone**
 
-Optimize baseline ML models for lap time and tire degradation prediction. Implement circuit clustering and temporal features to handle concept drift from regulation changes.
+Develop and train the first two ML models: lap time prediction and tire degradation. All experimentation in notebooks, final models in src/strategy/models/.
 
-**Dataset:**
+**Development Approach:**
 
-- [ ] Training: 2023-2024 seasons (46 GPs, ~110k laps)
-- [ ] Test: 2025 season (24 GPs, ~54k laps)
-- [ ] Rationale: 2022 regulation overhaul creates excessive concept drift in pre-2022 data
+- Experiments and EDA in notebooks/models/
+- Based on legacy notebooks but refactored with new 2023-2024 data
+- Final production models implemented in src/strategy/models/
 
-**Circuit Clustering:**
-Four clusters identified via K-means:
+**Lap Time Predictor:**
 
-- [ ] Power circuits: Monza, Baku, Jeddah, Las Vegas, Montreal
-- [ ] High downforce: Monaco, Singapore, Hungary, Zandvoort, Barcelona
-- [ ] Balanced: Silverstone, Spa, Suzuka, COTA, Interlagos
-- [ ] Street circuits: Miami, Albert Park, Shanghai
-
-**Models:**
-
-- [ ] Lap Time Predictor (XGBoost): RMSE target <0.5s, MAE <0.3s
-- [ ] Tire Degradation (TCN with PyTorch Lightning): R² target >0.85
-
-**Technical Tasks:**
-
-- [ ] Feature engineering: circuit cluster, downforce level, avg speed, temporal trends
-- [ ] TCN refactor to PyTorch Lightning for modularity
+- [ ] EDA and data exploration (notebooks/models/laptime_eda.ipynb)
+- [ ] XGBoost experiments with circuit clustering features (notebooks/models/laptime_experiments.ipynb)
 - [ ] Hyperparameter tuning via GridSearch
-- [ ] ONNX export for <50ms inference latency
-- [ ] Validation split from 2025 data
+- [ ] Final model implementation in src/strategy/models/laptime.py
+- [ ] Target: RMSE <0.5s, MAE <0.3s across all circuit clusters
+
+**Tire Degradation Predictor:**
+
+- [ ] EDA and degradation analysis (notebooks/models/tiredeg_eda.ipynb)
+- [ ] TCN architecture refactor to PyTorch Lightning (notebooks/models/tiredeg_experiments.ipynb)
+- [ ] Architecture improvements and experimentation
+- [ ] Final model implementation in src/strategy/models/tiredeg.py
+- [ ] Target: R² >0.85
+
+**Model Optimization:**
+
+- [ ] ONNX export for inference optimization
+- [ ] Quantization (FP32 → FP16)
+- [ ] Inference latency <50ms per prediction
+
+**Validation:**
+
+- [ ] Test on 2025 season data
+- [ ] Per-cluster performance metrics
+- [ ] Documented results in notebooks
 
 **Success Metrics:**
 
 - [ ] Lap Time: RMSE <0.5s across all circuit clusters
 - [ ] Tire Degradation: R² >0.85
 - [ ] Inference latency <50ms per prediction
+- [ ] All experiments documented in notebooks/models/
 
 ---
 
-## v0.4.0 - Additional Predictors (Weeks 8-12)
+## v0.5.0 - Additional Predictors (Weeks 11-15)
 
 - [ ] **Status:** Not Started
 - [ ] **Target:** Late April 2025
 
-Expand ML capabilities with three additional prediction models, all incorporating circuit clustering features.
-
-**Models:**
-
-- [ ] Sector Time Predictor (XGBoost Multi-Output): predicts S1, S2, S3 times, RMSE <0.3s per sector
-- [ ] Overtake Probability (Gradient Boosting): binary classification for next 3 laps, F1-score >0.75
-- [ ] Safety Car Probability (Random Forest): binary classification for next 5 laps, Precision >0.70
+Expand ML capabilities with three additional prediction models. All experimentation in notebooks/models/, production code in src/strategy/models/.
 
 **Dataset Preparation:**
 
-- [ ] Extract sector times from telemetry data
-- [ ] Label overtake events based on gap reduction and position changes
-- [ ] Incorporate historical safety car deployment data
+- [ ] Extract and label sector times from telemetry
+- [ ] Label overtake events (gap reduction + position changes)
+- [ ] Label historical safety car deployment events
+
+**Sector Time Predictor:**
+
+- [ ] EDA and sector analysis (notebooks/models/sector_eda.ipynb)
+- [ ] XGBoost Multi-Output experiments (notebooks/models/sector_experiments.ipynb)
+- [ ] Final implementation in src/strategy/models/sector.py
+- [ ] Target: RMSE <0.3s per sector (S1, S2, S3)
+
+**Overtake Probability:**
+
+- [ ] EDA and overtake pattern analysis (notebooks/models/overtake_eda.ipynb)
+- [ ] Gradient Boosting experiments (notebooks/models/overtake_experiments.ipynb)
+- [ ] Final implementation in src/strategy/models/overtake.py
+- [ ] Target: F1-score >0.75 for next 3 laps
+
+**Safety Car Probability:**
+
+- [ ] EDA and incident analysis (notebooks/models/safetycar_eda.ipynb)
+- [ ] Random Forest experiments (notebooks/models/safetycar_experiments.ipynb)
+- [ ] Final implementation in src/strategy/models/safetycar.py
+- [ ] Target: Precision >0.70 for next 5 laps
 
 **Success Metrics:**
 
 - [ ] Five complete ML models operational
 - [ ] Classification models achieve F1-score >0.75
 - [ ] Per-cluster performance validated on 2025 test data
+- [ ] All experiments documented in notebooks/models/
 
 ---
 
-## v0.5.0 - Multi-Agent System (Weeks 9-13)
+## v0.6.0 - Multi-Agent System (Weeks 15-18)
 
 - [ ] **Status:** Not Started
 - [ ] **Target:** Early May 2025
@@ -168,7 +230,7 @@ Implement coordinated three-agent architecture using LangGraph for orchestration
 
 ---
 
-## v0.6.0 - RAG System (Weeks 11.5-14)
+## v0.7.0 - RAG System (Weeks 18-20)
 
 - [ ] **Status:** Not Started
 - [ ] **Target:** Mid-May 2025
@@ -196,7 +258,7 @@ Integrate retrieval-augmented generation for FIA sporting regulations. Provides 
 
 ---
 
-## v0.7.0 - User Interfaces (Weeks 12.5-15.5)
+## v0.8.0 - User Interfaces (Weeks 20-23)
 
 - [ ] **Status:** Not Started
 - [ ] **Target:** Late May 2025
@@ -236,7 +298,7 @@ Develop dual interface system: Streamlit dashboard for analysis/configuration an
 
 ---
 
-## v0.8.0 - Testing & Validation (Weeks 14.5-16.5)
+## v0.9.0 - Testing & Validation (Weeks 23-25)
 
 - [ ] **Status:** Not Started
 - [ ] **Target:** Early June 2025
