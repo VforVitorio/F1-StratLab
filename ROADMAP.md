@@ -139,6 +139,9 @@ Develop and train the first two ML models: lap time prediction and tire degradat
 - [ ] Final model implementation in src/strategy/models/tiredeg.py
 - [ ] Target: R² >0.85
 
+**Important Note - Tire Compound Mapping:**
+Current data (FastF1/OpenF1) only provides relative compound names (SOFT/MEDIUM/HARD) per race. For accurate degradation predictions, actual Pirelli compounds (C1-C5) are critical since the same "MEDIUM" can be C2 (harder) or C4 (softer) depending on circuit. Future enhancement required: manual mapping from [Pirelli press releases](https://press.pirelli.com) to create `data/tire_compounds_by_race.json`. This enables compound-specific degradation models (C1 vs C5 degrades very differently) combined with circuit clustering.
+
 **Model Optimization:**
 
 - [ ] ONNX export for inference optimization
