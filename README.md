@@ -141,9 +141,39 @@ pip install -e ".[dev]"
 python -c "from src.strategy.models import *; print('OK')"
 ```
 
-### Running the App
+### Running with Docker (Recommended)
+
+The easiest way to run the telemetry application is using Docker Compose:
 
 ```bash
+# Start backend and frontend services
+docker-compose up
+
+# Run in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+**Access the application:**
+- Frontend (Streamlit): http://localhost:8501
+- Backend API: http://localhost:8000
+- API Documentation: http://localhost:8000/docs
+
+### Running Locally (Development)
+
+For development with hot reload:
+
+```bash
+# Terminal 1: Backend
+cd src/telemetry
+uvicorn backend.main:app --reload
+
+# Terminal 2: Frontend
 streamlit run src/telemetry/frontend/app/main.py
 ```
 
