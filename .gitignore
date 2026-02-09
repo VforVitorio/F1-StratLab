@@ -25,14 +25,12 @@ data/cache/**/*
 
 # Old data folders
 models/
-outputs/
 f1_cache/
 
 # ===========================
 # Notebooks
 # ===========================
 **/.ipynb_checkpoints/
-notebooks/outputs/
 
 # ===========================
 # Python
