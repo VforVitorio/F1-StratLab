@@ -56,10 +56,10 @@ Prepare and organize all datasets needed for ML model development. Exploratory d
 
 **Goals:**
 
-- [ ] Download and organize 2023-2024 seasons data (46 GPs, ~110k laps)
+- [X] Download and organize 2023-2024 seasons data (46 GPs, 52k laps)
 - [ ] Master EDA: data exploration, cleaning, validation
 - [ ] Circuit clustering using K-Means (4 clusters)
-- [ ] Feature engineering: circuit and temporal features
+- [ ] Feature engineering: circuit-specific features (undercut windows, DRS effectiveness), temporal features
 - [ ] Document all findings in notebooks/data_engineering/
 
 **Deliverables:**
