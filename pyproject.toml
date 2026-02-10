@@ -17,7 +17,6 @@ dependencies = [
     "pandas>=2.0.0,<3.0.0",
     "numpy>=1.24.0,<2.0.0",
     "pyarrow>=14.0.0",
-
     # ===================
     # ML / DEEP LEARNING
     # ===================
@@ -25,7 +24,6 @@ dependencies = [
     "scikit-learn>=1.3.0,<1.6.0",
     # torch: install manually with CUDA (see README)
     "pytorch-lightning>=2.0.0",
-
     # ===================
     # NLP
     # ===================
@@ -34,7 +32,6 @@ dependencies = [
     "sentence-transformers>=2.2.0",
     "spacy>=3.7.0",
     "tiktoken>=0.5.0",
-
     # ===================
     # AGENTS / EXPERT SYSTEM
     # ===================
@@ -42,14 +39,12 @@ dependencies = [
     # frozendict: install manually after (>=2.4.0 for Python 3.10+)
     "langgraph>=0.0.10",
     "langchain>=0.1.0",
-
     # ===================
     # COMPUTER VISION
     # ===================
     "opencv-python>=4.8.0",
     "ultralytics>=8.0.0",
     "pillow>=10.0.0",
-
     # ===================
     # BACKEND / STREAMING
     # ===================
@@ -62,12 +57,10 @@ dependencies = [
     "passlib[bcrypt]>=1.7.4",
     "httpx>=0.25.0",
     "aiofiles>=23.0.0",
-
     # ===================
     # DATABASE
     # ===================
     "qdrant-client>=1.6.0",
-
     # ===================
     # UI / VISUALIZATION
     # ===================
@@ -75,7 +68,6 @@ dependencies = [
     "plotly>=5.14.0",
     "matplotlib>=3.7.0",
     "seaborn>=0.12.0",
-
     # ===================
     # UTILITIES
     # ===================
@@ -83,6 +75,7 @@ dependencies = [
     "pyyaml>=6.0.0",
     "requests>=2.31.0",
     "tqdm>=4.65.0",
+    "joblib>=1.5.3",
 ]
 
 [project.optional-dependencies]
