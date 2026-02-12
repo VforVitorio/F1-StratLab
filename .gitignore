@@ -14,14 +14,10 @@ documents/dev_docs/tasks
 # ===========================
 # Data & Models
 # ===========================
-data/raw/**/*
-data/processed/**/*
-data/models/**/*
 data/cache/**/*
-!data/raw/.gitkeep
-!data/processed/.gitkeep
-!data/models/.gitkeep
+data/f1_cache/**/*
 !data/cache/.gitkeep
+!data/models/.gitkeep
 
 # Old data folders
 models/
