@@ -14,10 +14,16 @@ documents/dev_docs/tasks
 # ===========================
 # Data & Models
 # ===========================
+# Data tracked via Hugging Face Hub — not in git
+data/raw/**/*
+data/processed/**/*
+data/models/**/*
 data/cache/**/*
 data/f1_cache/**/*
-!data/cache/.gitkeep
+!data/raw/.gitkeep
+!data/processed/.gitkeep
 !data/models/.gitkeep
+!data/cache/.gitkeep
 
 # Old data folders
 models/
