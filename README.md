@@ -75,6 +75,7 @@ F1_Strat_Manager/
 ### Data Extraction & Preparation
 
 - **Sources**: FastF1, OpenF1, Roboflow
+- **HuggingFace Hub**: The dataset is also available on HuggingFace for easy download: [F1 Strategy Dataset](https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset)
 - **Data Types**:
   - Weather data
   - Track and race conditions
