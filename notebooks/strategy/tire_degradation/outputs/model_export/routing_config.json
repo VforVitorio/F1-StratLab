@@ -1,0 +1,32 @@
+{
+  "C1": {
+    "bundle": "tiredeg_C1_ft.pt",
+    "window": 25,
+    "model": "fine-tuned"
+  },
+  "C2": {
+    "bundle": "tiredeg_C2_ft.pt",
+    "window": 31,
+    "model": "fine-tuned"
+  },
+  "C3": {
+    "bundle": "tiredeg_C3_ft.pt",
+    "window": 30,
+    "model": "fine-tuned"
+  },
+  "C4": {
+    "bundle": "tiredeg_C4_ft.pt",
+    "window": 26,
+    "model": "fine-tuned"
+  },
+  "C5": {
+    "bundle": "tiredeg_C5_ft.pt",
+    "window": 22,
+    "model": "fine-tuned"
+  },
+  "C6": {
+    "bundle": "tiredeg_modelA_v4.pt",
+    "window": 28,
+    "model": "global"
+  }
+}
