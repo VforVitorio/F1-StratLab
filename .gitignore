@@ -34,6 +34,12 @@ f1_cache/
 # ===========================
 **/.ipynb_checkpoints/
 
+# Tire degradation notebook outputs (large training artefacts — not tracked)
+notebooks/strategy/tire_degradation/outputs/checkpoints_finetuning/
+notebooks/strategy/tire_degradation/outputs/logs_finetuning/
+notebooks/strategy/tire_degradation/outputs/logs/
+notebooks/strategy/tire_degradation/outputs/model_export/
+
 # ===========================
 # Python
 # ===========================
