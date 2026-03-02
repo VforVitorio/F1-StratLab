@@ -39,7 +39,7 @@ notebooks/strategy/tire_degradation/outputs/checkpoints_finetuning/
 notebooks/strategy/tire_degradation/outputs/logs_finetuning/
 notebooks/strategy/tire_degradation/outputs/logs/
 notebooks/strategy/tire_degradation/outputs/model_export/
-
+notebooks/strategy/overtake_probability/N11_BUILD_PLAN.md
 # ===========================
 # Python
 # ===========================
