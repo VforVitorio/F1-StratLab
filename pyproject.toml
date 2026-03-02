@@ -76,6 +76,9 @@ dependencies = [
     "requests>=2.31.0",
     "tqdm>=4.65.0",
     "joblib>=1.5.3",
+    "lightgbm>=4.6.0",
+    "optuna>=4.7.0",
+    "catboost>=1.2.10",
 ]
 
 [project.optional-dependencies]
