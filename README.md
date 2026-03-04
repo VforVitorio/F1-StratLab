@@ -112,6 +112,19 @@ F1_Strat_Manager/
 
 ---
 
+## Data & Model Weights
+
+> [!NOTE]
+> **Datasets and trained model weights are hosted on Hugging Face.**
+>
+> The `data/` directory (raw/processed datasets, FastF1 cache, labeled parquets) and all exported model weights (`data/models/`) are **not included in this repository** due to size constraints.
+>
+> If you need the data or the model weights, download them from the project's Hugging Face dataset repository:
+>
+> 👉 **[https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset](https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset)**
+
+---
+
 ## Environment Setup & Usage
 
 ### Requirements
