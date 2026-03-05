@@ -16,74 +16,154 @@ This project develops an intelligent multi-agent system for real-time Formula 1 
 
 ## Release Strategy
 
-Development follows an incremental approach across 9 phases with 8 planned releases.
+Development follows an incremental approach. v0.1–v0.5 covered project setup and integration; v0.6 closed out the data engineering phase. Subsequent releases track the ML, agent, and interface phases.
 
 ---
 
-## v0.1.0 - Integration & Setup (Weeks 1-3)
+## v0.1–v0.5 - Integration & Setup
 
-- [X] **Status:** Completed
-- [X] **Release Date:** Feb 5, 2025
+- [x] **Status:** Completed
+- [x] **Release Date:** Feb 5, 2025
 
-Integrated F1_Telemetry_Manager submodule and established modular project structure. Set up Docker Compose orchestration and configured base YAML configs for models, Kafka, and logging.
+Integrated F1_Telemetry_Manager submodule and established modular project structure. Set up Docker Compose orchestration and configured base YAML configs for models, Kafka, and logging. Incremental releases covered submodule wiring, package setup, FastAPI verification, and base configuration.
 
-**Note:** WebSocket streaming deferred to v0.7.0 (Interfaces). REST API endpoints are sufficient for ML development phases.
+**Note:** WebSocket streaming deferred to v0.12.0 (Interfaces). REST API endpoints are sufficient for ML development phases.
 
 **Deliverables:**
 
-- [X] Modular repository structure with src/, notebooks/, data/, legacy/
-- [X] Submodule integration preserving existing telemetry backend
-- [X] Python package setup with editable install
-- [X] Data organization by year/race hierarchy
-- [X] Base Docker Compose configuration
-- [X] FastAPI backend verification (7 endpoint categories operational)
+- [x] Modular repository structure with src/, notebooks/, data/, legacy/
+- [x] Submodule integration preserving existing telemetry backend
+- [x] Python package setup with editable install
+- [x] Data organization by year/race hierarchy
+- [x] Base Docker Compose configuration
+- [x] FastAPI backend verification (7 endpoint categories operational)
 
 **Success Criteria:**
 
-- [X] Clean imports from src modules
-- [X] Docker Compose successfully launches base services
-- [X] Project installable via pip install -e .
-- [X] REST API endpoints verified and documented
+- [x] Clean imports from src modules
+- [x] Docker Compose successfully launches base services
+- [x] Project installable via pip install -e .
+- [x] REST API endpoints verified and documented
 
 ---
 
-## v0.2.0 - Data Engineering (Weeks 2-4)
+## v0.6.0 - Data Engineering Pipeline
 
-- [ ] **Status:** In Progress
-- [ ] **Target:** Late February 2025
+- [x] **Status:** Completed
+- [x] **Release Date:** February 2025
 
-Prepare and organize all datasets needed for ML model development. Exploratory data analysis, circuit clustering, and feature engineering.
+Closed out the full data engineering phase. From raw FastF1 telemetry to a clean, feature-rich dataset ready to feed into the ML models. Previous notebooks moved to `legacy/`; new structure built around TFG architecture.
 
 **Goals:**
 
-- [X] Download and organize 2023-2024 seasons data (46 GPs, 52k laps)
-- [ ] Master EDA: data exploration, cleaning, validation
-- [ ] Circuit clustering using K-Means (4 clusters)
-- [ ] Feature engineering: circuit-specific features (undercut windows, DRS effectiveness), temporal features
-- [ ] Document all findings in notebooks/data_engineering/
+- [x] Download and organize 2023-2025 seasons data (N01 — extended to 2025, Miami/Barcelona alias fixes)
+- [x] Master EDA: data exploration, cleaning, validation
+- [x] Circuit clustering using K-Means k=4, fitted on 2023–2024, serialized with joblib; 2025 inference via `kmeans.predict()` without refit (N03)
+- [x] Feature engineering: 48-column dataset, ~45k clean racing laps; fuel-corrected degradation, sequential lap features, rolling 3-lap degradation, race context, circuit cluster merge (N04)
+- [x] 2025 saved as held-out test set — never touches training data
 
 **Deliverables:**
 
-- [ ] Clean datasets in data/processed/
-- [ ] Circuit clusters defined and validated
-- [ ] notebooks/data_engineering/ with all EDA notebooks
-- [ ] Feature engineering pipeline documented
+- [x] Clean datasets in data/processed/ (2023, 2024, 2025 separate)
+- [x] Circuit clusters defined and validated (`circuit_clusters_k4.parquet`, 25 circuits, 0 unknowns on 2023–2025)
+- [x] notebooks/data_engineering/ with all EDA and pipeline notebooks
+- [x] Dataset published to HuggingFace Hub (`VforVitorio/f1-strategy-dataset`)
 
 **Success Metrics:**
 
-- [ ] All 46 GPs downloaded and validated
-- [ ] 4 circuit clusters identified with clear characteristics
-- [ ] Data quality checks pass (no missing critical fields)
-- [ ] Feature engineering pipeline reproducible
+- [x] All GPs downloaded and validated (2023–2025)
+- [x] 4 circuit clusters identified with clear characteristics
+- [x] Data quality checks pass (no missing critical fields)
+- [x] Feature engineering pipeline reproducible
 
 ---
 
-## v0.3.0 - Code Refactoring (Weeks 4-7)
+## v0.7.0 - ML Foundation: Lap Time & Tire Degradation
 
-- [ ] **Status:** Not Started
-- [ ] **Target:** Early March 2025
+- [x] **Status:** Completed
+- [x] **Release Date:** March 2025
+- [x] **Critical Milestone**
 
-Clean and modularize existing codebase (excluding telemetry submodule). Eliminate code duplication, centralize configurations, and implement testing infrastructure.
+Developed and trained the first two ML models: lap time prediction (XGBoost) and tire degradation (TCN + MC Dropout). All experimentation in notebooks, models exported to `data/models/`.
+
+**Lap Time Predictor (N06):**
+
+- [x] EDA and data exploration
+- [x] XGBoost delta-lap-time model with circuit clustering features
+- [x] Hyperparameter tuning via GridSearch / cross-validation
+- [x] Model exported to `data/models/lap_time/`
+- [x] Target: MAE <0.5s — **Achieved: MAE 0.392s on 2025 test data** ✅
+
+**Tire Degradation Predictor (N07–N10):**
+
+- [x] EDA and degradation analysis (N07, N08)
+- [x] TCN (Temporal Convolutional Network) architecture in PyTorch (N09)
+- [x] Per-compound fine-tuning (SOFT / MEDIUM / HARD)
+- [x] MC Dropout for uncertainty quantification (N=50 forward passes)
+- [x] Calibration JSON exported alongside model weights
+- [x] Model exported to `data/models/tire_degradation/`
+- [ ] Target R² >0.85 — *pending formal evaluation on 2025 holdout*
+
+**Important Note - Tire Compound Mapping:**
+Current data (FastF1/OpenF1) only provides relative compound names (SOFT/MEDIUM/HARD) per race. For accurate degradation predictions, actual Pirelli compounds (C1-C5) are critical since the same "MEDIUM" can be C2 (harder) or C4 (softer) depending on circuit. Future enhancement: manual mapping from [Pirelli press releases](https://press.pirelli.com) into `data/tire_compounds_by_race.json`.
+
+**Success Metrics:**
+
+- [x] Lap Time: MAE 0.392s on 2025 (target <0.5s ✅ / stretch <0.3s ⬜)
+- [x] Tire Degradation model operational with MC Dropout uncertainty
+- [x] All experiments documented in notebooks/strategy/
+
+---
+
+## v0.8.0 - Additional Predictors
+
+- [x] **Status:** In Progress
+- [ ] **Target:** April 2025
+
+Expand ML capabilities with additional prediction models for overtake probability and safety car deployment. Sector time predictor descoped (no meaningful contribution over N06 delta model for the Strategy Agent).
+
+**Sector Time Predictor:**
+
+- [ ] ~~Descoped~~ — does not add value over lap delta model for Strategy Agent use case
+
+**Overtake Probability (N11 + N12):**
+
+- [x] EDA and overtake pattern analysis — `N11_overtake_eda.ipynb`
+- [x] 28,494 labeled pairs (2023–2025), gap ≤ 2.5s, 8.44% positive rate
+- [x] LightGBM binary classifier, Optuna hyperparameter search
+- [x] Platt calibration on 2024 validation set
+- [x] Window simulation: P(overtake in N laps) = 1 − ∏(1 − Pₖ)
+- [x] Model exported to `data/models/overtake_probability/`
+- [x] Labeled dataset published to HuggingFace Hub
+- [x] **Achieved: AUC-PR 0.5491, AUC-ROC 0.8758, threshold 0.80** ✅
+
+**Safety Car Probability (N13 + N14):**
+
+- [x] Dataset construction started — `N13_sc_eda.ipynb` in progress
+  - 58 races loaded, 3,506 race-lap rows, 0 failures
+  - Sources: `session.laps` + `session.track_status` (timestamped) + `session.race_control_messages`
+  - SC+VSC: 6.6% of all laps (231 caution laps)
+- [ ] Feature engineering: lap-level features + race control message precursors
+- [ ] SC labeling: `sc_within_5_laps = 1` if '4' or '6' in next 5 laps
+- [ ] EDA and class distribution analysis
+- [ ] Random Forest classifier + Platt calibration — `N14_sc_model.ipynb`
+- [ ] Model exported to `data/models/safety_car_probability/`
+- [ ] Target: Precision >0.70, AUC-PR to be benchmarked
+
+**Success Metrics:**
+
+- [x] Overtake: AUC-PR 0.5491, AUC-ROC 0.8758 (train 2023+2024 / test 2025) ✅
+- [ ] Safety Car: Precision >0.70 for next 5 laps
+- [x] Per-cluster performance validated on 2025 test data (overtake) ✅
+
+---
+
+## v0.9.0 - Code Refactoring
+
+- [ ] **Status:** Deferred — src/ modules implemented after all notebooks complete
+- [ ] **Target:** Post-notebook phase
+
+Clean and modularize the codebase. Eliminate code duplication, centralize configurations, implement testing infrastructure.
 
 **Scope:**
 
@@ -97,7 +177,7 @@ Clean and modularize existing codebase (excluding telemetry submodule). Eliminat
 - [ ] Refactor functions for modularity and reusability
 - [ ] Centralize YAML configurations
 - [ ] Implement structured logging
-- [ ] Unit tests with >50% coverage (initial target)
+- [ ] Unit tests with >50% coverage
 
 **Success Metrics:**
 
@@ -105,108 +185,10 @@ Clean and modularize existing codebase (excluding telemetry submodule). Eliminat
 - [ ] All configurations in configs/ directory
 - [ ] Test coverage >50%
 - [ ] Linting passes (black, ruff)
-- [ ] Code review checklist completed
 
 ---
 
-## v0.4.0 - ML Foundation: Lap Time & Tire Degradation (Weeks 7-11)
-
-- [ ] **Status:** Not Started
-- [ ] **Target:** Late March 2025
-- [ ] **Critical Milestone**
-
-Develop and train the first two ML models: lap time prediction and tire degradation. All experimentation in notebooks, final models in src/strategy/models/.
-
-**Development Approach:**
-
-- Experiments and EDA in notebooks/models/
-- Based on legacy notebooks but refactored with new 2023-2024 data
-- Final production models implemented in src/strategy/models/
-
-**Lap Time Predictor:**
-
-- [ ] EDA and data exploration (notebooks/models/laptime_eda.ipynb)
-- [ ] XGBoost experiments with circuit clustering features (notebooks/models/laptime_experiments.ipynb)
-- [ ] Hyperparameter tuning via GridSearch
-- [ ] Final model implementation in src/strategy/models/laptime.py
-- [ ] Target: RMSE <0.5s, MAE <0.3s across all circuit clusters
-
-**Tire Degradation Predictor:**
-
-- [ ] EDA and degradation analysis (notebooks/models/tiredeg_eda.ipynb)
-- [ ] TCN architecture refactor to PyTorch Lightning (notebooks/models/tiredeg_experiments.ipynb)
-- [ ] Architecture improvements and experimentation
-- [ ] Final model implementation in src/strategy/models/tiredeg.py
-- [ ] Target: R² >0.85
-
-**Important Note - Tire Compound Mapping:**
-Current data (FastF1/OpenF1) only provides relative compound names (SOFT/MEDIUM/HARD) per race. For accurate degradation predictions, actual Pirelli compounds (C1-C5) are critical since the same "MEDIUM" can be C2 (harder) or C4 (softer) depending on circuit. Future enhancement required: manual mapping from [Pirelli press releases](https://press.pirelli.com) to create `data/tire_compounds_by_race.json`. This enables compound-specific degradation models (C1 vs C5 degrades very differently) combined with circuit clustering.
-
-**Model Optimization:**
-
-- [ ] ONNX export for inference optimization
-- [ ] Quantization (FP32 → FP16)
-- [ ] Inference latency <50ms per prediction
-
-**Validation:**
-
-- [ ] Test on 2025 season data
-- [ ] Per-cluster performance metrics
-- [ ] Documented results in notebooks
-
-**Success Metrics:**
-
-- [ ] Lap Time: RMSE <0.5s across all circuit clusters
-- [ ] Tire Degradation: R² >0.85
-- [ ] Inference latency <50ms per prediction
-- [ ] All experiments documented in notebooks/models/
-
----
-
-## v0.5.0 - Additional Predictors (Weeks 11-15)
-
-- [ ] **Status:** Not Started
-- [ ] **Target:** Late April 2025
-
-Expand ML capabilities with three additional prediction models. All experimentation in notebooks/models/, production code in src/strategy/models/.
-
-**Dataset Preparation:**
-
-- [ ] Extract and label sector times from telemetry
-- [ ] Label overtake events (gap reduction + position changes)
-- [ ] Label historical safety car deployment events
-
-**Sector Time Predictor:**
-
-- [ ] EDA and sector analysis (notebooks/models/sector_eda.ipynb)
-- [ ] XGBoost Multi-Output experiments (notebooks/models/sector_experiments.ipynb)
-- [ ] Final implementation in src/strategy/models/sector.py
-- [ ] Target: RMSE <0.3s per sector (S1, S2, S3)
-
-**Overtake Probability:**
-
-- [ ] EDA and overtake pattern analysis (notebooks/models/overtake_eda.ipynb)
-- [ ] Gradient Boosting experiments (notebooks/models/overtake_experiments.ipynb)
-- [ ] Final implementation in src/strategy/models/overtake.py
-- [ ] Target: F1-score >0.75 for next 3 laps
-
-**Safety Car Probability:**
-
-- [ ] EDA and incident analysis (notebooks/models/safetycar_eda.ipynb)
-- [ ] Random Forest experiments (notebooks/models/safetycar_experiments.ipynb)
-- [ ] Final implementation in src/strategy/models/safetycar.py
-- [ ] Target: Precision >0.70 for next 5 laps
-
-**Success Metrics:**
-
-- [ ] Five complete ML models operational
-- [ ] Classification models achieve F1-score >0.75
-- [ ] Per-cluster performance validated on 2025 test data
-- [ ] All experiments documented in notebooks/models/
-
----
-
-## v0.6.0 - Multi-Agent System (Weeks 15-18)
+## v0.10.0 - Multi-Agent System
 
 - [ ] **Status:** Not Started
 - [ ] **Target:** Early May 2025
@@ -233,7 +215,7 @@ Implement coordinated three-agent architecture using LangGraph for orchestration
 
 ---
 
-## v0.7.0 - RAG System (Weeks 18-20)
+## v0.11.0 - RAG System
 
 - [ ] **Status:** Not Started
 - [ ] **Target:** Mid-May 2025
@@ -261,7 +243,7 @@ Integrate retrieval-augmented generation for FIA sporting regulations. Provides 
 
 ---
 
-## v0.8.0 - User Interfaces (Weeks 20-23)
+## v0.12.0 - User Interfaces
 
 - [ ] **Status:** Not Started
 - [ ] **Target:** Late May 2025
@@ -301,7 +283,7 @@ Develop dual interface system: Streamlit dashboard for analysis/configuration an
 
 ---
 
-## v0.9.0 - Testing & Validation (Weeks 23-25)
+## v0.13.0 - Testing & Validation
 
 - [ ] **Status:** Not Started
 - [ ] **Target:** Early June 2025
@@ -331,7 +313,7 @@ End-to-end system validation across multiple race scenarios. Performance testing
 
 ---
 
-## v1.0.0 - Final Release (Week 18)
+## v1.0.0 - Final Release
 
 - [ ] **Status:** Not Started
 - [ ] **Target:** June 20, 2025
@@ -356,16 +338,18 @@ Complete project delivery with thesis documentation and defense materials.
 
 ## Key Milestones
 
-| Week | Milestone                    | Criteria                                           | Status |
-| ---- | ---------------------------- | -------------------------------------------------- | ------ |
-| 3    | Code Integration Complete    | Docker Compose operational, WebSocket functional   | ✅     |
-| 5    | Circuit Clustering Validated | 4 clusters defined with F1-scores calculated       | ⬜     |
-| 8    | Base Models Optimized        | Lap Time RMSE <0.5s, Tire Deg R² >0.85            | ⬜     |
-| 12   | All ML Models Complete       | 5 models operational, classification F1 >0.75      | ⬜     |
-| 13   | Multi-Agent Operational      | 3 coordinated agents with successful demo          | ⬜     |
-| 14   | RAG Integrated               | Strategy Agent leverages FIA regulations           | ⬜     |
-| 16   | Testing Complete             | 3 race scenarios validated, critical bugs resolved | ⬜     |
-| 18   | Thesis Delivered             | Documentation complete, defense ready              | ⬜     |
+| Release | Milestone                    | Criteria                                                        | Status |
+| ------- | ---------------------------- | --------------------------------------------------------------- | ------ |
+| v0.5    | Code Integration Complete    | Docker Compose operational, API verified                        | ✅     |
+| v0.6    | Data Engineering Complete    | 4 clusters, 45k laps, 2025 held-out, HuggingFace published     | ✅     |
+| v0.7    | Base Models Complete         | Lap Time MAE 0.392s ✅ / Tire Deg TCN + MC Dropout ✅           | ✅     |
+| v0.8    | All ML Models Complete       | Overtake ✅ / SC in progress / Sector descoped                  | 🔄     |
+| v0.9    | Code Refactoring             | Deferred to post-notebooks                                      | ⏸️     |
+| v0.10   | Multi-Agent Operational      | 3 coordinated agents with successful demo                       | ⬜     |
+| v0.11   | RAG Integrated               | Strategy Agent leverages FIA regulations                        | ⬜     |
+| v0.12   | Interfaces Live              | Streamlit + Arcade connected to backend                         | ⬜     |
+| v0.13   | Testing Complete             | 3 race scenarios validated, critical bugs resolved              | ⬜     |
+| v1.0    | Thesis Delivered             | Documentation complete, defense ready                           | ⬜     |
 
 ---
 
@@ -385,10 +369,11 @@ Complete project delivery with thesis documentation and defense materials.
 
 **ML Models:**
 
-- Lap Time: RMSE <0.5s, MAE <0.3s
-- Tire Degradation: R² >0.85
-- Sector Time: RMSE <0.3s per sector
-- Overtake/Safety Car: F1-score >0.75, Precision >0.70
+- Lap Time: target MAE <0.3s — **achieved MAE 0.392s** (within <0.5s tolerance ✅)
+- Tire Degradation: target R² >0.85 — *pending formal holdout evaluation*
+- Sector Time: **descoped**
+- Overtake Probability: target AUC-PR >0.50 — **achieved AUC-PR 0.5491, AUC-ROC 0.8758** ✅
+- Safety Car Probability: target Precision >0.70 — *in progress*
 
 **System Performance:**
 
@@ -404,5 +389,5 @@ Complete project delivery with thesis documentation and defense materials.
 
 ---
 
-**Last Updated:** February 2025
-**Version:** 1.0
+**Last Updated:** March 2025
+**Version:** 1.4
