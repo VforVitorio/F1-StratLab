@@ -171,15 +171,10 @@ Additional predictive models extending the ML foundation: temporal battle sequen
 
 **Battle Outcome Temporal — Causal TCN (N12B):**
 
-- [ ] No separate EDA — N11 covers full overtake analysis; notebook will reference N11
-- [ ] **Architecture:** Causal TCN (NOT bidirectional — future leakage forbidden)
-  - 2-3 layers, dilation [1,2,4], kernel size 3 → receptive field ~15 timesteps (~5-8 laps)
-  - Input: sequence of last 5-8 laps of [gap_ahead, pace_delta, drs_window] per pair (X,Y)
-  - Causal TCN > LSTM: parallelizable, no vanishing gradient, better on short sequences
-- [ ] Same binary target as N12 (overtake yes/no), same parquet; add temporal windowing
-- [ ] Expected improvement: AUC-ROC 0.875 → ~0.90+ (captures gap momentum, not just snapshot)
-- [ ] Notebook: `notebooks/strategy/overtake_probability/N12B_overtake_tcn.ipynb`
-- [ ] Export: `data/models/overtake_probability/tcn_overtake_v1.pt` + `model_config.json`
+- [x] Causal TCN implemented and trained — `notebooks/strategy/overtake_probability/N12B_overtake_tcn.ipynb`
+- [x] **Result: negative** — AUC-PR ~0.10 vs N12 LightGBM 0.5491
+- [x] Root cause: N12 already encodes temporal signal via `pace_delta_rolling3` / `gap_trend`; TCN cannot rediscover what is already explicit on ~18k sequences
+- [x] **N12 LightGBM remains production model.** N12B archived as documented negative result — valid finding: explicit feature engineering dominates raw sequence modeling on small datasets.
 
 **Pit Stop Duration — Quantile Regression (N15):**
 
