@@ -1,84 +1,361 @@
 {
+  "2023": {
+    "Sakhir": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Jeddah": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Melbourne": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Baku": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Miami": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Monaco": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Barcelona": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Montréal": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Spielberg": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Silverstone": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Budapest": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Spa-Francorchamps": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Zandvoort": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Monza": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Marina Bay": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Suzuka": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Lusail": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Austin": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Mexico City": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "São Paulo": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Las Vegas": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Yas Island": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    }
+  },
+  "2024": {
+    "Sakhir": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Jeddah": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Melbourne": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Suzuka": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Shanghai": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Miami": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Imola": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Monaco": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Montréal": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Barcelona": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Spielberg": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Silverstone": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Budapest": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Spa-Francorchamps": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Zandvoort": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Monza": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Baku": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Marina Bay": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Austin": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Mexico City": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "São Paulo": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Las Vegas": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Lusail": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Yas Island": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    }
+  },
+  "2025": {
+    "Melbourne": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Shanghai": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Suzuka": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Sakhir": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Jeddah": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Miami": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Imola": {
+      "HARD": "C4",
+      "MEDIUM": "C5",
+      "SOFT": "C6"
+    },
+    "Monaco": {
+      "HARD": "C4",
+      "MEDIUM": "C5",
+      "SOFT": "C6"
+    },
+    "Barcelona": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Montréal": {
+      "HARD": "C4",
+      "MEDIUM": "C5",
+      "SOFT": "C6"
+    },
+    "Spielberg": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Silverstone": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Spa-Francorchamps": {
+      "HARD": "C1",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Budapest": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Zandvoort": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Monza": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Baku": {
+      "HARD": "C4",
+      "MEDIUM": "C5",
+      "SOFT": "C6"
+    },
+    "Marina Bay": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Austin": {
+      "HARD": "C1",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Mexico City": {
+      "HARD": "C2",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "São Paulo": {
+      "HARD": "C2",
+      "MEDIUM": "C3",
+      "SOFT": "C4"
+    },
+    "Las Vegas": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    },
+    "Lusail": {
+      "HARD": "C1",
+      "MEDIUM": "C2",
+      "SOFT": "C3"
+    },
+    "Yas Island": {
+      "HARD": "C3",
+      "MEDIUM": "C4",
+      "SOFT": "C5"
+    }
+  },
   "_comment": "Pirelli absolute compound allocation per race. Keys match GP_Name column (folder name with _ → space). Sourced from Pirelli official press releases.",
   "_usage": "Look up by year (str) → GP_Name → compound label (SOFT/MEDIUM/HARD) → absolute Pirelli compound (C1–C6). Compound labels match FastF1 Compound column values.",
-  "_note": "All keys are canonical circuit names. 'Spain' (2023 test artefact) must be aliased to 'Barcelona' before lookup. 2025 reintroduces C6 and allows non-consecutive compound sets (e.g. Spa: C1/C3/C4, Austin: C1/C3/C4, Mexico City: C2/C4/C5).",
-
-  "2023": {
-    "Sakhir":             {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Jeddah":             {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Melbourne":          {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Baku":               {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Miami":              {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Monaco":             {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Barcelona":          {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Montréal":           {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Spielberg":          {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Silverstone":        {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Budapest":           {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Spa-Francorchamps":  {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Zandvoort":          {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Monza":              {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Marina Bay":         {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Suzuka":             {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Lusail":             {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Austin":             {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Mexico City":        {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "São Paulo":          {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Las Vegas":          {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Yas Island":         {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"}
-  },
-
-  "2024": {
-    "Sakhir":             {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Jeddah":             {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Melbourne":          {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Suzuka":             {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Shanghai":           {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Miami":              {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Imola":              {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Monaco":             {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Montréal":           {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Barcelona":          {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Spielberg":          {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Silverstone":        {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Budapest":           {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Spa-Francorchamps":  {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Zandvoort":          {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Monza":              {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Baku":               {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Marina Bay":         {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Austin":             {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Mexico City":        {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "São Paulo":          {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Las Vegas":          {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Lusail":             {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Yas Island":         {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"}
-  },
-
-  "2025": {
-    "Melbourne":          {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Shanghai":           {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Suzuka":             {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Sakhir":             {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Jeddah":             {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Miami":              {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Imola":              {"HARD": "C4", "MEDIUM": "C5", "SOFT": "C6"},
-    "Monaco":             {"HARD": "C4", "MEDIUM": "C5", "SOFT": "C6"},
-    "Barcelona":          {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Montréal":           {"HARD": "C4", "MEDIUM": "C5", "SOFT": "C6"},
-    "Spielberg":          {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Silverstone":        {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Spa-Francorchamps":  {"HARD": "C1", "MEDIUM": "C3", "SOFT": "C4"},
-    "Budapest":           {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Zandvoort":          {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Monza":              {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Baku":               {"HARD": "C4", "MEDIUM": "C5", "SOFT": "C6"},
-    "Marina Bay":         {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Austin":             {"HARD": "C1", "MEDIUM": "C3", "SOFT": "C4"},
-    "Mexico City":        {"HARD": "C2", "MEDIUM": "C4", "SOFT": "C5"},
-    "São Paulo":          {"HARD": "C2", "MEDIUM": "C3", "SOFT": "C4"},
-    "Las Vegas":          {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"},
-    "Lusail":             {"HARD": "C1", "MEDIUM": "C2", "SOFT": "C3"},
-    "Yas Island":         {"HARD": "C3", "MEDIUM": "C4", "SOFT": "C5"}
-  }
+  "_note": "All keys are canonical circuit names. 'Spain' (2023 test artefact) must be aliased to 'Barcelona' before lookup. 2025 reintroduces C6 and allows non-consecutive compound sets (e.g. Spa: C1/C3/C4, Austin: C1/C3/C4, Mexico City: C2/C4/C5)."
 }
