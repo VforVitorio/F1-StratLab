@@ -164,12 +164,12 @@ Expand ML capabilities with additional prediction models for overtake probabilit
 
 ## v0.8.1 - Extended ML Models
 
-- [ ] **Status:** In Progress
-- [ ] **Target:** April–May 2025
+- [x] **Status:** Completed
+- [x] **Release Date:** March 2026
 
-Additional predictive models extending the ML foundation: temporal battle sequence modeling, pit stop duration quantile regression, and undercut success classification.
+Additional predictive models extending the ML foundation: pit stop duration quantile regression and undercut success classification. Causal TCN alternative archived as negative result.
 
-**Battle Outcome Temporal — Causal TCN (N12B):**
+**Battle Outcome Temporal — Causal TCN (N12B) — Negative Result:**
 
 - [x] Causal TCN implemented and trained — `notebooks/strategy/overtake_probability/N12B_overtake_tcn.ipynb`
 - [x] **Result: negative** — AUC-PR ~0.10 vs N12 LightGBM 0.5491
@@ -178,32 +178,114 @@ Additional predictive models extending the ML foundation: temporal battle sequen
 
 **Pit Stop Duration — Quantile Regression (N15):**
 
-- [ ] EDA integrated in same notebook (pit stop data never explored before)
-- [ ] **Model:** `sklearn.HistGradientBoostingRegressor(loss='quantile')` × 3 fits (P10/P50/P90)
-  - LightGBM overkill for ~1000 rows; HistGBT equivalent, no extra deps
-  - Bimodal distribution (normal ~24s vs slow ~29-36s) → quantile regression over point estimate
-  - P50 = expected duration (undercut), P10 = best case, P90 = worst case
-- [ ] Features: team, circuit, year, track_status (SC/VSC/normal), tyre_life_in, lap_number, compound_change
-- [ ] Expected MAE P50 ~0.3-0.4s on normal stops; team explains ~70% variance
-- [ ] Notebook: `notebooks/strategy/pit_prediction/N15_pit_duration.ipynb`
-- [ ] Export: `data/models/pit_prediction/hist_pit_duration_v1.pkl` + `model_config.json`
+- [x] EDA integrated in same notebook
+- [x] **Model:** `sklearn.HistGradientBoostingRegressor(loss='quantile')` × 3 fits (P05/P50/P95)
+- [x] Target: `physical_stop_est` [2.0–4.5s] — physical stop only, pit lane traversal subtracted per circuit
+- [x] Features: team, year, tyre_life_in, lap_number, compound_id, compound_change, under_sc, tight_pit_box, team_year_median
+- [x] Notebook: `notebooks/strategy/pit_prediction/N15_pit_duration.ipynb`
+- [x] Export: `data/models/pit_prediction/hist_pit_p05/p50/p95_v1.pkl` + `model_config.json`
+- [x] **Achieved: P50 MAE 0.487s vs baseline 0.555s** ✅
 
 **Undercut Success Predictor (N16):**
 
-- [ ] No separate EDA — reference N11 (gaps/pace) and N15 (pit stop context); labeling documented in notebook Step 0
-- [ ] Label: driver X pits before rival Y (≤5 laps) → X gains position after pit sequence = success
-- [ ] Dataset: ~400-600 labelable strategic pairs (2023-2025)
-- [ ] **Model:** LightGBM binary (same architecture as N12/N14)
-- [ ] Features: gap_to_rival_ahead, pace_delta, tyre_age_diff, circuit_undercut_rate, lap_pct, pit_duration_delta, fresh_tyre_pace_gain
-- [ ] Expected: AUC-ROC ~0.75-0.85 (more deterministic than SC)
-- [ ] Notebook: `notebooks/strategy/pit_prediction/N16_undercut.ipynb`
-- [ ] Export: `data/models/pit_prediction/lgbm_undercut_v1.pkl` + `model_config.json`
+- [x] Label: driver X pits before rival Y (≤5 laps) → X gains position after pit sequence = success
+- [x] Dataset: 1,032 labeled pairs (2023–2025), DRY_COMPOUNDS only (SOFT/MEDIUM/HARD)
+- [x] **Model:** LightGBM binary (same architecture as N12/N14) + Platt calibration
+- [x] Features (13): pos_gap_at_pit, pace_delta, tyre_life_diff, circuit_undercut_rate, lap_race_pct, compound_x/y_id, compound_delta, pit_duration_delta, circuit_undercut_rate (target enc), team_x_undercut_rate (target enc)
+- [x] SHAP top: pos_gap_at_pit > pace_delta > circuit_undercut_rate > tyre_life_diff
+- [x] Notebook: `notebooks/strategy/pit_prediction/N16_undercut.ipynb`
+- [x] Export: `data/models/pit_prediction/lgbm_undercut_v1.pkl` + `calibrator_undercut_v1.pkl` + `model_config_undercut_v1.json`
+- [x] **Achieved: AUC-PR 0.6739, AUC-ROC 0.7708, threshold 0.522** ✅
 
 **Success Metrics:**
 
-- [ ] N12B Causal TCN: AUC-ROC >0.90
-- [ ] N15 Pit Duration: P50 MAE <0.5s on normal stops
-- [ ] N16 Undercut: AUC-ROC >0.75
+- [x] N12B Causal TCN: archived — AUC-PR ~0.10, N12 production model unchanged ✅
+- [x] N15 Pit Duration: P50 MAE 0.487s (target <0.5s ✅)
+- [x] N16 Undercut: AUC-ROC 0.7708 (target >0.75 ✅)
+
+---
+
+## v0.8.2 - NLP Radio Processing Pipeline
+
+- [ ] **Status:** In Progress
+- [ ] **Target:** March–April 2026
+
+NLP pipeline for the Radio Agent: converts raw team radio audio into structured signals (sentiment, intent, F1 entities) consumed by the Strategy Agent. Legacy notebooks `legacy/notebooks/NLP_radio_processing/N00-N06` migrated and updated to `notebooks/nlp/N17-N23`, plus a new N24 notebook for Race Control Messages.
+
+**Pipeline architecture:**
+```
+Audio (MP3/WAV) → N18 Whisper ASR → text
+                                      ├─► N20 BERT Sentiment
+                                      ├─► N21 Intent Classifier
+                                      └─► N22 Custom NER (F1 entities)
+                                                    └─► N23 Merging → JSON output
+
+N24 Race Control Messages → structured SC/VSC/flags/penalties
+```
+
+**N17 — Data Labeling & Dataset Radio:**
+
+- [ ] Label transcriptions with intent + sentiment + entities
+- [ ] Source: `VforVitorio/f1-strategy-dataset` (HuggingFace)
+- [ ] Output: `data/processed/radio_nlp/` parquet
+- [ ] Notebook: `notebooks/nlp/N17_radio_labeling.ipynb`
+
+**N18 — Radio Transcription (Whisper ASR):**
+
+- [ ] Whisper (`openai-whisper` or `faster-whisper`) for F1 radio ASR
+- [ ] Benchmark WER by message type (pit instructions, tire status, incident alerts)
+- [ ] Notebook: `notebooks/nlp/N18_radio_transcription.ipynb`
+
+**N19 — Sentiment Baseline (VADER):**
+
+- [ ] Rule-based VADER baseline — benchmark for BERT fine-tuning
+- [ ] Metrics: accuracy, F1 per class (positive/neutral/negative/urgent)
+- [ ] Notebook: `notebooks/nlp/N19_sentiment_vader.ipynb`
+
+**N20 — BERT Sentiment Fine-tuning:**
+
+- [ ] Fine-tune `distilbert` or `bert-base-uncased` on labeled radio dataset
+- [ ] Classes: positive / neutral / negative / urgent / frustrated
+- [ ] Export: `data/models/nlp/bert_sentiment_v1/`
+- [ ] Notebook: `notebooks/nlp/N20_bert_sentiment.ipynb`
+
+**N21 — Intent Classification:**
+
+- [ ] Intent classes: pit request, tire complaint, gap update, incident report, team order, general
+- [ ] Model: fine-tuned transformer or LightGBM over embeddings
+- [ ] Export: `data/models/nlp/intent_classifier_v1/`
+- [ ] Notebook: `notebooks/nlp/N21_radio_intent.ipynb`
+
+**N22 — Custom NER (F1 Entities):**
+
+- [ ] Entity types: `DRIVER`, `TEAM`, `COMPOUND`, `LAP`, `GAP`, `POSITION`, `INCIDENT`
+- [ ] Model: spaCy or fine-tuned BERT NER
+- [ ] Export: `data/models/nlp/ner_f1_v1/`
+- [ ] Notebook: `notebooks/nlp/N22_ner_models.ipynb`
+
+**N23 — Model Merging Pipeline:**
+
+- [ ] Unified pipeline: ASR → Sentiment → Intent → NER → JSON output
+- [ ] Output schema: `{ "message": str, "analysis": { "sentiment": str, "intent": str, "entities": dict } }`
+- [ ] End-to-end latency benchmark (target: <500ms per message)
+- [ ] Export: `data/models/nlp/pipeline_config_v1.json`
+- [ ] Notebook: `notebooks/nlp/N23_nlp_pipeline.ipynb`
+
+**N24 — Race Control Messages NLP:**
+
+- [ ] Parse and classify `session.race_control_messages` (FastF1): SC, VSC, flags, penalties, incidents
+- [ ] Structured extraction: event type, affected sector, involved drivers, lap number
+- [ ] Feeds Strategy Agent directly (e.g. "SC deployed lap 32, sector 2")
+- [ ] Connects with N13/N14 (SC probability features) and N16 (undercut context)
+- [ ] Notebook: `notebooks/nlp/N24_race_control_messages.ipynb`
+
+**Success Metrics:**
+
+- [ ] N18 Whisper ASR: WER <20% on F1 radio messages
+- [ ] N20 BERT Sentiment: F1 >0.75 on test set
+- [ ] N21 Intent: F1 >0.80 on test set
+- [ ] N22 NER: F1 >0.70 per entity class
+- [ ] N23 Pipeline: end-to-end latency <500ms
 
 ---
 
@@ -393,7 +475,8 @@ Complete project delivery with thesis documentation and defense materials.
 | v0.6    | Data Engineering Complete    | 4 clusters, 45k laps, 2025 held-out, HuggingFace published     | ✅     |
 | v0.7    | Base Models Complete         | Lap Time MAE 0.392s ✅ / Tire Deg TCN + MC Dropout ✅           | ✅     |
 | v0.8    | Core ML Models Complete      | Overtake ✅ / SC ✅ (soft prior, lift 1.67×) / Sector descoped  | ✅     |
-| v0.8.1  | Extended ML Models           | N12B Causal TCN / N15 Pit Duration / N16 Undercut              | 🔄     |
+| v0.8.1  | Extended ML Models           | N12B archived (neg. result) / N15 MAE 0.487s ✅ / N16 AUC-ROC 0.7708 ✅ | ✅     |
+| v0.8.2  | NLP Radio Pipeline           | N17–N24: Whisper ASR, BERT sentiment, intent, NER, RC messages | 🔄     |
 | v0.9    | Code Refactoring             | Deferred to post-notebooks                                      | ⏸️     |
 | v0.10   | Multi-Agent Operational      | 3 coordinated agents with successful demo                       | ⬜     |
 | v0.11   | RAG Integrated               | Strategy Agent leverages FIA regulations                        | ⬜     |
@@ -424,9 +507,9 @@ Complete project delivery with thesis documentation and defense materials.
 - Sector Time: **descoped**
 - Overtake Probability: target AUC-PR >0.50 — **achieved AUC-PR 0.5491, AUC-ROC 0.8758** ✅
 - Safety Car Probability: reframed as soft prior — **achieved AUC-PR 0.0723 (lift 1.67×), AUC-ROC 0.6411** ✅
-- Battle Outcome TCN (N12B): target AUC-ROC >0.90 — *in progress*
-- Pit Stop Duration (N15): target P50 MAE <0.5s — *in progress*
-- Undercut Success (N16): target AUC-ROC >0.75 — *in progress*
+- Battle Outcome TCN (N12B): archived — AUC-PR ~0.10, N12 LightGBM remains production ✅
+- Pit Stop Duration (N15): **achieved P50 MAE 0.487s** (target <0.5s ✅)
+- Undercut Success (N16): **achieved AUC-ROC 0.7708, AUC-PR 0.6739** (target >0.75 ✅)
 
 **System Performance:**
 
@@ -442,5 +525,5 @@ Complete project delivery with thesis documentation and defense materials.
 
 ---
 
-**Last Updated:** March 2025
-**Version:** 1.4
+**Last Updated:** March 2026
+**Version:** 1.5
