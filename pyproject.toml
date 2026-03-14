@@ -80,6 +80,7 @@ dependencies = [
     "optuna>=4.7.0",
     "catboost>=1.2.10",
     "librosa>=0.11.0",
+    "nltk>=3.9.3",
 ]
 
 [project.optional-dependencies]
