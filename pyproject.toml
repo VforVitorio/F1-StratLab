@@ -79,6 +79,7 @@ dependencies = [
     "lightgbm>=4.6.0",
     "optuna>=4.7.0",
     "catboost>=1.2.10",
+    "librosa>=0.11.0",
 ]
 
 [project.optional-dependencies]
