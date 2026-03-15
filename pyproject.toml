@@ -28,6 +28,7 @@ dependencies = [
     # NLP
     # ===================
     "transformers>=4.30.0",
+    "sentencepiece>=0.1.99",
     "openai-whisper>=20230918",
     "sentence-transformers>=2.2.0",
     "spacy>=3.7.0",
