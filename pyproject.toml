@@ -82,6 +82,9 @@ dependencies = [
     "catboost>=1.2.10",
     "librosa>=0.11.0",
     "nltk>=3.9.3",
+    "gliner>=0.2.25",
+    "onnxruntime<1.24",
+    "setfit>=1.1.3",
 ]
 
 [project.optional-dependencies]
