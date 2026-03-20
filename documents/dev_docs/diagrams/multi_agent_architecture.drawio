@@ -1,0 +1,213 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="F1 Multi-Agent Architecture" id="arch_v1">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- TITLE -->
+        <mxCell id="title" value="F1 Strat Manager — Multi-Agent System Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="800" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- DATA LAYER -->
+        <!-- ════════════════════════════════════════ -->
+        <mxCell id="lbl_data" value="DATA SOURCES" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="60" y="75" width="160" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="parquet" value="&lt;b&gt;Race Parquet&lt;/b&gt;&#xa;(replay mode)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="200" y="70" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="live" value="&lt;b&gt;FastF1 Live / OpenF1 API&lt;/b&gt;&#xa;(real-time — future)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="820" y="70" width="230" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- RACE STATE MANAGER -->
+        <!-- ════════════════════════════════════════ -->
+        <mxCell id="rsm" value="&lt;b&gt;RaceStateManager&lt;/b&gt;&#xa;iter_laps(parquet | live) → RaceState per lap&#xa;accumulates stint history, syncs radio/RCM window" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="200" width="390" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_par_rsm" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="parquet" target="rsm" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_live_rsm" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="live" target="rsm" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- RACE STATE -->
+        <!-- ════════════════════════════════════════ -->
+        <mxCell id="rs" value="&lt;b&gt;RaceState&lt;/b&gt; (shared context, updated each lap)&#xa;lap_number · gp_name · driver · position · gaps · weather · tyre_data · stint_sequence · fuel_load · radio_msgs · rcm_events" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="100" y="350" width="1050" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_rsm_rs" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="rsm" target="rs" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- SUB-AGENTS -->
+        <!-- ════════════════════════════════════════ -->
+        <mxCell id="lbl_agents" value="SUB-AGENTS (LangGraph ReAct agents)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="60" y="425" width="360" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- N25 Pace Agent -->
+        <mxCell id="n25" value="&lt;b&gt;N25 — Pace Agent&lt;/b&gt;&#xa;LangGraph ReAct&#xa;─────────────&#xa;@tool predict_pace&#xa;@tool get_session_median&#xa;─────────────&#xa;Model: XGBoost N06&#xa;Context: prev_lap_time,&#xa;speed_trap, weather,&#xa;fuel_load, compound,&#xa;tyre_life" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="460" width="170" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- N26 Tire Agent -->
+        <mxCell id="n26" value="&lt;b&gt;N26 — Tire Agent&lt;/b&gt;&#xa;LangGraph ReAct&#xa;─────────────&#xa;@tool predict_tire_deg&#xa;@tool estimate_cliff&#xa;─────────────&#xa;Models: TCN N09&#xa;+ MC Dropout N10&#xa;Context: stint_seq[],&#xa;tyre_life[], deg_rate[],&#xa;compound" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="245" y="460" width="170" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- N27 Situation Agent -->
+        <mxCell id="n27" value="&lt;b&gt;N27 — Race Situation&lt;/b&gt;&#xa;LangGraph ReAct&#xa;─────────────&#xa;@tool predict_overtake&#xa;@tool predict_sc&#xa;─────────────&#xa;Models: LightGBM&#xa;N12 + N14&#xa;Context: gap_ahead,&#xa;position, DRS,&#xa;track_status,&#xa;lap_time_std_z" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="430" y="460" width="170" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- N28 Pit Strategy Agent -->
+        <mxCell id="n28" value="&lt;b&gt;N28 — Pit Strategy&lt;/b&gt;&#xa;LangGraph ReAct&#xa;─────────────&#xa;@tool predict_pit_dur&#xa;@tool predict_undercut&#xa;─────────────&#xa;Models: HistGBT N15&#xa;+ LightGBM N16&#xa;Context: gap_ahead,&#xa;tyre_life, team +&#xa;&lt;i&gt;PaceOutput (N25)&#xa;TireOutput (N26)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="615" y="460" width="170" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- N29 Radio Agent -->
+        <mxCell id="n29" value="&lt;b&gt;N29 — Radio Agent&lt;/b&gt;&#xa;LangGraph ReAct&#xa;─────────────&#xa;@tool process_radio&#xa;@tool process_rcm&#xa;─────────────&#xa;Model: NLP pipeline&#xa;N24&#xa;Context: radio_msgs[],&#xa;rcm_events[]&#xa;(time window)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="460" width="170" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- N30 RAG Agent -->
+        <mxCell id="n30" value="&lt;b&gt;N30 — RAG Agent&lt;/b&gt;&#xa;LangGraph ReAct&#xa;─────────────&#xa;@tool query_rag&#xa;(multi-query)&#xa;─────────────&#xa;Stack: Qdrant +&#xa;sentence-transformers&#xa;+ FIA PDFs 2023-25&#xa;Context: event_type&#xa;from N27 / N29" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="985" y="460" width="170" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- RaceState → Sub-agents -->
+        <mxCell id="e_rs_n25" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="rs" target="n25" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_rs_n26" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="rs" target="n26" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_rs_n27" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="rs" target="n27" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_rs_n28" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="rs" target="n28" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_rs_n29" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="rs" target="n29" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_rs_n30" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="rs" target="n30" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Cross-agent dependencies: N25+N26 → N28 -->
+        <mxCell id="e_n25_n28" value="PaceOutput" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#FF6600;fontColor=#FF6600;fontSize=9;" edge="1" source="n25" target="n28" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="145" y="660" />
+              <mxPoint x="145" y="680" />
+              <mxPoint x="700" y="680" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_n26_n28" value="TireOutput" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#FF6600;fontColor=#FF6600;fontSize=9;" edge="1" source="n26" target="n28" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="330" y="670" />
+              <mxPoint x="330" y="690" />
+              <mxPoint x="700" y="690" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Event-triggered RAG: N27+N29 → N30 -->
+        <mxCell id="e_n27_n30" value="SC_prob&gt;0.3" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#9673a6;fontColor=#9673a6;fontSize=9;" edge="1" source="n27" target="n30" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="515" y="650" />
+              <mxPoint x="515" y="660" />
+              <mxPoint x="1070" y="660" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_n29_n30" value="PROBLEM/ORDER" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#9673a6;fontColor=#9673a6;fontSize=9;" edge="1" source="n29" target="n30" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- N31 ORCHESTRATOR -->
+        <!-- ════════════════════════════════════════ -->
+        <mxCell id="n31" value="&lt;b&gt;N31 — Strategy Orchestrator&lt;/b&gt; (LangGraph Supervisor Pattern)&#xa;Supervisor LLM: OpenAI API (gpt-4o-mini) or LM Studio local (OpenAI-compatible)&#xa;Decides which sub-agents to call each lap · aggregates all AgentOutputs · synthesizes final recommendation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="710" width="680" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_n25_n31" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="n25" target="n31" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_n26_n31" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="n26" target="n31" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_n27_n31" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="n27" target="n31" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_n28_n31" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="n28" target="n31" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_n29_n31" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="n29" target="n31" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_n30_n31" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="n30" target="n31" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- OUTPUT -->
+        <!-- ════════════════════════════════════════ -->
+        <mxCell id="output" value="&lt;b&gt;StrategyRecommendation&lt;/b&gt;&#xa;action: STAY_OUT / PIT_NOW / UNDERCUT / OVERCUT / ALERT&#xa;reasoning (LLM natural language) · confidence · regulation_context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="330" y="870" width="580" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_n31_out" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="n31" target="output" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- LEGEND -->
+        <mxCell id="leg_title" value="LEGEND" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=10;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="650" width="80" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="RaceState slice (telemetry)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="675" width="190" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="Sub-agent (LangGraph ReAct)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="715" width="190" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#FF6600;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1200" y="760" as="sourcePoint" />
+            <mxPoint x="1390" y="760" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg3_lbl" value="Cross-agent dependency" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="765" width="190" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#9673a6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1200" y="795" as="sourcePoint" />
+            <mxPoint x="1390" y="795" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg4_lbl" value="Event-triggered call" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="800" width="190" height="20" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
