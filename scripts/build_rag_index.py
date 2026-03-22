@@ -284,7 +284,7 @@ def extract_article_reference(text: str) -> str:
               be shorter for the last chunk of a document section.
     """
     match = _ARTICLE_RE.search(text)
-    return match.group(0) if match else ""
+    return " ".join(match.group(0).strip().split()) if match else ""
 
 
 def extract_section_title(text: str) -> str:
