@@ -30,32 +30,66 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterator
 
-import fitz  # PyMuPDF
 import numpy as np
+import pypdf
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 from sentence_transformers import SentenceTransformer
 
 # ---------------------------------------------------------------------------
-# Paths + config
+# Configuration
 # ---------------------------------------------------------------------------
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+@dataclass
+class IndexConfig:
+    """Centralised configuration for the PDF ingestion pipeline.
 
-DOCS_DIR        = _REPO_ROOT / "data" / "rag" / "documents"
-QDRANT_PATH     = _REPO_ROOT / "data" / "rag" / "qdrant_local"
-COLLECTION_NAME = "fia_regulations"
-# BGE-M3: MTEB ~67 vs ~57 for all-MiniLM-L6-v2, 1024-dim, fits in 8 GB VRAM (~2 GB usage).
-# Produces significantly better retrieval on technical/legal text like FIA regulations.
-EMBEDDING_MODEL = "BAAI/bge-m3"
-EMBEDDING_DIM   = 1024
+    Grouping all tunable parameters here means changing the embedding model,
+    chunk strategy, or storage paths requires editing exactly one place.
 
-# Chunk size in characters. 512 chars ≈ 80–120 words, which fits comfortably
-# inside the encoder's 256-token limit while keeping each chunk semantically
-# coherent (typically one or two regulation sub-articles).
-CHUNK_SIZE       = 512
-CHUNK_OVERLAP    = 64
-EMBED_BATCH_SIZE = 64   # larger batches are faster but use more RAM
+    Attributes:
+        collection_name:  Name of the Qdrant collection to populate. Must match
+                          ``RagConfig.collection_name`` in ``retriever.py`` —
+                          a mismatch means the retriever queries an empty collection.
+        embedding_model:  Sentence-transformers model used to encode chunks. Must
+                          be the same model used at query time in ``retriever.py``
+                          — incompatible models produce meaningless similarity scores.
+        embedding_dim:    Output vector size of the embedding model. BGE-M3 produces
+                          1024-dim vectors; changing the model requires updating this
+                          value or Qdrant will reject the upsert silently.
+        chunk_size:       Sliding window size in characters. 512 chars ≈ 80–120 words,
+                          fitting comfortably inside BGE-M3's 512-token limit while
+                          keeping each chunk semantically coherent (one or two articles).
+        chunk_overlap:    Characters repeated at the start of each new window so that
+                          sentences at chunk boundaries appear complete in at least one
+                          chunk and are not truncated mid-article.
+        embed_batch_size: Number of chunks embedded in a single encoder call. Larger
+                          batches saturate the GPU better but consume more VRAM; 64 is
+                          a safe default for an 8 GB card with BGE-M3.
+    """
+
+    collection_name:  str = "fia_regulations"
+    embedding_model:  str = "BAAI/bge-m3"   # MTEB ~67, 1024-dim, ~2 GB VRAM on RTX 5070
+    embedding_dim:    int = 1024
+    chunk_size:       int = 512
+    chunk_overlap:    int = 64
+    embed_batch_size: int = 64
+
+    def __post_init__(self) -> None:
+        self._repo_root = Path(__file__).resolve().parent.parent
+
+    @property
+    def docs_dir(self) -> Path:
+        """Directory where FIA PDFs are stored, scanned at index build time."""
+        return self._repo_root / "data" / "rag" / "documents"
+
+    @property
+    def qdrant_path(self) -> Path:
+        """On-disk Qdrant storage directory; created automatically if absent."""
+        return self._repo_root / "data" / "rag" / "qdrant_local"
+
+
+CFG = IndexConfig()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -167,18 +201,16 @@ def extract_text_from_pdf(path: Path) -> str:
     """Extract all plain text from a PDF file using PyMuPDF.
 
     Concatenates text from every page separated by a newline so that page
-    boundaries do not create artificial word splits during chunking. PyMuPDF
-    preserves the reading order of multi-column layouts better than most
-    alternatives, which matters for regulation documents that use numbered
-    sub-articles in narrow columns.
+    boundaries do not create artificial word splits during chunking. pypdf
+    handles the simple linear layout of FIA regulation documents well without
+    requiring native C dependencies.
 
     Args:
         path: Path to the PDF file to read. Raises ``FileNotFoundError`` if
               the file does not exist — callers should validate the path first.
     """
-    doc   = fitz.open(str(path))
-    pages = [page.get_text() for page in doc]
-    doc.close()
+    reader = pypdf.PdfReader(str(path))
+    pages  = [page.extract_text() or "" for page in reader.pages]
     return "\n".join(pages)
 
 
@@ -289,8 +321,8 @@ def compute_hash(text: str) -> str:
 
 def iter_chunks(
     document: PDFDocument,
-    chunk_size:    int = CHUNK_SIZE,
-    chunk_overlap: int = CHUNK_OVERLAP,
+    chunk_size:    int | None = None,
+    chunk_overlap: int | None = None,
 ) -> Iterator[TextChunk]:
     """Yield overlapping text chunks from a ``PDFDocument``.
 
@@ -309,6 +341,9 @@ def iter_chunks(
         chunk_overlap: Number of characters to repeat at the start of each
                        new window. Must be smaller than ``chunk_size``.
     """
+    chunk_size    = chunk_size    or CFG.chunk_size
+    chunk_overlap = chunk_overlap or CFG.chunk_overlap
+
     text   = clean_text(document.text)
     start  = 0
     stride = chunk_size - chunk_overlap
@@ -419,9 +454,9 @@ def embed_chunks(
     texts = [c.text for c in chunks]
     return encoder.encode(
         texts,
-        batch_size=EMBED_BATCH_SIZE,
+        batch_size=CFG.embed_batch_size,
         normalize_embeddings=True,
-        show_progress_bar=len(texts) > EMBED_BATCH_SIZE,
+        show_progress_bar=len(texts) > CFG.embed_batch_size,
     )
 
 
@@ -477,9 +512,9 @@ def upsert_chunks(
 # ---------------------------------------------------------------------------
 
 def build_index(
-    docs_dir:      Path = DOCS_DIR,
-    qdrant_path:   Path = QDRANT_PATH,
-    force_rebuild: bool = False,
+    docs_dir:      Path | None = None,
+    qdrant_path:   Path | None = None,
+    force_rebuild: bool        = False,
 ) -> None:
     """Orchestrate the full PDF → Qdrant pipeline.
 
@@ -498,22 +533,25 @@ def build_index(
                        this when the embedding model changes or the chunking
                        parameters are modified.
     """
+    docs_dir    = docs_dir    or CFG.docs_dir
+    qdrant_path = qdrant_path or CFG.qdrant_path
+
     if not docs_dir.exists() or not any(docs_dir.glob("*.pdf")):
         log.error("No PDFs found in %s — add regulation PDFs and retry", docs_dir)
         sys.exit(1)
 
     qdrant_path.mkdir(parents=True, exist_ok=True)
     client  = QdrantClient(path=str(qdrant_path))
-    encoder = SentenceTransformer(EMBEDDING_MODEL)
+    encoder = SentenceTransformer(CFG.embedding_model)
 
     if force_rebuild:
         existing = {c.name for c in client.get_collections().collections}
-        if COLLECTION_NAME in existing:
-            client.delete_collection(COLLECTION_NAME)
-            log.info("Deleted existing collection '%s' (--force-rebuild)", COLLECTION_NAME)
+        if CFG.collection_name in existing:
+            client.delete_collection(CFG.collection_name)
+            log.info("Deleted existing collection '%s' (--force-rebuild)", CFG.collection_name)
 
-    ensure_collection(client, COLLECTION_NAME, EMBEDDING_DIM)
-    existing_hashes = get_existing_hashes(client, COLLECTION_NAME)
+    ensure_collection(client, CFG.collection_name, CFG.embedding_dim)
+    existing_hashes = get_existing_hashes(client, CFG.collection_name)
     log.info("Existing indexed chunks: %d", len(existing_hashes))
 
     documents = load_pdf_documents(docs_dir)
@@ -538,13 +576,13 @@ def build_index(
         log.info("Nothing to do — index is up to date")
         return
 
-    log.info("Embedding %d chunks with '%s'...", len(all_chunks), EMBEDDING_MODEL)
+    log.info("Embedding %d chunks with '%s'...", len(all_chunks), CFG.embedding_model)
     embeddings = embed_chunks(all_chunks, encoder)
 
-    id_offset = client.get_collection(COLLECTION_NAME).points_count or 0
-    n_upserted = upsert_chunks(client, COLLECTION_NAME, all_chunks, embeddings, id_offset)
+    id_offset  = client.get_collection(CFG.collection_name).points_count or 0
+    n_upserted = upsert_chunks(client, CFG.collection_name, all_chunks, embeddings, id_offset)
 
-    total = (client.get_collection(COLLECTION_NAME).points_count or 0)
+    total = (client.get_collection(CFG.collection_name).points_count or 0)
     log.info("Done. Upserted: %d  |  Total in collection: %d", n_upserted, total)
 
 
@@ -556,8 +594,8 @@ def main() -> None:
     parser.add_argument(
         "--docs-dir",
         type=Path,
-        default=DOCS_DIR,
-        help=f"Directory containing FIA PDFs (default: {DOCS_DIR})",
+        default=CFG.docs_dir,
+        help=f"Directory containing FIA PDFs (default: {CFG.docs_dir})",
     )
     parser.add_argument(
         "--force-rebuild",

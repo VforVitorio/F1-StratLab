@@ -26,7 +26,7 @@ import logging
 import re
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import requests
@@ -36,18 +36,66 @@ from bs4 import BeautifulSoup
 # Config
 # ---------------------------------------------------------------------------
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+# python scripts/download_fia_pdfs.py             # descarga real
+# python scripts/build_rag_index.py               # indexa los PDFs descargados
 
-DOCS_DIR       = _REPO_ROOT / "data" / "rag" / "documents"
-KNOWN_URLS_FILE = _REPO_ROOT / "data" / "rag" / "fia_known_urls.json"
 
-# FIA regulation category pages for Formula 1
+@dataclass
+class DownloadConfig:
+    """Centralised configuration for the FIA PDF downloader.
+
+    Grouping all tunable parameters here means changing retry settings, the
+    supported year range, or the output directory requires editing exactly one
+    place rather than hunting for scattered constants across the module.
+
+    Attributes:
+        supported_years:  List of regulation years to consider when scraping
+                          and downloading. Passed as-is to the scraper and used
+                          to filter links — add a new year here when the FIA
+                          publishes a new season's regulations.
+        request_timeout:  Maximum seconds to wait for a single HTTP response.
+                          Set conservatively because FIA PDFs can be large and
+                          the website occasionally responds slowly.
+        retry_delay:      Seconds to wait between retry attempts after a failed
+                          request. Avoids hammering the FIA server immediately
+                          after a transient failure.
+        max_retries:      Maximum number of download attempts per URL before
+                          giving up and logging an error. Three attempts cover
+                          most transient network issues without blocking the
+                          pipeline for too long.
+    """
+
+    supported_years: list[int] = field(default_factory=lambda: [2023, 2024, 2025])
+    request_timeout: int = 30
+    retry_delay:     int = 2
+    max_retries:     int = 3
+
+    def __post_init__(self) -> None:
+        # Derived from this file's location so the module works regardless of
+        # the caller's working directory.
+        self._repo_root = Path(__file__).resolve().parent.parent
+
+    @property
+    def docs_dir(self) -> Path:
+        """Destination directory for downloaded FIA PDFs."""
+        return self._repo_root / "data" / "rag" / "documents"
+
+    @property
+    def known_urls_file(self) -> Path:
+        """Path to the manually maintained fallback URL list."""
+        return self._repo_root / "data" / "rag" / "fia_known_urls.json"
+
+
+CFG = DownloadConfig()
+
+# FIA regulation category pages for Formula 1.
+# Only Sporting Regulations are indexed — they cover the rules relevant to
+# race strategy: safety car procedures, pit lane, tyre allocations, penalties,
+# blue flags, DRS, and race director directives. Technical Regulations (car
+# construction) are not needed by the strategy agents.
 FIA_CATEGORY_URLS: dict[str, str] = {
-    "sporting_regs":  "https://www.fia.com/regulation/category/110",
-    "technical_regs": "https://www.fia.com/regulation/category/111",
+    "sporting_regs": "https://www.fia.com/regulation/category/110",
 }
-
-SUPPORTED_YEARS = [2023, 2024, 2025]
 
 # Patterns that identify an F1 regulation PDF link on the FIA website.
 # The FIA uses "Formula 1" and either "Sporting" or "Technical" in document titles.
@@ -56,10 +104,6 @@ _TITLE_PATTERNS: dict[str, re.Pattern[str]] = {
     "technical_regs": re.compile(r"formula.?1.+technical.+regulation", re.IGNORECASE),
 }
 _YEAR_RE = re.compile(r"20(2[3-9])\d*")
-
-REQUEST_TIMEOUT = 30   # seconds per HTTP request
-RETRY_DELAY     = 2    # seconds between retries
-MAX_RETRIES     = 3
 
 logging.basicConfig(
     level=logging.INFO,
@@ -105,7 +149,7 @@ class RegulationLink:
 def _get(url: str, session: requests.Session) -> requests.Response | None:
     """Fetch a URL with retries, returning ``None`` on persistent failure.
 
-    Retries up to ``MAX_RETRIES`` times with a fixed delay. Returns ``None``
+    Retries up to ``CFG.max_retries`` times with a fixed delay. Returns ``None``
     rather than raising so the caller can fall back to the known-URLs list
     without interrupting the whole download run.
 
@@ -115,15 +159,15 @@ def _get(url: str, session: requests.Session) -> requests.Response | None:
                  session reuses the TCP connection and shares cookies across
                  requests to the same host.
     """
-    for attempt in range(1, MAX_RETRIES + 1):
+    for attempt in range(1, CFG.max_retries + 1):
         try:
-            resp = session.get(url, timeout=REQUEST_TIMEOUT)
+            resp = session.get(url, timeout=CFG.request_timeout)
             resp.raise_for_status()
             return resp
         except requests.RequestException as exc:
-            log.warning("Attempt %d/%d failed for %s: %s", attempt, MAX_RETRIES, url, exc)
-            if attempt < MAX_RETRIES:
-                time.sleep(RETRY_DELAY)
+            log.warning("Attempt %d/%d failed for %s: %s", attempt, CFG.max_retries, url, exc)
+            if attempt < CFG.max_retries:
+                time.sleep(CFG.retry_delay)
     return None
 
 
@@ -211,7 +255,7 @@ def scrape_regulation_links(
             continue
 
         year = _extract_year_from_text(title) or _extract_year_from_text(href)
-        if year is None or year not in SUPPORTED_YEARS:
+        if year is None or year not in CFG.supported_years:
             continue
 
         links.append(RegulationLink(url=href, doc_type=doc_type, year=year, title=title))
@@ -235,17 +279,19 @@ def load_known_urls() -> list[RegulationLink]:
     Returns an empty list (silently) if the file does not exist yet, so the
     script works on a fresh clone without requiring the file to be present.
     """
-    if not KNOWN_URLS_FILE.exists():
+    if not CFG.known_urls_file.exists():
         return []
 
     try:
-        entries = json.loads(KNOWN_URLS_FILE.read_text(encoding="utf-8"))
+        entries = json.loads(CFG.known_urls_file.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as exc:
-        log.warning("Could not read %s: %s", KNOWN_URLS_FILE, exc)
+        log.warning("Could not read %s: %s", CFG.known_urls_file, exc)
         return []
 
     links = []
     for entry in entries:
+        if "_comment" in entry:      # skip template/example entries
+            continue
         try:
             links.append(RegulationLink(
                 url=entry["url"],
@@ -256,7 +302,7 @@ def load_known_urls() -> list[RegulationLink]:
         except KeyError as exc:
             log.warning("Skipping malformed entry in known_urls (missing key %s)", exc)
 
-    log.info("Loaded %d known URLs from %s", len(links), KNOWN_URLS_FILE.name)
+    log.info("Loaded %d known URLs from %s", len(links), CFG.known_urls_file.name)
     return links
 
 
@@ -268,10 +314,10 @@ def save_known_urls_template() -> None:
     written on first run — subsequent runs never overwrite it so manually
     added entries are preserved.
     """
-    if KNOWN_URLS_FILE.exists():
+    if CFG.known_urls_file.exists():
         return
 
-    KNOWN_URLS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    CFG.known_urls_file.parent.mkdir(parents=True, exist_ok=True)
     template = [
         {
             "url":      "https://www.fia.com/sites/default/files/example_sporting_regs_2025.pdf",
@@ -281,11 +327,11 @@ def save_known_urls_template() -> None:
             "_comment": "Replace url and title with real values from fia.com/regulation/category/110"
         }
     ]
-    KNOWN_URLS_FILE.write_text(
+    CFG.known_urls_file.write_text(
         json.dumps(template, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
-    log.info("Created template %s — add real URLs there as fallback", KNOWN_URLS_FILE.name)
+    log.info("Created template %s — add real URLs there as fallback", CFG.known_urls_file.name)
 
 
 # ---------------------------------------------------------------------------
@@ -293,20 +339,23 @@ def save_known_urls_template() -> None:
 # ---------------------------------------------------------------------------
 
 def deduplicate_links(links: list[RegulationLink]) -> list[RegulationLink]:
-    """Keep only one link per (doc_type, year) pair — the last one seen.
+    """Keep only one link per (doc_type, year) pair — the first one seen.
 
-    When both the scraper and the known-URLs file return a link for the same
-    document, the scraper result takes priority (it comes first in the combined
-    list, and ``dict`` insertion order means the later known-URL entry would
-    overwrite it — so we reverse the priority by iterating in order and keeping
-    the last). This ensures the most recently discovered URL wins.
+    The FIA category pages list issues from newest to oldest, so the first
+    link encountered for a given (doc_type, year) is the most recent issue.
+    Known-URLs entries come after scraped links, so the scraper always takes
+    priority and known-URLs only fill gaps for documents the scraper missed.
 
     Args:
         links: Combined list from scraper + known-URLs, scraper entries first.
+               Order within the scraper results must be newest-issue-first,
+               which matches the FIA website's default sort order.
     """
     seen: dict[tuple[str, int], RegulationLink] = {}
     for link in links:
-        seen[(link.doc_type, link.year)] = link
+        key = (link.doc_type, link.year)
+        if key not in seen:          # first seen = newest issue
+            seen[key] = link
     return list(seen.values())
 
 
@@ -314,13 +363,13 @@ def output_path(link: RegulationLink) -> Path:
     """Compute the destination file path for a regulation link.
 
     Applies the project naming convention: ``<doc_type>_<year>.pdf``.
-    The file lives directly in ``DOCS_DIR`` with no sub-directories so
+    The file lives directly in ``CFG.docs_dir`` with no sub-directories so
     ``build_rag_index.py`` can discover it with a simple ``*.pdf`` glob.
 
     Args:
         link: A ``RegulationLink`` with valid ``doc_type`` and ``year``.
     """
-    return DOCS_DIR / f"{link.doc_type}_{link.year}.pdf"
+    return CFG.docs_dir / f"{link.doc_type}_{link.year}.pdf"
 
 
 def download_link(
@@ -328,7 +377,7 @@ def download_link(
     session: requests.Session,
     dry_run: bool = False,
 ) -> bool:
-    """Download a single regulation PDF and save it to ``DOCS_DIR``.
+    """Download a single regulation PDF and save it to ``CFG.docs_dir``.
 
     Skips the download if a file with the same name already exists, assuming
     it is the correct version. Re-running the script after a FIA erratum
@@ -369,7 +418,7 @@ def download_link(
         log.error("Response is not a PDF (Content-Type: %s) — skipping", content_type)
         return False
 
-    DOCS_DIR.mkdir(parents=True, exist_ok=True)
+    CFG.docs_dir.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(resp.content)
     size_kb = len(resp.content) // 1024
     log.info("Saved %s  (%d KB)", dest.name, size_kb)
@@ -392,11 +441,11 @@ def download_all(
 
     Args:
         years:   List of years to download (e.g. ``[2024, 2025]``). When
-                 ``None``, downloads all ``SUPPORTED_YEARS``.
+                 ``None``, downloads all ``CFG.supported_years``.
         dry_run: Pass through to ``download_link`` — logs actions without
                  writing files.
     """
-    target_years = set(years) if years else set(SUPPORTED_YEARS)
+    target_years = set(years) if years else set(CFG.supported_years)
     session      = _make_session()
 
     save_known_urls_template()
@@ -416,7 +465,7 @@ def download_all(
         log.warning(
             "No links found for years %s. "
             "Add entries to %s manually if scraping failed.",
-            sorted(target_years), KNOWN_URLS_FILE.name,
+            sorted(target_years), CFG.known_urls_file.name,
         )
         sys.exit(1)
 
@@ -439,7 +488,7 @@ def download_all(
     if failed:
         log.warning(
             "%d file(s) failed. Add their URLs to %s and re-run.",
-            failed, KNOWN_URLS_FILE.name,
+            failed, CFG.known_urls_file.name,
         )
 
 
@@ -454,7 +503,7 @@ def main() -> None:
         type=int,
         default=None,
         metavar="YEAR",
-        help=f"Years to download (default: all — {SUPPORTED_YEARS})",
+        help=f"Years to download (default: all — {CFG.supported_years})",
     )
     parser.add_argument(
         "--dry-run",
