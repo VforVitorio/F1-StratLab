@@ -32,7 +32,7 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 RAG_DIR         = _REPO_ROOT / "data" / "rag"
 COLLECTION_NAME = "fia_regulations"
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+EMBEDDING_MODEL = "BAAI/bge-m3"   # 1024-dim, MTEB ~67, fits in 8 GB VRAM
 TOP_K           = 5
 
 # ---------------------------------------------------------------------------

@@ -45,8 +45,10 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 DOCS_DIR        = _REPO_ROOT / "data" / "rag" / "documents"
 QDRANT_PATH     = _REPO_ROOT / "data" / "rag" / "qdrant_local"
 COLLECTION_NAME = "fia_regulations"
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-EMBEDDING_DIM   = 384
+# BGE-M3: MTEB ~67 vs ~57 for all-MiniLM-L6-v2, 1024-dim, fits in 8 GB VRAM (~2 GB usage).
+# Produces significantly better retrieval on technical/legal text like FIA regulations.
+EMBEDDING_MODEL = "BAAI/bge-m3"
+EMBEDDING_DIM   = 1024
 
 # Chunk size in characters. 512 chars ≈ 80–120 words, which fits comfortably
 # inside the encoder's 256-token limit while keeping each chunk semantically
