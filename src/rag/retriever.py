@@ -23,17 +23,52 @@ from sentence_transformers import SentenceTransformer
 from langchain_core.tools import tool
 
 # ---------------------------------------------------------------------------
-# Module-level constants
+# Configuration
 # ---------------------------------------------------------------------------
 
-# Derive the repository root from this file's location so the module works
-# regardless of the working directory the caller uses.
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+@dataclass
+class RagConfig:
+    """Centralised configuration for the RAG retriever.
 
-RAG_DIR         = _REPO_ROOT / "data" / "rag"
-COLLECTION_NAME = "fia_regulations"
-EMBEDDING_MODEL = "BAAI/bge-m3"   # 1024-dim, MTEB ~67, fits in 8 GB VRAM
-TOP_K           = 5
+    Grouping all tunable parameters here means changing the embedding model,
+    collection name, or storage path requires editing exactly one place rather
+    than hunting for scattered constants across the module.
+
+    Attributes:
+        collection_name: Name of the Qdrant collection that holds the FIA
+                         regulation vectors. Must match the name used in
+                         ``build_rag_index.py`` — a mismatch means queries
+                         silently hit an empty or wrong collection.
+        embedding_model: Sentence-transformers model identifier. Must be the
+                         same model used at index build time — mixing models
+                         produces meaningless similarity scores because the
+                         vector spaces are incompatible.
+        top_k:           Default number of chunks returned per query. Five is
+                         enough context for most strategy questions; increase
+                         to 10 for multi-article topics like safety car + pit lane.
+    """
+
+    collection_name: str = "fia_regulations"
+    embedding_model: str = "BAAI/bge-m3"   # 1024-dim, MTEB ~67, fits in 8 GB VRAM
+    top_k:           int = 5
+
+    def __post_init__(self) -> None:
+        # Derived from this file's location so the module works regardless of
+        # the caller's working directory.
+        self._repo_root = Path(__file__).resolve().parent.parent.parent
+
+    @property
+    def rag_dir(self) -> Path:
+        """Root directory for all RAG artefacts under ``data/rag/``."""
+        return self._repo_root / "data" / "rag"
+
+    @property
+    def qdrant_path(self) -> Path:
+        """On-disk Qdrant storage directory, created by ``build_rag_index.py``."""
+        return self.rag_dir / "qdrant_local"
+
+
+CFG = RagConfig()
 
 # ---------------------------------------------------------------------------
 # Data transfer object
@@ -233,35 +268,35 @@ _default_retriever: RagRetriever | None = None
 
 
 def get_retriever(
-    qdrant_path:     Path | str = RAG_DIR / "qdrant_local",
-    collection_name: str        = COLLECTION_NAME,
-    embedding_model: str        = EMBEDDING_MODEL,
-    top_k:           int        = TOP_K,
+    qdrant_path:     Path | str | None = None,
+    collection_name: str        | None = None,
+    embedding_model: str        | None = None,
+    top_k:           int        | None = None,
 ) -> RagRetriever:
     """Return the module-level singleton ``RagRetriever``, creating it on first call.
 
     The singleton pattern avoids reloading the sentence-transformers model on every
-    agent invocation — loading ``all-MiniLM-L6-v2`` takes ~1–2 s and should happen
+    agent invocation — loading ``BAAI/bge-m3`` takes ~1–2 s and should happen
     exactly once per process. Subsequent calls return the cached instance regardless
-    of the arguments passed, so always configure via the first call or via the
-    module constants.
+    of the arguments passed, so always configure via the first call or via ``CFG``.
 
     Args:
-        qdrant_path:     Path to the on-disk Qdrant storage. Defaults to the standard
-                         project location ``data/rag/qdrant_local/``.
-        collection_name: Qdrant collection to query. Defaults to ``COLLECTION_NAME``
-                         defined at module level.
+        qdrant_path:     Path to the on-disk Qdrant storage. Defaults to
+                         ``CFG.qdrant_path`` (``data/rag/qdrant_local/``).
+        collection_name: Qdrant collection to query. Defaults to
+                         ``CFG.collection_name``.
         embedding_model: Sentence-transformers model to load. Must match the model
                          used when the index was built.
-        top_k:           Default number of chunks returned per query.
+        top_k:           Default number of chunks returned per query. Defaults to
+                         ``CFG.top_k``.
     """
     global _default_retriever
     if _default_retriever is None:
         _default_retriever = RagRetriever(
-            qdrant_path=qdrant_path,
-            collection_name=collection_name,
-            embedding_model=embedding_model,
-            top_k=top_k,
+            qdrant_path=qdrant_path     or CFG.qdrant_path,
+            collection_name=collection_name or CFG.collection_name,
+            embedding_model=embedding_model or CFG.embedding_model,
+            top_k=top_k                 or CFG.top_k,
         )
     return _default_retriever
 
