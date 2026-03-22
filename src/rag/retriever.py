@@ -229,7 +229,7 @@ class RagRetriever:
         return [
             RegulationChunk(
                 text=hit.payload.get("text", ""),
-                article=hit.payload.get("article", ""),
+                article=" ".join(hit.payload.get("article", "").split()),
                 doc_type=hit.payload.get("doc_type", "unknown"),
                 year=hit.payload.get("year", 0),
                 score=round(float(hit.score), 4),
