@@ -25,6 +25,12 @@ data/f1_cache/**/*
 !data/models/.gitkeep
 !data/cache/.gitkeep
 
+# RAG data — FIA PDFs (~50MB) and Qdrant on-disk index — not in git
+data/rag/documents/**/*
+data/rag/qdrant_local/**/*
+!data/rag/documents/.gitkeep
+!data/rag/qdrant_local/.gitkeep
+
 # Old data folders
 models/
 f1_cache/
