@@ -121,3 +121,6 @@ docker-compose.override.yml
 *.temp
 .cache/
 uv.lock
+
+# Notebook Python dumps (read-only knowledge base for Claude)
+.nb_py/
