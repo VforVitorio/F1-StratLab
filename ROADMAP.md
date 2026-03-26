@@ -318,9 +318,9 @@ LangGraph multi-agent architecture replacing the legacy Experta rule engine. Sev
 **Sub-agents:**
 
 - [x] N25 — Pace Agent: XGBoost N06 → `PaceOutput` (lap time + delta + bootstrap CI) ✅
-- [ ] N26 — Tire Agent: TCN N09/N10 → `TireOutput`
-- [ ] N27 — Race Situation Agent: LightGBM N12/N14 → `RaceSituationOutput`
-- [ ] N28 — Pit Strategy Agent: N15/N16 + analytical undercut logic → `PitOutput`
+- [x] N26 — Tire Agent: TCN N09/N10 → `TireOutput` ✅
+- [x] N27 — Race Situation Agent: LightGBM N12/N14 → `RaceSituationOutput` ✅
+- [x] N28 — Pit Strategy Agent: N15/N16 + analytical undercut logic → `PitStrategyOutput` ✅
 - [ ] N29 — Radio Agent: N24 NLP pipeline → `RadioOutput`
 - [x] N30 — RAG Agent: Qdrant + BGE-M3 + LangGraph ReAct → `RegulationContext` ✅
 - [ ] N31 — Strategy Orchestrator: LangGraph supervisor coordinating N25–N30
@@ -466,7 +466,7 @@ Complete project delivery with thesis documentation and defense materials.
 | v0.8.1  | Extended ML Models           | N12B archived (neg. result) / N15 MAE 0.487s ✅ / N16 AUC-ROC 0.7708 ✅ | ✅     |
 | v0.8.2  | NLP Radio Pipeline           | N17–N24: RoBERTa sentiment 87.5% / SetFit intent / BERT NER / pipeline P95 59.4ms | ✅     |
 | v0.9    | Code Refactoring             | Deferred to post-notebooks                                      | ⏸️     |
-| v0.10   | Multi-Agent Operational      | N25 ✅ N30 ✅ — N26–N29 + N31 in progress                        | 🔄     |
+| v0.10   | Multi-Agent Operational      | N25 ✅ N26 ✅ N27 ✅ N28 ✅ N30 ✅ — N29 + N31 remaining           | 🔄     |
 | v0.11   | RAG Integrated               | 2,279 chunks indexed, BGE-M3, `src/rag/` module complete        | ✅     |
 | v0.12   | Interfaces Live              | Streamlit + Arcade connected to backend                         | ⬜     |
 | v0.13   | Testing Complete             | 3 race scenarios validated, critical bugs resolved              | ⬜     |
