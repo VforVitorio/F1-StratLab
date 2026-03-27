@@ -1,0 +1,51 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="n25" name="N25 — Pace Agent">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="N25 — Pace Agent" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="20" width="400" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- INPUT -->
+        <mxCell id="input" value="&lt;b&gt;Input — context_slice&lt;/b&gt;&lt;br/&gt;lap · driver · compound · tyre_life&lt;br/&gt;circuit_cluster · team · year" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="295" y="70" width="310" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- AGENT -->
+        <mxCell id="agent" value="&lt;b&gt;LangGraph ReAct Agent&lt;/b&gt;&lt;br/&gt;LM Studio local LLM&lt;br/&gt;Iterative tool calls until convergence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="295" y="195" width="310" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- TOOL 1 -->
+        <mxCell id="tool1" value="&lt;b&gt;predict_pace_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Model: XGBoost N06&lt;/i&gt;&lt;br/&gt;N=200 bootstrap CI&lt;br/&gt;→ lap_time_pred, ci_p10, ci_p90" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="100" y="345" width="240" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- TOOL 2 -->
+        <mxCell id="tool2" value="&lt;b&gt;get_session_median_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Race statistics&lt;/i&gt;&lt;br/&gt;Median lap time for driver/compound&lt;br/&gt;→ delta_vs_median" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="345" width="240" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- OUTPUT -->
+        <mxCell id="output" value="&lt;b&gt;PaceOutput&lt;/b&gt;&lt;br/&gt;lap_time_pred · delta_vs_prev · delta_vs_median&lt;br/&gt;ci_p10 · ci_p90 · reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="295" y="500" width="310" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- NOTE -->
+        <mxCell id="note" value="→ N31 Strategy Orchestrator · N28 Pit Agent (dependency)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="230" y="578" width="440" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- EDGES -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="input" target="agent" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent" target="tool1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent" target="tool2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool1" target="output" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool2" target="output" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

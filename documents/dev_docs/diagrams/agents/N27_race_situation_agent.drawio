@@ -1,0 +1,58 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="n27" name="N27 — Race Situation Agent">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="N27 — Race Situation Agent" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="20" width="500" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- INPUT -->
+        <mxCell id="input" value="&lt;b&gt;Input — context_slice&lt;/b&gt;&lt;br/&gt;lap · position · gap_ahead · gap_behind&lt;br/&gt;DRS window · track_status · SC history" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="295" y="70" width="310" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- AGENT -->
+        <mxCell id="agent" value="&lt;b&gt;LangGraph ReAct Agent&lt;/b&gt;&lt;br/&gt;LM Studio local LLM&lt;br/&gt;Iterative tool calls until convergence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="295" y="195" width="310" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- TOOL 1 -->
+        <mxCell id="tool1" value="&lt;b&gt;predict_overtake_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Model: LightGBM N12&lt;/i&gt;&lt;br/&gt;Platt calibrated&lt;br/&gt;→ overtake_prob per lap pair" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="345" width="210" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- TOOL 2 -->
+        <mxCell id="tool2" value="&lt;b&gt;predict_sc_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Model: LightGBM N14&lt;/i&gt;&lt;br/&gt;Target: sc_within_3_laps&lt;br/&gt;→ sc_prob_3lap (soft prior)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="345" y="345" width="210" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- TOOL 3 -->
+        <mxCell id="tool3" value="&lt;b&gt;get_race_context_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Race statistics&lt;/i&gt;&lt;br/&gt;Gap trend, position history&lt;br/&gt;→ compound comparison" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="630" y="345" width="210" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- OUTPUT -->
+        <mxCell id="output" value="&lt;b&gt;RaceSituationOutput&lt;/b&gt;&lt;br/&gt;overtake_prob · sc_prob_3lap · gap_trend · reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="295" y="500" width="310" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- NOTE -->
+        <mxCell id="note" value="→ N31 (routing: sc_prob_3lap &gt; 0.3 activates N30 · warning_level PIT_SOON activates N28)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="150" y="578" width="600" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- EDGES -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="input" target="agent" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent" target="tool1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent" target="tool2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent" target="tool3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool1" target="output" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool2" target="output" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool3" target="output" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
