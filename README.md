@@ -91,17 +91,30 @@ F1_Strat_Manager/
 
 ### Machine Learning Models
 
-- **XGBoost** : Lap time prediction with MAE = 0.09s and RMSE = 0.15s
-- **TCN (Temporal Convolutional Networks)** : For tire degradation modeling
+- **XGBoost (N06)** : Delta lap time prediction — MAE 0.392s on 2025 holdout
+- **TCN + MC Dropout (N09/N10)** : Tire degradation with uncertainty quantification (P10/P50/P90)
+- **LightGBM (N12)** : Overtake probability — AUC-PR 0.5491, AUC-ROC 0.8758
+- **LightGBM (N14)** : Safety car probability — soft contextual prior, lift 1.67×
+- **HistGradientBoosting (N15)** : Pit stop duration quantile regression P05/P50/P95 — MAE 0.487s
+- **LightGBM (N16)** : Undercut success prediction — AUC-ROC 0.7708
 - **YOLOv8** : Team identification from race footage with >90% mAP50
   > This section is no longer updated. Further development continues in an independent repository, now using YOLOv12.
   > See: [VforVitorio/F1_AI_team_detection](https://github.com/VforVitorio/F1_AI_team_detection)
-- **Whisper Turbo + BERT** : NLP pipeline for radio communication analysis
+- **RoBERTa + SetFit + BERT-large (N20/N21/N22)** : NLP pipeline — sentiment, intent classification, F1 entity recognition
+- **Whisper ASR (N18)** : Team radio transcription
 
-### Expert System
+### Multi-Agent System (current development)
 
-- Developed using the **Experta** framework.
-- Integrates all processed data and model results for strategy suggestion.
+- Six specialised **LangGraph ReAct** sub-agents (N25–N30) coordinate under a Strategy Orchestrator (N31)
+- Each agent wraps one or more ML models as `@tool`-decorated LangChain tools
+- **N29 Radio Agent** uses an NLP-first synthesis pattern (N06-style) with **Pydantic v2** structured output
+- **N30 RAG Agent** answers regulation questions via **Qdrant** vector search over FIA Sporting Regulations (2023–2025) with BGE-M3 embeddings
+- **N31 Orchestrator** uses MoE-style dynamic routing, Monte Carlo simulation over probabilistic sub-agent outputs, and LLM synthesis with Pydantic structured output
+
+### Expert System (legacy)
+
+- Originally developed using the **Experta** framework (see `src/agents/` legacy code).
+- Being replaced by the LangGraph multi-agent architecture described above.
 
 ### App Interface
 
