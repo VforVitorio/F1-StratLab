@@ -313,7 +313,9 @@ Clean and modularize the codebase. Eliminate code duplication, centralize config
 - [ ] **Status:** In Progress
 - [ ] **Target:** April–May 2026
 
-LangGraph multi-agent architecture replacing the legacy Experta rule engine. Seven specialised sub-agents (N25–N30) coordinate under a Supervisor Orchestrator (N31). Each agent wraps one or more ML models as `@tool`-decorated LangChain tools and returns a typed dataclass output.
+LangGraph multi-agent architecture replacing the legacy Experta rule engine. Seven specialised sub-agents (N25–N30) coordinate under a Supervisor Orchestrator (N31). Each agent wraps one or more ML models as `@tool`-decorated LangChain tools and returns a typed dataclass output including a `reasoning` field forwarded to N31.
+
+N31 architecture has three layers: (1) dynamic MoE-style routing — only activates the sub-agents relevant to the current race state; (2) Monte Carlo simulation — samples from the probabilistic outputs of N25–N28 (bootstrap CI, MC Dropout P10/P50/P90, Platt-calibrated probabilities, quantile regression intervals) to rank strategy candidates by risk-adjusted expected outcome; (3) LLM synthesis — aggregates all sub-agent reasoning texts plus MC scenario scores, with N30 regulation context acting as a hard constraint that eliminates illegal options before the LLM decides.
 
 **Sub-agents:**
 
@@ -323,7 +325,7 @@ LangGraph multi-agent architecture replacing the legacy Experta rule engine. Sev
 - [x] N28 — Pit Strategy Agent: N15/N16 + analytical undercut logic → `PitStrategyOutput` ✅
 - [ ] N29 — Radio Agent: N24 NLP pipeline → `RadioOutput`
 - [x] N30 — RAG Agent: Qdrant + BGE-M3 + LangGraph ReAct → `RegulationContext` ✅
-- [ ] N31 — Strategy Orchestrator: LangGraph supervisor coordinating N25–N30
+- [ ] N31 — Strategy Orchestrator: LangGraph supervisor + Monte Carlo simulation layer + dynamic routing (MoE-style)
 
 **Success Metrics:**
 
