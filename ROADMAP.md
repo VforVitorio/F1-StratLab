@@ -306,6 +306,19 @@ Clean and modularize the codebase. Eliminate code duplication, centralize config
 - [ ] Test coverage >50%
 - [ ] Linting passes (black, ruff)
 
+**Critical design constraint — single-driver perspective (MUST implement in v0.9):**
+
+The system operates as the strategy engineer of **one specific driver**. This is not a cosmetic choice — it is a hard architectural constraint that makes the system realistic and academically honest.
+
+When extracting `run_*` functions from notebooks to `src/agents/`, the data boundary must be enforced at the `RaceStateManager` level:
+
+- **Our driver** — receives the full telemetry slice: LapTime, Sector1/2/3, TyreLife, DegradationRate, CumulativeDeg, SpeedI1/I2/FL/ST, FuelLoad (estimated), Stint, Position, all weather fields. This is the data the team's own sensors and timing system produce.
+- **Rival drivers** — receive only the fields that are publicly available on the timing screen: Position, LapTime, Compound, TyreLife (estimated from last pit), gap_to_leader, interval (gap to our driver), SpeedST. Nothing else. Teams cannot see rivals' internal degradation rates, fuel loads, ERS state, or brake temperatures.
+
+This boundary is already naturally respected by the current notebooks (N25/N26/N28 use our driver's full data; N27 uses gap + pace_delta + tyre_life_diff, which are timing-screen fields), but it must be made explicit and enforced in `src/agents/race_state_manager.py` so that no future feature accidentally leaks rival internal data into the models.
+
+See `documents/dev_docs/tasks/single_driver_perspective.md` for the full data availability matrix, data flow diagram, and implementation spec.
+
 ---
 
 ## v0.10.0 - Multi-Agent System
@@ -371,8 +384,13 @@ Retrieval-augmented generation over FIA Sporting Regulations (2023–2025). Prov
 
 Develop dual interface system: Streamlit dashboard for analysis/configuration and Arcade visualization for real-time circuit representation.
 
+**Driver + Team selection (entry point for single-driver perspective):**
+
+The UI is the point where the user declares whose strategy they are running. At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). This pair is passed to `RaceStateManager`, which from that moment constructs every `RaceState` from NOR's perspective — full telemetry for NOR, timing-only data for everyone else. All downstream agents, ML models, and the orchestrator operate within this boundary automatically. See `documents/dev_docs/tasks/single_driver_perspective.md`.
+
 **Streamlit Dashboard:**
 
+- [ ] Driver + Team selector at session start (feeds RaceStateManager)
 - [ ] ML prediction displays with confidence metrics
 - [ ] Agent recommendation panels
 - [ ] Configuration interface for model parameters
