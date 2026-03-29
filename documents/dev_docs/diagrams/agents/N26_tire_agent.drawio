@@ -25,12 +25,12 @@
         </mxCell>
 
         <!-- TOOL 2 -->
-        <mxCell id="tool2" value="&lt;b&gt;get_compound_stats_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Historical compound data&lt;/i&gt;&lt;br/&gt;Avg deg rate per compound/circuit&lt;br/&gt;→ benchmarks for LLM reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="tool2" value="&lt;b&gt;estimate_laps_to_cliff_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Model: MC Dropout N10&lt;/i&gt;&lt;br/&gt;N=50 forward passes → P10/P50/P90&lt;br/&gt;→ laps_to_cliff with uncertainty" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="560" y="345" width="260" height="90" as="geometry" />
         </mxCell>
 
         <!-- OUTPUT -->
-        <mxCell id="output" value="&lt;b&gt;TireOutput&lt;/b&gt;&lt;br/&gt;deg_rate · cliff_lap · p10/p50/p90&lt;br/&gt;warning_level (OK/WATCH/PIT_SOON/CRITICAL) · reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+        <mxCell id="output" value="&lt;b&gt;TireOutput&lt;/b&gt;&lt;br/&gt;deg_rate · laps_to_cliff p10/p50/p90 · compound&lt;br/&gt;warning_level (OK/MONITOR/PIT_SOON) · reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
           <mxGeometry x="280" y="510" width="340" height="60" as="geometry" />
         </mxCell>
 

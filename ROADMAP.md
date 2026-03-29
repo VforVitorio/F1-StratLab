@@ -306,14 +306,13 @@ Clean and modularize the codebase. Eliminate code duplication, centralize config
 - [ ] Test coverage >50%
 - [ ] Linting passes (black, ruff)
 
-**Circuit-cluster-aware thresholds (implement in v0.9 alongside src/ extraction):**
+**Circuit-cluster-aware thresholds (N26 notebook done; src/ extraction target v0.9):**
 
-The current notebooks use global scalar thresholds for routing and tire-warning decisions.
-These must be made cluster-aware in v0.9 as part of the `src/agents/` extraction — the
-infrastructure cost is minimal (dict lookup instead of scalar) but the strategic accuracy
-gain is significant, especially for outlier circuits (Montreal, Monaco, Mexico City).
+N26 `TireAgentConfig` already loads cluster-aware thresholds from `tire_agent_config_v1.json`
+at runtime via `get_cliff_thresholds(gp_name)` — notebook implementation complete as of March 2026.
+The `src/agents/` extraction will carry this forward without additional design work.
 
-Only two agents need changes — the rest are already cluster-aware via ML features:
+Only two agents need src/ changes — the rest are already cluster-aware via ML features:
 
 - **`src/agents/orchestrator.py`** — replace `sc_prob_threshold: float = 0.30` with
   `SC_PROB_THRESHOLD_BY_CLUSTER: dict = {0: 0.25, 1: 0.35, 2: 0.20, 3: 0.30}`
@@ -351,8 +350,8 @@ See `documents/dev_docs/tasks/single_driver_perspective.md` for the full data av
 
 ## v0.10.0 - Multi-Agent System
 
-- [ ] **Status:** In Progress
-- [ ] **Target:** April–May 2026
+- [x] **Status:** Completed
+- [x] **Release Date:** March 2026
 
 LangGraph multi-agent architecture replacing the legacy Experta rule engine. Seven specialised sub-agents (N25–N30) coordinate under a Supervisor Orchestrator (N31). Each agent wraps one or more ML models as `@tool`-decorated LangChain tools and returns a typed dataclass output including a `reasoning` field forwarded to N31.
 
@@ -366,13 +365,13 @@ N31 architecture has three layers: (1) dynamic MoE-style routing — only activa
 - [x] N28 — Pit Strategy Agent: N15/N16 + analytical undercut logic → `PitStrategyOutput` ✅
 - [x] N29 — Radio Agent: N24 NLP pipeline (N06-style synthesizer + Pydantic structured output) → `RadioOutput` ✅
 - [x] N30 — RAG Agent: Qdrant + BGE-M3 + LangGraph ReAct → `RegulationContext` ✅
-- [ ] N31 — Strategy Orchestrator: LangGraph supervisor + Monte Carlo simulation layer + dynamic routing (MoE-style)
+- [x] N31 — Strategy Orchestrator: LangGraph supervisor + Monte Carlo simulation layer + dynamic routing (MoE-style) ✅
 
 **Success Metrics:**
 
-- [ ] All seven agents operational and coordinated
-- [ ] End-to-end workflow from lap state to strategy recommendation
-- [ ] Successful demo with historical race data
+- [x] All seven agents operational and coordinated ✅
+- [x] End-to-end workflow from lap state to strategy recommendation ✅
+- [x] Successful demo with historical race data (Bahrain 2025 multi-lap replay) ✅
 
 ---
 
@@ -514,7 +513,7 @@ Complete project delivery with thesis documentation and defense materials.
 | v0.8.1  | Extended ML Models           | N12B archived (neg. result) / N15 MAE 0.487s ✅ / N16 AUC-ROC 0.7708 ✅ | ✅     |
 | v0.8.2  | NLP Radio Pipeline           | N17–N24: RoBERTa sentiment 87.5% / SetFit intent / BERT NER / pipeline P95 59.4ms | ✅     |
 | v0.9    | Code Refactoring             | Deferred to post-notebooks                                      | ⏸️     |
-| v0.10   | Multi-Agent Operational      | N25 ✅ N26 ✅ N27 ✅ N28 ✅ N29 ✅ N30 ✅ — N31 remaining          | 🔄     |
+| v0.10   | Multi-Agent Operational      | N25–N31 all complete, Bahrain 2025 end-to-end demo ✅              | ✅     |
 | v0.11   | RAG Integrated               | 2,279 chunks indexed, BGE-M3, `src/rag/` module complete        | ✅     |
 | v0.12   | Interfaces Live              | Streamlit + Arcade connected to backend                         | ⬜     |
 | v0.13   | Testing Complete             | 3 race scenarios validated, critical bugs resolved              | ⬜     |
