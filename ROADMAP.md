@@ -306,6 +306,34 @@ Clean and modularize the codebase. Eliminate code duplication, centralize config
 - [ ] Test coverage >50%
 - [ ] Linting passes (black, ruff)
 
+**Circuit-cluster-aware thresholds (implement in v0.9 alongside src/ extraction):**
+
+The current notebooks use global scalar thresholds for routing and tire-warning decisions.
+These must be made cluster-aware in v0.9 as part of the `src/agents/` extraction — the
+infrastructure cost is minimal (dict lookup instead of scalar) but the strategic accuracy
+gain is significant, especially for outlier circuits (Montreal, Monaco, Mexico City).
+
+Only two agents need changes — the rest are already cluster-aware via ML features:
+
+- **`src/agents/orchestrator.py`** — replace `sc_prob_threshold: float = 0.30` with
+  `SC_PROB_THRESHOLD_BY_CLUSTER: dict = {0: 0.25, 1: 0.35, 2: 0.20, 3: 0.30}`
+  (validated against Pirelli compound nomination tiers and Heilmeier et al. 2020, DOI:10.3390/app10124229)
+- **`src/agents/tire_agent.py`** (extracted from N26) — replace `cliff_pit_soon_laps: int = 3`
+  and `cliff_monitor_laps: int = 7` with `{0:3, 1:4, 2:2, 3:5}` / `{0:7, 1:8, 2:5, 3:9}`.
+  Counter-intuitive: Cluster 1 (1-stop) gets MORE warning (4 laps) because missing the single
+  window is very costly; Cluster 0 (multi-stop) is already in reactive mode (3 laps).
+  Note: `cluster_id` is already stored in N26's `SESSION_META` — it just isn't used yet.
+  Add `overrides_by_gp = {"Mexico City": {"pit_soon": 3, "monitor": 7}}` for Cluster 3 split.
+
+Cluster assignments from `data/processed/circuit_clustering/circuit_features_with_clusters_k4_2025.parquet`:
+Cluster 0 (high-energy/deg): Sakhir, Melbourne, Silverstone, Spa, Suzuka, Lusail, São Paulo, Zandvoort, Las Vegas |
+Cluster 1 (stable/technical): Monza, Budapest, Yas Island, Marina Bay, Jeddah, Baku, Imola, Barcelona, Austin, Miami, Spielberg, Shanghai |
+Cluster 2 (SC haven): Montréal only (avg 4.15 pit stops/race) |
+Cluster 3 (outliers): Monaco (72-lap max stint), Mexico City (780 mbar altitude)
+
+Threshold values to be finalized after circuit classification research
+(see `documents/dev_docs/tasks/circuit_cluster_thresholds.md` when generated).
+
 **Critical design constraint — single-driver perspective (MUST implement in v0.9):**
 
 The system operates as the strategy engineer of **one specific driver**. This is not a cosmetic choice — it is a hard architectural constraint that makes the system realistic and academically honest.
