@@ -25,7 +25,7 @@ jobs:
         run: uv sync --all-extras
 
       - name: Run tests
-        run: uv run pytest --cov=src/lmcode --cov-report=term-missing
+        run: uv run pytest -v
 
   lint:
     name: lint

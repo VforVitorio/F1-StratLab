@@ -98,6 +98,7 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "black>=23.7.0",
     "ruff>=0.0.286",
+    "mypy>=1.0.0",
     "ipykernel>=6.25.0",
     "jupyter>=1.0.0",
     "jupyterlab>=4.0.0",
@@ -124,8 +125,18 @@ target-version = ['py310', 'py311']
 
 [tool.ruff]
 line-length = 100
+exclude = ["legacy/", ".nb_py/", "notebooks/"]
+
+[tool.ruff.lint]
 select = ["E", "F", "I", "W"]
 ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+no_strict_optional = true
+warn_unused_ignores = false
+exclude = ["legacy/", ".nb_py/", "notebooks/"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
