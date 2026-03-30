@@ -10,8 +10,9 @@ Usage:
     python scripts/download_data.py
 """
 
-from huggingface_hub import snapshot_download
 from pathlib import Path
+
+from huggingface_hub import snapshot_download
 
 REPO_ID = "VforVitorio/f1-strategy-dataset"
 LOCAL_DIR = Path(__file__).parent.parent / "data"

@@ -12,15 +12,13 @@ Public interface::
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import numpy as np
+from langchain_core.tools import tool
 from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
-from langchain_core.tools import tool
 
 # ---------------------------------------------------------------------------
 # Configuration

@@ -278,58 +278,147 @@ N24 Race Control Messages → structured SC/VSC/flags/penalties
 
 ---
 
-## v0.9.0 - Code Refactoring
+## v0.9.0 - src/ Extraction & Backend Modularization
 
-- [ ] **Status:** Deferred — src/ modules implemented after all notebooks complete
-- [ ] **Target:** Post-notebook phase
+- [ ] **Status:** Next up
+- [ ] **Target:** Post-notebooks (after v0.10 notebooks are re-executed)
 
-Clean and modularize the codebase. Eliminate code duplication, centralize configurations, implement testing infrastructure.
+Extract N25-N31 agent entry points to importable `src/agents/` modules and modularize the FastAPI backend. Ordered execution plan in `memory/project_v09_src_extraction_plan.md`.
 
-**Scope:**
+**Ordered extraction steps:**
 
-- Refactor: src/strategy/, src/agents/, src/nlp/, src/vision/, src/shared/
-- Do NOT modify: src/telemetry/ (independent submodule)
+1. [ ] Update `.nb_py/` transcriptions (all 6 agent notebooks post-SRP)
+2. [ ] `src/agents/pace_agent.py` — `run_pace_agent()` → `PaceOutput`
+3. [ ] `src/agents/tire_agent.py` — `run_tire_agent()` → `TireOutput` (TireDegTCN bundles)
+4. [ ] `src/agents/race_situation_agent.py` — `run_race_situation_agent()` → `RaceSituationOutput`
+5. [ ] `src/agents/radio_agent.py` — `run_radio_agent()` → `RadioOutput` (3 NLP models)
+6. [ ] `src/agents/pit_strategy_agent.py` — `run_pit_strategy_agent()` → `PitStrategyOutput`
+7. [ ] `src/agents/rag_agent.py` — `run_rag_agent()` → `RagOutput` (wraps src/rag/)
+8. [ ] `src/agents/strategy_orchestrator.py` — `run_strategy_orchestrator()` → `StrategyRecommendation` (replaces legacy Experta)
+9. [ ] **FastAPI modularization** — split monolithic backend into routers: `routers/chat.py`, `routers/strategy.py`, `routers/telemetry.py`. Add `/strategy/recommend` endpoint calling `run_strategy_orchestrator`.
+10. [ ] **FastMCP integration** — mount MCP server alongside FastAPI (`fastmcp`). Expose LangGraph tools as MCP tools so the /chat/ LLM can call them natively and render structured tool results in the chat UI. See `memory/project_fastmcp_architecture.md`.
 
-**Goals:**
+**Additional scope:**
 
-- [ ] Audit code duplication across modules
 - [ ] Extract shared utilities to src/shared/
-- [ ] Refactor functions for modularity and reusability
-- [ ] Centralize YAML configurations
 - [ ] Implement structured logging
-- [ ] Unit tests with >50% coverage
+- [ ] Unit tests with >50% coverage (target)
+- [ ] Linting passes (black, ruff)
+
+**Circuit-cluster-aware thresholds (N26 notebook done; src/ extraction target v0.9):**
+
+N26 `TireAgentConfig` already loads cluster-aware thresholds from `tire_agent_config_v1.json`
+at runtime via `get_cliff_thresholds(gp_name)` — notebook implementation complete as of March 2026.
+The `src/agents/` extraction will carry this forward without additional design work.
+
+Only two agents need src/ changes — the rest are already cluster-aware via ML features:
+
+- **`src/agents/orchestrator.py`** — replace `sc_prob_threshold: float = 0.30` with
+  `SC_PROB_THRESHOLD_BY_CLUSTER: dict = {0: 0.25, 1: 0.35, 2: 0.20, 3: 0.30}`
+  (validated against Pirelli compound nomination tiers and Heilmeier et al. 2020, DOI:10.3390/app10124229)
+- **`src/agents/tire_agent.py`** (extracted from N26) — replace `cliff_pit_soon_laps: int = 3`
+  and `cliff_monitor_laps: int = 7` with `{0:3, 1:4, 2:2, 3:5}` / `{0:7, 1:8, 2:5, 3:9}`.
+  Counter-intuitive: Cluster 1 (1-stop) gets MORE warning (4 laps) because missing the single
+  window is very costly; Cluster 0 (multi-stop) is already in reactive mode (3 laps).
+  Note: `cluster_id` is already stored in N26's `SESSION_META` — it just isn't used yet.
+  Add `overrides_by_gp = {"Mexico City": {"pit_soon": 3, "monitor": 7}}` for Cluster 3 split.
+
+Cluster assignments from `data/processed/circuit_clustering/circuit_features_with_clusters_k4_2025.parquet`:
+Cluster 0 (high-energy/deg): Sakhir, Melbourne, Silverstone, Spa, Suzuka, Lusail, São Paulo, Zandvoort, Las Vegas |
+Cluster 1 (stable/technical): Monza, Budapest, Yas Island, Marina Bay, Jeddah, Baku, Imola, Barcelona, Austin, Miami, Spielberg, Shanghai |
+Cluster 2 (SC haven): Montréal only (avg 4.15 pit stops/race) |
+Cluster 3 (outliers): Monaco (72-lap max stint), Mexico City (780 mbar altitude)
+
+Threshold values to be finalized after circuit classification research
+(see `documents/dev_docs/tasks/circuit_cluster_thresholds.md` when generated).
+
+**Critical design constraint — single-driver perspective (MUST implement in v0.9):**
+
+The system operates as the strategy engineer of **one specific driver**. This is not a cosmetic choice — it is a hard architectural constraint that makes the system realistic and academically honest.
+
+When extracting `run_*` functions from notebooks to `src/agents/`, the data boundary must be enforced at the `RaceStateManager` level:
+
+- **Our driver** — receives the full telemetry slice: LapTime, Sector1/2/3, TyreLife, DegradationRate, CumulativeDeg, SpeedI1/I2/FL/ST, FuelLoad (estimated), Stint, Position, all weather fields. This is the data the team's own sensors and timing system produce.
+- **Rival drivers** — receive only the fields that are publicly available on the timing screen: Position, LapTime, Compound, TyreLife (estimated from last pit), gap_to_leader, interval (gap to our driver), SpeedST. Nothing else. Teams cannot see rivals' internal degradation rates, fuel loads, ERS state, or brake temperatures.
+
+This boundary is already naturally respected by the current notebooks (N25/N26/N28 use our driver's full data; N27 uses gap + pace_delta + tyre_life_diff, which are timing-screen fields), but it must be made explicit and enforced in `src/agents/race_state_manager.py` so that no future feature accidentally leaks rival internal data into the models.
+
+See `documents/dev_docs/tasks/single_driver_perspective.md` for the full data availability matrix, data flow diagram, and implementation spec.
 
 **Success Metrics:**
 
-- [ ] Zero code duplication detected
-- [ ] All configurations in configs/ directory
+- [ ] All 7 `run_*` agent functions importable from `src/agents/`
+- [ ] `/strategy/recommend` FastAPI endpoint operational
+- [ ] FastMCP server mounted, at least 3 tools exposed
 - [ ] Test coverage >50%
-- [ ] Linting passes (black, ruff)
+- [ ] Linting passes
+
+**Circuit-cluster-aware thresholds (N26 notebook done; src/ extraction target v0.9):**
+
+N26 `TireAgentConfig` already loads cluster-aware thresholds from `tire_agent_config_v1.json`
+at runtime via `get_cliff_thresholds(gp_name)` — notebook implementation complete as of March 2026.
+The `src/agents/` extraction will carry this forward without additional design work.
+
+Only two agents need src/ changes — the rest are already cluster-aware via ML features:
+
+- **`src/agents/orchestrator.py`** — replace `sc_prob_threshold: float = 0.30` with
+  `SC_PROB_THRESHOLD_BY_CLUSTER: dict = {0: 0.25, 1: 0.35, 2: 0.20, 3: 0.30}`
+  (validated against Pirelli compound nomination tiers and Heilmeier et al. 2020, DOI:10.3390/app10124229)
+- **`src/agents/tire_agent.py`** (extracted from N26) — replace `cliff_pit_soon_laps: int = 3`
+  and `cliff_monitor_laps: int = 7` with `{0:3, 1:4, 2:2, 3:5}` / `{0:7, 1:8, 2:5, 3:9}`.
+  Counter-intuitive: Cluster 1 (1-stop) gets MORE warning (4 laps) because missing the single
+  window is very costly; Cluster 0 (multi-stop) is already in reactive mode (3 laps).
+  Note: `cluster_id` is already stored in N26's `SESSION_META` — it just isn't used yet.
+  Add `overrides_by_gp = {"Mexico City": {"pit_soon": 3, "monitor": 7}}` for Cluster 3 split.
+
+Cluster assignments from `data/processed/circuit_clustering/circuit_features_with_clusters_k4_2025.parquet`:
+Cluster 0 (high-energy/deg): Sakhir, Melbourne, Silverstone, Spa, Suzuka, Lusail, São Paulo, Zandvoort, Las Vegas |
+Cluster 1 (stable/technical): Monza, Budapest, Yas Island, Marina Bay, Jeddah, Baku, Imola, Barcelona, Austin, Miami, Spielberg, Shanghai |
+Cluster 2 (SC haven): Montréal only (avg 4.15 pit stops/race) |
+Cluster 3 (outliers): Monaco (72-lap max stint), Mexico City (780 mbar altitude)
+
+Threshold values to be finalized after circuit classification research
+(see `documents/dev_docs/tasks/circuit_cluster_thresholds.md` when generated).
+
+**Critical design constraint — single-driver perspective (MUST implement in v0.9):**
+
+The system operates as the strategy engineer of **one specific driver**. This is not a cosmetic choice — it is a hard architectural constraint that makes the system realistic and academically honest.
+
+When extracting `run_*` functions from notebooks to `src/agents/`, the data boundary must be enforced at the `RaceStateManager` level:
+
+- **Our driver** — receives the full telemetry slice: LapTime, Sector1/2/3, TyreLife, DegradationRate, CumulativeDeg, SpeedI1/I2/FL/ST, FuelLoad (estimated), Stint, Position, all weather fields. This is the data the team's own sensors and timing system produce.
+- **Rival drivers** — receive only the fields that are publicly available on the timing screen: Position, LapTime, Compound, TyreLife (estimated from last pit), gap_to_leader, interval (gap to our driver), SpeedST. Nothing else. Teams cannot see rivals' internal degradation rates, fuel loads, ERS state, or brake temperatures.
+
+This boundary is already naturally respected by the current notebooks (N25/N26/N28 use our driver's full data; N27 uses gap + pace_delta + tyre_life_diff, which are timing-screen fields), but it must be made explicit and enforced in `src/agents/race_state_manager.py` so that no future feature accidentally leaks rival internal data into the models.
+
+See `documents/dev_docs/tasks/single_driver_perspective.md` for the full data availability matrix, data flow diagram, and implementation spec.
 
 ---
 
 ## v0.10.0 - Multi-Agent System
 
-- [ ] **Status:** In Progress
-- [ ] **Target:** April–May 2026
+- [x] **Status:** Completed
+- [x] **Release Date:** March 2026
 
-LangGraph multi-agent architecture replacing the legacy Experta rule engine. Seven specialised sub-agents (N25–N30) coordinate under a Supervisor Orchestrator (N31). Each agent wraps one or more ML models as `@tool`-decorated LangChain tools and returns a typed dataclass output.
+LangGraph multi-agent architecture replacing the legacy Experta rule engine. Seven specialised sub-agents (N25–N30) coordinate under a Supervisor Orchestrator (N31). Each agent wraps one or more ML models as `@tool`-decorated LangChain tools and returns a typed dataclass output including a `reasoning` field forwarded to N31.
+
+N31 architecture has three layers: (1) dynamic MoE-style routing — only activates the sub-agents relevant to the current race state; (2) Monte Carlo simulation — samples from the probabilistic outputs of N25–N28 (bootstrap CI, MC Dropout P10/P50/P90, Platt-calibrated probabilities, quantile regression intervals) to rank strategy candidates by risk-adjusted expected outcome; (3) LLM synthesis — aggregates all sub-agent reasoning texts plus MC scenario scores, with N30 regulation context acting as a hard constraint that eliminates illegal options before the LLM decides.
 
 **Sub-agents:**
 
 - [x] N25 — Pace Agent: XGBoost N06 → `PaceOutput` (lap time + delta + bootstrap CI) ✅
-- [ ] N26 — Tire Agent: TCN N09/N10 → `TireOutput`
-- [ ] N27 — Race Situation Agent: LightGBM N12/N14 → `RaceSituationOutput`
-- [ ] N28 — Pit Strategy Agent: N15/N16 + analytical undercut logic → `PitOutput`
-- [ ] N29 — Radio Agent: N24 NLP pipeline → `RadioOutput`
+- [x] N26 — Tire Agent: TCN N09/N10 → `TireOutput` ✅
+- [x] N27 — Race Situation Agent: LightGBM N12/N14 → `RaceSituationOutput` ✅
+- [x] N28 — Pit Strategy Agent: N15/N16 + analytical undercut logic → `PitStrategyOutput` ✅
+- [x] N29 — Radio Agent: N24 NLP pipeline (N06-style synthesizer + Pydantic structured output) → `RadioOutput` ✅
 - [x] N30 — RAG Agent: Qdrant + BGE-M3 + LangGraph ReAct → `RegulationContext` ✅
-- [ ] N31 — Strategy Orchestrator: LangGraph supervisor coordinating N25–N30
+- [x] N31 — Strategy Orchestrator: LangGraph supervisor + Monte Carlo simulation layer + dynamic routing (MoE-style) ✅
 
 **Success Metrics:**
 
-- [ ] All seven agents operational and coordinated
-- [ ] End-to-end workflow from lap state to strategy recommendation
-- [ ] Successful demo with historical race data
+- [x] All seven agents operational and coordinated ✅
+- [x] End-to-end workflow from lap state to strategy recommendation ✅
+- [x] Successful demo with historical race data (Bahrain 2025 multi-lap replay) ✅
 
 ---
 
@@ -369,12 +458,25 @@ Retrieval-augmented generation over FIA Sporting Regulations (2023–2025). Prov
 
 Develop dual interface system: Streamlit dashboard for analysis/configuration and Arcade visualization for real-time circuit representation.
 
+**Driver + Team selection (entry point for single-driver perspective):**
+
+The UI is the point where the user declares whose strategy they are running. At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). This pair is passed to `RaceStateManager`, which from that moment constructs every `RaceState` from NOR's perspective — full telemetry for NOR, timing-only data for everyone else. All downstream agents, ML models, and the orchestrator operate within this boundary automatically. See `documents/dev_docs/tasks/single_driver_perspective.md`.
+
 **Streamlit Dashboard:**
 
+- [ ] Driver + Team selector at session start (feeds RaceStateManager)
 - [ ] ML prediction displays with confidence metrics
 - [ ] Agent recommendation panels
 - [ ] Configuration interface for model parameters
 - [ ] Historical data analysis views
+
+**Voice Mode — low-latency upgrade (see `memory/project_voice_models.md`):**
+
+Current pipeline (Whisper → NLP → TTS) has ~1.5-2s latency. Replace with:
+
+- [ ] **GPT-4o Realtime API** (preferred for demo — integrates with existing OpenAI SDK, ~200-300ms)
+- [ ] **Moshi** (Kyutai, open-source, local GPU, ~160ms full-duplex — offline fallback)
+- [ ] Keep N24 NLP pipeline active for text-based analysis in parallel; voice mode bypasses it
 
 **Arcade Visualization:**
 
@@ -466,7 +568,7 @@ Complete project delivery with thesis documentation and defense materials.
 | v0.8.1  | Extended ML Models           | N12B archived (neg. result) / N15 MAE 0.487s ✅ / N16 AUC-ROC 0.7708 ✅ | ✅     |
 | v0.8.2  | NLP Radio Pipeline           | N17–N24: RoBERTa sentiment 87.5% / SetFit intent / BERT NER / pipeline P95 59.4ms | ✅     |
 | v0.9    | Code Refactoring             | Deferred to post-notebooks                                      | ⏸️     |
-| v0.10   | Multi-Agent Operational      | N25 ✅ N30 ✅ — N26–N29 + N31 in progress                        | 🔄     |
+| v0.10   | Multi-Agent Operational      | N25–N31 all complete, Bahrain 2025 end-to-end demo ✅              | ✅     |
 | v0.11   | RAG Integrated               | 2,279 chunks indexed, BGE-M3, `src/rag/` module complete        | ✅     |
 | v0.12   | Interfaces Live              | Streamlit + Arcade connected to backend                         | ⬜     |
 | v0.13   | Testing Complete             | 3 race scenarios validated, critical bugs resolved              | ⬜     |

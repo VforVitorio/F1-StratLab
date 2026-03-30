@@ -1,0 +1,51 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="n26" name="N26 — Tire Agent">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="N26 — Tire Agent" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="20" width="400" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- INPUT -->
+        <mxCell id="input" value="&lt;b&gt;Input — context_slice&lt;/b&gt;&lt;br/&gt;compound · tyre_life · driver · circuit&lt;br/&gt;stint_sequence · lap" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="295" y="70" width="310" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- AGENT -->
+        <mxCell id="agent" value="&lt;b&gt;LangGraph ReAct Agent&lt;/b&gt;&lt;br/&gt;LM Studio local LLM&lt;br/&gt;Iterative tool calls until convergence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="295" y="195" width="310" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- TOOL 1 — MC Dropout highlighted -->
+        <mxCell id="tool1" value="&lt;b&gt;predict_tire_deg_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Models: TireDegTCN N09 + MC Dropout N10&lt;/i&gt;&lt;br/&gt;N=50 forward passes → P10/P50/P90&lt;br/&gt;→ deg_rate, laps_to_cliff, uncertainty" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="345" width="260" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- TOOL 2 -->
+        <mxCell id="tool2" value="&lt;b&gt;estimate_laps_to_cliff_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Model: MC Dropout N10&lt;/i&gt;&lt;br/&gt;N=50 forward passes → P10/P50/P90&lt;br/&gt;→ laps_to_cliff with uncertainty" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="345" width="260" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- OUTPUT -->
+        <mxCell id="output" value="&lt;b&gt;TireOutput&lt;/b&gt;&lt;br/&gt;deg_rate · laps_to_cliff p10/p50/p90 · compound&lt;br/&gt;warning_level (OK/MONITOR/PIT_SOON) · reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="280" y="510" width="340" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- NOTE -->
+        <mxCell id="note" value="→ N31 Strategy Orchestrator · N28 Pit Agent (dependency — cliff_lap, warning_level)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="180" y="588" width="540" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- EDGES -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="input" target="agent" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent" target="tool1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent" target="tool2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool1" target="output" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool2" target="output" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

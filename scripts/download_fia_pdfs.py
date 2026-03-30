@@ -459,7 +459,7 @@ def download_all(
     all_links = deduplicate_links(scraped + load_known_urls())
 
     # Filter by requested years
-    filtered = [l for l in all_links if l.year in target_years]
+    filtered = [lnk for lnk in all_links if lnk.year in target_years]
 
     if not filtered:
         log.warning(
@@ -472,7 +472,7 @@ def download_all(
     log.info("Links to process: %d", len(filtered))
 
     downloaded = skipped = failed = 0
-    for link in sorted(filtered, key=lambda l: (l.year, l.doc_type)):
+    for link in sorted(filtered, key=lambda lnk: (lnk.year, lnk.doc_type)):
         result = download_link(link, session, dry_run=dry_run)
         if result is True:
             downloaded += 1
