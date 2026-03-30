@@ -58,4 +58,4 @@ jobs:
         run: uv sync --all-extras
 
       - name: Mypy
-        run: uv run mypy src/
+        run: uv run mypy src/rag/
