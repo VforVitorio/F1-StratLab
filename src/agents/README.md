@@ -1,33 +1,133 @@
-# src/agents — Legacy Rule-Based Strategy Engine
+# src/agents — Multi-Agent Strategy System (v0.9)
 
-**Status: Legacy** — superseded by the LangGraph multi-agent system (N25–N31).
-
-This package implements the original Experta-based expert system that was the first
-version of the strategy engine. It is kept for reference; it is not used in the
-current agent architecture.
+LangGraph-based multi-agent system extracted from notebooks N25–N31.
+Each module is importable without a FastF1 session via its `*_from_state` RSM adapter.
 
 ---
 
-## What is here
+## Module map
+
+| File | Notebook | Role | Entry points |
+|---|---|---|---|
+| `pace_agent.py` | N25 | XGBoost lap-time prediction + bootstrap CI | `run_pace_agent(**kwargs)` · `run_pace_agent_from_state(lap_state, laps_df)` |
+| `tire_agent.py` | N26 | TireDegTCN + MC Dropout cliff estimation | `run_tire_agent(lap_state)` · `run_tire_agent_from_state(lap_state, laps_df)` |
+| `race_situation_agent.py` | N27 | LightGBM overtake prob + SC prob (N12 + N14) | `run_race_situation_agent(lap_state)` · `run_race_situation_agent_from_state(lap_state, laps_df)` |
+| `pit_strategy_agent.py` | N28 | N15 pit quantiles + N16 undercut + compound recommendation | `run_pit_strategy_agent(lap_state)` · `run_pit_strategy_agent_from_state(lap_state, laps_df)` |
+| `radio_agent.py` | N29 | RoBERTa sentiment + SetFit intent + BERT-large NER + RCM parser | `run_radio_agent(lap_state)` · `run_radio_agent_from_state(lap_state, laps_df)` |
+| `rag_agent.py` | N30 | FIA regulation retrieval (Qdrant + BGE-M3 + LangGraph ReAct) | `run_rag_agent(question)` · `run_rag_agent_from_state(lap_state)` |
+| `strategy_orchestrator.py` | N31 | MoE routing + MC simulation + LLM synthesis | `run_strategy_orchestrator(race_state, lap_state)` · `run_strategy_orchestrator_from_state(race_state, laps_df)` |
+
+---
+
+## Output dataclasses
+
+| Agent | Output type | Key fields |
+|---|---|---|
+| N25 | `PaceOutput` | `lap_time_pred`, `ci_p10`, `ci_p90`, `delta_vs_prev`, `reasoning` |
+| N26 | `TireOutput` | `laps_to_cliff_p10/p50/p90`, `warning_level`, `deg_rate`, `reasoning` |
+| N27 | `RaceSituationOutput` | `overtake_prob`, `sc_prob_3lap`, `threat_level`, `reasoning` |
+| N28 | `PitStrategyOutput` | `action`, `compound_recommendation`, `stop_duration_p05/p50/p95`, `undercut_prob`, `reasoning` |
+| N29 | `RadioOutput` | `radio_events`, `rcm_events`, `alerts`, `reasoning`, `corrections` |
+| N30 | `RegulationContext` | `answer`, `articles`, `chunks`, `.reasoning` (alias for answer) |
+| N31 | `StrategyRecommendation` | `action`, `reasoning`, `confidence`, `scenario_scores`, `regulation_context` |
+
+---
+
+## Architecture
+
+```
+RaceState (Pydantic)
+      │
+      ├─ Layer 1 always-on ──────────────────────────────────────────────┐
+      │   N25 PaceAgent (XGBoost)                                        │
+      │   N26 TireAgent (TireDegTCN + MC Dropout)                        │
+      │   N27 RaceSituationAgent (LightGBM overtake + SC)                │
+      │   N29 RadioAgent (RoBERTa + SetFit + BERT NER + RCM parser)      │
+      │                                                                   │
+      ├─ Layer 1 MoE routing ──────────────────────────────────────────► │
+      │   tire_warning == PIT_SOON  → activate N28                        │
+      │   radio PROBLEM/WARNING     → activate N28                        │
+      │   sc_prob > 0.30            → activate N30                        │
+      │   N28 active                → activate N30                        │
+      │                                                                   │
+      ├─ Layer 1 conditional ─────────────────────────────────────────── │
+      │   N28 PitStrategyAgent (N15 quantiles + N16 undercut)             │
+      │   N30 RAGAgent (Qdrant + BGE-M3 + LangGraph)                     │
+      │                                                                   │
+      ├─ Layer 2 Monte Carlo (N_SIM=500, window=5 laps) ──────────────── │
+      │   STAY_OUT / PIT_NOW / UNDERCUT / OVERCUT                         │
+      │   score = α·E[S] + (1−α)·P10[S]                                  │
+      │                                                                   │
+      └─ Layer 3 LLM synthesis ───────────────────────────────────────── │
+          with_structured_output(StrategyRecommendation)                  │
+          action / reasoning / confidence                                 ▼
+                                                                StrategyRecommendation
+```
+
+---
+
+## RSM adapter pattern
+
+Every agent exposes two entry points:
+
+```python
+# FastF1 entry point (requires populated module globals from setup_session)
+run_*_agent(lap_state)
+
+# RSM adapter (no FastF1 session required)
+run_*_agent_from_state(lap_state, laps_df)
+```
+
+The RSM adapter builds `SESSION_META` from `laps_df` and calls the same core logic.
+Use `run_strategy_orchestrator_from_state(race_state, laps_df)` to run the full
+pipeline from a pre-loaded parquet DataFrame.
+
+---
+
+## Testing
+
+**Level 1 — NLP/model tools, no LLM:**
+
+```python
+from src.agents.radio_agent import process_radio_tool
+result = process_radio_tool.invoke({"driver": "NOR", "lap": 18, "text": "Box this lap."})
+print(result)
+```
+
+**Level 2 — Single agent, no LLM:**
+
+```python
+from src.agents.race_situation_agent import process_rcm_tool
+result = process_rcm_tool.invoke({
+    "message": "SAFETY CAR DEPLOYED", "flag": "", "category": "SafetyCar", "lap": 20
+})
+print(result)
+```
+
+**Level 3 — Full orchestrator smoke test (requires LM Studio running):**
+
+```python
+from src.agents.strategy_orchestrator import RaceState, run_strategy_orchestrator_from_state
+import pandas as pd
+
+laps_df = pd.read_parquet("data/processed/laps_featured_2025.parquet")
+race_state = RaceState(
+    driver="NOR", lap=18, total_laps=57, position=3,
+    compound="C2", tyre_life=20, gap_ahead_s=1.2, pace_delta_s=-0.3,
+    air_temp=32.0, track_temp=48.0,
+)
+rec = run_strategy_orchestrator_from_state(race_state, laps_df)
+print(rec.action, rec.confidence, rec.reasoning)
+```
+
+---
+
+## Legacy files (kept for reference)
 
 | File | Description |
 |---|---|
-| `base_agent.py` | Experta `Fact` subclasses (`TelemetryFact`, `DegradationFact`, `GapFact`, `RadioFact`, `RaceStatusFact`, `StrategyRecommendation`) and `F1StrategyEngine` base engine; also contains data-transform helpers for tire/lap/gap/radio facts |
-| `strategy_agent.py` | `F1CompleteStrategyEngine` — unified engine combining degradation, lap-time, NLP, and gap rule sub-engines via multiple inheritance; imports from `src.agents.rules.*` |
-| `rules/` | Domain rule modules (`degradation_rules.py`, `laptime_rules.py`, `nlp_rules.py`, `gap_rules.py`) |
+| `base_agent.py` | Experta `Fact` subclasses and `F1StrategyEngine` (CLIPS-style, legacy) |
+| `strategy_agent.py` | `F1CompleteStrategyEngine` — original rule-based engine, superseded by N31 |
+| `rules/` | Domain rule modules for the legacy engine |
 
----
-
-## Why superseded
-
-The Experta rule engine (CLIPS-style forward chaining) was replaced by a LangGraph
-ReAct multi-agent architecture in N25–N31. The new system uses trained ML models
-(LightGBM, TCN, calibrated probabilities) as tool calls rather than hand-coded rules,
-and coordinates via a Supervisor Orchestrator (N31).
-
----
-
-## Do not use in new code
-
-Import from `notebooks/agents/` or from `src/rag/` instead.
-For the production entry point see [`notebooks/agents/N31_orchestrator.ipynb`](../../notebooks/agents/N31_orchestrator.ipynb).
+The legacy engine is not used in v0.9. Do not import from it in new code.
