@@ -122,12 +122,37 @@ print(rec.action, rec.confidence, rec.reasoning)
 
 ---
 
+## Package init
+
+`__init__.py` re-exports all public entry points so callers can do:
+
+```python
+from src.agents import RaceState, run_strategy_orchestrator_from_state
+```
+
+---
+
 ## Legacy files (kept for reference)
 
 | File | Description |
 |---|---|
 | `base_agent.py` | Experta `Fact` subclasses and `F1StrategyEngine` (CLIPS-style, legacy) |
 | `strategy_agent.py` | `F1CompleteStrategyEngine` — original rule-based engine, superseded by N31 |
-| `rules/` | Domain rule modules for the legacy engine |
+| `rules/degradation_rules.py` | Tyre degradation rules for legacy engine |
+| `rules/laptime_rules.py` | Lap time rules for legacy engine |
+| `rules/gap_rules.py` | Gap/position rules for legacy engine |
+| `rules/nlp_rules.py` | NLP intent rules for legacy engine |
+| `rules/__init__.py` | Legacy rules package init |
 
 The legacy engine is not used in v0.9. Do not import from it in new code.
+
+---
+
+## LLM configuration (production)
+
+| Layer | Model |
+|---|---|
+| Sub-agents N25–N29 | `gpt-4.1-mini` |
+| Orchestrator N31 | `gpt-4.1` (larger model — synthesises all sub-agent outputs) |
+
+Notebooks default to `local-model` (LM Studio). Switch to the OpenAI model IDs above when deploying via FastAPI.

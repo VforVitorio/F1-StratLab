@@ -7,9 +7,9 @@ Technical documentation for each `src/` module. Written for developers working o
 | Module | Status | Doc |
 |---|---|---|
 | `src/simulation/` | done (v0.9) | [overview](simulation/overview.md) |
-| `src/agents/` | in progress | — |
+| `src/agents/` | done (v0.9) | [README](../src/agents/README.md) |
 | `src/rag/` | done | — |
-| `src/api/` | planned | — |
+| `src/api/` | planned (Step 9) | — |
 
 ## Conventions
 
