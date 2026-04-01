@@ -476,7 +476,7 @@ def run_pace_agent_from_state(lap_state: dict) -> PaceOutput:
         laps_since_pit = d.get('tyre_life', 1),       # proxy: tyre_life since last stop
         fuel_load      = laps_remaining / max(total_laps, 1),
         year           = meta.get('year', 2025),
-        prev_lap_time  = d.get('lap_time_s', 90.0),
+        prev_lap_time  = d.get('lap_time_s') or 90.0,
         prev_tyre_life = max(0, d.get('tyre_life', 1) - 1),
         prev_speed_st  = d.get('speed_st', 300.0),
         air_temp       = wx.get('air_temp', 25.0),

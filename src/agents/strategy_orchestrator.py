@@ -612,36 +612,7 @@ def _run_always_on_agents_from_state(
 
     Returns (pace_out, tire_out, situation_out, radio_out).
     """
-    pace_lap_state = {
-        "driver_number":  lap_state.get("driver_number", "0"),
-        "lap_number":     race_state.lap,
-        "stint":          lap_state.get("stint", 1),
-        "tyre_life":      race_state.tyre_life,
-        "compound":       race_state.compound,
-        "position":       race_state.position,
-        "team":           lap_state.get("team", "Unknown"),
-        "laps_since_pit": lap_state.get("laps_since_pit", race_state.tyre_life),
-        "fuel_load":      lap_state.get(
-            "fuel_load", 1 - race_state.lap / race_state.total_laps
-        ),
-        "year":           lap_state.get("year", 2025),
-        "prev_lap_time":  lap_state.get("prev_lap_time", 92.0),
-        "prev_tyre_life": race_state.tyre_life - 1,
-        "prev_speed_st":  lap_state.get("prev_speed_st", 300.0),
-        "air_temp":       race_state.air_temp,
-        "track_temp":     race_state.track_temp,
-        "humidity":       lap_state.get("humidity", 50.0),
-        "rainfall":       race_state.rainfall,
-        "total_laps":     race_state.total_laps,
-        "gp_name":        lap_state.get("gp_name", ""),
-        "session_meta": {
-            "gp":         lap_state.get("gp_name", ""),
-            "year":       lap_state.get("year", 2025),
-            "total_laps": race_state.total_laps,
-        },
-    }
-
-    pace_out      = run_pace_agent_from_state(pace_lap_state, laps_df)
+    pace_out      = run_pace_agent_from_state(lap_state)
     tire_out      = run_tire_agent_from_state(lap_state, laps_df)
     situation_out = run_race_situation_agent_from_state(lap_state, laps_df)
 
@@ -822,20 +793,37 @@ def run_strategy_orchestrator_from_state(
         gp_name     = (
             str(laps_df["GP_Name"].iloc[0]) if "GP_Name" in laps_df.columns else ""
         )
+        stint = int(lap_row["Stint"].iloc[0]) if not lap_row.empty else 1
+        team  = (
+            str(lap_row["Team"].iloc[0]) if not lap_row.empty and "Team" in lap_row else "Unknown"
+        )
         lap_state = {
-            "driver_number": str(race_state.driver),
-            "stint":         int(lap_row["Stint"].iloc[0]) if not lap_row.empty else 1,
-            "team":          (
-                str(lap_row["Team"].iloc[0]) if not lap_row.empty and "Team" in lap_row else "Unknown"
-            ),
-            "year":          year,
-            "gp_name":       gp_name,
-            "driver":        race_state.driver,
+            "lap_number": race_state.lap,
+            "driver": {
+                "driver":        race_state.driver,
+                "driver_number": 0,
+                "team":          team,
+                "position":      race_state.position,
+                "compound":      race_state.compound,
+                "tyre_life":     race_state.tyre_life,
+                "stint":         stint,
+                "lap_time_s":    None,
+                "speed_st":      300.0,
+                "fuel_load":     1 - race_state.lap / max(race_state.total_laps, 1),
+            },
             "session_meta": {
+                "gp_name":    gp_name,
                 "gp":         gp_name,
                 "year":       year,
+                "driver":     race_state.driver,
+                "team":       team,
                 "total_laps": race_state.total_laps,
-                "session":    None,
+            },
+            "weather": {
+                "air_temp":   race_state.air_temp,
+                "track_temp": race_state.track_temp,
+                "rainfall":   race_state.rainfall,
+                "humidity":   50.0,
             },
             "rivals": [],
         }

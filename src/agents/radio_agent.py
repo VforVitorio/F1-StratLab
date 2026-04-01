@@ -280,6 +280,16 @@ class RadioAgentCFG:
 
         Returns (intent_model, intent_names).
         """
+        # Compatibility shim: SetFit 0.9.x imports default_logdir from
+        # transformers.training_args which was removed in transformers >= 5.0.
+        import transformers.training_args as _ta
+        if not hasattr(_ta, "default_logdir"):
+            import datetime, os
+            def _default_logdir() -> str:
+                ts = datetime.datetime.now().strftime("%b%d_%H-%M-%S")
+                return os.path.join("runs", ts)
+            _ta.default_logdir = _default_logdir
+
         from setfit import SetFitModel
         _i_dir  = nlp_dir / "intent_setfit_modernbert_v1"
         i_model = SetFitModel.from_pretrained(str(_i_dir))
