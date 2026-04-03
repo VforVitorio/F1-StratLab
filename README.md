@@ -187,6 +187,7 @@ docker-compose down
 ```
 
 **Access the application:**
+
 - Frontend (Streamlit): http://localhost:8501
 - Backend API: http://localhost:8000
 - API Documentation: http://localhost:8000/docs
@@ -207,12 +208,14 @@ streamlit run src/telemetry/frontend/app/main.py
 ### Troubleshooting
 
 **Windows: DLL load failed (scikit-learn)**
+
 ```bash
 # Add .venv/ folder to Windows Defender exclusions, then:
 pip install --no-cache-dir --force-reinstall scikit-learn
 ```
 
 **Python 3.10+ AttributeError: collections.Mapping**
+
 ```bash
 # Ensure frozendict>=2.4.0 is installed
 pip install --upgrade frozendict>=2.4.0
