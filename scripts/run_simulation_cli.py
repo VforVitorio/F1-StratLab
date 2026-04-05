@@ -31,6 +31,8 @@ Output columns
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import sys
 import traceback
 from pathlib import Path
@@ -38,8 +40,9 @@ from typing import Any
 
 import pandas as pd
 from rich.box import ROUNDED
-from rich.console import Console
+from rich.console import Console, Group
 from rich.live import Live
+from rich.spinner import Spinner
 from rich.table import Table
 from rich.text import Text
 
@@ -53,6 +56,15 @@ _REPO_ROOT = next(
 )
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+
+# Load .env so OPENAI_API_KEY is available when --provider openai is used
+try:
+    from dotenv import load_dotenv
+    _env = _REPO_ROOT / ".env"
+    if _env.exists():
+        load_dotenv(_env)
+except ImportError:
+    pass
 
 # ---------------------------------------------------------------------------
 # Lazy imports — surface missing-model errors clearly
@@ -81,6 +93,39 @@ ACTION_STYLE: dict[str, str] = {
     "ALERT":    "bold cyan",
 }
 
+# Pirelli tyre-compound colours
+_COMPOUND_STYLE: dict[str, str] = {
+    "SOFT":         "bold red",
+    "MEDIUM":       "bold yellow",
+    "HARD":         "white",
+    "INTERMEDIATE": "bold green",
+    "WET":          "bold blue",
+    "INT":          "bold green",
+}
+
+# Loaded once in run() — maps year → gp → compound → Cx
+_TIRE_ALLOC: dict = {}
+
+
+def _load_tire_alloc(repo_root: Path) -> None:
+    """Populate _TIRE_ALLOC from data/tire_compounds_by_race.json."""
+    global _TIRE_ALLOC
+    path = repo_root / "data" / "tire_compounds_by_race.json"
+    if path.exists():
+        with open(path) as f:
+            _TIRE_ALLOC = json.load(f)
+
+
+def _compound_text(compound: str, gp_name: str, year: int) -> Text:
+    """Return a coloured Rich Text showing compound + Cx (e.g. 'SOF/C4')."""
+    cu = compound.upper()
+    cx = _TIRE_ALLOC.get(str(year), {}).get(gp_name, {}).get(cu)
+    if cx:
+        label = f"{cu[:3]}/{cx}"   # SOF/C4, MED/C3, HAR/C2
+    else:
+        label = cu[:4]             # INTE, WET (no Cx for wet compounds)
+    return Text(label, style=_COMPOUND_STYLE.get(cu, ""))
+
 
 def _make_table() -> Table:
     """Build and return the Rich Table skeleton (no rows yet)."""
@@ -90,16 +135,19 @@ def _make_table() -> Table:
         header_style="bold white",
         expand=False,
     )
-    table.add_column("Lap",      justify="right",  style="dim",    width=4)
-    table.add_column("Cmpd",     justify="left",                   width=8)
-    table.add_column("Life",     justify="right",  style="dim",    width=4)
-    table.add_column("Action",   justify="left",                   width=10)
-    table.add_column("Conf",     justify="right",                  width=5)
-    table.add_column("STAY",     justify="right",  style="green",  width=6)
-    table.add_column("PIT",      justify="right",  style="red",    width=6)
-    table.add_column("UDCT",     justify="right",  style="yellow", width=6)
-    table.add_column("OVCT",     justify="right",  style="yellow", width=6)
-    table.add_column("Reasoning",                                  min_width=40)
+    table.add_column("Lap",       justify="right",  style="dim",    width=4)
+    table.add_column("Tyre",      justify="left",                   width=8)
+    table.add_column("Age",       justify="right",  style="dim",    width=4)
+    table.add_column("P",         justify="right",  style="dim",    width=3)
+    table.add_column("Lap (s)",   justify="right",                  width=8)
+    table.add_column("Gap Fwd",   justify="right",  style="dim",    width=7)
+    table.add_column("Decision",  justify="left",                   width=10)
+    table.add_column("Conf",      justify="right",                  width=5)
+    table.add_column("Stay",      justify="right",  style="green",  width=6)
+    table.add_column("Pit",       justify="right",  style="red",    width=6)
+    table.add_column("Ucut",      justify="right",  style="yellow", width=6)
+    table.add_column("Ocut",      justify="right",  style="yellow", width=6)
+    table.add_column("Reasoning",                                   min_width=36)
     return table
 
 
@@ -242,6 +290,9 @@ def _run_no_llm(
 # ---------------------------------------------------------------------------
 
 def run(args: argparse.Namespace) -> None:
+    # Set provider before any agent singleton is created
+    os.environ["F1_LLM_PROVIDER"] = args.provider
+
     raw_dir  = Path(args.raw_dir)
     race_dir = raw_dir / args.gp_name
 
@@ -261,12 +312,14 @@ def run(args: argparse.Namespace) -> None:
     )
     console.print()
 
+    _load_tire_alloc(_REPO_ROOT)
+
     console.print("[dim]Loading featured parquet…[/dim]", end=" ")
     laps_df = pd.read_parquet(featured_path)
     console.print(f"done ([dim]{len(laps_df):,} rows[/dim])")
 
     console.print(f"[dim]Loading race parquet from {race_dir}…[/dim]", end=" ")
-    engine = RaceReplayEngine(race_dir, args.driver, args.team, interval_seconds=0.0)
+    engine = RaceReplayEngine(race_dir, args.driver, args.team, interval_seconds=args.interval)
     console.print(f"done ([dim]{engine.total_laps} laps[/dim])")
     console.print()
 
@@ -280,7 +333,15 @@ def run(args: argparse.Namespace) -> None:
     errors: list[str] = []
     prev_lap_time: float = 0.0
 
-    with Live(table, console=console, refresh_per_second=4):
+    _spinner = Spinner("dots", style="dim cyan")
+
+    def _render(status: str = "") -> Group:
+        if status:
+            _spinner.text = Text(f"  lap {status}", style="dim cyan")
+            return Group(table, _spinner)
+        return Group(table, Text(""))
+
+    with Live(_render(), console=console, refresh_per_second=10) as live:
         for lap_state in engine.replay():
             lap_num = lap_state["lap_number"]
 
@@ -291,15 +352,30 @@ def run(args: argparse.Namespace) -> None:
 
             driver_st = lap_state.get("driver", {})
             if not driver_st:
-                table.add_row(str(lap_num), "—", "—", Text("[DNF]", style="dim"), "", "", "", "", "", "")
+                table.add_row(str(lap_num), "—", "—", "—", "—", "—",
+                              Text("[DNF]", style="dim"), "", "", "", "", "", "")
+                live.update(_render())
                 continue
 
             compound  = driver_st.get("compound", "?")
             tyre_life = driver_st.get("tyre_life", 0)
+            position  = driver_st.get("position", 0)
+            lap_time  = driver_st.get("lap_time_s") or 0.0
+
+            # Gap to car directly ahead (from rivals list)
+            rivals   = lap_state.get("rivals", [])
+            car_ahead = next((r for r in rivals if r.get("position") == position - 1), None)
+            gap_ahead = abs(car_ahead.get("interval_to_driver_s") or 0.0) if car_ahead else 0.0
+            gap_str   = f"{gap_ahead:.2f}" if gap_ahead > 0 else "—"
+
+            cmpd_text = _compound_text(compound, args.gp_name, args.year)
+
+            # Show spinner while agents / LLM run
+            live.update(_render(f"{lap_num} / {lap_end}  —  running agents…"))
 
             try:
                 race_state = _build_race_state(lap_state, args.driver, prev_lap_time)
-                prev_lap_time = driver_st.get("lap_time_s") or prev_lap_time
+                prev_lap_time = lap_time or prev_lap_time
 
                 if args.no_llm:
                     result = _run_no_llm(race_state, lap_state, laps_df)
@@ -323,8 +399,11 @@ def run(args: argparse.Namespace) -> None:
 
                 table.add_row(
                     str(lap_num),
-                    compound,
+                    cmpd_text,
                     str(tyre_life),
+                    str(position),
+                    f"{lap_time:.2f}" if lap_time else "—",
+                    gap_str,
                     action_text,
                     f"{confidence:.2f}",
                     f"{stay:.3f}",
@@ -338,12 +417,16 @@ def run(args: argparse.Namespace) -> None:
                 err_msg = f"LAP {lap_num} ERROR: {type(exc).__name__}: {exc}"
                 errors.append(err_msg)
                 table.add_row(
-                    str(lap_num), compound, str(tyre_life),
+                    str(lap_num), cmpd_text, str(tyre_life),
+                    str(position), "—", gap_str,
                     Text("[ERROR]", style="bold red"), "", "", "", "", "",
                     str(exc)[:60],
                 )
                 if args.verbose:
                     console.print_exception()
+
+            # Clear spinner once row is in the table
+            live.update(_render())
 
     if errors:
         console.print(f"\n[yellow]Completed with {len(errors)} error(s):[/yellow]")
@@ -367,6 +450,12 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("driver",  help="FIA three-letter driver code (e.g. NOR, HAM)")
     p.add_argument("team",    help="Team name as stored in laps parquet (e.g. McLaren)")
     p.add_argument(
+        "--year",
+        type=int,
+        default=2025,
+        help="Season year — used for tyre compound allocation lookup (default: 2025)",
+    )
+    p.add_argument(
         "--raw-dir",
         default="data/raw/2025",
         help="Base directory for raw race parquets (default: data/raw/2025)",
@@ -385,6 +474,20 @@ def _parse_args() -> argparse.Namespace:
         "--no-llm",
         action="store_true",
         help="Skip LLM synthesis — print MC scores only (no LM Studio required)",
+    )
+    p.add_argument(
+        "--provider",
+        default="lmstudio",
+        choices=["lmstudio", "openai"],
+        help="LLM provider: 'lmstudio' (default) or 'openai' (needs OPENAI_API_KEY in .env)",
+    )
+    p.add_argument(
+        "--interval",
+        type=float,
+        default=0.0,
+        metavar="SECONDS",
+        help="Pause between laps in seconds (default: 0.0 — no pause). "
+             "E.g. --interval 2.0 pauses 2 s after each lap row is printed.",
     )
     p.add_argument(
         "--verbose",
