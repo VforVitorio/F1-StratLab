@@ -1,14 +1,140 @@
-# F1 Strategy Manager — Simulation & Debug Commands
+# F1 Strategy Manager — Dev Testing & Simulation Guide
 
-Quick reference for running the agent pipeline without the HTTP layer.
+Quick reference for running, testing, and verifying every layer of the stack.
 
 ---
 
-## 1. Full system simulation (`run_simulation_cli.py`)
+## 0. Prerequisites
 
-### Without LLM — ML + MC scores only (fast, no API key needed)
+```powershell
+# Activate your Python env from repo root
+# (adjust path to your actual venv/conda)
+.\.venv\Scripts\Activate.ps1
+```
 
-```bash
+**LM Studio** — must be running on `http://localhost:1234` for any LLM step.
+Load a model (e.g. Llama-3-8B or equivalent) before running with-LLM tests.
+
+---
+
+## 1. Agent unit smoke (no LLM, no GPU required)
+
+### Fast import check
+
+```powershell
+python -c "from src.agents.pace_agent import run_pace_agent_from_state; print('pace OK')"
+python -c "from src.agents.tire_agent import run_tire_agent_from_state; print('tire OK')"
+python -c "from src.agents.race_situation_agent import run_race_situation_agent_from_state; print('situation OK')"
+python -c "from src.agents.pit_strategy_agent import run_pit_strategy_agent_from_state; print('pit OK')"
+python -c "from src.agents.radio_agent import run_radio_agent_from_state; print('radio OK')"
+python -c "from src.agents.rag_agent import run_rag_agent; print('rag OK')"
+python -c "from src.agents.strategy_orchestrator import RaceState, run_strategy_orchestrator_from_state; print('orchestrator OK')"
+```
+
+### pytest suites
+
+```powershell
+# Agent imports + Pydantic schemas + voice config
+pytest tests/test_agents.py -v
+
+# Repo structure + simulation imports + Melbourne parquet
+pytest tests/test_smoke.py -v
+
+# All at once
+pytest tests/ -v
+```
+
+---
+
+## 2. Single-agent debug (`debug_agent.py`)
+
+Runs one agent in isolation using real Melbourne 2025 lap data (falls back to synthetic defaults if parquet not found).
+
+### Pace agent (N25)
+
+```powershell
+python scripts/debug_agent.py --agent pace --gp Melbourne --lap 20 --driver NOR --team McLaren
+```
+
+### Tire agent (N26)
+
+```powershell
+python scripts/debug_agent.py --agent tire --gp Melbourne --lap 20 --driver NOR --team McLaren
+
+# Force specific tyre state
+python scripts/debug_agent.py --agent tire --gp Melbourne --lap 35 --driver NOR --team McLaren `
+    --override tyre_life=28 compound=MEDIUM position=2
+```
+
+### Race situation agent (N27)
+
+```powershell
+python scripts/debug_agent.py --agent situation --gp Melbourne --lap 20 --driver NOR --team McLaren
+```
+
+### Pit strategy agent (N28)
+
+```powershell
+python scripts/debug_agent.py --agent pit --gp Melbourne --lap 28 --driver NOR --team McLaren
+
+# Print full lap_state before running
+python scripts/debug_agent.py --agent pit --gp Melbourne --lap 28 --driver NOR --team McLaren --print-state
+
+# Override compound
+python scripts/debug_agent.py --agent pit --gp Bahrain --lap 20 --driver NOR --team McLaren `
+    --override compound=MEDIUM tyre_life=18
+```
+
+### Radio agent (N29)
+
+```powershell
+# With explicit radio message (exercises full NLP path)
+python scripts/debug_agent.py --agent radio --gp Melbourne --lap 10 --driver NOR --team McLaren `
+    --radio "Box box, tyres are gone completely"
+
+# No radio — exercises RCM path only
+python scripts/debug_agent.py --agent radio --gp Bahrain --lap 25 --driver HAM --team Mercedes
+```
+
+### RAG agent (N30) — requires LM Studio
+
+```powershell
+# Auto-generated query from gp_name
+python scripts/debug_agent.py --agent rag --gp Melbourne --lap 20 --driver NOR --team McLaren
+
+# Custom regulation question
+python scripts/debug_agent.py --agent rag --gp Monaco --lap 50 --driver LEC --team Ferrari `
+    --query "Can a driver change tyres twice in the same lap under VSC?"
+```
+
+### Full orchestrator (N31) — requires LM Studio
+
+```powershell
+python scripts/debug_agent.py --agent orchestrator --gp Melbourne --lap 20 --driver NOR --team McLaren
+```
+
+---
+
+## 3. `--override` reference
+
+Overrides any field in the `driver` dict of the lap state without touching the rest.
+
+```powershell
+--override tyre_life=28 compound=MEDIUM position=3 lap_time_s=88.5
+```
+
+Supported fields: `tyre_life`, `compound`, `compound_id`, `position`, `lap_time_s`,
+`speed_st`, `fuel_load`, `stint`, `fresh_tyre`, `gap_to_leader_s`.
+
+---
+
+## 4. Full system CLI simulation (`run_simulation_cli.py`)
+
+Renders a live Rich table (lap-by-lap) using the full RaceReplayEngine pipeline.
+
+### Without LLM — ML + MC scores only (fast)
+
+```powershell
 # All laps, Melbourne, NOR
 python scripts/run_simulation_cli.py Melbourne NOR McLaren --no-llm
 
@@ -22,115 +148,204 @@ python scripts/run_simulation_cli.py Bahrain HAM Mercedes --laps 20-40 --no-llm
 python scripts/run_simulation_cli.py Silverstone NOR McLaren --laps 1-57 --no-llm --verbose
 ```
 
-### With LLM synthesis (LM Studio running or OpenAI API configured)
+### With LLM synthesis — requires LM Studio
 
-```bash
-# Full pipeline — sub-agents (gpt-4.1-mini) + orchestrator (gpt-5.4-mini)
+```powershell
 python scripts/run_simulation_cli.py Melbourne NOR McLaren --laps 20-30
 
-# Custom featured parquet or raw dir
-python scripts/run_simulation_cli.py Monaco LEC Ferrari --laps 50-78 \
-    --raw-dir data/raw/2025 \
+# Custom parquet paths
+python scripts/run_simulation_cli.py Monaco LEC Ferrari --laps 50-78 `
+    --raw-dir data/raw/2025 `
     --featured data/processed/laps_featured_2025.parquet
 ```
 
 **Output columns:**
-
 ```
-Lap | Cmpd | Life | Action     | Conf | STAY  / PIT   / UDCT  / OVCT  | Reasoning
-```
-
----
-
-## 2. Single-agent debug (`debug_agent.py`)
-
-Runs one agent in isolation — no replay engine, no full pipeline.
-Looks up real lap data from the featured parquet when available; falls back to synthetic defaults.
-
-### Tire agent (N26)
-
-```bash
-# Real data lookup — Melbourne lap 20, NOR
-python scripts/debug_agent.py --agent tire --gp Melbourne --lap 20 --driver NOR --team McLaren
-
-# Force specific parameters with --override
-python scripts/debug_agent.py --agent tire --gp Melbourne --lap 35 --driver NOR --team McLaren \
-    --override tyre_life=28 compound=MEDIUM position=2
-```
-
-### Pace agent (N25)
-
-```bash
-python scripts/debug_agent.py --agent pace --gp Bahrain --lap 15 --driver HAM --team Mercedes
-```
-
-### Race situation agent (N27)
-
-```bash
-python scripts/debug_agent.py --agent situation --gp Monaco --lap 50 --driver VER --team "Red Bull Racing"
-```
-
-### Pit strategy agent (N28)
-
-```bash
-# Basic run
-python scripts/debug_agent.py --agent pit --gp Silverstone --lap 28 --driver NOR --team McLaren
-
-# Print full lap_state dict before running
-python scripts/debug_agent.py --agent pit --gp Silverstone --lap 28 --driver NOR --team McLaren --print-state
-
-# Override compound + tyre life
-python scripts/debug_agent.py --agent pit --gp Bahrain --lap 20 --driver NOR --team McLaren \
-    --override compound=MEDIUM tyre_life=18
-```
-
-### Radio agent (N29)
-
-```bash
-# With explicit radio message
-python scripts/debug_agent.py --agent radio --gp Melbourne --lap 10 --driver NOR --team McLaren \
-    --radio "Box box, tyres are gone completely"
-
-# No radio message — exercises RCM path only
-python scripts/debug_agent.py --agent radio --gp Bahrain --lap 25 --driver HAM --team Mercedes
-```
-
-### RAG agent (N30)
-
-```bash
-# Default query generated from gp_name
-python scripts/debug_agent.py --agent rag --gp Melbourne --lap 20 --driver NOR --team McLaren
-
-# Custom regulation query
-python scripts/debug_agent.py --agent rag --gp Monaco --lap 50 --driver LEC --team Ferrari \
-    --query "Can a driver change tyres twice in the same lap under VSC?"
-```
-
-### Full orchestrator (N31 — needs LLM)
-
-```bash
-python scripts/debug_agent.py --agent orchestrator --gp Melbourne --lap 20 --driver NOR --team McLaren
+Lap | Cmpd | Life | Action | Conf | STAY / PIT / UDCT / OVCT | Reasoning
 ```
 
 ---
 
-## 3. `--override` reference
+## 5. Telemetry backend — local deployment (sin Docker)
 
-Overrides any field in the `driver` dict of the lap state without touching the rest.
-Multiple overrides in one call:
+Run from inside the submodule directory (`src/telemetry/`).
 
-```bash
---override tyre_life=28 compound=MEDIUM position=3 lap_time_s=88.5
+### Install dependencies
+
+```powershell
+cd src\telemetry
+
+# New voice deps (Nemotron + Qwen3-TTS) — add to requirements
+pip install transformers accelerate
+pip install qwen-tts soundfile
+
+# Existing backend deps
+pip install -r backend/requirements.txt
 ```
 
-Supported fields: any key that appears in `driver` — `tyre_life`, `compound`, `compound_id`,
-`position`, `lap_time_s`, `speed_st`, `fuel_load`, `stint`, `fresh_tyre`, `gap_to_leader_s`.
+> **Note:** `requirements.txt` still lists `openai-whisper` and `edge-tts` — estas líneas
+> son ahora dead code. Puedes borrarlas manualmente o simplemente ignorarlas;
+> el backend ya no las importa.
+
+### Start backend (uvicorn)
+
+```powershell
+cd src\telemetry
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### Start frontend (Streamlit)
+
+```powershell
+# Separate terminal
+cd src\telemetry
+streamlit run frontend/app/main.py --server.port 8501
+```
+
+### Docker (backend + frontend juntos)
+
+```powershell
+cd src\telemetry
+docker-compose up --build
+```
 
 ---
 
-## 4. Tips
+## 6. Strategy endpoints — curl/PowerShell verification
 
-- **No parquet?** The script falls back to synthetic defaults (position=1, lap_time=91.0s, air_temp=28°C, etc.) and prints a warning.
-- **Connection error during LLM call?** `_safe_call` in `run_simulation_cli.py` catches it and returns a stub output so the lap does not abort.
-- **LM Studio not running?** Use `--no-llm` for the CLI or avoid `--agent orchestrator` in the debug script.
-- **Slow startup?** NLP models (RoBERTa, BERT-large, SetFit) load at import time via `radio_agent`. First run always takes 20–40s regardless of which agent you test.
+Con el backend corriendo en `http://localhost:8000`.
+
+### Pace endpoint (N25)
+
+```powershell
+$body = '{"lap_state":{"driver":{"driver":"NOR","position":1,"compound":"SOFT","tyre_life":10,"lap_number":20,"lap_time_s":90.5,"speed_st":310,"fuel_load":0.6,"stint":1,"fresh_tyre":false,"gap_to_leader_s":0},"session_meta":{"total_laps":57,"gp_name":"Melbourne","year":2025},"weather":{"air_temp":22,"track_temp":35,"rainfall":false},"rivals":[]}}'
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/strategy/pace" -Method POST -ContentType "application/json" -Body $body
+```
+
+### Tire endpoint (N26)
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/strategy/tire" -Method POST -ContentType "application/json" -Body $body
+```
+
+### Situation endpoint (N27)
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/strategy/situation" -Method POST -ContentType "application/json" -Body $body
+```
+
+### Pit endpoint (N28)
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/strategy/pit" -Method POST -ContentType "application/json" -Body $body
+```
+
+### Radio endpoint (N29)
+
+```powershell
+$radioBody = '{"lap_state":{"driver":{"driver":"NOR","position":1,"compound":"SOFT","tyre_life":10,"lap_number":20,"lap_time_s":90.5,"speed_st":310,"fuel_load":0.6,"stint":1,"fresh_tyre":false,"gap_to_leader_s":0},"session_meta":{"total_laps":57,"gp_name":"Melbourne","year":2025},"weather":{"air_temp":22,"track_temp":35,"rainfall":false},"rivals":[]},"radio_msgs":[{"driver":"NOR","timestamp":0,"text":"Box box, tyres are gone","team_radio":true}],"rcm_events":[]}'
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/strategy/radio" -Method POST -ContentType "application/json" -Body $radioBody
+```
+
+### RAG endpoint (N30) — requires LM Studio
+
+```powershell
+$ragBody = '{"question":"What are the rules for pit stop minimum time?"}'
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/strategy/rag" -Method POST -ContentType "application/json" -Body $ragBody
+```
+
+### Full orchestrator — /recommend (N31) — requires LM Studio
+
+```powershell
+$recBody = '{"lap_state":{"driver":{"driver":"NOR","position":1,"compound":"SOFT","tyre_life":18,"lap_number":28,"lap_time_s":91.2,"speed_st":308,"fuel_load":0.4,"stint":1,"fresh_tyre":false,"gap_to_leader_s":0},"session_meta":{"total_laps":57,"gp_name":"Melbourne","year":2025},"weather":{"air_temp":22,"track_temp":35,"rainfall":false},"rivals":[{"driver":"PIA","position":2,"interval_to_driver_s":2.1}]},"gap_ahead_s":2.1,"risk_tolerance":0.5}'
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/strategy/recommend" -Method POST -ContentType "application/json" -Body $recBody
+```
+
+---
+
+## 7. Voice endpoints — verificación
+
+### Health check (no model load needed)
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/voice/health" -Method GET
+```
+
+### STT service import check (Nemotron — no GPU needed para el import)
+
+```powershell
+cd src\telemetry
+python -c "from backend.services.voice.stt_service import STTService; print('STT import OK')"
+python -c "from backend.services.voice.tts_service import TTSService; print('TTS import OK')"
+```
+
+### Voice config — verificar que Whisper/EdgeTTS están eliminados
+
+```powershell
+cd src\telemetry
+python -c "
+from backend.core.voice_config import NEMOTRON_MODEL, QWEN3_TTS_MODEL, QWEN3_SAMPLE_RATE
+print('Nemotron model:', NEMOTRON_MODEL)
+print('Qwen3-TTS model:', QWEN3_TTS_MODEL)
+print('Sample rate:', QWEN3_SAMPLE_RATE)
+import backend.core.voice_config as vc
+assert not hasattr(vc, 'WHISPER_MODEL'), 'ERROR: WHISPER_MODEL still present'
+assert not hasattr(vc, 'TTS_ENGINE'), 'ERROR: TTS_ENGINE still present'
+print('Config clean — no Whisper/EdgeTTS constants')
+"
+```
+
+### Transcribe audio (Nemotron) — requiere GPU o CPU lento
+
+```powershell
+# Graba un WAV y pásalo al endpoint
+$audioBytes = [System.IO.File]::ReadAllBytes("test_audio.wav")
+$b64 = [Convert]::ToBase64String($audioBytes)
+$sttBody = "{`"audio_base64`":`"$b64`"}"
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/voice/transcribe" -Method POST -ContentType "application/json" -Body $sttBody
+```
+
+### TTS synthesis (Qwen3-TTS) — requiere model download en primer uso
+
+```powershell
+$ttsBody = '{"text":"Box box, pit this lap. Undercut window is open."}'
+$response = Invoke-RestMethod -Uri "http://localhost:8000/api/v1/voice/synthesize" -Method POST -ContentType "application/json" -Body $ttsBody -OutFile "test_tts_output.wav"
+# Reproduce test_tts_output.wav para verificar
+```
+
+---
+
+## 8. Chat endpoint — verificar routing de estrategia (Step 9b)
+
+```powershell
+# Pregunta de estrategia — debe enrutar a StrategyHandler
+$chatBody = '{"message":"Should NOR pit this lap? Tyres are 22 laps old on MEDIUM."}'
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/chat/query" -Method POST -ContentType "application/json" -Body $chatBody
+
+# Pregunta técnica — debe enrutar a TechnicalQueryHandler
+$chatBody2 = '{"message":"What was the top speed in sector 2?"}'
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/chat/query" -Method POST -ContentType "application/json" -Body $chatBody2
+```
+
+---
+
+## 9. N32 Smoke test notebook
+
+Ejecuta todos los agentes (N25–N31) + CLI de 3 vueltas via subprocess.
+
+```powershell
+# En Jupyter
+jupyter notebook notebooks/agents/N32_smoke_test.ipynb
+# → Kernel > Restart & Run All
+# Criterio: todas las celdas exit code 0, sin [ERROR] en ningún output
+```
+
+---
+
+## 10. Tips
+
+- **Sin parquet Melbourne?** `debug_agent.py` cae a valores sintéticos y avisa. La CLI aborta si no hay `--raw-dir`.
+- **Startup lento (~20-40s)?** Normal — NLP models (RoBERTa, BERT-large, SetFit) se cargan en memoria la primera vez que se importa `radio_agent`.
+- **LM Studio no corre?** Usa `--no-llm` en la CLI, o evita `--agent orchestrator`/`--agent rag` en debug.
+- **Nemotron/Qwen3-TTS — primer arranque lento?** Los modelos se descargan de HuggingFace en el primer uso (~1-3 GB). Después quedan en caché local (`~/.cache/huggingface/`).
+- **GPU no disponible?** Cambia `NEMOTRON_DEVICE = 0` → `NEMOTRON_DEVICE = "cpu"` en `voice_config.py`. Nemotron funciona en CPU pero más lento (~500ms/chunk vs ~80ms GPU).
