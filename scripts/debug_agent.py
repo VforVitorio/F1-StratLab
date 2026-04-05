@@ -38,12 +38,32 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import json
+import os
 import sys
 import traceback
+
+# Force UTF-8 output on Windows terminals that default to cp1252
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+
+# Load .env from repo root so OPENAI_API_KEY is available for provider='openai'
+try:
+    from dotenv import load_dotenv
+    _env_path = next(
+        (p / ".env" for p in [Path(__file__).resolve().parent, *Path(__file__).resolve().parents]
+         if (p / ".git").exists() and (p / ".env").exists()),
+        None,
+    )
+    if _env_path:
+        load_dotenv(_env_path)
+except ImportError:
+    pass  # python-dotenv not installed — rely on env vars being set manually
 
 # ---------------------------------------------------------------------------
 # Repo-root sys.path injection
@@ -237,7 +257,7 @@ def _run_pit(lap_state: dict, laps_df: pd.DataFrame, args: argparse.Namespace) -
 
 
 def _run_radio(lap_state: dict, laps_df: pd.DataFrame, args: argparse.Namespace) -> None:
-    from src.agents.radio_agent import run_radio_agent_from_state, RadioMessage
+    from src.agents.radio_agent import run_radio_agent_from_state
     radio_msgs = []
     if args.radio:
         radio_msgs = [{"driver": args.driver, "text": args.radio, "lap": args.lap}]
@@ -249,7 +269,7 @@ def _run_radio(lap_state: dict, laps_df: pd.DataFrame, args: argparse.Namespace)
 def _run_rag(lap_state: dict, laps_df: pd.DataFrame, args: argparse.Namespace) -> None:
     from src.agents.rag_agent import run_rag_agent
     query = args.query or f"What are the safety car regulations for the {args.gp_name} GP?"
-    out = run_rag_agent(lap_state, query)
+    out = run_rag_agent(query)
     _print_output(out)
 
 
@@ -324,11 +344,17 @@ def _parse_args() -> argparse.Namespace:
                    help="Query string for --agent rag")
     p.add_argument("--print-state", action="store_true",
                    help="Print the full lap_state dict before running the agent")
+    p.add_argument("--provider", default="lmstudio", choices=["lmstudio", "openai"],
+                   help="LLM provider: 'lmstudio' (default, localhost:1234) or 'openai' (real API, needs OPENAI_API_KEY)")
     return p.parse_args()
 
 
 def main() -> None:
     args = _parse_args()
+
+    # Propagate provider to agents via env var BEFORE any agent module is imported
+    # (singletons like _get_orchestrator_llm check this on first call)
+    os.environ["F1_LLM_PROVIDER"] = args.provider
 
     _header(
         f"Debug — {args.agent.upper()} agent  |  "
