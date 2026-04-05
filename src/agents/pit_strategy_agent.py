@@ -713,7 +713,7 @@ class PitStrategyAgent:
 
     def get_react_agent(
         self,
-        provider: str = 'lmstudio',
+        provider: str = None,
         model_name: str = 'gpt-4.1-mini',
         base_url: str = 'http://localhost:1234/v1',
         api_key: str = 'lm-studio',
@@ -741,6 +741,10 @@ class PitStrategyAgent:
 
         if self._react_agent is not None:
             return self._react_agent
+
+        import os
+        if provider is None:
+            provider = os.environ.get('F1_LLM_PROVIDER', 'lmstudio')
 
         if provider == 'lmstudio':
             llm = ChatOpenAI(
