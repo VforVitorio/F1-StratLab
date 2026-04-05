@@ -573,7 +573,7 @@ class PaceAgent:
 
     def get_react_agent(
         self,
-        provider: str = 'lmstudio',
+        provider: str = None,
         model_name: str = 'gpt-4.1-mini',
         base_url: str = 'http://localhost:1234/v1',
         api_key: str = 'lmstudio',
@@ -606,6 +606,10 @@ class PaceAgent:
             from langchain.agents import create_react_agent  # LangGraph ≥ 1.0
         except ImportError:
             from langgraph.prebuilt import create_react_agent  # legacy
+
+        import os
+        if provider is None:
+            provider = os.environ.get('F1_LLM_PROVIDER', 'lmstudio')
 
         if provider == 'lmstudio':
             llm = ChatOpenAI(model=model_name, base_url=base_url, api_key=api_key, temperature=0)
