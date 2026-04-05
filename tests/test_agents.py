@@ -108,13 +108,13 @@ def test_pit_output_fields():
     from src.agents.pit_strategy_agent import PitStrategyOutput
     import dataclasses
     fields = {f.name for f in dataclasses.fields(PitStrategyOutput)}
-    assert {"stop_p05", "stop_p50", "stop_p95", "undercut_prob"} <= fields
+    assert {"stop_duration_p05", "stop_duration_p50", "stop_duration_p95", "undercut_prob"} <= fields
 
 
 def test_strategy_recommendation_fields():
     from src.agents.strategy_orchestrator import StrategyRecommendation
-    import dataclasses
-    fields = {f.name for f in dataclasses.fields(StrategyRecommendation)}
+    # StrategyRecommendation is a Pydantic BaseModel, not a dataclass
+    fields = set(StrategyRecommendation.model_fields.keys())
     assert {"action", "confidence", "reasoning", "scenario_scores"} <= fields
 
 
