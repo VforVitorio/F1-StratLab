@@ -146,13 +146,18 @@ def get_rag_react_agent():
                 "langgraph or langchain_openai is not installed — cannot build "
                 "the RAG agent. Install with: pip install langgraph langchain-openai"
             )
-        llm = ChatOpenAI(
-            model="gpt-4.1-mini",
-            base_url="http://localhost:1234/v1",
-            api_key="lm-studio",
-            temperature=0,
-            model_kwargs={"parallel_tool_calls": False},
-        )
+        import os
+        provider = os.environ.get("F1_LLM_PROVIDER", "lmstudio")
+        if provider == "openai":
+            llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+        else:
+            llm = ChatOpenAI(
+                model="gpt-4.1-mini",
+                base_url="http://localhost:1234/v1",
+                api_key="lm-studio",
+                temperature=0,
+                model_kwargs={"parallel_tool_calls": False},
+            )
         _rag_agent = create_react_agent(
             model=llm,
             tools=[query_rag_tool],
