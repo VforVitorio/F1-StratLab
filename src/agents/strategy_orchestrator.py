@@ -114,9 +114,13 @@ _orchestrator_llm = None
 def _get_orchestrator_llm():
     """Return the cached structured-output LLM, creating it on first call.
 
+    Checks F1_LLM_PROVIDER env var: 'openai' uses the real OpenAI API
+    (requires OPENAI_API_KEY); anything else defaults to LM Studio at CFG.base_url.
+
     Returns a Runnable that produces StrategyRecommendation Pydantic objects.
     Raises ImportError when langchain_openai is not installed.
     """
+    import os
     global _orchestrator_llm
     if _orchestrator_llm is None:
         if not _LC_OK:
@@ -124,13 +128,21 @@ def _get_orchestrator_llm():
                 "langchain_openai is not installed. "
                 "Install with: pip install langchain-openai"
             )
-        llm = ChatOpenAI(
-            model=CFG.model_name,
-            base_url=CFG.base_url,
-            api_key="lm-studio",
-            temperature=CFG.temperature,
-            model_kwargs={"parallel_tool_calls": False},
-        )
+        provider = os.environ.get("F1_LLM_PROVIDER", "lmstudio")
+        if provider == "openai":
+            llm = ChatOpenAI(
+                model=CFG.model_name,
+                temperature=CFG.temperature,
+                model_kwargs={"parallel_tool_calls": False},
+            )
+        else:
+            llm = ChatOpenAI(
+                model=CFG.model_name,
+                base_url=CFG.base_url,
+                api_key="lm-studio",
+                temperature=CFG.temperature,
+                model_kwargs={"parallel_tool_calls": False},
+            )
         _orchestrator_llm = llm.with_structured_output(StrategyRecommendation)
     return _orchestrator_llm
 
