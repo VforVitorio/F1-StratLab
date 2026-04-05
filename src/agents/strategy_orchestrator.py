@@ -40,7 +40,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # ── Repo root ──────────────────────────────────────────────────────────────────
 _REPO_ROOT = Path(__file__).resolve()
@@ -130,11 +130,8 @@ def _get_orchestrator_llm():
             )
         provider = os.environ.get("F1_LLM_PROVIDER", "lmstudio")
         if provider == "openai":
-            llm = ChatOpenAI(
-                model=CFG.model_name,
-                temperature=CFG.temperature,
-                model_kwargs={"parallel_tool_calls": False},
-            )
+            # No parallel_tool_calls — OpenAI rejects it when no tools are specified
+            llm = ChatOpenAI(model=CFG.model_name, temperature=CFG.temperature)
         else:
             llm = ChatOpenAI(
                 model=CFG.model_name,
@@ -143,7 +140,9 @@ def _get_orchestrator_llm():
                 temperature=CFG.temperature,
                 model_kwargs={"parallel_tool_calls": False},
             )
-        _orchestrator_llm = llm.with_structured_output(StrategyRecommendation)
+        # _LLMSynthesis only has the 3 fields the LLM actually fills —
+        # scenario_scores (dict) and regulation_context are attached in code after.
+        _orchestrator_llm = llm.with_structured_output(_LLMSynthesis)
     return _orchestrator_llm
 
 
@@ -192,6 +191,20 @@ class RaceState(BaseModel):
     risk_tolerance: float = Field(default=0.5, ge=0.0, le=1.0)
 
     model_config = {"arbitrary_types_allowed": True}
+
+
+class _LLMSynthesis(BaseModel):
+    """Strict-schema model passed to with_structured_output — only the fields the LLM fills.
+
+    OpenAI structured output requires additionalProperties=false on all objects,
+    which free-form Dict fields violate. scenario_scores and regulation_context
+    are attached in code after the LLM call and live on StrategyRecommendation.
+    """
+    model_config = ConfigDict(extra="forbid")
+
+    action:     str   = Field(description="STAY_OUT | PIT_NOW | UNDERCUT | OVERCUT | ALERT")
+    reasoning:  str   = Field(description="Narrative synthesis of all agent inputs and MC scores")
+    confidence: float = Field(ge=0.0, le=1.0, description="LLM self-assessed certainty")
 
 
 class StrategyRecommendation(BaseModel):
@@ -767,11 +780,14 @@ def run_strategy_orchestrator(
         regulation_context   = regulation_context,
     )
 
-    rec                    = _get_orchestrator_llm().invoke(prompt)
-    rec.scenario_scores    = mc_results
-    rec.regulation_context = regulation_context
-
-    return rec
+    synth: _LLMSynthesis = _get_orchestrator_llm().invoke(prompt)
+    return StrategyRecommendation(
+        action             = synth.action,
+        reasoning          = synth.reasoning,
+        confidence         = synth.confidence,
+        scenario_scores    = mc_results,
+        regulation_context = regulation_context,
+    )
 
 
 def run_strategy_orchestrator_from_state(
@@ -886,8 +902,11 @@ def run_strategy_orchestrator_from_state(
         regulation_context   = regulation_context,
     )
 
-    rec                    = _get_orchestrator_llm().invoke(prompt)
-    rec.scenario_scores    = mc_results
-    rec.regulation_context = regulation_context
-
-    return rec
+    synth: _LLMSynthesis = _get_orchestrator_llm().invoke(prompt)
+    return StrategyRecommendation(
+        action             = synth.action,
+        reasoning          = synth.reasoning,
+        confidence         = synth.confidence,
+        scenario_scores    = mc_results,
+        regulation_context = regulation_context,
+    )
