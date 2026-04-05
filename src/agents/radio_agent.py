@@ -737,6 +737,7 @@ def _get_radio_llm():
     Jinja NullValue errors. Returns a Runnable that produces RadioSynthesis objects.
     Raises ImportError when langchain_openai is not installed.
     """
+    import os
     global _structured_llm
     if _structured_llm is None:
         if not _LC_OK:
@@ -744,13 +745,21 @@ def _get_radio_llm():
                 "langchain_openai is not installed — cannot run LLM synthesis. "
                 "Install it with: pip install langchain-openai"
             )
-        base_llm = ChatOpenAI(
-            model=CFG.model_name,
-            base_url="http://localhost:1234/v1",
-            api_key="lm-studio",
-            temperature=0.0,
-            model_kwargs={"parallel_tool_calls": False},
-        )
+        provider = os.environ.get('F1_LLM_PROVIDER', 'lmstudio')
+        if provider == 'openai':
+            # parallel_tool_calls is NOT sent — OpenAI rejects it when no tools are specified
+            base_llm = ChatOpenAI(
+                model=CFG.model_name,
+                temperature=0.0,
+            )
+        else:
+            base_llm = ChatOpenAI(
+                model=CFG.model_name,
+                base_url="http://localhost:1234/v1",
+                api_key="lm-studio",
+                temperature=0.0,
+                model_kwargs={"parallel_tool_calls": False},
+            )
         _structured_llm = base_llm.with_structured_output(RadioSynthesis)
     return _structured_llm
 
@@ -885,8 +894,36 @@ def run_radio_agent(lap_state: dict, persist: bool = False) -> "RadioOutput":
     and corrections populated.
     """
     lap        = lap_state["lap"]
-    radio_msgs = lap_state.get("radio_msgs", [])
-    rcm_events = lap_state.get("rcm_events", [])
+
+    # Normalise radio_msgs: accept both RadioMessage dataclasses and plain dicts
+    _raw_radio = lap_state.get("radio_msgs", [])
+    radio_msgs: list[RadioMessage] = []
+    for m in _raw_radio:
+        if isinstance(m, RadioMessage):
+            radio_msgs.append(m)
+        elif isinstance(m, dict):
+            radio_msgs.append(RadioMessage(
+                driver    = m.get("driver", "UNK"),
+                lap       = m.get("lap", lap),
+                text      = m.get("text", ""),
+                timestamp = m.get("timestamp"),
+            ))
+
+    # Normalise rcm_events: accept both RCMEvent dataclasses and plain dicts
+    _raw_rcm = lap_state.get("rcm_events", [])
+    rcm_events: list[RCMEvent] = []
+    for ev in _raw_rcm:
+        if isinstance(ev, RCMEvent):
+            rcm_events.append(ev)
+        elif isinstance(ev, dict):
+            rcm_events.append(RCMEvent(
+                message       = ev.get("message", ""),
+                flag          = ev.get("flag", ""),
+                category      = ev.get("category", "Other"),
+                lap           = ev.get("lap", lap),
+                racing_number = ev.get("racing_number"),
+                scope         = ev.get("scope", ""),
+            ))
 
     # Stage 1 — NLP inference (N06 pattern: models run before LLM)
     radio_results = [run_pipeline(msg.text) for msg in radio_msgs]
