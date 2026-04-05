@@ -6,14 +6,16 @@ the degradation cliff?
 
 Public API
 ----------
-run_tire_agent(stint_state)                  → TireOutput  (FastF1 session in stint_state)
-run_tire_agent_from_state(lap_state, laps_df)→ TireOutput  (RSM adapter, no FastF1 session)
+run_tire_agent(stint_state)                   → TireOutput  (FastF1 session in stint_state)
+run_tire_agent_from_state(lap_state, laps_df) → TireOutput  (RSM adapter, no FastF1 session)
+get_tire_react_agent(**kwargs)                → CompiledGraph
 
 Module-level singletons
 -----------------------
-CFG     — TireAgentConfig: loads routing, calibration, encoding maps, cliff thresholds
-BUNDLES — {compound_id: bundle_dict} with loaded TireDegTCN, scaler, feature_names
-LAPS / SESSION_META — globals set by run_tire_agent before LangGraph tool invocation
+CFG — TireAgentConfig: loads routing, calibration, encoding maps, cliff thresholds.
+      Kept at module level so TireOutput.__post_init__ can call CFG.get_cliff_thresholds.
+      Model bundles (BUNDLES) are loaded lazily inside TireAgent.__init__ to avoid
+      expensive I/O at import time.
 """
 
 from __future__ import annotations
@@ -22,6 +24,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -34,8 +37,8 @@ _REPO_ROOT = Path(__file__).resolve().parent
 while not (_REPO_ROOT / '.git').exists():
     _REPO_ROOT = _REPO_ROOT.parent
 
-_MODEL_DIR = _REPO_ROOT / 'data' / 'models' / 'tire_degradation'
-_PROCESSED = _REPO_ROOT / 'data' / 'processed'
+_MODEL_DIR  = _REPO_ROOT / 'data' / 'models' / 'tire_degradation'
+_PROCESSED  = _REPO_ROOT / 'data' / 'processed'
 _AGENTS_DIR = _REPO_ROOT / 'data' / 'models' / 'agents'
 
 
@@ -63,14 +66,14 @@ class CausalConv1dBlock(nn.Module):
             at inference time for MC Dropout uncertainty estimation.
     """
 
-    def __init__(self, in_ch, out_ch, kernel_size, dilation, dropout=0.1):
+    def __init__(self, in_ch: int, out_ch: int, kernel_size: int, dilation: int, dropout: float = 0.1):
         super().__init__()
         self.pad  = (kernel_size - 1) * dilation
         self.conv = nn.Conv1d(in_ch, out_ch, kernel_size, dilation=dilation, padding=0)
         self.norm = nn.LayerNorm(out_ch)
         self.drop = nn.Dropout(dropout)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = F.pad(x, (self.pad, 0))
         x = self.conv(x)
         return self.drop(F.gelu(self.norm(x.transpose(1, 2)).transpose(1, 2)))
@@ -90,14 +93,14 @@ class TCNResidualBlock(nn.Module):
         dropout: Dropout probability.
     """
 
-    def __init__(self, ch, kernel_size, dilation, dropout=0.1):
+    def __init__(self, ch: int, kernel_size: int, dilation: int, dropout: float = 0.1):
         super().__init__()
         self.net = nn.Sequential(
             CausalConv1dBlock(ch, ch, kernel_size, dilation, dropout),
             CausalConv1dBlock(ch, ch, kernel_size, dilation, dropout),
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return F.relu(self.net(x) + x)
 
 
@@ -113,7 +116,7 @@ class TireDegTCN(nn.Module):
     src/strategy/models/tire_degradation_model.py.
 
     MC Dropout is enabled by calling model.train() before inference and running
-    N_MC forward passes — see estimate_laps_to_cliff_tool.
+    N_MC forward passes — see TireAgent._build_tools.
 
     Args:
         n_features: Number of input features per timestep (42 in N10 exports).
@@ -123,7 +126,14 @@ class TireDegTCN(nn.Module):
         dropout: Dropout probability (0.1 in N10; must match training for MC calibration).
     """
 
-    def __init__(self, n_features, d_model=64, n_layers=4, kernel_size=3, dropout=0.1):
+    def __init__(
+        self,
+        n_features: int,
+        d_model: int = 64,
+        n_layers: int = 4,
+        kernel_size: int = 3,
+        dropout: float = 0.1,
+    ):
         super().__init__()
         self.input_proj  = nn.Linear(n_features, d_model)
         self.blocks      = nn.ModuleList([
@@ -132,7 +142,7 @@ class TireDegTCN(nn.Module):
         ])
         self.output_head = nn.Linear(d_model, 1)
 
-    def forward(self, x, mask=None):
+    def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
         x = self.input_proj(x).transpose(1, 2)
         for block in self.blocks:
             x = block(x)
@@ -165,11 +175,11 @@ class TireAgentConfig:
     """
 
     n_mc: int = 50
-    model_name: str = 'local-model'
+    model_name: str = 'gpt-4.1-mini'
     cliff_pit_soon_laps: int = 3
     cliff_monitor_laps: int  = 7
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self._model_dir = _MODEL_DIR
         self.export_dir = _AGENTS_DIR
         self.export_dir.mkdir(parents=True, exist_ok=True)
@@ -286,15 +296,11 @@ class TireAgentConfig:
         return {cid: self.load_bundle(cid) for cid in self.routing_cfg}
 
 
-# ── Module-level singletons ───────────────────────────────────────────────────
-CFG     = TireAgentConfig()
-BUNDLES = CFG.load_all_bundles()
-
-# ── Globals set by run_tire_agent() before tool invocation ────────────────────
-# Both tools read these globals; run_tire_agent / run_tire_agent_from_state
-# must populate them before calling the LangGraph agent.
-LAPS:         pd.DataFrame = pd.DataFrame()
-SESSION_META: dict         = {}
+# ── Module-level config singleton ─────────────────────────────────────────────
+# Kept at module level because TireOutput.__post_init__ calls
+# CFG.get_cliff_thresholds(self.gp_name). Model bundles are NOT loaded here;
+# they are loaded lazily inside TireAgent.__init__ to avoid expensive I/O at import time.
+CFG = TireAgentConfig()
 
 # ── Per-compound cumulative degradation cliff thresholds (seconds) ────────────
 # p75 of last-stint-lap FuelAdjustedDegAbsolute in N10 training data (2023-2024).
@@ -352,7 +358,7 @@ class TireOutput:
     warning_level: str = field(init=False)
     reasoning: str = ''
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         pit_soon, monitor = CFG.get_cliff_thresholds(self.gp_name)
         if self.laps_to_cliff_p10 < pit_soon:
             self.warning_level = 'PIT_SOON'
@@ -364,6 +370,7 @@ class TireOutput:
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Feature pipeline helpers (must match N10 training order exactly)
+# Pure functions — receive all required state as arguments, read no globals.
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _add_timing_cols(df: pd.DataFrame) -> pd.DataFrame:
@@ -519,113 +526,9 @@ def _add_session_cols(df: pd.DataFrame, session_meta: dict) -> pd.DataFrame:
     return df
 
 
-def build_stint_features(
-    stint_laps: pd.DataFrame,
-    compound_id: str,
-    session_meta: dict,
-) -> pd.DataFrame:
-    """Compute all 42 TCN input features from a FastF1 stint slice.
-
-    Orchestrates the feature helpers in the same order applied during N04/N10
-    training. Critical ordering constraints:
-    - _add_prev_cols must run before _add_delta_cols (LapTime_Delta needs Prev_LapTime)
-    - _add_fuel_cols must run before _add_delta_cols (DegradationRate needs FuelAdjustedLapTime)
-    - _add_speed_delta_cols must run after _add_prev_cols
-
-    Args:
-        stint_laps: FastF1 laps for one driver and one stint, sorted by LapNumber.
-            Required columns: LapTime, Sector1/2/3Time, SpeedFL/I1/I2/ST,
-            TyreLife, Position, Compound, LapNumber, TrackStatus, Team.
-            Weather columns are filled from session_meta if absent.
-        compound_id: Pirelli compound ID (e.g. 'C2').
-        session_meta: Dict with keys: fastest_lap_s, cluster_mean_lap_s,
-            total_laps, cluster_id, team_id, year, and optionally weather averages.
-
-    Returns:
-        DataFrame with 42 float columns in bundle['feature_names'] order.
-    """
-    df = stint_laps.copy().reset_index(drop=True)
-
-    df = _add_timing_cols(df)
-    df = _add_weather_cols(df, session_meta)
-    df = _add_compound_cols(df, compound_id)
-    df = _add_prev_cols(df)
-    df = _add_fuel_cols(df, session_meta)
-    df = _add_delta_cols(df)
-    df = _add_speed_delta_cols(df)
-    df = _add_session_cols(df, session_meta)
-
-    df['Cluster'] = session_meta['cluster_id']
-    df['TeamID']  = session_meta['team_id']
-    df['Year']    = session_meta['year']
-
-    return df[BUNDLES[compound_id]['feature_names']].astype(float)
-
-
-def build_stint_tensor(
-    stint_laps: pd.DataFrame,
-    compound_id: str,
-    session_meta: dict,
-) -> torch.Tensor:
-    """Scale and tensorise a stint feature DataFrame for TCN inference.
-
-    Applies the StandardScaler stored inside the compound bundle (fitted on
-    2023-2024 training data), then pads or trims the sequence to the compound's
-    window length. Short stints are left-padded by repeating the first row.
-
-    NaN values from first-lap shifted features are replaced with 0.0 after
-    scaling — equivalent to imputing the training-data mean, matching N10.
-
-    Args:
-        stint_laps: Raw FastF1 laps for one driver + stint, sorted ascending.
-        compound_id: Pirelli compound ID (e.g. 'C2').
-        session_meta: Same dict passed to build_stint_features.
-
-    Returns:
-        Float32 tensor of shape (1, window, 42) on CPU.
-    """
-    bundle = BUNDLES[compound_id]
-    window = bundle['window']
-
-    feat_df = build_stint_features(stint_laps, compound_id, session_meta)
-    scaled  = bundle['scaler'].transform(feat_df)
-    scaled  = np.nan_to_num(scaled, nan=0.0)
-
-    if len(scaled) >= window:
-        seq = scaled[-window:]
-    else:
-        pad = np.tile(scaled[0], (window - len(scaled), 1))
-        seq = np.vstack([pad, scaled])
-
-    return torch.tensor(seq, dtype=torch.float32).unsqueeze(0)  # (1, window, 42)
-
-
 # ─────────────────────────────────────────────────────────────────────────────
-# Internal helpers for tools
+# Stateless helpers
 # ─────────────────────────────────────────────────────────────────────────────
-
-def _get_driver_stint(driver: str, tyre_life: int) -> pd.DataFrame | None:
-    """Filter LAPS to the current driver's stint up to the given tyre life.
-
-    Resolves compound from SESSION_META['{driver}_compound'] if available,
-    falling back to the most recent compound in LAPS for that driver.
-    Returns None when no matching rows exist.
-    """
-    compound = SESSION_META.get(
-        f'{driver}_compound',
-        LAPS.loc[LAPS['Driver'] == driver, 'Compound'].iloc[-1]
-        if len(LAPS.loc[LAPS['Driver'] == driver]) > 0 else 'MEDIUM'
-    )
-    stint = (
-        LAPS[
-            (LAPS['Driver']   == driver) &
-            (LAPS['Compound'] == compound) &
-            (LAPS['TyreLife'] <= tyre_life)
-        ]
-        .sort_values('LapNumber')
-    )
-    return stint if len(stint) > 0 else None
-
 
 def _parse_tool_outputs(messages: list) -> dict:
     """Extract numeric fields from ToolMessage strings in the agent message history.
@@ -657,123 +560,56 @@ def _parse_tool_outputs(messages: list) -> dict:
     return result
 
 
+def _compound_name_to_id(compound_name: str, gp_name: str, year: int) -> str:
+    """Map a Pirelli compound name (SOFT/MEDIUM/HARD) to its Cx ID for this GP.
+
+    Loads data/tire_compounds_by_race.json (authoritative source) to resolve
+    the Cx allocation for this GP/year. Falls back to C3/C2/C1 if the GP is
+    not found — these are the most common mid-season assignments.
+
+    Args:
+        compound_name: Pirelli compound name string (e.g. 'SOFT', 'MEDIUM').
+        gp_name: GP name matching the tire_compounds_by_race.json keys.
+        year: Race year as int.
+
+    Returns:
+        Compound ID string such as 'C3'.
+    """
+    compounds_path = _REPO_ROOT / 'data' / 'tire_compounds_by_race.json'
+    fallback = {'SOFT': 'C3', 'MEDIUM': 'C2', 'HARD': 'C1',
+                'INTERMEDIATE': 'INT', 'WET': 'WET'}
+    if not compounds_path.exists():
+        return fallback.get(compound_name.upper(), 'C3')
+
+    with open(compounds_path) as f:
+        alloc = json.load(f)
+
+    year_data = alloc.get(str(year), {})
+    gp_data   = year_data.get(gp_name, {})
+    return gp_data.get(compound_name.upper(), fallback.get(compound_name.upper(), 'C3'))
+
+
 # ─────────────────────────────────────────────────────────────────────────────
-# LangGraph tools
+# LangGraph / LangChain optional imports
 # ─────────────────────────────────────────────────────────────────────────────
 
 try:
     from langchain_core.tools import tool as lc_tool
     from langchain_openai import ChatOpenAI
-    from langgraph.prebuilt import create_react_agent
+    try:
+        from langchain.agents import create_react_agent  # LangGraph ≥ 1.0
+    except ImportError:
+        from langgraph.prebuilt import create_react_agent  # legacy
     _LANGGRAPH_AVAILABLE = True
 except ImportError:
     _LANGGRAPH_AVAILABLE = False
 
 
-if _LANGGRAPH_AVAILABLE:
+# ─────────────────────────────────────────────────────────────────────────────
+# System prompt (module-level constant — unchanged from N26)
+# ─────────────────────────────────────────────────────────────────────────────
 
-    @lc_tool
-    def predict_tire_deg_tool(driver: str, compound_id: str, tyre_life: int) -> str:
-        """Predict cumulative tyre degradation and instantaneous rate for the current stint.
-
-        Runs a single deterministic forward pass through the per-compound TireDegTCN
-        using the recent laps of the requested driver from the globally loaded session.
-
-        Args:
-            driver: FastF1 driver abbreviation (e.g. 'NOR').
-            compound_id: Pirelli compound ID (e.g. 'C2'). Must be a key in BUNDLES.
-            tyre_life: Current laps on this set of tyres.
-
-        Returns:
-            Multi-line string: cumulative degradation (s) and degradation rate (s/lap).
-            Returns an error string if no laps are found.
-        """
-        stint = _get_driver_stint(driver, tyre_life)
-        if stint is None:
-            return f'No laps found for driver {driver} with tyre_life <= {tyre_life}.'
-
-        tensor = build_stint_tensor(stint, compound_id, SESSION_META)
-        model  = BUNDLES[compound_id]['model']
-
-        with torch.no_grad():
-            model.eval()
-            pred = model(tensor).item()
-
-        feat_df  = build_stint_features(stint, compound_id, SESSION_META)
-        deg_rate = float(feat_df['DegradationRate'].iloc[-1])
-
-        return (
-            f'Driver {driver} | Compound {compound_id} | TyreLife {tyre_life}\n'
-            f'Cumulative degradation: {pred:.3f} s | Degradation rate: {deg_rate:.4f} s/lap'
-        )
-
-    @lc_tool
-    def estimate_laps_to_cliff_tool(driver: str, compound_id: str, tyre_life: int) -> str:
-        """Estimate laps remaining before tyre cliff using MC Dropout uncertainty.
-
-        Switches the model to train mode so dropout stays active, then runs
-        CFG.n_mc forward passes to sample the predictive distribution. P10/P50/P90
-        laps remaining are computed from the remaining degradation budget.
-
-        Cliff is defined as cumulative FuelAdjustedDegAbsolute >= CLIFF_THRESHOLD[compound_id].
-
-        Args:
-            driver: FastF1 driver abbreviation (e.g. 'NOR').
-            compound_id: Pirelli compound ID (e.g. 'C2'). Must be a key in BUNDLES.
-            tyre_life: Current laps on this set of tyres.
-
-        Returns:
-            Multi-line string: P10/P50/P90 laps to cliff, deg rate, MC std, warning level.
-        """
-        stint = _get_driver_stint(driver, tyre_life)
-        if stint is None:
-            return f'No laps found for driver {driver} with tyre_life <= {tyre_life}.'
-
-        tensor = build_stint_tensor(stint, compound_id, SESSION_META)
-        model  = BUNDLES[compound_id]['model']
-        model.train()  # keep dropout active for MC
-
-        preds = []
-        with torch.no_grad():
-            for _ in range(CFG.n_mc):
-                preds.append(model(tensor).item())
-
-        mean_pred = float(np.mean(preds))
-        mc_std    = float(np.std(preds))
-        sigma     = (
-            float(CFG.mc_calibration[compound_id]['mean_sigma_s'])
-            if compound_id in CFG.mc_calibration
-            else CFG.mc_sigma_fallback
-        )
-        total_std = np.sqrt(mc_std**2 + sigma**2)
-
-        feat_df  = build_stint_features(stint, compound_id, SESSION_META)
-        deg_rate = max(float(feat_df['DegradationRate'].abs().iloc[-1]), 0.001)
-
-        threshold        = CLIFF_THRESHOLD.get(compound_id, 2.5)
-        remaining_budget = max(0.0, threshold - mean_pred)
-
-        p50 = remaining_budget / deg_rate
-        p10 = max(0.0, (remaining_budget - total_std) / deg_rate)
-        p90 = (remaining_budget + total_std) / deg_rate
-
-        to = TireOutput(
-            compound=compound_id,
-            current_tyre_life=tyre_life,
-            deg_rate=round(deg_rate, 4),
-            laps_to_cliff_p10=round(p10, 1),
-            laps_to_cliff_p50=round(p50, 1),
-            laps_to_cliff_p90=round(p90, 1),
-        )
-
-        return (
-            f'Driver {driver} | Compound {compound_id} | TyreLife {tyre_life}\n'
-            f'Laps to cliff — P10: {to.laps_to_cliff_p10} | P50: {to.laps_to_cliff_p50} | P90: {to.laps_to_cliff_p90}\n'
-            f'Degradation rate: {deg_rate:.4f} s/lap | MC std: {mc_std:.4f} s | Calibrated sigma: {sigma:.4f} s\n'
-            f'Warning level: {to.warning_level}'
-        )
-
-    _TIRE_SYSTEM_PROMPT = """You are a Formula 1 tyre degradation analyst embedded in a race strategy system.
+_TIRE_SYSTEM_PROMPT = """You are a Formula 1 tyre degradation analyst embedded in a race strategy system.
 
 Your job is to assess the current state of a tyre stint and determine how many laps remain
 before the degradation cliff — the point at which pace loss accelerates sharply and a pit
@@ -797,33 +633,306 @@ stop becomes unavoidable.
 - Keep your final answer concise: state the warning level, laps to cliff (P50),
   and one sentence of reasoning."""
 
-    TIRE_TOOLS = [predict_tire_deg_tool, estimate_laps_to_cliff_tool]
 
-    _tire_react_agent = None
+# ─────────────────────────────────────────────────────────────────────────────
+# TireAgent — encapsulated agent class
+# ─────────────────────────────────────────────────────────────────────────────
 
-    def get_tire_react_agent(
+class TireAgent:
+    """Encapsulated Tire Degradation Agent backed by TireDegTCN and LangGraph ReAct.
+
+    Owns all mutable state that was previously held in module-level globals:
+    - laps_df / session_meta: set per call by run() / run_from_state()
+    - bundles: {compound_id: bundle_dict} with loaded TireDegTCN models
+    - _react_agent: lazily created LangGraph CompiledGraph
+
+    LangChain tools are built as closures inside _build_tools() so they read
+    instance attributes (self.laps_df, self.session_meta, self.bundles) without
+    depending on any module-level globals.
+
+    Args:
+        cfg: TireAgentConfig instance. Defaults to the module-level CFG singleton
+            so TireOutput.__post_init__ remains consistent.
+    """
+
+    def __init__(self, cfg: TireAgentConfig = CFG) -> None:
+        self.cfg: TireAgentConfig = cfg
+        self.bundles: dict        = self.cfg.load_all_bundles()
+        self.laps_df: pd.DataFrame = pd.DataFrame()
+        self.session_meta: dict    = {}
+        self._react_agent          = None
+        self._tools: list          = self._build_tools()
+
+    # ── Feature pipeline (instance methods: use self.bundles / self.cfg) ──────
+
+    def _build_stint_features(
+        self,
+        stint_laps: pd.DataFrame,
+        compound_id: str,
+        session_meta: dict,
+    ) -> pd.DataFrame:
+        """Compute all 42 TCN input features from a FastF1 stint slice.
+
+        Orchestrates the feature helpers in the same order applied during N04/N10
+        training. Critical ordering constraints:
+        - _add_prev_cols must run before _add_delta_cols (LapTime_Delta needs Prev_LapTime)
+        - _add_fuel_cols must run before _add_delta_cols (DegradationRate needs FuelAdjustedLapTime)
+        - _add_speed_delta_cols must run after _add_prev_cols
+
+        Args:
+            stint_laps: FastF1 laps for one driver and one stint, sorted by LapNumber.
+                Required columns: LapTime, Sector1/2/3Time, SpeedFL/I1/I2/ST,
+                TyreLife, Position, Compound, LapNumber, TrackStatus, Team.
+                Weather columns are filled from session_meta if absent.
+            compound_id: Pirelli compound ID (e.g. 'C2').
+            session_meta: Dict with keys: fastest_lap_s, cluster_mean_lap_s,
+                total_laps, cluster_id, team_id, year, and optionally weather averages.
+
+        Returns:
+            DataFrame with 42 float columns in bundle['feature_names'] order.
+        """
+        df = stint_laps.copy().reset_index(drop=True)
+
+        df = _add_timing_cols(df)
+        df = _add_weather_cols(df, session_meta)
+        df = _add_compound_cols(df, compound_id)
+        df = _add_prev_cols(df)
+        df = _add_fuel_cols(df, session_meta)
+        df = _add_delta_cols(df)
+        df = _add_speed_delta_cols(df)
+        df = _add_session_cols(df, session_meta)
+
+        df['Cluster'] = session_meta['cluster_id']
+        df['TeamID']  = session_meta['team_id']
+        df['Year']    = session_meta['year']
+
+        return df[self.bundles[compound_id]['feature_names']].astype(float)
+
+    def _build_stint_tensor(
+        self,
+        stint_laps: pd.DataFrame,
+        compound_id: str,
+        session_meta: dict,
+    ) -> torch.Tensor:
+        """Scale and tensorise a stint feature DataFrame for TCN inference.
+
+        Applies the StandardScaler stored inside the compound bundle (fitted on
+        2023-2024 training data), then pads or trims the sequence to the compound's
+        window length. Short stints are left-padded by repeating the first row.
+
+        NaN values from first-lap shifted features are replaced with 0.0 after
+        scaling — equivalent to imputing the training-data mean, matching N10.
+
+        Args:
+            stint_laps: Raw FastF1 laps for one driver + stint, sorted ascending.
+            compound_id: Pirelli compound ID (e.g. 'C2').
+            session_meta: Same dict passed to _build_stint_features.
+
+        Returns:
+            Float32 tensor of shape (1, window, 42) on CPU.
+        """
+        bundle = self.bundles[compound_id]
+        window = bundle['window']
+
+        feat_df = self._build_stint_features(stint_laps, compound_id, session_meta)
+        scaled  = bundle['scaler'].transform(feat_df)
+        scaled  = np.nan_to_num(scaled, nan=0.0)
+
+        if len(scaled) >= window:
+            seq = scaled[-window:]
+        else:
+            pad = np.tile(scaled[0], (window - len(scaled), 1))
+            seq = np.vstack([pad, scaled])
+
+        return torch.tensor(seq, dtype=torch.float32).unsqueeze(0)  # (1, window, 42)
+
+    # ── Stint helper ──────────────────────────────────────────────────────────
+
+    def _get_driver_stint(self, driver: str, tyre_life: int) -> Optional[pd.DataFrame]:
+        """Filter self.laps_df to the current driver's stint up to the given tyre life.
+
+        Resolves compound from self.session_meta['{driver}_compound'] if available,
+        falling back to the most recent compound in laps_df for that driver.
+        Returns None when no matching rows exist.
+
+        Args:
+            driver: FastF1 driver abbreviation (e.g. 'NOR').
+            tyre_life: Current laps completed on this tyre set.
+
+        Returns:
+            Filtered and sorted DataFrame, or None if no laps found.
+        """
+        driver_laps = self.laps_df.loc[self.laps_df['Driver'] == driver]
+        compound = self.session_meta.get(
+            f'{driver}_compound',
+            driver_laps['Compound'].iloc[-1] if len(driver_laps) > 0 else 'MEDIUM',
+        )
+        stint = (
+            self.laps_df[
+                (self.laps_df['Driver']   == driver) &
+                (self.laps_df['Compound'] == compound) &
+                (self.laps_df['TyreLife'] <= tyre_life)
+            ]
+            .sort_values('LapNumber')
+        )
+        return stint if len(stint) > 0 else None
+
+    # ── LangChain tool factory ────────────────────────────────────────────────
+
+    def _build_tools(self) -> list:
+        """Build LangChain tools as closures over this TireAgent instance.
+
+        Each tool reads self.laps_df, self.session_meta, self.bundles, and
+        self.cfg at call time — no module-level globals are accessed. Returns
+        an empty list when LangGraph is not installed so the agent degrades
+        gracefully.
+
+        Returns:
+            List of decorated LangChain tool functions.
+        """
+        if not _LANGGRAPH_AVAILABLE:
+            return []
+
+        agent = self  # capture instance for closures
+
+        @lc_tool
+        def predict_tire_deg_tool(driver: str, compound_id: str, tyre_life: int) -> str:
+            """Predict cumulative tyre degradation and instantaneous rate for the current stint.
+
+            Runs a single deterministic forward pass through the per-compound TireDegTCN
+            using the recent laps of the requested driver from the session loaded into
+            the agent instance.
+
+            Args:
+                driver: FastF1 driver abbreviation (e.g. 'NOR').
+                compound_id: Pirelli compound ID (e.g. 'C2'). Must be a key in bundles.
+                tyre_life: Current laps on this set of tyres.
+
+            Returns:
+                Multi-line string: cumulative degradation (s) and degradation rate (s/lap).
+                Returns an error string if no laps are found.
+            """
+            stint = agent._get_driver_stint(driver, tyre_life)
+            if stint is None:
+                return f'No laps found for driver {driver} with tyre_life <= {tyre_life}.'
+
+            tensor = agent._build_stint_tensor(stint, compound_id, agent.session_meta)
+            model  = agent.bundles[compound_id]['model']
+
+            with torch.no_grad():
+                model.eval()
+                pred = model(tensor).item()
+
+            feat_df  = agent._build_stint_features(stint, compound_id, agent.session_meta)
+            deg_rate = float(feat_df['DegradationRate'].iloc[-1])
+
+            return (
+                f'Driver {driver} | Compound {compound_id} | TyreLife {tyre_life}\n'
+                f'Cumulative degradation: {pred:.3f} s | Degradation rate: {deg_rate:.4f} s/lap'
+            )
+
+        @lc_tool
+        def estimate_laps_to_cliff_tool(driver: str, compound_id: str, tyre_life: int) -> str:
+            """Estimate laps remaining before tyre cliff using MC Dropout uncertainty.
+
+            Switches the model to train mode so dropout stays active, then runs
+            cfg.n_mc forward passes to sample the predictive distribution. P10/P50/P90
+            laps remaining are computed from the remaining degradation budget.
+
+            Cliff is defined as cumulative FuelAdjustedDegAbsolute >= CLIFF_THRESHOLD[compound_id].
+
+            Args:
+                driver: FastF1 driver abbreviation (e.g. 'NOR').
+                compound_id: Pirelli compound ID (e.g. 'C2'). Must be a key in bundles.
+                tyre_life: Current laps on this set of tyres.
+
+            Returns:
+                Multi-line string: P10/P50/P90 laps to cliff, deg rate, MC std, warning level.
+            """
+            stint = agent._get_driver_stint(driver, tyre_life)
+            if stint is None:
+                return f'No laps found for driver {driver} with tyre_life <= {tyre_life}.'
+
+            tensor = agent._build_stint_tensor(stint, compound_id, agent.session_meta)
+            model  = agent.bundles[compound_id]['model']
+            model.train()  # keep dropout active for MC
+
+            preds = []
+            with torch.no_grad():
+                for _ in range(agent.cfg.n_mc):
+                    preds.append(model(tensor).item())
+
+            mean_pred = float(np.mean(preds))
+            mc_std    = float(np.std(preds))
+            sigma     = (
+                float(agent.cfg.mc_calibration[compound_id]['mean_sigma_s'])
+                if compound_id in agent.cfg.mc_calibration
+                else agent.cfg.mc_sigma_fallback
+            )
+            total_std = np.sqrt(mc_std**2 + sigma**2)
+
+            feat_df  = agent._build_stint_features(stint, compound_id, agent.session_meta)
+            deg_rate = max(float(feat_df['DegradationRate'].abs().iloc[-1]), 0.001)
+
+            threshold        = CLIFF_THRESHOLD.get(compound_id, 2.5)
+            remaining_budget = max(0.0, threshold - mean_pred)
+
+            p50 = remaining_budget / deg_rate
+            p10 = max(0.0, (remaining_budget - total_std) / deg_rate)
+            p90 = (remaining_budget + total_std) / deg_rate
+
+            to = TireOutput(
+                compound=compound_id,
+                current_tyre_life=tyre_life,
+                deg_rate=round(deg_rate, 4),
+                laps_to_cliff_p10=round(p10, 1),
+                laps_to_cliff_p50=round(p50, 1),
+                laps_to_cliff_p90=round(p90, 1),
+            )
+
+            return (
+                f'Driver {driver} | Compound {compound_id} | TyreLife {tyre_life}\n'
+                f'Laps to cliff — P10: {to.laps_to_cliff_p10} | P50: {to.laps_to_cliff_p50} | P90: {to.laps_to_cliff_p90}\n'
+                f'Degradation rate: {deg_rate:.4f} s/lap | MC std: {mc_std:.4f} s | Calibrated sigma: {sigma:.4f} s\n'
+                f'Warning level: {to.warning_level}'
+            )
+
+        return [predict_tire_deg_tool, estimate_laps_to_cliff_tool]
+
+    # ── LangGraph agent (lazy) ────────────────────────────────────────────────
+
+    def get_react_agent(
+        self,
         provider: str = 'lmstudio',
-        model_name: str = 'local-model',
+        model_name: str = 'gpt-4.1-mini',
         base_url: str = 'http://localhost:1234/v1',
         api_key: str = 'lm-studio',
     ):
-        """Return the LangGraph ReAct agent, creating it on the first call (lazy singleton).
+        """Return the LangGraph ReAct agent, creating it on the first call (lazy).
 
-        Avoids connecting to the LLM at import time — created only when N31 or tests
-        actually invoke the agent.
+        Avoids connecting to the LLM at import time — the graph is compiled only
+        when N31 or a test actually invokes the agent.
 
         Args:
-            provider: 'lmstudio' or 'openai'.
+            provider: 'lmstudio' (default) or 'openai'.
             model_name: Model identifier for ChatOpenAI.
             base_url: Base URL for LM Studio (ignored when provider='openai').
             api_key: API key; use 'lm-studio' for local server.
 
         Returns:
             LangGraph CompiledGraph — invoke with {"messages": [{"role": "user", "content": ...}]}.
+
+        Raises:
+            ImportError: When LangGraph / LangChain are not installed.
         """
-        global _tire_react_agent
-        if _tire_react_agent is not None:
-            return _tire_react_agent
+        if not _LANGGRAPH_AVAILABLE:
+            raise ImportError(
+                'LangGraph / LangChain not installed. '
+                'Install with: pip install langgraph langchain-openai'
+            )
+
+        if self._react_agent is not None:
+            return self._react_agent
 
         if provider == 'lmstudio':
             llm = ChatOpenAI(
@@ -835,193 +944,260 @@ stop becomes unavoidable.
         else:
             llm = ChatOpenAI(model=model_name, temperature=0)
 
-        _tire_react_agent = create_react_agent(
+        self._react_agent = create_react_agent(
             model=llm,
-            tools=TIRE_TOOLS,
+            tools=self._tools,
             prompt=_TIRE_SYSTEM_PROMPT,
         )
-        return _tire_react_agent
+        return self._react_agent
 
-else:
-    TIRE_TOOLS = []
+    # ── Entry point methods ───────────────────────────────────────────────────
 
-    def get_tire_react_agent(**kwargs):
-        raise ImportError(
-            'LangGraph / LangChain not installed. '
-            'Install with: pip install langgraph langchain-openai'
+    def run(self, stint_state: dict) -> TireOutput:
+        """Run the Tire Agent from a FastF1 session-based stint_state.
+
+        Populates self.laps_df and self.session_meta from the FastF1 Session in
+        stint_state, then invokes the ReAct agent. Numeric values are extracted
+        from tool call results in the message history — not from the LLM's
+        free-text answer — so the output is deterministic.
+
+        Args:
+            stint_state: Dict with keys:
+                session     — loaded FastF1 Session (laps + weather already cached).
+                driver      — FastF1 driver abbreviation (e.g. 'NOR').
+                compound_id — Pirelli compound ID (e.g. 'C2').
+                tyre_life   — Current laps on this tyre set.
+                gp_name     — GP name matching circuit_cluster_map keys (e.g. 'Sakhir').
+                team        — Team name matching team_id_map keys (e.g. 'McLaren').
+                year        — Race year (int).
+
+        Returns:
+            TireOutput with deg_rate, laps_to_cliff P10/P50/P90, gp_name,
+            warning_level, and reasoning.
+        """
+        session     = stint_state['session']
+        driver      = stint_state['driver']
+        compound_id = stint_state['compound_id']
+        tyre_life   = stint_state['tyre_life']
+        gp_name     = stint_state.get('gp_name', '')
+
+        self.laps_df = session.laps.pick_accurate().copy()
+        _clean       = self.laps_df[self.laps_df['TrackStatus'] == '1']
+        _weather     = session.weather_data.mean(numeric_only=True)
+
+        self.session_meta = {
+            'fastest_lap_s':      _clean['LapTime'].min().total_seconds(),
+            'cluster_mean_lap_s': _clean['LapTime'].dt.total_seconds().mean(),
+            'total_laps':         int(session.total_laps),
+            'cluster_id':         self.cfg.circuit_cluster_map.get(gp_name, 0),
+            'team_id':            self.cfg.team_id_map.get(stint_state.get('team', 'Unknown'), 4),
+            'year':               stint_state.get('year', 2025),
+            'AirTemp':   float(_weather.get('AirTemp',   28.0)),
+            'TrackTemp': float(_weather.get('TrackTemp', 38.0)),
+            'Humidity':  float(_weather.get('Humidity',  50.0)),
+            'Rainfall':  0.0,
+        }
+
+        return self._run_core(driver, compound_id, tyre_life, gp_name)
+
+    def run_from_state(self, lap_state: dict, laps_df: pd.DataFrame) -> TireOutput:
+        """RSM adapter: run the Tire Agent from a RaceStateManager lap_state dict.
+
+        Translates the nested RSM lap_state into self.laps_df / self.session_meta.
+        No FastF1 session is required — all context is derived directly from laps_df
+        and the lap_state dict produced by RaceStateManager.
+
+        Args:
+            lap_state: Dict from RaceStateManager.get_lap_state(). Expected keys:
+                lap_number, driver (full telemetry), weather, session_meta.
+            laps_df: Full race laps DataFrame (columns must include LapTime, Driver,
+                Compound, TyreLife, TrackStatus, LapNumber, SpeedFL/I1/I2/ST,
+                Sector1/2/3Time, Team).
+
+        Returns:
+            TireOutput with all fields populated.
+        """
+        d    = lap_state['driver']
+        meta = lap_state['session_meta']
+        wx   = lap_state.get('weather', {})
+
+        driver      = meta['driver']
+        compound    = d.get('compound', 'MEDIUM')
+        tyre_life   = d.get('tyre_life', 1)
+        gp_name     = meta.get('gp_name', '')
+        total_laps  = meta.get('total_laps', 60)
+        year        = meta.get('year', 2025)
+        team        = meta.get('team', 'Unknown')
+
+        compound_id = (
+            compound if compound.startswith('C')
+            else _compound_name_to_id(compound, gp_name, year)
+        )
+
+        self.laps_df = laps_df.copy()
+
+        # Build session_meta from laps_df (FastF1 Timedelta → float if needed)
+        lt_col = 'LapTime_s' if 'LapTime_s' in self.laps_df.columns else 'LapTime'
+        if lt_col == 'LapTime' and hasattr(self.laps_df[lt_col].iloc[0], 'total_seconds'):
+            lap_times = self.laps_df[lt_col].dropna().apply(lambda t: t.total_seconds())
+        else:
+            lap_times = pd.to_numeric(self.laps_df[lt_col], errors='coerce').dropna()
+
+        if 'TrackStatus' in self.laps_df.columns:
+            clean_mask  = self.laps_df['TrackStatus'].astype(str) == '1'
+            clean_times = lap_times[clean_mask] if clean_mask.sum() > 0 else lap_times
+        else:
+            clean_times = lap_times
+
+        self.session_meta = {
+            'fastest_lap_s':      float(clean_times.min()) if len(clean_times) > 0 else 90.0,
+            'cluster_mean_lap_s': float(clean_times.mean()) if len(clean_times) > 0 else 90.0,
+            'total_laps':         total_laps,
+            'cluster_id':         self.cfg.circuit_cluster_map.get(gp_name, 0),
+            'team_id':            self.cfg.team_id_map.get(team, 4),
+            'year':               year,
+            'AirTemp':   wx.get('air_temp',   28.0),
+            'TrackTemp': wx.get('track_temp', 38.0),
+            'Humidity':  wx.get('humidity',   50.0),
+            'Rainfall':  float(wx.get('rainfall', 0)),
+            f'{driver}_compound': compound,
+        }
+
+        return self._run_core(driver, compound_id, tyre_life, gp_name)
+
+    def _run_core(
+        self,
+        driver: str,
+        compound_id: str,
+        tyre_life: int,
+        gp_name: str,
+    ) -> TireOutput:
+        """Invoke the ReAct agent with session state already set; parse and return TireOutput.
+
+        self.laps_df and self.session_meta must be populated before calling this method.
+        Numeric values are extracted from ToolMessage contents in the message history
+        to guarantee determinism regardless of LLM phrasing.
+
+        Args:
+            driver: FastF1 driver abbreviation.
+            compound_id: Pirelli compound ID string.
+            tyre_life: Current laps on this tyre set.
+            gp_name: GP name for cliff threshold lookup.
+
+        Returns:
+            Fully populated TireOutput.
+        """
+        react_agent = self.get_react_agent()
+        msg = (
+            f'Analyse the tyre state for driver {driver}, compound {compound_id}, '
+            f'tyre life {tyre_life} laps. Use both tools and give your recommendation.'
+        )
+        response = react_agent.invoke({'messages': [{'role': 'user', 'content': msg}]})
+        parsed   = _parse_tool_outputs(response['messages'])
+
+        reasoning = ''
+        for m in reversed(response['messages']):
+            if hasattr(m, 'content') and isinstance(m.content, str) and m.content.strip():
+                if not getattr(m, 'tool_calls', None):
+                    reasoning = m.content.strip()
+                    break
+
+        return TireOutput(
+            compound          = compound_id,
+            current_tyre_life = tyre_life,
+            gp_name           = gp_name,
+            deg_rate          = round(parsed.get('deg_rate', 0.0), 4),
+            laps_to_cliff_p10 = round(parsed.get('p10', 0.0), 1),
+            laps_to_cliff_p50 = round(parsed.get('p50', 0.0), 1),
+            laps_to_cliff_p90 = round(parsed.get('p90', 0.0), 1),
+            reasoning         = reasoning,
         )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Entry points
+# Lazy singleton
+# ─────────────────────────────────────────────────────────────────────────────
+
+_default_tire_agent: Optional[TireAgent] = None
+
+
+def _get_default_tire_agent() -> TireAgent:
+    """Return the process-level TireAgent singleton, creating it on first call.
+
+    Model bundles are loaded only once per process. Subsequent calls return the
+    cached instance immediately.
+
+    Returns:
+        TireAgent with all compound bundles loaded and tools built.
+    """
+    global _default_tire_agent
+    if _default_tire_agent is None:
+        _default_tire_agent = TireAgent()
+    return _default_tire_agent
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Public entry points — backward-compatible signatures (unchanged)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def run_tire_agent(stint_state: dict) -> TireOutput:
     """Run the Tire Agent for a given stint and return a structured TireOutput.
 
-    Sets the module-level LAPS and SESSION_META globals from the FastF1 session
-    object in stint_state, then invokes tire_react_agent. Numeric values are
-    extracted from tool call results in the message history — not from the LLM's
-    free-text answer — so the output is deterministic.
+    Delegates to the process-level TireAgent singleton. Populates session state
+    from the FastF1 Session object inside stint_state, then invokes the LangGraph
+    ReAct agent. Numeric outputs are extracted from tool call results in the
+    message history — not from the LLM's free-text answer.
 
     Args:
-        stint_state: Dict with keys:
-            session     — loaded FastF1 Session (laps + weather already cached).
-            driver      — FastF1 driver abbreviation (e.g. 'NOR').
-            compound_id — Pirelli compound ID (e.g. 'C2').
-            tyre_life   — Current laps on this tyre set.
-            gp_name     — GP name matching circuit_cluster_map keys (e.g. 'Sakhir').
-            team        — Team name matching team_id_map keys (e.g. 'McLaren').
-            year        — Race year (int).
+        stint_state: Dict with keys: session, driver, compound_id, tyre_life,
+            gp_name, team, year. See TireAgent.run for full specification.
 
     Returns:
-        TireOutput with deg_rate, laps_to_cliff P10/P50/P90, gp_name,
-        warning_level, and reasoning.
+        TireOutput with deg_rate, laps_to_cliff P10/P50/P90, warning_level, reasoning.
     """
-    global LAPS, SESSION_META
-
-    session     = stint_state['session']
-    driver      = stint_state['driver']
-    compound_id = stint_state['compound_id']
-    tyre_life   = stint_state['tyre_life']
-    gp_name     = stint_state.get('gp_name', '')
-
-    LAPS       = session.laps.pick_accurate().copy()
-    _clean     = LAPS[LAPS['TrackStatus'] == '1']
-    _weather   = session.weather_data.mean(numeric_only=True)
-
-    SESSION_META = {
-        'fastest_lap_s':      _clean['LapTime'].min().total_seconds(),
-        'cluster_mean_lap_s': _clean['LapTime'].dt.total_seconds().mean(),
-        'total_laps':         int(session.total_laps),
-        'cluster_id':         CFG.circuit_cluster_map.get(gp_name, 0),
-        'team_id':            CFG.team_id_map.get(stint_state.get('team', 'Unknown'), 4),
-        'year':               stint_state.get('year', 2025),
-        'AirTemp':   float(_weather.get('AirTemp',   28.0)),
-        'TrackTemp': float(_weather.get('TrackTemp', 38.0)),
-        'Humidity':  float(_weather.get('Humidity',  50.0)),
-        'Rainfall':  0.0,
-    }
-
-    return _run_tire_agent_core(driver, compound_id, tyre_life, gp_name)
+    return _get_default_tire_agent().run(stint_state)
 
 
 def run_tire_agent_from_state(lap_state: dict, laps_df: pd.DataFrame) -> TireOutput:
     """RSM adapter: run the Tire Agent from a RaceStateManager lap_state dict.
 
-    Translates the nested RSM lap_state into the globals expected by the LangGraph
-    tools. laps_df is the raw laps DataFrame from the replay engine (e.g.
-    engine.rsm._driver / engine.rsm._rivals combined, or the full laps parquet).
-    SESSION_META is derived directly from laps_df — no FastF1 session required.
+    Delegates to the process-level TireAgent singleton. No FastF1 session required —
+    all context is derived from laps_df and the lap_state produced by RaceStateManager.
 
     Args:
         lap_state: Dict from RaceStateManager.get_lap_state(). Expected keys:
             lap_number, driver (full telemetry), weather, session_meta.
-        laps_df: Full race laps DataFrame (columns must include LapTime, LapTime as
-            Timedelta or float, Driver, Compound, TyreLife, TrackStatus, LapNumber,
-            SpeedFL/I1/I2/ST, Sector1/2/3Time, Team).
+        laps_df: Full race laps DataFrame with required telemetry columns.
 
     Returns:
         TireOutput with all fields populated.
     """
-    global LAPS, SESSION_META
-
-    d    = lap_state['driver']
-    meta = lap_state['session_meta']
-    wx   = lap_state.get('weather', {})
-
-    driver      = meta['driver']
-    compound    = d.get('compound', 'MEDIUM')
-    tyre_life   = d.get('tyre_life', 1)
-    gp_name     = meta.get('gp_name', '')
-    total_laps  = meta.get('total_laps', 60)
-    year        = meta.get('year', 2025)
-    team        = meta.get('team', 'Unknown')
-
-    # Compound ID: e.g. 'C3' from compound name MEDIUM + tire_compounds_by_race.json
-    # Fall back to using compound string directly if it looks like 'C{n}' already
-    compound_id = compound if compound.startswith('C') else _compound_name_to_id(compound, gp_name, year)
-
-    LAPS = laps_df.copy()
-
-    # Build SESSION_META from laps_df (FastF1 Timedelta → float if needed)
-    lt_col = 'LapTime_s' if 'LapTime_s' in LAPS.columns else 'LapTime'
-    if lt_col == 'LapTime' and hasattr(LAPS[lt_col].iloc[0], 'total_seconds'):
-        lap_times = LAPS[lt_col].dropna().apply(lambda t: t.total_seconds())
-    else:
-        lap_times = pd.to_numeric(LAPS[lt_col], errors='coerce').dropna()
-
-    # Filter to clean laps (green flag) where possible
-    if 'TrackStatus' in LAPS.columns:
-        clean_mask = LAPS['TrackStatus'].astype(str) == '1'
-        clean_times = lap_times[clean_mask] if clean_mask.sum() > 0 else lap_times
-    else:
-        clean_times = lap_times
-
-    SESSION_META = {
-        'fastest_lap_s':      float(clean_times.min()) if len(clean_times) > 0 else 90.0,
-        'cluster_mean_lap_s': float(clean_times.mean()) if len(clean_times) > 0 else 90.0,
-        'total_laps':         total_laps,
-        'cluster_id':         CFG.circuit_cluster_map.get(gp_name, 0),
-        'team_id':            CFG.team_id_map.get(team, 4),
-        'year':               year,
-        'AirTemp':   wx.get('air_temp',   28.0),
-        'TrackTemp': wx.get('track_temp', 38.0),
-        'Humidity':  wx.get('humidity',   50.0),
-        'Rainfall':  float(wx.get('rainfall', 0)),
-        f'{driver}_compound': compound,
-    }
-
-    return _run_tire_agent_core(driver, compound_id, tyre_life, gp_name)
+    return _get_default_tire_agent().run_from_state(lap_state, laps_df)
 
 
-def _compound_name_to_id(compound_name: str, gp_name: str, year: int) -> str:
-    """Map a Pirelli compound name (SOFT/MEDIUM/HARD) to its Cx ID for this GP.
+def get_tire_react_agent(
+    provider: str = 'lmstudio',
+    model_name: str = 'gpt-4.1-mini',
+    base_url: str = 'http://localhost:1234/v1',
+    api_key: str = 'lm-studio',
+):
+    """Return the LangGraph ReAct agent backed by the singleton TireAgent instance.
 
-    Loads data/tire_compounds_by_race.json (authoritative source) to resolve
-    the Cx allocation for this GP/year. Falls back to C3/C2/C1 if the GP is
-    not found — these are the most common mid-season assignments.
+    Avoids connecting to the LLM at import time — created only when N31 or tests
+    actually invoke the agent.
+
+    Args:
+        provider: 'lmstudio' or 'openai'.
+        model_name: Model identifier for ChatOpenAI.
+        base_url: Base URL for LM Studio (ignored when provider='openai').
+        api_key: API key; use 'lm-studio' for local server.
+
+    Returns:
+        LangGraph CompiledGraph — invoke with {"messages": [{"role": "user", "content": ...}]}.
     """
-    compounds_path = _REPO_ROOT / 'data' / 'tire_compounds_by_race.json'
-    fallback = {'SOFT': 'C3', 'MEDIUM': 'C2', 'HARD': 'C1',
-                'INTERMEDIATE': 'INT', 'WET': 'WET'}
-    if not compounds_path.exists():
-        return fallback.get(compound_name.upper(), 'C3')
-
-    with open(compounds_path) as f:
-        alloc = json.load(f)
-
-    year_data = alloc.get(str(year), {})
-    gp_data   = year_data.get(gp_name, {})
-    return gp_data.get(compound_name.upper(), fallback.get(compound_name.upper(), 'C3'))
-
-
-def _run_tire_agent_core(
-    driver: str, compound_id: str, tyre_life: int, gp_name: str
-) -> TireOutput:
-    """Invoke tire_react_agent with LAPS/SESSION_META already set; parse and return TireOutput."""
-    agent = get_tire_react_agent()
-    msg   = (
-        f'Analyse the tyre state for driver {driver}, compound {compound_id}, '
-        f'tyre life {tyre_life} laps. Use both tools and give your recommendation.'
-    )
-    response = agent.invoke({'messages': [{'role': 'user', 'content': msg}]})
-    parsed   = _parse_tool_outputs(response['messages'])
-
-    reasoning = ''
-    for m in reversed(response['messages']):
-        if hasattr(m, 'content') and isinstance(m.content, str) and m.content.strip():
-            if not getattr(m, 'tool_calls', None):
-                reasoning = m.content.strip()
-                break
-
-    return TireOutput(
-        compound          = compound_id,
-        current_tyre_life = tyre_life,
-        gp_name           = gp_name,
-        deg_rate          = round(parsed.get('deg_rate', 0.0), 4),
-        laps_to_cliff_p10 = round(parsed.get('p10', 0.0), 1),
-        laps_to_cliff_p50 = round(parsed.get('p50', 0.0), 1),
-        laps_to_cliff_p90 = round(parsed.get('p90', 0.0), 1),
-        reasoning         = reasoning,
+    return _get_default_tire_agent().get_react_agent(
+        provider=provider,
+        model_name=model_name,
+        base_url=base_url,
+        api_key=api_key,
     )

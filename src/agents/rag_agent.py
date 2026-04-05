@@ -47,7 +47,10 @@ from src.rag.retriever import (  # noqa: E402
 try:
     from langchain_core.messages import HumanMessage
     from langchain_openai import ChatOpenAI
-    from langgraph.prebuilt import create_react_agent
+    try:
+        from langchain.agents import create_react_agent  # LangGraph ≥ 1.0
+    except ImportError:
+        from langgraph.prebuilt import create_react_agent  # legacy
     _LC_OK = True
 except ImportError:
     _LC_OK = False
@@ -144,7 +147,7 @@ def get_rag_react_agent():
                 "the RAG agent. Install with: pip install langgraph langchain-openai"
             )
         llm = ChatOpenAI(
-            model="local-model",
+            model="gpt-4.1-mini",
             base_url="http://localhost:1234/v1",
             api_key="lm-studio",
             temperature=0,

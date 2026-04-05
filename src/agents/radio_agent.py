@@ -222,7 +222,7 @@ class RadioAgentCFG:
         N22 training config to avoid truncation artifacts on long messages.
     """
 
-    model_name:       str   = "local-model"
+    model_name:       str   = "gpt-4.1-mini"
     device:           str   = field(
         default_factory=lambda: "cuda" if torch.cuda.is_available() else "cpu"
     )

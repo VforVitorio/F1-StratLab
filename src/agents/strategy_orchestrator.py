@@ -97,7 +97,7 @@ class OrchestratorCFG:
     temperature=0.0 ensures deterministic structured output from Layer 3 LLM.
     """
 
-    model_name:             str   = "local-model"
+    model_name:             str   = "gpt-5.4-mini"
     base_url:               str   = "http://localhost:1234/v1"
     temperature:            float = 0.0
     n_sim:                  int   = 500
