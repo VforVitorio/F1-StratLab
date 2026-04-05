@@ -4,7 +4,7 @@ any HTTP layer.
 
 Loads a race from data/raw/2025/<gp_name>/ and iterates lap by lap through
 RaceReplayEngine. For each lap it builds a RaceState, calls
-run_strategy_orchestrator_from_state, and prints a per-lap summary table.
+run_strategy_orchestrator_from_state, and renders a live per-lap Rich table.
 
 Usage
 -----
@@ -25,7 +25,7 @@ Examples
 
 Output columns
 --------------
-    Lap | Cmpd | Life | Action     | Conf | STAY  / PIT   / UDCT  / OVCT  | Reasoning
+    Lap | Cmpd | Life | Action | Conf | STAY / PIT / UDCT / OVCT | Reasoning
 """
 
 from __future__ import annotations
@@ -37,6 +37,11 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from rich.box import ROUNDED
+from rich.console import Console
+from rich.live import Live
+from rich.table import Table
+from rich.text import Text
 
 # ---------------------------------------------------------------------------
 # Repo-root sys.path injection — must happen before any src.* import
@@ -64,28 +69,38 @@ except ImportError as e:
 
 
 # ---------------------------------------------------------------------------
-# ANSI colour helpers
+# Rich setup
 # ---------------------------------------------------------------------------
-_RESET  = "\033[0m"
-_BOLD   = "\033[1m"
-_RED    = "\033[91m"
-_GREEN  = "\033[92m"
-_YELLOW = "\033[93m"
-_CYAN   = "\033[96m"
-_DIM    = "\033[2m"
+console = Console()
 
-_ACTION_COLOUR = {
-    "STAY_OUT":  _GREEN,
-    "PIT_NOW":   _RED,
-    "UNDERCUT":  _YELLOW,
-    "OVERCUT":   _YELLOW,
-    "ALERT":     _CYAN,
+ACTION_STYLE: dict[str, str] = {
+    "STAY_OUT": "bold green",
+    "PIT_NOW":  "bold red",
+    "UNDERCUT": "bold yellow",
+    "OVERCUT":  "bold yellow",
+    "ALERT":    "bold cyan",
 }
 
 
-def _colour_action(action: str) -> str:
-    col = _ACTION_COLOUR.get(action.upper(), "")
-    return f"{_BOLD}{col}{action:<10}{_RESET}"
+def _make_table() -> Table:
+    """Build and return the Rich Table skeleton (no rows yet)."""
+    table = Table(
+        box=ROUNDED,
+        show_header=True,
+        header_style="bold white",
+        expand=False,
+    )
+    table.add_column("Lap",      justify="right",  style="dim",    width=4)
+    table.add_column("Cmpd",     justify="left",                   width=8)
+    table.add_column("Life",     justify="right",  style="dim",    width=4)
+    table.add_column("Action",   justify="left",                   width=10)
+    table.add_column("Conf",     justify="right",                  width=5)
+    table.add_column("STAY",     justify="right",  style="green",  width=6)
+    table.add_column("PIT",      justify="right",  style="red",    width=6)
+    table.add_column("UDCT",     justify="right",  style="yellow", width=6)
+    table.add_column("OVCT",     justify="right",  style="yellow", width=6)
+    table.add_column("Reasoning",                                  min_width=40)
+    return table
 
 
 # ---------------------------------------------------------------------------
@@ -102,17 +117,12 @@ def _build_race_state(
     rivals    = lap_state.get("rivals", [])
     weather   = lap_state.get("weather", {})
 
-    # Gap to the car directly ahead (position = our_pos - 1)
     our_pos = driver_st.get("position", 99)
     car_ahead = next(
         (r for r in rivals if r.get("position") == our_pos - 1), None
     )
-    if car_ahead is not None:
-        gap_ahead_s = abs(car_ahead.get("interval_to_driver_s") or 0.0)
-    else:
-        gap_ahead_s = 0.0
+    gap_ahead_s = abs(car_ahead.get("interval_to_driver_s") or 0.0) if car_ahead else 0.0
 
-    # Pace delta vs own previous lap (0.0 on lap 1)
     cur_lap_time = driver_st.get("lap_time_s") or 0.0
     pace_delta_s = cur_lap_time - prev_lap_time if prev_lap_time else 0.0
 
@@ -140,16 +150,7 @@ def _run_no_llm(
     lap_state: dict[str, Any],
     laps_df: pd.DataFrame,
 ) -> dict[str, Any]:
-    """Run ML models only — no LLM synthesis at any layer.
-
-    Calls each sub-agent individually, catching connection errors so that a
-    failing LLM call in one agent does not abort the whole lap. Falls back to
-    a stub output for any agent that raises a connection/API error (these happen
-    when a sub-agent tries to call LM Studio for its own reasoning synthesis).
-
-    Returns a dict with the same keys as StrategyRecommendation but produced
-    deterministically from the MC simulation scores.
-    """
+    """Run ML models only — no LLM synthesis at any layer."""
     from src.agents.pace_agent           import run_pace_agent_from_state, PaceOutput
     from src.agents.tire_agent           import run_tire_agent_from_state, TireOutput
     from src.agents.race_situation_agent import (
@@ -173,10 +174,9 @@ def _run_no_llm(
             return fn(*args)
         except Exception as exc:
             if _is_connection_err(exc):
-                return stub  # LLM unreachable — ML already ran, return stub
-            raise  # re-raise real errors (dtype, key, etc.)
+                return stub
+            raise
 
-    # Default stubs for when LLM synthesis inside sub-agents fails
     pace_stub = PaceOutput(
         lap_time_pred=90.0, delta_vs_prev=0.0, delta_vs_median=0.0,
         ci_p10=88.0, ci_p90=92.0, reasoning="[stub — LLM unreachable]",
@@ -197,13 +197,12 @@ def _run_no_llm(
         reasoning="[stub — LLM unreachable]", corrections=[],
     )
 
-    # Layer 1 — always-on agents (each call isolated so one failure doesn't abort the lap)
     pace_out  = _safe_call(run_pace_agent_from_state, lap_state, stub=pace_stub)
     tire_out  = _safe_call(run_tire_agent_from_state, lap_state, laps_df, stub=tire_stub)
     sit_out   = _safe_call(run_race_situation_agent_from_state, lap_state, laps_df, stub=sit_stub)
 
-    radio_msgs = [m for m in race_state.radio_msgs]
-    rcm_events = [e for e in race_state.rcm_events]
+    radio_msgs = list(race_state.radio_msgs)
+    rcm_events = list(race_state.rcm_events)
     radio_out = _safe_call(
         run_radio_agent_from_state,
         {**lap_state, "lap": race_state.lap,
@@ -212,7 +211,6 @@ def _run_no_llm(
         stub=radio_stub,
     )
 
-    # MoE routing
     alerts = [a["type"] for a in (radio_out.alerts if radio_out else [])]
     active = _decide_agents_to_call(
         tire_out.warning_level if tire_out else "OK",
@@ -220,12 +218,10 @@ def _run_no_llm(
         alerts,
     )
 
-    # Layer 1 conditional
     pit_out, _ = _run_conditional_agents(
         active, lap_state, tire_out, sit_out, race_state, laps_df
     )
 
-    # Layer 2 — MC simulation
     mc = _run_mc_simulation(
         pace_out, tire_out, sit_out, pit_out,
         alpha=race_state.risk_tolerance,
@@ -239,66 +235,6 @@ def _run_no_llm(
         "scenario_scores": {k: round(v["score"], 3) for k, v in mc.items()},
         "regulation_context": "",
     }
-
-
-# ---------------------------------------------------------------------------
-# Table printing helpers
-# ---------------------------------------------------------------------------
-
-_HEADER = (
-    f"{'Lap':>3}  {'Cmpd':<8}  {'Life':>4}  {'Action':<12}  "
-    f"{'Conf':>5}  {'STAY':>6} {'PIT':>6} {'UDCT':>6} {'OVCT':>6}  Reasoning"
-)
-_SEP = "-" * len(_HEADER)
-
-
-def _print_row(lap: int, rec: Any, scores: dict[str, float]) -> None:
-    s = scores
-    stay = s.get("STAY_OUT", 0.0)
-    pit  = s.get("PIT_NOW",  0.0)
-    ucut = s.get("UNDERCUT", 0.0)
-    ocut = s.get("OVERCUT",  0.0)
-
-    action = getattr(rec, "action", rec.get("action", "?")) if not hasattr(rec, "action") or isinstance(rec, dict) else rec.action
-    confidence = getattr(rec, "confidence", rec.get("confidence", 0.0)) if not isinstance(rec, dict) else rec.get("confidence", 0.0)
-    reasoning  = getattr(rec, "reasoning",  rec.get("reasoning",  "")) if not isinstance(rec, dict) else rec.get("reasoning", "")
-
-    col_action = _colour_action(action)
-    print(
-        f"{lap:>3}  {_DIM}{'':8}{_RESET}  {'':>4}  {col_action}  "
-        f"{confidence:>5.2f}  {stay:>6.3f} {pit:>6.3f} {ucut:>6.3f} {ocut:>6.3f}  "
-        f"{reasoning[:70]}"
-    )
-
-
-def _print_row_with_state(
-    lap: int,
-    compound: str,
-    tyre_life: int,
-    rec: Any,
-    scores: dict[str, float],
-) -> None:
-    s = scores
-    stay = s.get("STAY_OUT", 0.0)
-    pit  = s.get("PIT_NOW",  0.0)
-    ucut = s.get("UNDERCUT", 0.0)
-    ocut = s.get("OVERCUT",  0.0)
-
-    if isinstance(rec, dict):
-        action     = rec.get("action", "?")
-        confidence = rec.get("confidence", 0.0)
-        reasoning  = rec.get("reasoning", "")
-    else:
-        action     = rec.action
-        confidence = rec.confidence
-        reasoning  = rec.reasoning
-
-    col_action = _colour_action(action)
-    print(
-        f"{lap:>3}  {compound:<8}  {tyre_life:>4}  {col_action}  "
-        f"{confidence:>5.2f}  {stay:>6.3f} {pit:>6.3f} {ucut:>6.3f} {ocut:>6.3f}  "
-        f"{reasoning[:70]}"
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -316,80 +252,105 @@ def run(args: argparse.Namespace) -> None:
     if not featured_path.exists():
         sys.exit(f"[FATAL] Featured parquet not found: {featured_path}")
 
-    print(f"\n{_BOLD}F1 Strategy Manager — CLI Simulation{_RESET}")
-    print(f"  GP      : {args.gp_name}")
-    print(f"  Driver  : {args.driver}")
-    print(f"  Team    : {args.team}")
-    print(f"  Mode    : {'no-LLM (MC scores only)' if args.no_llm else 'full (LLM synthesis)'}")
-    print()
+    console.print(f"\n[bold]F1 Strategy Manager — CLI Simulation[/bold]")
+    console.print(f"  GP      : {args.gp_name}")
+    console.print(f"  Driver  : {args.driver}")
+    console.print(f"  Team    : {args.team}")
+    console.print(
+        f"  Mode    : {'[dim]no-LLM (MC scores only)[/dim]' if args.no_llm else '[bold]full (LLM synthesis)[/bold]'}"
+    )
+    console.print()
 
-    # Load featured parquet once (passed to all agent RSM adapters)
-    print(f"{_DIM}Loading featured parquet …{_RESET}", end=" ", flush=True)
+    console.print("[dim]Loading featured parquet…[/dim]", end=" ")
     laps_df = pd.read_parquet(featured_path)
-    print(f"done ({len(laps_df):,} rows)")
+    console.print(f"done ([dim]{len(laps_df):,} rows[/dim])")
 
-    # Build replay engine (loads raw race parquet internally)
-    print(f"{_DIM}Loading race parquet from {race_dir} …{_RESET}", end=" ", flush=True)
+    console.print(f"[dim]Loading race parquet from {race_dir}…[/dim]", end=" ")
     engine = RaceReplayEngine(race_dir, args.driver, args.team, interval_seconds=0.0)
-    print(f"done ({engine.total_laps} laps)")
-    print()
+    console.print(f"done ([dim]{engine.total_laps} laps[/dim])")
+    console.print()
 
-    # Lap range filter
     lap_start, lap_end = 1, engine.total_laps
     if args.laps:
         parts = args.laps.split("-")
         lap_start = int(parts[0])
         lap_end   = int(parts[1]) if len(parts) > 1 else int(parts[0])
 
-    print(_HEADER)
-    print(_SEP)
-
+    table = _make_table()
+    errors: list[str] = []
     prev_lap_time: float = 0.0
-    errors: list[str]   = []
 
-    for lap_state in engine.replay():
-        lap_num = lap_state["lap_number"]
+    with Live(table, console=console, refresh_per_second=4):
+        for lap_state in engine.replay():
+            lap_num = lap_state["lap_number"]
 
-        if lap_num < lap_start:
-            continue
-        if lap_num > lap_end:
-            break
+            if lap_num < lap_start:
+                continue
+            if lap_num > lap_end:
+                break
 
-        driver_st = lap_state.get("driver", {})
-        if not driver_st:
-            print(f"{lap_num:>3}  [DNF — no driver state]")
-            continue
+            driver_st = lap_state.get("driver", {})
+            if not driver_st:
+                table.add_row(str(lap_num), "—", "—", Text("[DNF]", style="dim"), "", "", "", "", "", "")
+                continue
 
-        compound  = driver_st.get("compound", "?")
-        tyre_life = driver_st.get("tyre_life", 0)
+            compound  = driver_st.get("compound", "?")
+            tyre_life = driver_st.get("tyre_life", 0)
 
-        try:
-            race_state = _build_race_state(lap_state, args.driver, prev_lap_time)
-            prev_lap_time = driver_st.get("lap_time_s") or prev_lap_time
+            try:
+                race_state = _build_race_state(lap_state, args.driver, prev_lap_time)
+                prev_lap_time = driver_st.get("lap_time_s") or prev_lap_time
 
-            if args.no_llm:
-                result = _run_no_llm(race_state, lap_state, laps_df)
-                scores = result["scenario_scores"]
-            else:
-                result = run_strategy_orchestrator_from_state(race_state, laps_df, lap_state)
-                scores = getattr(result, "scenario_scores", {})
+                if args.no_llm:
+                    result = _run_no_llm(race_state, lap_state, laps_df)
+                    scores = result["scenario_scores"]
+                    action     = result["action"]
+                    confidence = result["confidence"]
+                    reasoning  = result["reasoning"]
+                else:
+                    result     = run_strategy_orchestrator_from_state(race_state, laps_df, lap_state)
+                    scores     = getattr(result, "scenario_scores", {})
+                    action     = getattr(result, "action", "?")
+                    confidence = getattr(result, "confidence", 0.0)
+                    reasoning  = getattr(result, "reasoning", "")
 
-            _print_row_with_state(lap_num, compound, tyre_life, result, scores)
+                stay = scores.get("STAY_OUT", 0.0)
+                pit  = scores.get("PIT_NOW",  0.0)
+                ucut = scores.get("UNDERCUT", 0.0)
+                ocut = scores.get("OVERCUT",  0.0)
 
-        except Exception as exc:
-            err_msg = f"[LAP {lap_num} ERROR: {type(exc).__name__}: {exc}]"
-            print(f"{_RED}{err_msg}{_RESET}")
-            errors.append(err_msg)
-            if args.verbose:
-                traceback.print_exc()
+                action_text = Text(action, style=ACTION_STYLE.get(action.upper(), ""))
 
-    print(_SEP)
+                table.add_row(
+                    str(lap_num),
+                    compound,
+                    str(tyre_life),
+                    action_text,
+                    f"{confidence:.2f}",
+                    f"{stay:.3f}",
+                    f"{pit:.3f}",
+                    f"{ucut:.3f}",
+                    f"{ocut:.3f}",
+                    reasoning[:80],
+                )
+
+            except Exception as exc:
+                err_msg = f"LAP {lap_num} ERROR: {type(exc).__name__}: {exc}"
+                errors.append(err_msg)
+                table.add_row(
+                    str(lap_num), compound, str(tyre_life),
+                    Text("[ERROR]", style="bold red"), "", "", "", "", "",
+                    str(exc)[:60],
+                )
+                if args.verbose:
+                    console.print_exception()
+
     if errors:
-        print(f"\n{_YELLOW}Completed with {len(errors)} error(s):{_RESET}")
+        console.print(f"\n[yellow]Completed with {len(errors)} error(s):[/yellow]")
         for e in errors:
-            print(f"  {e}")
+            console.print(f"  [red]{e}[/red]")
     else:
-        print(f"\n{_GREEN}Completed successfully.{_RESET}")
+        console.print("\n[green]Completed successfully.[/green]")
 
 
 # ---------------------------------------------------------------------------
