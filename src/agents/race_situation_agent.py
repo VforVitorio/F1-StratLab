@@ -452,6 +452,16 @@ def _ensure_timedelta_laps(laps_df: pd.DataFrame) -> pd.DataFrame:
         if col not in df.columns:
             df[col] = pd.NaT
 
+    # Normalise TrackStatus: featured parquet has track_status_clean (int 0/1/2),
+    # but feature builders call _dominant_status() which accesses TrackStatus (string).
+    if 'TrackStatus' not in df.columns:
+        if 'track_status_clean' in df.columns:
+            # Reverse map: 0=green→'1', 1=yellow/VSC→'6', 2=SC/red→'4'
+            ts_reverse = {0: '1', 1: '6', 2: '4'}
+            df['TrackStatus'] = df['track_status_clean'].map(ts_reverse).fillna('1')
+        else:
+            df['TrackStatus'] = '1'
+
     return df
 
 
@@ -835,7 +845,7 @@ class RaceSituationAgent:
 
     def get_react_agent(
         self,
-        provider: str = 'lmstudio',
+        provider: str = None,
         model_name: str = 'gpt-4.1-mini',
         base_url: str = 'http://localhost:1234/v1',
         api_key: str = 'lm-studio',
@@ -862,6 +872,10 @@ class RaceSituationAgent:
 
         if self._react_agent is not None:
             return self._react_agent
+
+        import os
+        if provider is None:
+            provider = os.environ.get('F1_LLM_PROVIDER', 'lmstudio')
 
         if provider == 'lmstudio':
             llm = ChatOpenAI(model=model_name, base_url=base_url, api_key=api_key, temperature=0)
