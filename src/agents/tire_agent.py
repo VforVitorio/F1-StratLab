@@ -376,13 +376,29 @@ class TireOutput:
 def _add_timing_cols(df: pd.DataFrame) -> pd.DataFrame:
     """Convert FastF1 Timedelta columns to float seconds.
 
-    FastF1 returns LapTime and Sector times as pandas Timedelta objects.
-    The TCN expects plain floats. LapsSincePitStop is aliased from TyreLife.
+    Handles two source formats:
+    - FastF1 raw: LapTime/Sector*Time are pandas Timedelta objects
+    - Featured parquet: LapTime_s/Sector*_s are already plain floats
+
+    LapsSincePitStop is aliased from TyreLife.
     """
-    df['LapTime_s']        = df['LapTime'].dt.total_seconds()
-    df['Sector1_s']        = df['Sector1Time'].dt.total_seconds()
-    df['Sector2_s']        = df['Sector2Time'].dt.total_seconds()
-    df['Sector3_s']        = df['Sector3Time'].dt.total_seconds()
+    def _to_seconds(df, td_col, s_col):
+        if s_col in df.columns:
+            df[s_col] = pd.to_numeric(df[s_col], errors='coerce')
+        elif td_col in df.columns:
+            val = df[td_col]
+            if hasattr(val.iloc[0] if len(val) > 0 else None, 'total_seconds'):
+                df[s_col] = val.dt.total_seconds()
+            else:
+                df[s_col] = pd.to_numeric(val, errors='coerce')
+        else:
+            df[s_col] = float('nan')
+        return df
+
+    df = _to_seconds(df, 'LapTime',    'LapTime_s')
+    df = _to_seconds(df, 'Sector1Time', 'Sector1_s')
+    df = _to_seconds(df, 'Sector2Time', 'Sector2_s')
+    df = _to_seconds(df, 'Sector3Time', 'Sector3_s')
     df['LapsSincePitStop'] = df['TyreLife']
     return df
 
@@ -519,10 +535,14 @@ def _add_session_cols(df: pd.DataFrame, session_meta: dict) -> pd.DataFrame:
     df['laps_remaining']    = session_meta['total_laps'] - df['LapNumber']
     df['mean_sector_speed'] = (df['SpeedI1'] + df['SpeedI2'] + df['SpeedFL']) / 3
 
-    status_map = {'1': 0, '2': 1, '3': 2, '4': 2, '5': 2, '6': 1, '7': 1}
-    df['track_status_clean'] = (
-        df['TrackStatus'].astype(str).map(status_map).fillna(0).astype(int)
-    )
+    if 'track_status_clean' not in df.columns:
+        status_map = {'1': 0, '2': 1, '3': 2, '4': 2, '5': 2, '6': 1, '7': 1}
+        if 'TrackStatus' in df.columns:
+            df['track_status_clean'] = (
+                df['TrackStatus'].astype(str).map(status_map).fillna(0).astype(int)
+            )
+        else:
+            df['track_status_clean'] = 0
     return df
 
 
@@ -903,7 +923,7 @@ class TireAgent:
 
     def get_react_agent(
         self,
-        provider: str = 'lmstudio',
+        provider: str = None,
         model_name: str = 'gpt-4.1-mini',
         base_url: str = 'http://localhost:1234/v1',
         api_key: str = 'lm-studio',
@@ -933,6 +953,10 @@ class TireAgent:
 
         if self._react_agent is not None:
             return self._react_agent
+
+        import os
+        if provider is None:
+            provider = os.environ.get('F1_LLM_PROVIDER', 'lmstudio')
 
         if provider == 'lmstudio':
             llm = ChatOpenAI(
@@ -1087,6 +1111,23 @@ class TireAgent:
         Returns:
             Fully populated TireOutput.
         """
+        # TCN bundles only exist for dry compounds (C1–C6). For wet/intermediate
+        # compounds return a stub with conservative defaults — no TCN inference.
+        if compound_id not in self.bundles:
+            return TireOutput(
+                compound          = compound_id,
+                current_tyre_life = tyre_life,
+                gp_name           = gp_name,
+                deg_rate          = 0.03,
+                laps_to_cliff_p10 = 20.0,
+                laps_to_cliff_p50 = 30.0,
+                laps_to_cliff_p90 = 40.0,
+                reasoning         = (
+                    f"[{compound_id} — TCN model not available for wet/intermediate compounds; "
+                    f"conservative defaults used]"
+                ),
+            )
+
         react_agent = self.get_react_agent()
         msg = (
             f'Analyse the tyre state for driver {driver}, compound {compound_id}, '
