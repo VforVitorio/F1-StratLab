@@ -485,9 +485,26 @@ def _decide_agents_to_call(
     radio_alerts is RadioOutput.alerts — each dict has keys 'source' and 'intent'
     or 'event_type'.
 
-    N28 is activated if the tyre is near the cliff or if radio signals a problem.
-    N30 is activated whenever N28 is active (regulation check on the pit decision)
-    or if SC probability is high (fetch SC procedure articles).
+    **N28 — pit strategy agent** activates when the tyre is near the cliff
+    (tire_warning == PIT_SOON) or when the radio signals a car problem that
+    could force an unplanned stop (PROBLEM / WARNING intent). A firing N28 is
+    our proxy for "we are about to change compound", which is the canonical
+    trigger for the regulation check.
+
+    **N30 — RAG regulation check** activates only when the upcoming decision
+    actually touches sporting-regulation territory, so we don't burn Qdrant
+    calls on quiet cruise laps where no rule is relevant:
+
+    * N28 is active  → imminent pit / compound change → query tyre-compound
+      and pit-lane rules (mandatory dry compound, unsafe release, pit window).
+    * sc_prob_3lap > threshold → SC deployment likely → query SC procedure
+      (delta lap time, pit-lane closure, double-yellow restart).
+    * Radio carries a FIA-facing alert (PENALTY / WARNING intent) → regulation
+      lookup for the infringement the steward is flagging.
+
+    Any of the three conditions independently activates N30. The orchestrator
+    LLM then sees the retrieved regulation snippet in its prompt and must
+    reconcile its proposed action with the rules before committing.
     """
     activate: set = set()
 
@@ -499,6 +516,9 @@ def _decide_agents_to_call(
         activate.add("N28")
 
     if sc_prob_3lap > CFG.sc_prob_threshold:
+        activate.add("N30")
+
+    if alert_intents & {"PENALTY", "WARNING"}:
         activate.add("N30")
 
     if "N28" in activate:
