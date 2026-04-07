@@ -89,6 +89,7 @@ dependencies = [
     "fitz>=0.0.1.dev2",
     "bs4>=0.0.2",
     "langchain-openai>=1.1.11",
+    "rich>=14.3.3",
 ]
 
 [project.optional-dependencies]
