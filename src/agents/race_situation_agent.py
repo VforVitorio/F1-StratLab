@@ -223,12 +223,31 @@ def _compute_laptime_features(all_laps: pd.DataFrame, lap_number: int) -> dict:
         Dict with: lap_time_mean_z, lap_time_std_z, lap_time_min_z,
         lap_time_cv, lap_time_trend_5.
     """
-    per_lap = (
-        all_laps[all_laps['LapNumber'] <= lap_number]
-        .groupby('LapNumber')
-        .apply(_agg)
-        .dropna(subset=['lt_mean'])
-    )
+    causal = all_laps[all_laps['LapNumber'] <= lap_number]
+    if causal.empty:
+        # No prior lap data — return neutral defaults matching the N14 schema.
+        # Happens on lap 1 of every replay (no lap has finished yet) and also
+        # when the race has been neutralised (all LapTimes NaN under red flag).
+        return {
+            'lap_time_mean_z':  0.0,
+            'lap_time_std_z':   0.0,
+            'lap_time_min_z':   0.0,
+            'lap_time_cv':      0.0,
+            'lap_time_trend_5': 1.0,
+        }
+
+    per_lap = causal.groupby('LapNumber').apply(_agg)
+    # apply() on an empty-after-filter group can return a DataFrame with no
+    # columns at all — guard before dropna so we don't KeyError on 'lt_mean'.
+    if 'lt_mean' not in per_lap.columns:
+        return {
+            'lap_time_mean_z':  0.0,
+            'lap_time_std_z':   0.0,
+            'lap_time_min_z':   0.0,
+            'lap_time_cv':      0.0,
+            'lap_time_trend_5': 1.0,
+        }
+    per_lap = per_lap.dropna(subset=['lt_mean'])
 
     lt_mean_z = _zscore(per_lap, 'lt_mean', lap_number)
     lt_std_z  = _zscore(per_lap, 'lt_std',  lap_number)
@@ -303,19 +322,58 @@ def _compute_track_status_features(all_laps: pd.DataFrame, lap_number: int) -> d
     Returns:
         Dict with model features plus '_cur_code', '_prev_code', '_yel_esc' sentinels.
     """
+    causal_laps = all_laps[all_laps['LapNumber'] <= lap_number]
+    if causal_laps.empty:
+        # No lap data yet — return green-flag defaults. Matches N14's behaviour
+        # when the model receives a pre-race or post-red-flag blank state.
+        return {
+            '_cur_code':               '1',
+            '_prev_code':              '1',
+            '_yel_esc':                0,
+            'track_status_enc':        STATUS_ENC.get('1', 0),
+            'status_changed':          0,
+            'status_change_direction': 0,
+            'yellow_escalation_count': 0,
+            'laps_since_last_yellow':  10,
+        }
+
     lap_status = (
-        all_laps[all_laps['LapNumber'] <= lap_number]
+        causal_laps
         .groupby('LapNumber')
         .apply(_dominant_status)
         .sort_index()
     )
-    cur_code  = str(lap_status.iloc[-1]) if not lap_status.empty else '1'
+    # Pandas quirk: when the grouped object is empty or apply() returns an
+    # empty result, groupby().apply() can yield an empty DataFrame (with the
+    # full column schema) instead of an empty Series. The early-return above
+    # prevents that, but cheap belt-and-braces check in case of edge cases.
+    if not isinstance(lap_status, pd.Series) or lap_status.empty:
+        return {
+            '_cur_code':               '1',
+            '_prev_code':              '1',
+            '_yel_esc':                0,
+            'track_status_enc':        STATUS_ENC.get('1', 0),
+            'status_changed':          0,
+            'status_change_direction': 0,
+            'yellow_escalation_count': 0,
+            'laps_since_last_yellow':  10,
+        }
+
+    cur_code  = str(lap_status.iloc[-1])
     prev_code = str(lap_status.iloc[-2]) if len(lap_status) > 1 else cur_code
 
     cur_sev  = STATUS_SEVERITY.get(cur_code, 1)
     prev_sev = STATUS_SEVERITY.get(prev_code, 1)
 
-    sev_series = lap_status.map(lambda c: STATUS_SEVERITY.get(str(c), 1))
+    # Force plain int dtype — FastF1 stores TrackStatus as a Categorical, and
+    # .map() can preserve that dtype, which then blows up on .fillna(1) because
+    # 1 is not in the original category set. Converting via pd.Series(..., dtype=int)
+    # strips the Categorical wrapper so shift/fillna behave like plain numerics.
+    sev_series = pd.Series(
+        [STATUS_SEVERITY.get(str(c), 1) for c in lap_status],
+        index=lap_status.index,
+        dtype=int,
+    )
     escalated  = (sev_series > sev_series.shift(1).fillna(1)).astype(int)
     yel_esc    = int(escalated.iloc[:-1].tail(3).sum())
 
@@ -507,10 +565,7 @@ try:
     from langchain_core.tools import tool as lc_tool
     from langchain_core.messages import HumanMessage
     from langchain_openai import ChatOpenAI
-    try:
-        from langchain.agents import create_react_agent  # LangGraph ≥ 1.0
-    except ImportError:
-        from langgraph.prebuilt import create_react_agent  # legacy
+    from langchain.agents import create_agent
     _LANGGRAPH_AVAILABLE = True
 except ImportError:
     _LANGGRAPH_AVAILABLE = False
@@ -882,10 +937,10 @@ class RaceSituationAgent:
         else:
             llm = ChatOpenAI(model=model_name, temperature=0)
 
-        self._react_agent = create_react_agent(
+        self._react_agent = create_agent(
             model=llm,
             tools=self._tools,
-            prompt=_RACE_SITUATION_SYSTEM_PROMPT,
+            system_prompt=_RACE_SITUATION_SYSTEM_PROMPT,
         )
         return self._react_agent
 
