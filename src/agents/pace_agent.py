@@ -328,7 +328,13 @@ class PaceAgent:
             'Prev_CumulativeDeg':   prev_cum_deg,
             'Prev_DegAcceleration': prev_deg_accel,
         }
-        return pd.DataFrame([row])[self.features]
+        df = pd.DataFrame([row])[self.features]
+        # Belt-and-braces: any caller that slips a None through lands here.
+        # XGBoost refuses object-dtype columns; ``to_numeric(errors='coerce')``
+        # converts None→NaN and the model handles NaN natively via its
+        # sparse-aware split logic (default_left). Cheap and defensive —
+        # no-op on already-numeric frames.
+        return df.apply(pd.to_numeric, errors='coerce')
 
     # ── Inference helpers ─────────────────────────────────────────────────────
 
@@ -544,26 +550,41 @@ class PaceAgent:
         total_laps     = meta['total_laps']
         laps_remaining = max(0, total_laps - lap_number)
 
+        # ``dict.get(key, default)`` only applies the default when *key is
+        # absent* — if the key is present with a None value (FastF1 logs
+        # speed_st=None on laps where the trap beam is not crossed cleanly,
+        # e.g. inlaps, traffic interruptions, sector anomalies), the default
+        # is ignored and None flows into the DataFrame. The feature column
+        # then becomes object dtype and XGBoost rejects it with:
+        #     "DataFrame.dtypes for data must be int, float, bool or category"
+        # That is exactly the crash observed on mid-stint laps. The ``or``
+        # pattern handles both missing-key and None-value cases in one step.
+        _speed_st  = d.get('speed_st')   or 300.0
+        _air_temp  = wx.get('air_temp')  if wx.get('air_temp')  is not None else 25.0
+        _trk_temp  = wx.get('track_temp') if wx.get('track_temp') is not None else 35.0
+        _humidity  = wx.get('humidity')  if wx.get('humidity')  is not None else 50.0
+        _rainfall  = wx.get('rainfall', 0)
+
         return self.run(
-            driver_number  = d.get('driver_number', 0),
+            driver_number  = d.get('driver_number') or 0,
             lap_number     = lap_number,
-            stint          = d.get('stint', 1),
-            tyre_life      = d.get('tyre_life', 1),
-            compound       = d.get('compound', 'MEDIUM'),
-            position       = d.get('position', 1),
-            team           = meta.get('team', 'Unknown'),
-            laps_since_pit = d.get('tyre_life', 1),
+            stint          = d.get('stint') or 1,
+            tyre_life      = d.get('tyre_life') or 1,
+            compound       = d.get('compound') or 'MEDIUM',
+            position       = d.get('position') or 1,
+            team           = meta.get('team') or 'Unknown',
+            laps_since_pit = d.get('tyre_life') or 1,
             fuel_load      = laps_remaining / max(total_laps, 1),
-            year           = meta.get('year', 2025),
+            year           = meta.get('year') or 2025,
             prev_lap_time  = d.get('lap_time_s') or 90.0,
-            prev_tyre_life = max(0, d.get('tyre_life', 1) - 1),
-            prev_speed_st  = d.get('speed_st', 300.0),
-            air_temp       = wx.get('air_temp', 25.0),
-            track_temp     = wx.get('track_temp', 35.0),
-            humidity       = wx.get('humidity', 50.0),
-            rainfall       = float(wx.get('rainfall', 0)),
+            prev_tyre_life = max(0, (d.get('tyre_life') or 1) - 1),
+            prev_speed_st  = float(_speed_st),
+            air_temp       = float(_air_temp),
+            track_temp     = float(_trk_temp),
+            humidity       = float(_humidity),
+            rainfall       = float(_rainfall or 0),
             total_laps     = total_laps,
-            gp_name        = meta.get('gp_name', ''),
+            gp_name        = meta.get('gp_name') or '',
             prev_deg_rate  = 0.0,
             prev_cum_deg   = 0.0,
             prev_deg_accel = 0.0,
