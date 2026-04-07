@@ -205,6 +205,114 @@ uvicorn backend.main:app --reload
 streamlit run src/telemetry/frontend/app/main.py
 ```
 
+### Headless CLI (Multi-Agent Simulator)
+
+A Rich-powered command line interface is bundled for running the full
+multi-agent pipeline (N25–N31) lap by lap against a real race. It needs
+**no HTTP layer, no Streamlit, no Docker** — just Python and the race data.
+
+#### One-command install — recommended (uv)
+
+The project is configured for [`uv`](https://docs.astral.sh/uv/), Astral's
+Rust-based package manager that replaces `pip` + `venv` + `pipx` +
+`virtualenv` and is **10–100× faster**. With `uv`, the entire install
+collapses to a single command — `pyproject.toml` already routes torch /
+torchvision to the right CUDA wheel per platform via `[tool.uv.sources]`,
+so there is **no manual PyTorch step on Windows or Linux**:
+
+```bash
+# 0. Install uv once per machine — pick the line for your OS
+#    Windows (PowerShell):
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+#    Linux / macOS:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+#    Or via package manager:
+#       winget install astral-sh.uv     # Windows
+#       brew   install uv               # macOS
+#       pipx   install uv               # any OS that already has pipx
+
+# 1. Clone + install in one shot
+git clone --recursive https://github.com/VforVitorio/F1_Strat_Manager.git
+cd F1_Strat_Manager
+uv sync           # creates .venv, resolves cu128 torch on Win/Linux, CPU on macOS
+
+# 2. Run the interactive launcher — no venv activation needed
+uv run f1-strat
+```
+
+That's it. `uv sync` reads `pyproject.toml`, builds a fresh `.venv/`,
+pulls every runtime dependency (`fastf1`, `xgboost`, `lightgbm`,
+`langgraph`, `langchain-openai`, `rich`, `torch`, etc.) and exposes the
+two console scripts as `uv run f1-strat` / `uv run f1-sim`.
+
+> **GPU with a different CUDA?** Edit the `[[tool.uv.index]]` URL in
+> `pyproject.toml` (currently `https://download.pytorch.org/whl/cu128`)
+> to match your driver — e.g. `cu121`, `cu118`, `rocm6.2`. Then re-run
+> `uv sync`.
+
+#### Fallback install — pip + venv
+
+If you cannot install `uv` (corporate restrictions, etc.), the legacy
+pip flow still works but you must install PyTorch manually because
+`pip` ignores `[tool.uv.sources]`:
+
+```bash
+git clone --recursive https://github.com/VforVitorio/F1_Strat_Manager.git
+cd F1_Strat_Manager
+python -m venv .venv
+.venv\Scripts\activate                 # Windows
+# source .venv/bin/activate            # Linux / macOS
+
+# CUDA torch first (skip on macOS, or use cu118 / cu121 to match your driver)
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+
+# Then the project (pulls everything else from pyproject.toml)
+pip install -e .
+
+# Verify
+f1-strat
+```
+
+If `python -m venv .venv` produces a venv without `pip` (rare, happens
+on broken Python installs), recreate it with `python -m venv --upgrade-deps .venv`
+or just use the `uv` flow above — `uv` builds its own venv from scratch.
+
+#### What you get
+
+Two console scripts become available on your PATH after installation:
+
+| Command   | What it launches                                                        |
+| --------- | ----------------------------------------------------------------------- |
+| `f1-strat`| Interactive menu — pick race / driver / lap range / provider visually   |
+| `f1-sim`  | Headless simulator — `f1-sim <gp_name> <driver> <team> [options]`       |
+
+**Interactive launcher**
+
+```bash
+f1-strat
+```
+
+Walks you through race → driver → lap range → provider with keyboard
+pickers, then runs `f1-sim` in a subprocess with a live lap-by-lap panel
+and a final "Run complete" summary (positions, actions mix, agent
+firings, stint, timing).
+
+**Direct headless mode**
+
+```bash
+# LLM orchestrator off — only MC scores (fastest, no provider required)
+f1-sim Melbourne NOR McLaren --laps 1-5 --no-llm
+
+# LLM mode with OpenAI (reads OPENAI_API_KEY from .env)
+f1-sim Bahrain NOR McLaren --laps 15-25 --provider openai
+
+# LLM mode with LM Studio (local, OpenAI-compatible API on :1234)
+f1-sim Monaco LEC Ferrari --laps 1-10 --provider lmstudio
+```
+
+Use `f1-sim --help` for the full option list (rival tracking, radio
+cadence, year, custom parquet paths, verbose traceback, etc.).
+
 ### Troubleshooting
 
 **Windows: DLL load failed (scikit-learn)**

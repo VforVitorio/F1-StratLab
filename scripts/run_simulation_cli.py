@@ -868,7 +868,11 @@ def _add_pit_row(tbl: Table, pit_out) -> None:
     the context carries the P05/P95 duration range plus undercut.
     """
     if pit_out is None:
-        _idle_row(tbl, "Pit", "triggers on cliff pressure or problem radio")
+        _idle_row(
+            tbl,
+            "Pit",
+            "triggers on cliff pressure, compound change, or problem radio",
+        )
         return
 
     p05 = getattr(pit_out, "stop_duration_p05",       None)
@@ -961,7 +965,11 @@ def _add_rag_row(tbl: Table, rag_text: str) -> None:
     visible at all times even though it rarely runs.
     """
     if not rag_text:
-        _idle_row(tbl, "RAG", "triggers on SC >30% or rule query")
+        _idle_row(
+            tbl,
+            "RAG",
+            "triggers on compound change, SC >30%, or FIA warning/penalty",
+        )
         return
 
     preview = rag_text.strip().split("\n", 1)[0][:60]
@@ -1980,5 +1988,14 @@ def _parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Console-script entry point (see ``[project.scripts]`` in pyproject.toml).
+
+    Parses argv and hands off to :func:`run`. Exists so that ``pip install .``
+    can expose the headless simulator as the ``f1-sim`` command.
+    """
     run(_parse_args())
+
+
+if __name__ == "__main__":
+    main()
