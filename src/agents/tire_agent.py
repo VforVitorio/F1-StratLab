@@ -616,10 +616,7 @@ def _compound_name_to_id(compound_name: str, gp_name: str, year: int) -> str:
 try:
     from langchain_core.tools import tool as lc_tool
     from langchain_openai import ChatOpenAI
-    try:
-        from langchain.agents import create_react_agent  # LangGraph ≥ 1.0
-    except ImportError:
-        from langgraph.prebuilt import create_react_agent  # legacy
+    from langchain.agents import create_agent
     _LANGGRAPH_AVAILABLE = True
 except ImportError:
     _LANGGRAPH_AVAILABLE = False
@@ -968,10 +965,10 @@ class TireAgent:
         else:
             llm = ChatOpenAI(model=model_name, temperature=0)
 
-        self._react_agent = create_react_agent(
+        self._react_agent = create_agent(
             model=llm,
             tools=self._tools,
-            prompt=_TIRE_SYSTEM_PROMPT,
+            system_prompt=_TIRE_SYSTEM_PROMPT,
         )
         return self._react_agent
 
