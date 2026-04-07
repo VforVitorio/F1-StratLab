@@ -40,7 +40,7 @@ import time
 import traceback
 import warnings
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # Suppress stray SWIG DeprecationWarnings from C-extension imports.
 warnings.filterwarnings("ignore", message=".*builtin type.*__module__.*")
@@ -455,18 +455,34 @@ def _probe_core_agents(
     return pace_out, tire_out, sit_out, radio_out
 
 
-def _make_table(has_rival: bool = False) -> Table:
-    """Build and return the Rich Table skeleton (no rows yet).
+def _make_table(has_rival: bool = False, show_header: bool = True) -> Table:
+    """Build a borderless Rich Table skeleton matching the history layout.
+
+    Used in two modes:
+      • show_header=True  — printed ONCE before the Live region as a header row.
+      • show_header=False — built per-lap as a 1-row sibling table and emitted
+        via ``live.console.print`` so it scrolls above the Live region.
+
+    box is ``None`` so successive per-lap row tables flow as one continuous
+    stream; column widths are pinned explicitly so alignment is preserved
+    without any border characters.
+
+    Why the split: embedding a growing Table inside the Live renderable caused
+    Rich to repaint the whole region from the top once total content exceeded
+    terminal height (cursor cannot rewind above the terminal top line). Moving
+    history out of Live and keeping only the fixed-height inference panel
+    inside Live is the standard Rich recipe for growing logs.
 
     When *has_rival* is True an extra "Rival" column is inserted after
     "Gap Fwd" showing the tracked driver's position / compound / interval.
     """
     table = Table(
-        box=ROUNDED,
-        show_lines=True,
-        show_header=True,
+        box=None,
+        show_lines=False,
+        show_header=show_header,
         header_style="bold white",
         expand=False,
+        padding=(0, 1),
     )
     table.add_column("Lap",       justify="right",  style="dim",    width=4)
     table.add_column("Tyre",      justify="left",                   width=8)
@@ -620,6 +636,39 @@ def _idle_row(tbl: Table, label: str, hint: str) -> None:
         Text(label,      style=COL_DIM),
         Text("idle",     style=COL_DIM),
         Text(hint,       style=COL_DIM),
+    )
+
+
+def _add_reasoning_continuation(tbl: Table, reasoning: str | None) -> None:
+    """Append a dimmed continuation row with the agent's own reasoning text.
+
+    Sub-agents expose their narrative via the ``reasoning`` field on their
+    output dataclass — PaceAgent fills it from a string template every lap
+    (always populated), TireAgent/RaceSituationAgent/RadioAgent/PitStrategyAgent
+    fill it from the last LLM message in the ReAct loop (populated only in
+    LLM mode; in no-llm mode these fall back to the stub wrapper). We show
+    it as a second row under each agent so the viewer can see *why* the
+    numbers came out that way, not just the numbers themselves.
+
+    Skips empty strings and the ``[stub — LLM unreachable]`` marker used
+    by no-llm mode so the panel stays clean when the ReAct chain could
+    not run. Everything else — including compound-not-available notes
+    from TireAgent — is rendered. Newlines are collapsed onto a single
+    line and the text is clipped to 180 chars so a verbose LLM reasoning
+    cannot blow up the panel height.
+    """
+    if not reasoning:
+        return
+    s = " ".join(str(reasoning).split())
+    if not s or s.startswith("[stub"):
+        return
+    if len(s) > 180:
+        s = s[:177] + "..."
+    tbl.add_row(
+        Text(""),
+        Text(""),
+        Text("↳", style=COL_DIM),
+        Text(s, style=f"italic {COL_DIM}"),
     )
 
 
@@ -1069,10 +1118,15 @@ def _make_inference_panel(
     # execution order: always-on block first, then conditional block.
     inf = _mini_grid()
     _add_pace_row(inf,      pace_out)
+    _add_reasoning_continuation(inf, getattr(pace_out,  "reasoning", None))
     _add_tire_row(inf,      tire_out)
+    _add_reasoning_continuation(inf, getattr(tire_out,  "reasoning", None))
     _add_situation_row(inf, sit_out)
+    _add_reasoning_continuation(inf, getattr(sit_out,   "reasoning", None))
     _add_radio_row(inf,     radio_out)
+    _add_reasoning_continuation(inf, getattr(radio_out, "reasoning", None))
     _add_pit_row(inf,       pit_out)
+    _add_reasoning_continuation(inf, getattr(pit_out,   "reasoning", None))
     _add_rag_row(inf,       rag_text)
 
     plan_table = _build_plan_table(strategy_rec)
@@ -1096,15 +1150,15 @@ def _make_inference_panel(
         items.append(rival_line)
 
     # Title stays minimal — just the lap number so the eye locks on to the
-    # per-lap boundary. The subtitle is gone: activation state is now
-    # encoded in each row's glyph/colour, so repeating the same info at
-    # the border would be redundant.
+    # per-lap boundary. Centred so it reads as a chapter header for the
+    # frame rather than a left-flush label, matching the visual weight of
+    # the six evenly-spaced inference rows below.
     title = f"[bold {COL_HEADLINE}]Lap {lap_num}[/bold {COL_HEADLINE}]" if lap_num else None
 
     return Panel(
         Group(*items),
         title          = title,
-        title_align    = "left",
+        title_align    = "center",
         border_style   = COL_DIM,
         padding        = (0, 1),
         expand         = False,
@@ -1219,7 +1273,12 @@ def _run_no_llm(
         stub=radio_stub,
     )
 
-    alerts = [a["type"] for a in (radio_out.alerts if radio_out else [])]
+    # N29 alerts are dicts with source+intent or source+event_type.
+    # _decide_agents_to_call reads a.get("intent", "") internally, so we pass
+    # the raw dict list — extracting strings would break the downstream contract
+    # (and the previous [a["type"] ...] comprehension crashed because no alert
+    # dict has a "type" key: radio alerts carry "intent", rcm alerts "event_type").
+    alerts = list(radio_out.alerts) if radio_out else []
     active = _decide_agents_to_call(
         tire_out.warning_level if tire_out else "OK",
         sit_out.sc_prob_3lap   if sit_out  else 0.0,
@@ -1302,67 +1361,120 @@ def run(args: argparse.Namespace) -> None:
         lap_start = int(parts[0])
         lap_end   = int(parts[1]) if len(parts) > 1 else int(parts[0])
 
-    drv_hex  = _drv_color(args.driver)
-    header_text = (
-        f"[bold cyan]F1 Strategy Manager[/bold cyan]\n"
-        f"[dim]GP[/dim] [white]{args.gp_name}[/white]  "
-        f"[dim]Driver[/dim] [bold {drv_hex}]{args.driver}[/bold {drv_hex}]  "
-        f"[dim]Team[/dim] [white]{args.team}[/white]\n"
-        f"[dim]Laps[/dim] [white]{lap_start}–{lap_end}[/white]  "
-        f"[dim]Mode[/dim] [white]{mode_label}[/white]  "
-        f"[dim]Total race laps[/dim] [white]{engine.total_laps}[/white]\n"
-        f"[dim]Orchestrator actions (5):[/dim] "
-        f"[green]STAY_OUT[/green] · [red]PIT_NOW[/red] · "
-        f"[yellow]UNDERCUT[/yellow] · [yellow]OVERCUT[/yellow] · "
-        f"[cyan]ALERT[/cyan]\n"
-        f"[dim]Columns:[/dim] [dim]Stay/Pit/Ucut/Ocut = MC scenario scores (highest wins; can be negative) · "
-        f"Conf = LLM confidence · panel below = sub-agent inference + execution plan[/dim]"
+    # ── Header panel — Table.grid layout ────────────────────────────────────
+    # Two-column key/value grid instead of a long text blob. Race info up
+    # top, action legend + column legend in a second block. Keeps all the
+    # same information but aligns labels, lets the driver/team colour pop,
+    # and stops long lines from word-wrapping across the terminal width.
+    drv_hex = _drv_color(args.driver)
+
+    info_grid = Table.grid(padding=(0, 2), expand=False)
+    info_grid.add_column(style=COL_DIM,   justify="right", min_width=7)
+    info_grid.add_column(justify="left",  min_width=22)
+    info_grid.add_column(style=COL_DIM,   justify="right", min_width=7)
+    info_grid.add_column(justify="left")
+
+    info_grid.add_row(
+        "GP",   f"[bold {COL_HEADLINE}]{args.gp_name}[/bold {COL_HEADLINE}]",
+        "Mode", f"[{COL_HEADLINE}]{mode_label}[/{COL_HEADLINE}]",
+    )
+    info_grid.add_row(
+        "Driver", f"[bold {drv_hex}]{args.driver}[/bold {drv_hex}]  [dim]{args.team}[/dim]",
+        "Laps",   f"[{COL_HEADLINE}]{lap_start}–{lap_end}[/{COL_HEADLINE}]  [dim]/ {engine.total_laps} total[/dim]",
     )
     if args.rival:
         riv_hex = _drv_color(args.rival)
-        header_text += (
-            f"\n[dim]Rival tracked[/dim]  [bold {riv_hex}]{args.rival}[/bold {riv_hex}]  "
-            f"[dim](position / compound / interval in table + detail line)[/dim]"
+        info_grid.add_row(
+            "Rival", f"[bold {riv_hex}]{args.rival}[/bold {riv_hex}]  [dim]tracked[/dim]",
+            "", "",
         )
-    console.print(Panel(header_text, expand=False, border_style="cyan"))
+
+    legend_grid = Table.grid(padding=(0, 2), expand=False)
+    legend_grid.add_column(style=COL_DIM, justify="right", min_width=7)
+    legend_grid.add_column(justify="left")
+    legend_grid.add_row(
+        "Actions",
+        "[green]STAY_OUT[/green] · [red]PIT_NOW[/red] · "
+        "[yellow]UNDERCUT[/yellow] · [yellow]OVERCUT[/yellow] · "
+        "[cyan]ALERT[/cyan]",
+    )
+    legend_grid.add_row(
+        "Columns",
+        "[dim]Stay/Pit/Ucut/Ocut = MC scenario scores  ·  "
+        "Conf = LLM confidence  ·  panel below = per-agent inference + plan[/dim]",
+    )
+
+    header_body = Group(info_grid, Text(""), legend_grid)
+
+    console.print(Panel(
+        header_body,
+        title        = "[bold cyan]F1 Strategy Manager[/bold cyan]",
+        title_align  = "center",
+        border_style = "cyan",
+        padding      = (1, 2),
+        expand       = False,
+    ))
     console.print()
 
     has_rival = bool(args.rival)
-    table = _make_table(has_rival)
     errors:        list[str]   = []
     lap_times_s:   list[float] = []   # elapsed wall-clock time per lap
     prev_lap_time: float       = 0.0
-    _detail: list = [None]     # mutable slot for the last-lap sub-agent detail Text
+    _detail: list = [None]     # mutable slot for the last-lap sub-agent detail Group
+
+    # ── Run-level counters — used by the final "Run complete" summary ────────
+    # Kept as plain locals (no class) because they only live for one run().
+    # Every lap that enters the success branch increments action_counts and
+    # the agent-activation counters; DNF and ERROR laps only bump their own
+    # bucket. The summary block below reads these to produce a race digest
+    # instead of the bare "All N laps OK" line from v1.
+    action_counts:     dict[str, int]  = {}
+    pit_stops_seen:    int             = 0
+    last_compound:     Optional[str]   = None
+    best_lap_s:        float           = 0.0
+    worst_lap_s:       float           = 0.0
+    pit_agent_calls:   int             = 0
+    rag_agent_calls:   int             = 0
+    radio_alert_total: int             = 0
+
+    # Print the history header ONCE, outside the Live region. Per-lap rows
+    # below emit headerless sibling tables via live.console.print so they
+    # scroll naturally above the fixed-height inference panel that lives
+    # inside Live. See _make_table docstring for the full rationale.
+    console.print(_make_table(has_rival, show_header=True))
+    console.print(Rule(style=COL_DIM))
 
     _spinner = Spinner("dots", style="dim cyan")
 
-    def _render(status: str = "") -> Group:
-        items: list = [table]
+    def _live_content(status: str = "") -> Group:
+        """Bottom Live region renderable only — must be fixed height per frame.
+
+        Contains the last-lap inference panel plus an optional spinner row
+        showing which lap is currently being processed. Never contains the
+        history table — that lives above Live as scrollback.
+        """
+        items: list = []
         if _detail[0] is not None:
             items.append(_detail[0])
         if status:
             _spinner.text = Text(f"  {status}", style="dim cyan")
             items.append(_spinner)
-        else:
+        if not items:
             items.append(Text(""))
         return Group(*items)
 
     sim_start = time.monotonic()
 
-    # Live render config:
-    # - refresh_per_second=4 — slower than 10 Hz keeps the cursor-line counter
-    #   in sync on narrow terminals. 10 Hz causes ghost frames when the panel
-    #   below the table changes height mid-refresh.
-    # - vertical_overflow="visible" — if the combined Group taller than the
-    #   viewport, render the overflow below instead of silently cropping it.
-    # - auto_refresh=False — we call live.refresh() manually after each row
-    #   so the table and panel always update together, never half-drawn.
+    # Live render config: wraps ONLY the fixed-height inference panel at the
+    # bottom of the screen. History rows scroll above via live.console.print.
+    # This sidesteps the repaint-from-top bug that happened when the growing
+    # history table was inside Live and eventually exceeded terminal height
+    # (the terminal cursor cannot rewind above the topmost visible line).
     with Live(
-        _render(),
-        console           = console,
+        _live_content(),
+        console            = console,
         refresh_per_second = 4,
-        vertical_overflow  = "visible",
-        auto_refresh       = False,
+        auto_refresh       = True,
     ) as live:
         for lap_state in engine.replay():
             lap_num = lap_state["lap_number"]
@@ -1374,12 +1486,15 @@ def run(args: argparse.Namespace) -> None:
 
             driver_st = lap_state.get("driver", {})
             if not driver_st:
-                dnf_row = [str(lap_num), "—", "—", "—", "—", "—"]
+                dnf_row: list[Any] = [str(lap_num), "—", "—", "—", "—", "—"]
                 if has_rival:
                     dnf_row.append("—")
                 dnf_row.extend([Text("[DNF]", style="dim"), "", "", "", "", "", ""])
-                table.add_row(*dnf_row)
-                live.update(_render(), refresh=True)
+                dnf_tbl = _make_table(has_rival, show_header=False)
+                dnf_tbl.add_row(*dnf_row)
+                live.console.print(dnf_tbl)
+                live.console.print()  # visual breathing room between rows
+                action_counts["DNF"] = action_counts.get("DNF", 0) + 1
                 continue
 
             compound  = driver_st.get("compound", "?")
@@ -1411,7 +1526,10 @@ def run(args: argparse.Namespace) -> None:
             cmpd_text = _compound_text(compound, args.gp_name, args.year)
 
             lap_t0 = time.monotonic()
-            live.update(_render(f"lap {lap_num} / {lap_end}  —  running agents…"), refresh=True)
+            live.update(
+                _live_content(f"lap {lap_num} / {lap_end}  —  running agents…"),
+                refresh=True,
+            )
 
             try:
                 race_state = _build_race_state(lap_state, args.driver, prev_lap_time)
@@ -1529,7 +1647,28 @@ def run(args: argparse.Namespace) -> None:
                     f"{ocut:.3f}",
                     reasoning[:200],
                 ])
-                table.add_row(*row)
+                row_tbl = _make_table(has_rival, show_header=False)
+                row_tbl.add_row(*row)
+                live.console.print(row_tbl)
+                live.console.print()  # visual breathing room between rows
+
+                # Summary counters — cheap, per-lap increments so the final
+                # "Run complete" panel can show action mix, compound stints
+                # and conditional-agent usage without scanning the history.
+                action_counts[action] = action_counts.get(action, 0) + 1
+                if lap_time:
+                    best_lap_s  = min(best_lap_s, lap_time)  if best_lap_s  else lap_time
+                    worst_lap_s = max(worst_lap_s, lap_time) if worst_lap_s else lap_time
+                if last_compound is not None and compound != last_compound:
+                    pit_stops_seen += 1
+                last_compound = compound
+                if result.get("_pit_out")  is not None: pit_agent_calls += 1
+                if result.get("_rag_text"):             rag_agent_calls += 1
+                _radio_out_local = result.get("_radio_out")
+                if _radio_out_local is not None:
+                    radio_alert_total += len(
+                        getattr(_radio_out_local, "alerts", []) or []
+                    )
 
             except Exception as exc:
                 elapsed = time.monotonic() - lap_t0
@@ -1545,30 +1684,90 @@ def run(args: argparse.Namespace) -> None:
                     Text("[ERROR]", style="bold red"), "", "", "", "", "",
                     str(exc)[:60],
                 ])
-                table.add_row(*err_row)
+                err_tbl = _make_table(has_rival, show_header=False)
+                err_tbl.add_row(*err_row)
+                live.console.print(err_tbl)
+                live.console.print()  # visual breathing room between rows
+                action_counts["ERROR"] = action_counts.get("ERROR", 0) + 1
                 if args.verbose:
                     console.print_exception()
 
-            live.update(_render(), refresh=True)
+            live.update(_live_content(), refresh=True)
 
     # ── Summary panel ─────────────────────────────────────────────────────────
+    # Aggregates the per-lap counters into a four-block race digest so the
+    # user sees WHAT the orchestrator decided (action mix), HOW the tyre
+    # stints played out (pit stops + final compound), WHICH conditional
+    # agents actually fired, and the headline timing numbers — all without
+    # scrolling back through the history.
     total_s   = time.monotonic() - sim_start
     avg_s     = sum(lap_times_s) / len(lap_times_s) if lap_times_s else 0.0
     n_laps    = len(lap_times_s)
     err_count = len(errors)
+    ok        = err_count == 0
 
     status_line = (
         f"[green]All {n_laps} lap(s) OK[/green]"
-        if not errors else
-        f"[yellow]{n_laps} lap(s), {err_count} error(s)[/yellow]"
+        if ok else
+        f"[yellow]{n_laps} lap(s) · {err_count} error(s)[/yellow]"
     )
-    summary = (
-        f"{status_line}\n"
-        f"[dim]Total[/dim] [white]{total_s:.1f}s[/white]  "
-        f"[dim]Avg/lap[/dim] [white]{avg_s:.1f}s[/white]"
+
+    # ── Block 1 — Decision mix ────────────────────────────────────────────
+    _action_colours = {
+        "STAY_OUT": "green", "PIT_NOW": "red",
+        "UNDERCUT": "yellow", "OVERCUT": "yellow",
+        "ALERT":    "cyan",   "DNF":     "grey50",
+        "ERROR":    "red",
+    }
+    action_parts: list[str] = []
+    for act in ("STAY_OUT", "PIT_NOW", "UNDERCUT", "OVERCUT", "ALERT", "DNF", "ERROR"):
+        n = action_counts.get(act, 0)
+        if n:
+            col = _action_colours.get(act, "white")
+            action_parts.append(f"[{col}]{act}[/{col}]·{n}")
+    action_mix_line = "  ".join(action_parts) if action_parts else "[dim]none[/dim]"
+
+    # ── Block 2 — Agents fired (conditional Layer 1b) ─────────────────────
+    agents_line = (
+        f"[dim]pit[/dim] [white]{pit_agent_calls}[/white]  "
+        f"[dim]rag[/dim] [white]{rag_agent_calls}[/white]  "
+        f"[dim]radio alerts[/dim] [white]{radio_alert_total}[/white]"
     )
+
+    # ── Block 3 — Stint / compound ────────────────────────────────────────
+    compound_line = (
+        f"[dim]final[/dim] [{COL_HEADLINE}]{last_compound or '—'}[/{COL_HEADLINE}]  "
+        f"[dim]compound switches[/dim] [white]{pit_stops_seen}[/white]"
+    )
+
+    # ── Block 4 — Timing ──────────────────────────────────────────────────
+    best_str  = f"{best_lap_s:.3f}s"  if best_lap_s  else "—"
+    worst_str = f"{worst_lap_s:.3f}s" if worst_lap_s else "—"
+    timing_line = (
+        f"[dim]wallclock[/dim] [white]{total_s:.1f}s[/white]  "
+        f"[dim]avg/lap[/dim] [white]{avg_s:.1f}s[/white]  "
+        f"[dim]best lap[/dim] [green]{best_str}[/green]  "
+        f"[dim]worst lap[/dim] [yellow]{worst_str}[/yellow]"
+    )
+
+    summary_grid = Table.grid(padding=(0, 2), expand=False)
+    summary_grid.add_column(style=COL_DIM, justify="right", min_width=10)
+    summary_grid.add_column(justify="left")
+    summary_grid.add_row("Status",   status_line)
+    summary_grid.add_row("Actions",  action_mix_line)
+    summary_grid.add_row("Agents",   agents_line)
+    summary_grid.add_row("Stint",    compound_line)
+    summary_grid.add_row("Timing",   timing_line)
+
     console.print()
-    console.print(Panel(summary, title="[bold]Run complete[/bold]", expand=False, border_style="green" if not errors else "yellow"))
+    console.print(Panel(
+        summary_grid,
+        title        = "[bold]Run complete[/bold]",
+        title_align  = "center",
+        border_style = "green" if ok else "yellow",
+        padding      = (1, 2),
+        expand       = False,
+    ))
 
     if errors:
         console.print()
