@@ -47,10 +47,7 @@ from src.rag.retriever import (  # noqa: E402
 try:
     from langchain_core.messages import HumanMessage
     from langchain_openai import ChatOpenAI
-    try:
-        from langchain.agents import create_react_agent  # LangGraph ≥ 1.0
-    except ImportError:
-        from langgraph.prebuilt import create_react_agent  # legacy
+    from langchain.agents import create_agent
     _LC_OK = True
 except ImportError:
     _LC_OK = False
@@ -158,10 +155,10 @@ def get_rag_react_agent():
                 temperature=0,
                 model_kwargs={"parallel_tool_calls": False},
             )
-        _rag_agent = create_react_agent(
+        _rag_agent = create_agent(
             model=llm,
             tools=[query_rag_tool],
-            prompt=_SYSTEM_PROMPT,
+            system_prompt=_SYSTEM_PROMPT,
         )
     return _rag_agent
 
