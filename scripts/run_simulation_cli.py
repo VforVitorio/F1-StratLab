@@ -639,6 +639,74 @@ def _idle_row(tbl: Table, label: str, hint: str) -> None:
     )
 
 
+# ── Reasoning syntax highlighter ─────────────────────────────────────────────
+#
+# A strategist scanning a ReAct narrative at glance-speed wants numbers,
+# percentages and quantile names to POP out of the prose. We don't try to
+# parse the reasoning semantically — we use a small set of regex patterns to
+# paint known token shapes with their semantic colour. Everything else stays
+# in the dim italic base style so the numeric tokens visually lead the eye.
+#
+# Patterns are applied in order via a single Text object, using Text.highlight_regex
+# which is idempotent per match span (later patterns do not re-override earlier
+# ones). The base style is set at construction time.
+
+_REASONING_PATTERNS: list[tuple[str, str]] = [
+    # Action tokens — bold coloured so the recommended call jumps out
+    (r"\bSTAY_OUT\b",               "bold green"),
+    (r"\bPIT_NOW\b",                "bold red"),
+    (r"\bUNDERCUT\b",               "bold yellow"),
+    (r"\bOVERCUT\b",                "bold yellow"),
+    (r"\bALERT\b",                  "bold cyan"),
+    # Quantile tokens from MC-Dropout tire model and HistGBT pit model
+    (r"\bP(?:05|10|50|90|95)\b",    "bold #60a5fa"),    # blue
+    # Regulation article references ("Article 30.5", "Art. 32.4(b)")
+    (r"\bArt(?:icle|\.)\s*\d+(?:\.\d+)?(?:\([a-z]\))?", "bold #fbbf24"),  # amber
+    # Lap references ("lap 22", "laps 15-20")
+    (r"\blap[s]?\s+\d+(?:\s*[-–]\s*\d+)?", "#f472b6"),  # pink
+    # Percentages — always interesting (probabilities, deltas)
+    (r"[-+]?\d+(?:\.\d+)?\s*%",     "bold #a78bfa"),    # violet
+    # Signed time deltas ("+0.42s", "-1.28s")
+    (r"[-+]\d+(?:\.\d+)?\s*s(?:/lap)?\b",  "bold #fb923c"),  # orange
+    # Plain positive durations / lap-time numbers (only 2+ digit integers or
+    # decimals with a trailing 's' to avoid matching every number in prose)
+    (r"\b\d+(?:\.\d+)?\s*s(?:/lap)?\b",    "#f97316"),        # orange-dim
+]
+
+
+def _style_reasoning(text: str, base_style: str = "") -> Text:
+    """Return a Rich Text with semantic colours applied to notable tokens.
+
+    Strategy-focused highlighter — it does NOT parse the sentence structure,
+    it just paints known token shapes with a colour that matches their role
+    in the decision chain. The goal is "at a glance, which lap? which action?
+    which probability?" without reading the whole paragraph.
+
+    Highlighted token families:
+    * actions (STAY_OUT / PIT_NOW / UNDERCUT / OVERCUT / ALERT) — bold coloured
+    * quantiles (P05/P10/P50/P90/P95) — bold blue
+    * regulation articles (Article 30.5, Art. 32.4(b)) — bold amber
+    * lap references (lap 22, laps 15-20) — pink
+    * percentages — bold violet
+    * signed time deltas (+0.42s, -1.28s/lap) — bold orange
+    * plain durations with trailing s (3.25s, 24.8s/lap) — orange-dim
+
+    ``base_style`` lets the caller pick the style for un-highlighted prose.
+    The inference-panel continuation rows use ``"italic #6b7280"`` so the
+    reasoning looks visually quieter than the headline row above it; the
+    history-table Reasoning column uses ``""`` so it blends with the rest
+    of the columns (no forced italic).
+    """
+    out = Text(text, style=base_style)
+    for pattern, style in _REASONING_PATTERNS:
+        try:
+            out.highlight_regex(pattern, style)
+        except Exception:
+            # Defensive — a broken regex must never crash the whole panel.
+            pass
+    return out
+
+
 def _add_reasoning_continuation(tbl: Table, reasoning: str | None) -> None:
     """Append a dimmed continuation row with the agent's own reasoning text.
 
@@ -649,6 +717,12 @@ def _add_reasoning_continuation(tbl: Table, reasoning: str | None) -> None:
     LLM mode; in no-llm mode these fall back to the stub wrapper). We show
     it as a second row under each agent so the viewer can see *why* the
     numbers came out that way, not just the numbers themselves.
+
+    The continuation text is passed through ``_style_reasoning`` so action
+    tokens, P-quantiles, lap references, percentages and signed time deltas
+    are highlighted — that is the difference between staring at a wall of
+    text and spotting "PIT_NOW on lap 22 ... cliff P50 lap 24 ... +0.42s/lap"
+    at a glance.
 
     Skips empty strings and the ``[stub — LLM unreachable]`` marker used
     by no-llm mode so the panel stays clean when the ReAct chain could
@@ -668,7 +742,7 @@ def _add_reasoning_continuation(tbl: Table, reasoning: str | None) -> None:
         Text(""),
         Text(""),
         Text("↳", style=COL_DIM),
-        Text(s, style=f"italic {COL_DIM}"),
+        _style_reasoning(s, base_style=f"italic {COL_DIM}"),
     )
 
 
@@ -1431,6 +1505,9 @@ def run(args: argparse.Namespace) -> None:
     action_counts:     dict[str, int]  = {}
     pit_stops_seen:    int             = 0
     last_compound:     Optional[str]   = None
+    last_tyre_life:    int             = 0
+    start_position:    Optional[int]   = None
+    last_position:     Optional[int]   = None
     best_lap_s:        float           = 0.0
     worst_lap_s:       float           = 0.0
     pit_agent_calls:   int             = 0
@@ -1645,7 +1722,7 @@ def run(args: argparse.Namespace) -> None:
                     f"{pit:.3f}",
                     f"{ucut:.3f}",
                     f"{ocut:.3f}",
-                    reasoning[:200],
+                    _style_reasoning(reasoning[:200]),
                 ])
                 row_tbl = _make_table(has_rival, show_header=False)
                 row_tbl.add_row(*row)
@@ -1655,16 +1732,44 @@ def run(args: argparse.Namespace) -> None:
                 # Summary counters — cheap, per-lap increments so the final
                 # "Run complete" panel can show action mix, compound stints
                 # and conditional-agent usage without scanning the history.
+                #
+                # ``result`` has two shapes: a plain dict in no-llm mode and
+                # a StrategyRecommendation pydantic object in LLM mode. The
+                # previous version called ``.get()`` unconditionally, which
+                # crashed the LLM path with ``'StrategyRecommendation' object
+                # has no attribute 'get'`` and duplicated every lap as an
+                # [ERROR] row. Branch on isinstance so each mode reads its
+                # own native fields — in LLM mode the pit/rag/radio telemetry
+                # comes from the probe variables set inside the else branch
+                # above, not from result.
                 action_counts[action] = action_counts.get(action, 0) + 1
                 if lap_time:
                     best_lap_s  = min(best_lap_s, lap_time)  if best_lap_s  else lap_time
                     worst_lap_s = max(worst_lap_s, lap_time) if worst_lap_s else lap_time
+                # Track first/last position so the summary can show P → P (+Δ)
+                if start_position is None:
+                    start_position = position
+                last_position = position
+                # Track tyre state at the very last lap for the summary panel
+                last_tyre_life = tyre_life
                 if last_compound is not None and compound != last_compound:
                     pit_stops_seen += 1
                 last_compound = compound
-                if result.get("_pit_out")  is not None: pit_agent_calls += 1
-                if result.get("_rag_text"):             rag_agent_calls += 1
-                _radio_out_local = result.get("_radio_out")
+
+                if isinstance(result, dict):
+                    _pit_out_local   = result.get("_pit_out")
+                    _rag_text_local  = result.get("_rag_text", "")
+                    _radio_out_local = result.get("_radio_out")
+                else:
+                    # LLM mode — orchestrator runs pit/rag internally. Infer
+                    # rag from regulation_context; pit firings are counted
+                    # implicitly via the PIT_NOW action bucket in action_counts.
+                    _pit_out_local   = None
+                    _rag_text_local  = getattr(result, "regulation_context", "") or ""
+                    _radio_out_local = probe_radio
+
+                if _pit_out_local  is not None: pit_agent_calls += 1
+                if _rag_text_local:             rag_agent_calls += 1
                 if _radio_out_local is not None:
                     radio_alert_total += len(
                         getattr(_radio_out_local, "alerts", []) or []
@@ -1734,13 +1839,35 @@ def run(args: argparse.Namespace) -> None:
         f"[dim]radio alerts[/dim] [white]{radio_alert_total}[/white]"
     )
 
-    # ── Block 3 — Stint / compound ────────────────────────────────────────
+    # ── Block 3 — Position P→P (±Δ) ───────────────────────────────────────
+    # Shows the racing outcome first: a strategist opens any summary to see
+    # "did we gain or lose places?" before anything else. Green when we
+    # gained positions, red when we lost, dim when we held station.
+    if start_position is not None and last_position is not None:
+        delta = start_position - last_position   # + means gained places
+        if delta > 0:
+            delta_fmt = f"[green]+{delta}[/green]"
+        elif delta < 0:
+            delta_fmt = f"[red]{delta}[/red]"
+        else:
+            delta_fmt = f"[dim]±0[/dim]"
+        position_line = (
+            f"[{COL_HEADLINE}]P{start_position}[/{COL_HEADLINE}] "
+            f"[dim]→[/dim] "
+            f"[{COL_HEADLINE}]P{last_position}[/{COL_HEADLINE}]  "
+            f"{delta_fmt}"
+        )
+    else:
+        position_line = "[dim]—[/dim]"
+
+    # ── Block 4 — Stint / compound + tyre age at the final lap ────────────
     compound_line = (
-        f"[dim]final[/dim] [{COL_HEADLINE}]{last_compound or '—'}[/{COL_HEADLINE}]  "
+        f"[dim]final[/dim] [{COL_HEADLINE}]{last_compound or '—'}[/{COL_HEADLINE}]"
+        f"[dim]/{last_tyre_life}[/dim]  "
         f"[dim]compound switches[/dim] [white]{pit_stops_seen}[/white]"
     )
 
-    # ── Block 4 — Timing ──────────────────────────────────────────────────
+    # ── Block 5 — Timing ──────────────────────────────────────────────────
     best_str  = f"{best_lap_s:.3f}s"  if best_lap_s  else "—"
     worst_str = f"{worst_lap_s:.3f}s" if worst_lap_s else "—"
     timing_line = (
@@ -1753,11 +1880,12 @@ def run(args: argparse.Namespace) -> None:
     summary_grid = Table.grid(padding=(0, 2), expand=False)
     summary_grid.add_column(style=COL_DIM, justify="right", min_width=10)
     summary_grid.add_column(justify="left")
-    summary_grid.add_row("Status",   status_line)
-    summary_grid.add_row("Actions",  action_mix_line)
-    summary_grid.add_row("Agents",   agents_line)
-    summary_grid.add_row("Stint",    compound_line)
-    summary_grid.add_row("Timing",   timing_line)
+    summary_grid.add_row("Status",    status_line)
+    summary_grid.add_row("Positions", position_line)
+    summary_grid.add_row("Actions",   action_mix_line)
+    summary_grid.add_row("Agents",    agents_line)
+    summary_grid.add_row("Stint",     compound_line)
+    summary_grid.add_row("Timing",    timing_line)
 
     console.print()
     console.print(Panel(
