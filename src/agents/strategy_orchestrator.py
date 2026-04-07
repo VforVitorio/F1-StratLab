@@ -44,9 +44,11 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
-# ── Repo root ──────────────────────────────────────────────────────────────────
+# ── Repo root (with root-stop guard for uv tool install) ─────────────────────
 _REPO_ROOT = Path(__file__).resolve()
 while not (_REPO_ROOT / ".git").exists():
+    if _REPO_ROOT.parent == _REPO_ROOT:
+        break
     _REPO_ROOT = _REPO_ROOT.parent
 
 if str(_REPO_ROOT) not in sys.path:

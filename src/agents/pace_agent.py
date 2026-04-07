@@ -29,13 +29,24 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 
-# ── Repo root ─────────────────────────────────────────────────────────────────
+# ── Repo root (with root-stop guard for uv tool install) ─────────────────────
 _REPO_ROOT = Path(__file__).resolve().parent
 while not (_REPO_ROOT / '.git').exists():
+    if _REPO_ROOT.parent == _REPO_ROOT:
+        break
     _REPO_ROOT = _REPO_ROOT.parent
 
-_MODELS_DIR = _REPO_ROOT / 'data' / 'models' / 'lap_time'
-_PROCESSED  = _REPO_ROOT / 'data' / 'processed'
+# Route model + processed-data paths through the user cache helper so that
+# `uv tool install` users land on ``~/.f1-strat/data/`` automatically; dev
+# checkouts with a repo-relative ``data/`` short-circuit the helper.
+try:
+    from src.f1_strat_manager.data_cache import get_data_root as _get_data_root
+    _DATA_ROOT = _get_data_root()
+except Exception:
+    _DATA_ROOT = _REPO_ROOT / 'data'
+
+_MODELS_DIR = _DATA_ROOT / 'models' / 'lap_time'
+_PROCESSED  = _DATA_ROOT / 'processed'
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 N_BOOTSTRAP: int   = 200

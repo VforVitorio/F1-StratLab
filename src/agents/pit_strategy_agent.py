@@ -24,17 +24,27 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-# ── Repo root ─────────────────────────────────────────────────────────────────
+# ── Repo root (with root-stop guard for uv tool install) ─────────────────────
 _REPO_ROOT = Path(__file__).resolve().parent
 while not (_REPO_ROOT / '.git').exists():
+    if _REPO_ROOT.parent == _REPO_ROOT:
+        break
     _REPO_ROOT = _REPO_ROOT.parent
 
-_MODELS    = _REPO_ROOT / 'data' / 'models'
-_PROCESSED = _REPO_ROOT / 'data' / 'processed'
-_AGENTS    = _REPO_ROOT / 'data' / 'models' / 'agents'
+# Route every artefact path through the cache helper so the agent works
+# transparently in both editable-dev mode and the ``uv tool install`` flow.
+try:
+    from src.f1_strat_manager.data_cache import get_data_root as _get_data_root
+    _DATA_ROOT = _get_data_root()
+except Exception:
+    _DATA_ROOT = _REPO_ROOT / 'data'
+
+_MODELS    = _DATA_ROOT / 'models'
+_PROCESSED = _DATA_ROOT / 'processed'
+_AGENTS    = _DATA_ROOT / 'models' / 'agents'
 
 # ── Compound allocation (SOFT/MEDIUM/HARD → Cx per GP/year) ───────────────────
-_compounds_path = _REPO_ROOT / 'data' / 'tire_compounds_by_race.json'
+_compounds_path = _DATA_ROOT / 'tire_compounds_by_race.json'
 TIRE_COMPOUNDS: dict = (
     json.loads(_compounds_path.read_text(encoding='utf-8'))
     if _compounds_path.exists() else {}

@@ -61,13 +61,24 @@ except ImportError:
         return fn
 
 
-# ── Repo root ──────────────────────────────────────────────────────────────────
+# ── Repo root (with root-stop guard for uv tool install) ─────────────────────
 _REPO_ROOT = Path(__file__).resolve()
 while not (_REPO_ROOT / ".git").exists():
+    if _REPO_ROOT.parent == _REPO_ROOT:
+        break
     _REPO_ROOT = _REPO_ROOT.parent
 
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+
+# Resolve the data root (models + processed parquets) through the cache
+# helper when importable; fall back to the repo-relative layout for bare
+# dev checkouts where the helper is not yet on the path.
+try:
+    from src.f1_strat_manager.data_cache import get_data_root as _get_data_root
+    _DATA_ROOT = _get_data_root()
+except Exception:
+    _DATA_ROOT = _REPO_ROOT / "data"
 
 # ── Module-level globals (populated by entry points) ──────────────────────────
 LAPS:         pd.DataFrame = pd.DataFrame()
@@ -335,7 +346,7 @@ class RadioAgentCFG:
     # ------------------------------------------------------------------
 
     def __post_init__(self):
-        nlp_dir = _REPO_ROOT / "data" / "models" / "nlp"
+        nlp_dir = _DATA_ROOT / "models" / "nlp"
 
         s_tok,  s_model                = self._load_sentiment_model(nlp_dir, self.device)
         i_model, _intent_names         = self._load_intent_model(nlp_dir)
@@ -856,7 +867,7 @@ def _save_nlp_json(lap: int, radio_results: list, rcm_results: list) -> Path:
 
     Returns the Path of the saved file.
     """
-    out_dir   = _REPO_ROOT / "data" / "processed" / "radio_outputs"
+    out_dir   = _DATA_ROOT / "processed" / "radio_outputs"
     out_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     path      = out_dir / f"radio_nlp_lap{lap:03d}_{timestamp}.json"

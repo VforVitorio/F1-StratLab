@@ -250,6 +250,98 @@ two console scripts as `uv run f1-strat` / `uv run f1-sim`.
 > to match your driver — e.g. `cu121`, `cu118`, `rocm6.2`. Then re-run
 > `uv sync`.
 
+#### Global install without cloning the repo (uv tool)
+
+If you only want to *use* the CLI and do not plan to touch the source,
+`uv tool install` pulls the project straight from GitHub and exposes
+`f1-strat` / `f1-sim` as global commands — no clone, no venv to activate,
+no editable-dev workflow. This is the closest thing the Python ecosystem
+has to `npx` or `pipx run`, and it resolves the full dependency graph
+(including the cu128 torch wheel on Windows / Linux) automatically from
+`pyproject.toml`:
+
+```bash
+# 0. Once per machine, if uv is not already installed
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"   # Windows
+curl -LsSf https://astral.sh/uv/install.sh | sh              # Linux / macOS
+
+# 1. Install the CLI globally as an isolated tool
+uv tool install git+https://github.com/VforVitorio/F1_Strat_Manager.git
+
+# 2. Run from anywhere — f1-strat and f1-sim are on your PATH
+f1-strat
+```
+
+`uv tool install` creates an isolated venv behind the scenes, reads
+`pyproject.toml`, resolves torch cu128 via `[tool.uv.sources]` on
+Win/Linux (CPU torch on macOS), and drops the two console scripts into
+the `uv` tool bin (`~/.local/bin` on Unix, `%USERPROFILE%\.local\bin` on
+Windows — add it to PATH if `uv tool install` prompts you to).
+
+> **Trade-off:** this flow installs the **code** but not the **race data
+> or model weights** (~15 GB). Those live on the HuggingFace Dataset
+> `VforVitorio/f1-strategy-dataset` and are fetched automatically on
+> first run — see "First-run data download" below.
+
+#### First-run data download (~15 GB)
+
+The race parquets, trained models, and NLP weights that the multi-agent
+pipeline needs do **not** ship inside the Python wheel — they live on the
+HuggingFace Dataset
+[`VforVitorio/f1-strategy-dataset`](https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset).
+The first time you run `f1-strat` or `f1-sim` on a machine without a
+populated cache, the CLI downloads everything it needs with a Rich
+progress bar and then boots straight into the normal flow:
+
+```
+$ f1-strat
+F1 Strategy Manager — first-run setup
+─────────────────────────────────────
+  Dataset  VforVitorio/f1-strategy-dataset
+  Cache    C:\Users\<you>\.f1-strat\data
+  Note     Downloads ~7-8 GB on first run — models, configs, one sentinel race
+  Override $F1_STRAT_DATA_ROOT / $F1_STRAT_OFFLINE=1 / $F1_STRAT_NO_FIRST_RUN=1
+
+Downloading model weights ████████████░░░░  78%  (6.4/8.1 GB)
+[OK] Setup complete. Cached under C:\Users\<you>\.f1-strat
+```
+
+After the first run the cache is warm and every subsequent launch is
+instant — the CLI checks for the critical artefacts and skips the
+download when they already exist on disk.
+
+**Where the cache lives:**
+
+| Scenario | Cache path |
+| --- | --- |
+| `uv tool install git+…` (global)        | `~/.f1-strat/data/` (Unix) / `%USERPROFILE%\.f1-strat\data\` (Windows) |
+| `uv sync` / `pip install -e .` (clone)  | `<repo>/data/` — reuses the existing tree, no download triggered |
+| Explicit override                       | Whatever `$F1_STRAT_DATA_ROOT` points to |
+
+**Environment variables**
+
+| Variable | Effect |
+| --- | --- |
+| `F1_STRAT_DATA_ROOT` | Absolute path to use as the cache root. Useful for putting the ~15 GB on a fast NVMe volume or a shared drive. |
+| `F1_STRAT_OFFLINE=1` | Disables every HuggingFace Hub call. The CLI assumes the cache is already populated and fails cleanly if it isn't. |
+| `F1_STRAT_NO_FIRST_RUN=1` | Skips the first-run bootstrap entirely. Intended for CI runs where the cache is mounted from a volume or reconstructed in a prior step. |
+
+**Manual pre-population (optional)**
+
+If you prefer to download the dataset with `git` instead of letting the
+CLI stream it, you can clone the HF dataset directly into the cache
+directory and the first-run check will find it:
+
+```bash
+# Windows PowerShell example
+git lfs install
+git clone https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset ^
+          "$env:USERPROFILE\.f1-strat"
+```
+
+The directory layout must match `data/raw/<year>/<gp>/`, `data/processed/`,
+and `models/<family>/` — exactly what the HF dataset publishes.
+
 #### Fallback install — pip + venv
 
 If you cannot install `uv` (corporate restrictions, etc.), the legacy

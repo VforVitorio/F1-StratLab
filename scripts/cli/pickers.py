@@ -179,11 +179,31 @@ def _arrow_pick(title: str, options: list[str], default: int = 0) -> int:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def discover_races(repo_root: Path, year: int = 2025) -> list[str]:
-    """Return sorted list of race directories found in data/raw/<year>/."""
-    raw_dir = repo_root / "data" / "raw" / str(year)
+    """Return sorted list of race directories found under the data root.
+
+    Historically this joined ``repo_root / "data" / "raw" / <year>`` because
+    the CLI only ran from a git checkout. Now that ``f1-strat`` can be
+    installed globally via ``uv tool install`` the data directory may live
+    at ``~/.f1-strat/data/`` instead, so we route through
+    :func:`src.f1_strat_manager.data_cache.get_data_root` when available
+    and fall back to the historical path for dev checkouts without the
+    package (e.g. running a raw ``scripts/f1_cli.py`` before ``uv sync``).
+    """
+    try:
+        from src.f1_strat_manager.data_cache import get_data_root
+        raw_dir = get_data_root() / "raw" / str(year)
+    except ImportError:
+        raw_dir = repo_root / "data" / "raw" / str(year)
+
     if not raw_dir.exists():
         return []
-    return sorted(d.name for d in raw_dir.iterdir() if d.is_dir())
+    # Only return folders that actually contain race files — empty
+    # placeholders from a partial download would otherwise crash the
+    # downstream RaceReplayEngine.
+    return sorted(
+        d.name for d in raw_dir.iterdir()
+        if d.is_dir() and any(d.iterdir())
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -194,13 +214,23 @@ _DRIVER_TEAM_CACHE: dict[str, str] | None = None
 
 
 def _load_driver_team_map(repo_root: Path) -> dict[str, str]:
-    """Return {driver_code: team} built from laps_featured_2025.parquet (cached)."""
+    """Return {driver_code: team} built from laps_featured_2025.parquet (cached).
+
+    Resolves the parquet path through ``get_data_root`` when the
+    f1_strat_manager package is importable so that ``uv tool install``
+    cached layouts work; otherwise falls back to the repo-relative path
+    for bare dev checkouts.
+    """
     global _DRIVER_TEAM_CACHE
     if _DRIVER_TEAM_CACHE is not None:
         return _DRIVER_TEAM_CACHE
     try:
         import pandas as pd
-        parquet = repo_root / "data" / "processed" / "laps_featured_2025.parquet"
+        try:
+            from src.f1_strat_manager.data_cache import get_data_root
+            parquet = get_data_root() / "processed" / "laps_featured_2025.parquet"
+        except ImportError:
+            parquet = repo_root / "data" / "processed" / "laps_featured_2025.parquet"
         if parquet.exists():
             df = pd.read_parquet(parquet, columns=["Driver", "Team"])
             _DRIVER_TEAM_CACHE = (

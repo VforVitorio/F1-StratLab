@@ -57,8 +57,19 @@ class RagConfig:
 
     @property
     def rag_dir(self) -> Path:
-        """Root directory for all RAG artefacts under ``data/rag/``."""
-        return self._repo_root / "data" / "rag"
+        """Root directory for all RAG artefacts under ``data/rag/``.
+
+        Routes through :func:`src.f1_strat_manager.data_cache.get_data_root`
+        when the helper is importable so the Qdrant collection is found under
+        ``~/.f1-strat/data/rag/`` in the ``uv tool install`` flow; otherwise
+        falls back to the repo-relative path for dev checkouts that do not
+        have the helper on ``sys.path`` yet.
+        """
+        try:
+            from src.f1_strat_manager.data_cache import get_data_root
+            return get_data_root() / "rag"
+        except Exception:
+            return self._repo_root / "data" / "rag"
 
     @property
     def qdrant_path(self) -> Path:

@@ -33,13 +33,26 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 # ── Repo root (module-relative) ───────────────────────────────────────────────
+# Walker with a root-stop guard so we don't spin forever when the module is
+# imported from outside a git checkout (e.g. uv tool install).
 _REPO_ROOT = Path(__file__).resolve().parent
 while not (_REPO_ROOT / '.git').exists():
+    if _REPO_ROOT.parent == _REPO_ROOT:
+        break
     _REPO_ROOT = _REPO_ROOT.parent
 
-_MODEL_DIR  = _REPO_ROOT / 'data' / 'models' / 'tire_degradation'
-_PROCESSED  = _REPO_ROOT / 'data' / 'processed'
-_AGENTS_DIR = _REPO_ROOT / 'data' / 'models' / 'agents'
+# Prefer f1_strat_manager.data_cache.get_data_root() so the uv tool install
+# flow (where data lives under ~/.f1-strat/) works transparently; fall back
+# to the repo-relative layout when the helper is not importable.
+try:
+    from src.f1_strat_manager.data_cache import get_data_root as _get_data_root
+    _DATA_ROOT = _get_data_root()
+except Exception:
+    _DATA_ROOT = _REPO_ROOT / 'data'
+
+_MODEL_DIR  = _DATA_ROOT / 'models' / 'tire_degradation'
+_PROCESSED  = _DATA_ROOT / 'processed'
+_AGENTS_DIR = _DATA_ROOT / 'models' / 'agents'
 
 
 # ─────────────────────────────────────────────────────────────────────────────

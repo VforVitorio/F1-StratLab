@@ -1414,6 +1414,17 @@ def run(args: argparse.Namespace) -> None:
     # Set provider before any agent singleton is created
     os.environ["F1_LLM_PROVIDER"] = args.provider
 
+    # First-run bootstrap: pull data + models from HF Hub when the cache is
+    # empty. Dev checkouts with a populated data/ tree short-circuit
+    # is_first_run() so this is a no-op for the repo contributor workflow.
+    if not args.no_first_run:
+        try:
+            from src.f1_strat_manager.data_cache import ensure_setup, is_first_run
+            if is_first_run():
+                ensure_setup()
+        except ImportError:
+            pass
+
     raw_dir  = Path(args.raw_dir)
     race_dir = raw_dir / args.gp_name
 
@@ -1915,6 +1926,36 @@ def run(args: argparse.Namespace) -> None:
 # Entry point
 # ---------------------------------------------------------------------------
 
+def _default_raw_dir() -> str:
+    """Return the default ``--raw-dir`` value as a string path.
+
+    Routes through :func:`src.f1_strat_manager.data_cache.get_data_root`
+    when that helper is importable so that ``uv tool install`` users
+    (whose data lives under ``~/.f1-strat/data/``) see a sensible default
+    instead of the legacy repo-relative ``data/raw/2025``. Dev checkouts
+    without the helper fall back to the historical string.
+    """
+    try:
+        from src.f1_strat_manager.data_cache import get_data_root
+        return str(get_data_root() / "raw" / "2025")
+    except ImportError:
+        return "data/raw/2025"
+
+
+def _default_featured() -> str:
+    """Return the default ``--featured`` value as a string path.
+
+    Same rationale as :func:`_default_raw_dir` — the featured parquet lives
+    under ``data/processed/`` in every layout, and we want the path to
+    match wherever ``get_data_root()`` ends up resolving to.
+    """
+    try:
+        from src.f1_strat_manager.data_cache import get_data_root
+        return str(get_data_root() / "processed" / "laps_featured_2025.parquet")
+    except ImportError:
+        return "data/processed/laps_featured_2025.parquet"
+
+
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="F1 Strategy Manager — headless CLI simulation demo",
@@ -1932,13 +1973,19 @@ def _parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--raw-dir",
-        default="data/raw/2025",
-        help="Base directory for raw race parquets (default: data/raw/2025)",
+        default=_default_raw_dir(),
+        help="Base directory for raw race parquets (default: <data_root>/raw/2025)",
     )
     p.add_argument(
         "--featured",
-        default="data/processed/laps_featured_2025.parquet",
+        default=_default_featured(),
         help="Path to featured parquet for agent RSM adapters",
+    )
+    p.add_argument(
+        "--no-first-run",
+        action="store_true",
+        help="Skip the first-run HuggingFace Hub download check. Useful for CI "
+             "or when the data cache is already populated out-of-band.",
     )
     p.add_argument(
         "--laps",
