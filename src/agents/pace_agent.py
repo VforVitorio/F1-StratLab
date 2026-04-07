@@ -602,10 +602,7 @@ class PaceAgent:
             )
 
         from langchain_openai import ChatOpenAI
-        try:
-            from langchain.agents import create_react_agent  # LangGraph ≥ 1.0
-        except ImportError:
-            from langgraph.prebuilt import create_react_agent  # legacy
+        from langchain.agents import create_agent
 
         import os
         if provider is None:
@@ -616,10 +613,10 @@ class PaceAgent:
         else:
             llm = ChatOpenAI(model=model_name, temperature=0)
 
-        self._react_agent = create_react_agent(
+        self._react_agent = create_agent(
             model=llm,
             tools=PACE_TOOLS,
-            prompt=_PACE_SYSTEM_PROMPT,
+            system_prompt=_PACE_SYSTEM_PROMPT,
         )
         return self._react_agent
 
@@ -701,10 +698,7 @@ def run_pace_agent_from_state(lap_state: dict) -> PaceOutput:
 try:
     from langchain_core.tools import tool as lc_tool
     from langchain_openai import ChatOpenAI  # noqa: F401
-    try:
-        from langchain.agents import create_react_agent  # LangGraph ≥ 1.0  # noqa: F401
-    except ImportError:
-        from langgraph.prebuilt import create_react_agent  # legacy  # noqa: F401
+    from langchain.agents import create_agent  # noqa: F401
     _LANGGRAPH_AVAILABLE = True
 except ImportError:
     _LANGGRAPH_AVAILABLE = False
