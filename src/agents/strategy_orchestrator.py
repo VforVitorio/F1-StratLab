@@ -34,9 +34,11 @@ Liu et al. (2024) arXiv:2402.02392 — DeLLMa decision under uncertainty with LL
 
 import json
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Literal, Optional
 
 import numpy as np
 import pandas as pd
@@ -193,52 +195,267 @@ class RaceState(BaseModel):
     model_config = {"arbitrary_types_allowed": True}
 
 
+_ACTION_VALUES    = Literal["STAY_OUT", "PIT_NOW", "UNDERCUT", "OVERCUT", "ALERT"]
+_PACE_MODE_VALUES = Literal["PUSH", "NEUTRAL", "MANAGE", "LIFT_AND_COAST"]
+_RISK_VALUES      = Literal["AGGRESSIVE", "BALANCED", "DEFENSIVE"]
+_PRIORITY_VALUES  = Literal["HIGH", "MEDIUM", "LOW"]
+_COMPOUND_VALUES  = Literal["SOFT", "MEDIUM", "HARD"]
+
+
+class Contingency(BaseModel):
+    """A single conditional branch planned by the LLM for upcoming laps.
+
+    Contingencies encode the if-then-else logic that a real F1 strategist keeps
+    in their head: "stay out now, BUT if a Safety Car is deployed in the next
+    three laps, switch to PIT_NOW immediately". Without this field the
+    orchestrator is forced to collapse every lap decision into a single myopic
+    action, discarding any plan B. Exposing contingencies lets N31 communicate
+    a genuine multi-lap plan to the UI and to downstream consumers.
+
+    trigger:
+        Plain-language description of the event that activates this branch.
+        Examples: "SC deployed within 3 laps", "gap to SAI drops below 0.8 s",
+        "rain intensity increases". Must be specific enough for a human to
+        recognise the trigger condition in live telemetry — vague triggers
+        ("things go wrong") are rejected implicitly by the LLM prompt.
+    switch_to:
+        The replacement action to execute when the trigger fires. Restricted
+        to the same five-value enum as the primary action so that downstream
+        MC grounding and UI rendering logic stays consistent whether the
+        orchestrator executes the primary plan or a contingency.
+    priority:
+        Ordering signal when multiple contingencies fire in the same lap.
+        HIGH contingencies pre-empt MEDIUM which pre-empt LOW. Used by the
+        future execution layer to resolve conflicts deterministically.
+    rationale:
+        One-line justification linking the trigger to a sub-agent input or
+        regulation clause. Kept short (ideally under 100 chars) so the UI
+        can render a full contingency list without wrapping.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    trigger:   str              = Field(description="When does this branch activate?")
+    switch_to: _ACTION_VALUES   = Field(description="Replacement action to execute")
+    priority:  _PRIORITY_VALUES = Field(description="Resolution order when multiple fire")
+    rationale: str              = Field(description="Brief link to sub-agent data or regulation")
+
+
 class _LLMSynthesis(BaseModel):
     """Strict-schema model passed to with_structured_output — only the fields the LLM fills.
 
     OpenAI structured output requires additionalProperties=false on all objects,
     which free-form Dict fields violate. scenario_scores and regulation_context
     are attached in code after the LLM call and live on StrategyRecommendation.
+
+    The schema expanded in v2 adds execution detail (pit_lap_target,
+    compound_next, undercut_target), driver-side instructions (pace_mode,
+    target_lap_time_s, risk_posture), and multi-lap planning (contingencies,
+    key_risks, expected_stint_end). These fields let the LLM surface reasoning
+    that previously lived only inside the narrative string or was discarded
+    entirely from N28's output. See StrategyRecommendation for per-field prose.
     """
     model_config = ConfigDict(extra="forbid")
 
-    action:     str   = Field(description="STAY_OUT | PIT_NOW | UNDERCUT | OVERCUT | ALERT")
-    reasoning:  str   = Field(description="Narrative synthesis of all agent inputs and MC scores")
-    confidence: float = Field(ge=0.0, le=1.0, description="LLM self-assessed certainty")
+    # ── Primary decision — kept for MC grounding + backward compatibility ─────
+    action:             _ACTION_VALUES   = Field(
+        description="STAY_OUT | PIT_NOW | UNDERCUT | OVERCUT | ALERT",
+    )
+    reasoning:          str              = Field(
+        description="Narrative synthesis of all agent inputs and MC scores",
+    )
+    confidence:         float            = Field(
+        ge=0.0, le=1.0,
+        description="LLM self-assessed certainty",
+    )
+
+    # ── Pit execution details — recovers N28 data that was previously discarded
+    pit_lap_target:     Optional[int]              = Field(
+        default=None,
+        description="Absolute lap number of the planned stop (None when STAY_OUT)",
+    )
+    compound_next:      Optional[_COMPOUND_VALUES] = Field(
+        default=None,
+        description="Compound chosen for the next stint (None when STAY_OUT)",
+    )
+    undercut_target:    Optional[str]              = Field(
+        default=None,
+        description="Three-letter code of the rival targeted by an undercut/overcut",
+    )
+
+    # ── Driver-side instructions — new dimension for pace management ──────────
+    pace_mode:          _PACE_MODE_VALUES = Field(
+        description="PUSH | NEUTRAL | MANAGE | LIFT_AND_COAST — what to tell the driver now",
+    )
+    target_lap_time_s:  Optional[float]   = Field(
+        default=None,
+        description="Target lap time in seconds, grounded in PaceOutput CI bounds",
+    )
+    risk_posture:       _RISK_VALUES      = Field(
+        description="AGGRESSIVE | BALANCED | DEFENSIVE — championship-aware risk stance",
+    )
+
+    # ── Multi-lap planning — the big new reasoning surface ────────────────────
+    contingencies:      list[Contingency] = Field(
+        default_factory=list,
+        max_length=4,
+        description="Conditional branches activated by specific triggers",
+    )
+    key_risks:          list[str]         = Field(
+        default_factory=list,
+        max_length=5,
+        description="Short bullet list of the top risks the LLM wants to flag",
+    )
+    expected_stint_end: Optional[int]     = Field(
+        default=None,
+        description="Lap at which the current stint is planned to end (for STAY_OUT plans)",
+    )
 
 
 class StrategyRecommendation(BaseModel):
     """Final structured output of the Strategy Orchestrator (N31).
 
-    action is one of five values: STAY_OUT defers the pit stop, PIT_NOW calls
-    an immediate box, UNDERCUT pits before the target rival to gain track position,
-    OVERCUT stays out to exploit fresh-tyre pace later, and ALERT flags a critical
-    event (radio PROBLEM, SC deployed) that overrides standard strategy logic.
+    v2 schema rationale — the v1 schema collapsed ~30 sub-agent fields into a
+    single five-value action, discarding rich execution detail from N28
+    (recommended_lap, compound_recommendation, undercut_target) and leaving
+    no room for multi-lap planning. v2 keeps the discrete action as the
+    primary decision so Monte Carlo grounding via simulate_lap_window and
+    existing downstream renderers continue to work, but surrounds it with
+    execution detail, driver-side instructions, and a contingency list that
+    together turn the orchestrator from a myopic per-lap selector into a
+    planner that communicates a genuine strategy.
 
-    reasoning is the LLM's narrative synthesis of all sub-agent inputs, MC scores,
-    and regulation constraints — forwarded verbatim to the UI and post-race analysis.
-
-    confidence is the LLM's self-assessed certainty in [0, 1]. Treat it as a
-    qualitative signal rather than a calibrated probability estimate.
-
-    scenario_scores carries the full MC output dict so downstream consumers can
-    inspect the distribution without re-running the simulation.
-
-    regulation_context is the N30 answer string when activated, empty string
-    otherwise. Included in the recommendation so the UI can surface the regulatory
-    basis for the action without re-querying N30.
+    action:
+        Primary decision — one of five values. STAY_OUT defers the pit stop,
+        PIT_NOW calls an immediate box, UNDERCUT pits before the target rival
+        to gain track position, OVERCUT stays out to exploit fresh-tyre pace
+        later, and ALERT flags a critical event (radio PROBLEM, SC deployed)
+        that overrides standard strategy logic. The enum is kept intentionally
+        small so each value maps directly to an MC candidate scored in
+        simulate_lap_window and to a colour badge in the UI.
+    reasoning:
+        The LLM's narrative synthesis of all sub-agent inputs, MC scores, and
+        regulation constraints — forwarded verbatim to the UI and post-race
+        analysis. Use this for the human-readable "why", use the structured
+        fields below for machine-readable decisions.
+    confidence:
+        The LLM's self-assessed certainty in [0, 1]. Treat it as a qualitative
+        signal rather than a calibrated probability — models tend to
+        over-report certainty on borderline decisions.
+    pit_lap_target:
+        Absolute lap number of the planned stop. Populated whenever action is
+        PIT_NOW / UNDERCUT / OVERCUT, and optionally for STAY_OUT when the
+        LLM wants to communicate a forward-looking plan ("stay out, pit on
+        lap 28"). None means "no pit stop planned within the visible horizon".
+        Prefer this field over parsing the reasoning string.
+    compound_next:
+        Compound chosen for the next stint (SOFT / MEDIUM / HARD). Populated
+        whenever a stop is planned. Lets the UI render the full stint plan
+        without having to re-query N28. None is valid for STAY_OUT decisions.
+    undercut_target:
+        Three-letter code of the rival targeted by an undercut or overcut
+        (e.g. "SAI"). Non-None only for UNDERCUT / OVERCUT actions. Recovers
+        N28.undercut_target which v1 silently discarded.
+    pace_mode:
+        Driving instruction for the immediate next laps — PUSH, NEUTRAL,
+        MANAGE, or LIFT_AND_COAST. This is a new dimension introduced in v2:
+        previously the orchestrator only answered "when to pit" without any
+        signal on how to drive between pit stops. A neutral default keeps
+        backward compatibility with consumers that ignore this field.
+    target_lap_time_s:
+        Concrete target lap time for the driver, grounded in PaceOutput CI
+        bounds so the LLM cannot invent values far outside what the N06 model
+        predicts. Rendered by the UI as a radio-style instruction. None when
+        the LLM prefers not to commit to a precise number.
+    risk_posture:
+        AGGRESSIVE / BALANCED / DEFENSIVE — captures the championship context
+        the LLM is reasoning under. An AGGRESSIVE posture relaxes cliff risk
+        tolerance and favours undercut attempts; DEFENSIVE prioritises track
+        position over potential gain. Exposing this field makes the stance
+        auditable instead of buried inside the narrative.
+    contingencies:
+        Conditional branches the LLM has planned for upcoming laps. Each
+        Contingency bundles a trigger, a replacement action, a priority, and
+        a one-line rationale. Capped at four entries so the UI can render the
+        full list without scrolling. An empty list means the primary action
+        is executed unconditionally.
+    key_risks:
+        Short bullet list (max five) of the top risks the LLM wants to flag —
+        e.g. "cliff P10 at lap 22 is uncomfortably close", "SC probability
+        rising in the last three laps". Surfaces reasoning that would
+        otherwise be buried inside the prose narrative.
+    expected_stint_end:
+        Lap number at which the current stint is planned to end. Populated
+        primarily for STAY_OUT decisions to communicate "this is a one-stop
+        plan, stop on lap 32". Lets the UI render a stint-plan bar without
+        parsing the reasoning string.
+    scenario_scores:
+        Full MC output dict per strategy — {"STAY_OUT": {"E", "P10", "P90",
+        "score"}, ...}. Attached in code after the LLM call, not filled by
+        the LLM itself. Downstream consumers can inspect the distribution
+        without re-running the simulation.
+    regulation_context:
+        The N30 RAG answer string when activated, empty string otherwise.
+        Attached in code after the LLM call. Included on the recommendation
+        so the UI can surface the regulatory basis for the action without
+        re-querying N30.
     """
 
-    action:             str   = Field(
-        description="STAY_OUT | PIT_NOW | UNDERCUT | OVERCUT | ALERT"
+    # ── Primary decision ──────────────────────────────────────────────────────
+    action:             _ACTION_VALUES   = Field(
+        description="STAY_OUT | PIT_NOW | UNDERCUT | OVERCUT | ALERT",
     )
-    reasoning:          str   = Field(
-        description="Narrative synthesis of all agent inputs and MC scores"
+    reasoning:          str              = Field(
+        description="Narrative synthesis of all agent inputs and MC scores",
     )
-    confidence:         float = Field(
+    confidence:         float            = Field(
         ge=0.0, le=1.0,
         description="LLM self-assessed certainty",
     )
+
+    # ── Pit execution details ─────────────────────────────────────────────────
+    pit_lap_target:     Optional[int]              = Field(
+        default=None,
+        description="Absolute lap of the planned stop",
+    )
+    compound_next:      Optional[_COMPOUND_VALUES] = Field(
+        default=None,
+        description="Compound chosen for the next stint",
+    )
+    undercut_target:    Optional[str]              = Field(
+        default=None,
+        description="Rival code targeted by UNDERCUT/OVERCUT",
+    )
+
+    # ── Driver-side instructions ──────────────────────────────────────────────
+    pace_mode:          _PACE_MODE_VALUES = Field(
+        default="NEUTRAL",
+        description="PUSH | NEUTRAL | MANAGE | LIFT_AND_COAST",
+    )
+    target_lap_time_s:  Optional[float]   = Field(
+        default=None,
+        description="Target lap time (s), grounded in PaceOutput CI",
+    )
+    risk_posture:       _RISK_VALUES      = Field(
+        default="BALANCED",
+        description="AGGRESSIVE | BALANCED | DEFENSIVE",
+    )
+
+    # ── Multi-lap planning ────────────────────────────────────────────────────
+    contingencies:      list[Contingency] = Field(
+        default_factory=list,
+        description="Conditional branches planned for upcoming laps",
+    )
+    key_risks:          list[str]         = Field(
+        default_factory=list,
+        description="Top risks the LLM wants to flag",
+    )
+    expected_stint_end: Optional[int]     = Field(
+        default=None,
+        description="Lap at which the current stint is planned to end",
+    )
+
+    # ── Post-hoc grounding (attached in code, not filled by the LLM) ──────────
     scenario_scores:    dict  = Field(
         default_factory=dict,
         description="MC scores per strategy",
@@ -471,22 +688,29 @@ def _build_orchestrator_prompt(
     race_state:          "RaceState",
     mc_results:          dict,
     best_mc:             str,
-    pace_reasoning:      str = "",
-    tire_reasoning:      str = "",
-    situation_reasoning: str = "",
-    pit_reasoning:       str = "",
-    radio_reasoning:     str = "",
+    pace_out             = None,
+    tire_out             = None,
+    situation_out        = None,
+    pit_out              = None,
+    radio_out            = None,
     regulation_context:  str = "",
 ) -> str:
     """Build the LLM synthesis prompt for Layer 3.
 
-    Assembles sub-agent reasoning strings, MC scenario scores, and regulation
-    context into a single prompt. N30 regulation context is injected as a hard
-    constraint block — the LLM is told explicitly which actions are regulation-
-    compliant before it decides, so illegal options cannot appear in the output.
+    Assembles every sub-agent's structured numeric output plus its reasoning
+    string, the Monte Carlo scenario scores, and the N30 regulation context
+    into a single prompt. The v2 prompt exposes the full numeric grounding
+    (Pace CI, Tire cliff percentiles, N27 probabilities, N28 stop and undercut
+    data) so the LLM can fill the expanded StrategyRecommendation schema
+    without having to reverse-engineer values from the reasoning strings.
+
+    N30 regulation context is injected as a hard constraint block — the LLM is
+    told explicitly which actions are regulation-compliant before it decides,
+    so illegal options cannot appear in the output.
 
     best_mc is the MC argmax passed as a hint. The LLM may override it if
-    regulation context or radio alerts justify a different action.
+    regulation context, radio alerts, or a planned contingency justify a
+    different action.
     """
     mc_table = "\n".join(
         f"  {s}: E={v['E']:+.3f}  P10={v['P10']:+.3f}  P90={v['P90']:+.3f}  score={v['score']:+.3f}"
@@ -500,32 +724,129 @@ def _build_orchestrator_prompt(
         else "REGULATION CONSTRAINT: none flagged — all four actions are compliant."
     )
 
+    # Pace CI bounds rendered into the prompt guidance — keep a safe fallback
+    # when pace_out is unavailable so the format string never crashes.
+    pace_ci_lo = pace_out.ci_p10 if pace_out is not None else 0.0
+    pace_ci_hi = pace_out.ci_p90 if pace_out is not None else 0.0
+
+    # ── Sub-agent numeric blocks — verbatim numbers so the LLM can cite them ─
+    if pace_out is not None:
+        pace_block = (
+            f"  [N25 Pace]      pred={pace_out.lap_time_pred:.3f}s  "
+            f"Δprev={pace_out.delta_vs_prev:+.3f}s  "
+            f"Δmedian={pace_out.delta_vs_median:+.3f}s  "
+            f"CI=[{pace_out.ci_p10:.3f}, {pace_out.ci_p90:.3f}]\n"
+            f"                  reasoning: {pace_out.reasoning or '(empty)'}"
+        )
+    else:
+        pace_block = "  [N25 Pace]      not activated"
+
+    if tire_out is not None:
+        tire_block = (
+            f"  [N26 Tire]      deg_rate={tire_out.deg_rate:.3f}s/lap  "
+            f"cliff P10={tire_out.laps_to_cliff_p10:.1f}  "
+            f"P50={tire_out.laps_to_cliff_p50:.1f}  "
+            f"P90={tire_out.laps_to_cliff_p90:.1f}  "
+            f"[{tire_out.warning_level}]\n"
+            f"                  reasoning: {tire_out.reasoning or '(empty)'}"
+        )
+    else:
+        tire_block = "  [N26 Tire]      not activated"
+
+    if situation_out is not None:
+        sit_block = (
+            f"  [N27 Situation] overtake={situation_out.overtake_prob:.2f}  "
+            f"sc_3lap={situation_out.sc_prob_3lap:.2f}  "
+            f"threat={situation_out.threat_level}\n"
+            f"                  reasoning: {situation_out.reasoning or '(empty)'}"
+        )
+    else:
+        sit_block = "  [N27 Situation] not activated"
+
+    if pit_out is not None:
+        ucut_str = (
+            f"{pit_out.undercut_prob:.2f}→{pit_out.undercut_target}"
+            if pit_out.undercut_prob is not None and pit_out.undercut_target
+            else "n/a"
+        )
+        pit_block = (
+            f"  [N28 Pit] ★     action={pit_out.action}  "
+            f"rec_lap={pit_out.recommended_lap}  "
+            f"compound_next={pit_out.compound_recommendation}  "
+            f"stop=[{pit_out.stop_duration_p05:.2f}, "
+            f"{pit_out.stop_duration_p50:.2f}, "
+            f"{pit_out.stop_duration_p95:.2f}]s  "
+            f"undercut={ucut_str}  "
+            f"sc_reactive={pit_out.sc_reactive}\n"
+            f"                  reasoning: {pit_out.reasoning or '(empty)'}"
+        )
+    else:
+        pit_block = "  [N28 Pit]       not activated (no cliff pressure, no radio problem)"
+
+    if radio_out is not None:
+        n_radio  = len(getattr(radio_out, "radio_events", []) or [])
+        n_rcm    = len(getattr(radio_out, "rcm_events",   []) or [])
+        n_alerts = len(getattr(radio_out, "alerts",       []) or [])
+        radio_block = (
+            f"  [N29 Radio]     radio={n_radio}  rcm={n_rcm}  alerts={n_alerts}\n"
+            f"                  reasoning: {radio_out.reasoning or '(empty)'}"
+        )
+    else:
+        radio_block = "  [N29 Radio]     not activated"
+
     return (
         f"You are the F1 Strategy Orchestrator. Synthesise the sub-agent outputs below\n"
-        f"into a single StrategyRecommendation. Choose the action that maximises risk-adjusted\n"
-        f"position gain while respecting the regulation constraint.\n\n"
+        f"into a single StrategyRecommendation. Choose the primary action that maximises\n"
+        f"risk-adjusted position gain while respecting the regulation constraint, and fill\n"
+        f"every structured field so the strategy can be executed without parsing your prose.\n\n"
         f"RACE CONTEXT:\n"
         f"  Driver: {race_state.driver} | Lap: {race_state.lap}/{race_state.total_laps}\n"
         f"  Position: P{race_state.position} | Compound: {race_state.compound} "
         f"TyreLife {race_state.tyre_life}\n"
         f"  Gap ahead: {race_state.gap_ahead_s:.2f}s | "
         f"Pace delta: {race_state.pace_delta_s:+.3f}s\n"
+        f"  Air {race_state.air_temp:.1f}°C | Track {race_state.track_temp:.1f}°C | "
+        f"Rain {race_state.rainfall}\n"
         f"  Risk tolerance α: {race_state.risk_tolerance}\n\n"
-        f"SUB-AGENT REASONING:\n"
-        f"  [N25 Pace]      {pace_reasoning or 'not activated'}\n"
-        f"  [N26 Tire]      {tire_reasoning or 'not activated'}\n"
-        f"  [N27 Situation] {situation_reasoning or 'not activated'}\n"
-        f"  [N28 Pit]       {pit_reasoning or 'not activated'}\n"
-        f"  [N29 Radio]     {radio_reasoning or 'not activated'}\n\n"
+        f"SUB-AGENT OUTPUTS:\n"
+        f"{pace_block}\n"
+        f"{tire_block}\n"
+        f"{sit_block}\n"
+        f"{pit_block}\n"
+        f"{radio_block}\n\n"
         f"MONTE CARLO SCENARIO SCORES "
         f"(N_SIM={CFG.n_sim}, α={race_state.risk_tolerance}, window={WINDOW_LAPS} laps):\n"
         f"{mc_table}\n"
         f"  → Best MC candidate: {best_mc}\n\n"
         f"{reg_block}\n\n"
-        f"Return a StrategyRecommendation with:\n"
-        f"- action: one of STAY_OUT / PIT_NOW / UNDERCUT / OVERCUT / ALERT\n"
-        f"- reasoning: concise narrative (2-4 sentences) citing the key inputs\n"
-        f"- confidence: your certainty in [0, 1]\n"
+        f"Return a StrategyRecommendation filling EVERY field:\n"
+        f"  action:             one of STAY_OUT / PIT_NOW / UNDERCUT / OVERCUT / ALERT.\n"
+        f"                       Do not invent new values.\n"
+        f"  reasoning:          2-4 sentences citing the key numeric inputs above.\n"
+        f"  confidence:         your certainty in [0, 1] after weighing MC and regulation.\n"
+        f"  pit_lap_target:     absolute lap number of the planned stop. None only if the\n"
+        f"                       plan is to stay out beyond the visible horizon.\n"
+        f"  compound_next:      SOFT / MEDIUM / HARD for the next stint. None only for\n"
+        f"                       STAY_OUT with no planned stop.\n"
+        f"  undercut_target:    rival code (e.g. SAI). Non-None only for UNDERCUT/OVERCUT.\n"
+        f"                       Prefer N28.undercut_target when available.\n"
+        f"  pace_mode:          PUSH | NEUTRAL | MANAGE | LIFT_AND_COAST. Choose PUSH when\n"
+        f"                       attacking a close rival, MANAGE when defending a gap,\n"
+        f"                       LIFT_AND_COAST only when tyre warning is PIT_SOON.\n"
+        f"  target_lap_time_s:  concrete target lap time, inside PaceOutput CI "
+        f"[{pace_ci_lo:.3f}, {pace_ci_hi:.3f}] if available. None if you\n"
+        f"                       prefer not to commit to a number.\n"
+        f"  risk_posture:       AGGRESSIVE / BALANCED / DEFENSIVE. Align with the\n"
+        f"                       position and gap — leaders defend, midfield balances,\n"
+        f"                       chasers attack.\n"
+        f"  contingencies:      up to 4 Contingency entries. Each must have a concrete\n"
+        f"                       trigger (e.g. 'SC deployed within 3 laps', 'gap to "
+        f"<rival> drops below 0.8 s'), a switch_to action, a HIGH/MEDIUM/LOW priority,\n"
+        f"                       and a one-line rationale tied to a sub-agent number.\n"
+        f"  key_risks:          up to 5 short bullets flagging the top risks (tyre cliff\n"
+        f"                       timing, SC probability spikes, regulation gaps, etc.).\n"
+        f"  expected_stint_end: lap at which you expect the current stint to end. Use the\n"
+        f"                       tyre cliff P50 as a baseline and adjust for strategy.\n"
     )
 
 
@@ -632,22 +953,28 @@ def _run_always_on_agents_from_state(
 ) -> tuple:
     """RSM adapter version of _run_always_on_agents.
 
-    Calls the *_from_state entry points of each sub-agent so no FastF1 session
-    is required. laps_df is passed to each adapter to populate sub-agent globals.
+    N25 (pace, XGBoost) and N27 (situation, LightGBM + HTTP LLM) are I/O-bound
+    and share no mutable state, so they run in parallel threads. N26 (tire, TCN +
+    HTTP LLM) and N29 (radio, NLP + HTTP LLM) run sequentially to avoid potential
+    PyTorch/MLX thread-safety issues with their model inference layers.
 
     Returns (pace_out, tire_out, situation_out, radio_out).
     """
-    pace_out      = run_pace_agent_from_state(lap_state)
-    tire_out      = run_tire_agent_from_state(lap_state, laps_df)
-    situation_out = run_race_situation_agent_from_state(lap_state, laps_df)
+    radio_msgs      = [_to_radio_message(m) for m in race_state.radio_msgs]
+    rcm_events      = [_to_rcm_event(e) for e in race_state.rcm_events]
+    radio_lap_state = {**lap_state, "lap": race_state.lap,
+                       "radio_msgs": radio_msgs, "rcm_events": rcm_events}
 
-    radio_msgs = [_to_radio_message(m) for m in race_state.radio_msgs]
-    rcm_events = [_to_rcm_event(e) for e in race_state.rcm_events]
-    radio_out  = run_radio_agent_from_state(
-        {**lap_state, "lap": race_state.lap,
-         "radio_msgs": radio_msgs, "rcm_events": rcm_events},
-        laps_df,
-    )
+    # N25 + N27 in parallel (no shared PyTorch state)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        fut_pace = pool.submit(run_pace_agent_from_state, lap_state)
+        fut_sit  = pool.submit(run_race_situation_agent_from_state, lap_state, laps_df)
+        pace_out      = fut_pace.result()
+        situation_out = fut_sit.result()
+
+    # N26 + N29 sequential (PyTorch/MLX inference)
+    tire_out  = run_tire_agent_from_state(lap_state, laps_df)
+    radio_out = run_radio_agent_from_state(radio_lap_state, laps_df)
 
     return pace_out, tire_out, situation_out, radio_out
 
@@ -705,6 +1032,62 @@ def _run_conditional_agents(
         regulation_context = reg_out.answer
 
     return pit_out, regulation_context
+
+
+# ==============================================================================
+# Post-LLM assembly helper
+# ==============================================================================
+
+def _assemble_recommendation(
+    synth:              "_LLMSynthesis",
+    pit_out,
+    mc_results:         dict,
+    regulation_context: str,
+) -> "StrategyRecommendation":
+    """Merge the LLM synthesis with N28 pit data and attach grounding fields.
+
+    The LLM fills a _LLMSynthesis (action, reasoning, confidence, plus the
+    v2 expansion fields). This helper builds the final StrategyRecommendation
+    by combining that synthesis with:
+
+    * pit_out from N28 — used as a deterministic fallback whenever the LLM
+      leaves pit_lap_target, compound_next, or undercut_target as None but
+      N28 actually produced a value. This guarantees that richer execution
+      detail never silently disappears because the LLM was lazy on a given
+      lap. The LLM's explicit choice always wins; N28 only backfills nulls.
+    * mc_results — attached as scenario_scores so downstream consumers can
+      inspect the MC distribution without re-running the simulation. The LLM
+      never writes this field directly (strict schema forbids dicts).
+    * regulation_context — attached verbatim from N30 so the UI can surface
+      the regulatory basis for the action without re-querying N30.
+
+    Returns a fully-populated StrategyRecommendation ready for the UI layer.
+    """
+    # N28 fallbacks — only used when the LLM did not commit to a value
+    fallback_lap     = pit_out.recommended_lap        if pit_out else None
+    fallback_cmpd    = pit_out.compound_recommendation if pit_out else None
+    fallback_target  = pit_out.undercut_target        if pit_out else None
+
+    pit_lap_target  = synth.pit_lap_target  if synth.pit_lap_target  is not None else fallback_lap
+    compound_next   = synth.compound_next   if synth.compound_next   is not None else fallback_cmpd
+    undercut_target = synth.undercut_target if synth.undercut_target is not None else fallback_target
+
+    return StrategyRecommendation(
+        action             = synth.action,
+        reasoning          = synth.reasoning,
+        confidence         = synth.confidence,
+        pit_lap_target     = pit_lap_target,
+        compound_next      = compound_next,
+        undercut_target    = undercut_target,
+        pace_mode          = synth.pace_mode,
+        target_lap_time_s  = synth.target_lap_time_s,
+        risk_posture       = synth.risk_posture,
+        contingencies      = synth.contingencies,
+        key_risks          = synth.key_risks,
+        expected_stint_end = synth.expected_stint_end,
+        scenario_scores    = mc_results,
+        regulation_context = regulation_context,
+    )
 
 
 # ==============================================================================
@@ -769,25 +1152,19 @@ def run_strategy_orchestrator(
 
     # Layer 3 — LLM synthesis
     prompt = _build_orchestrator_prompt(
-        race_state           = race_state,
-        mc_results           = mc_results,
-        best_mc              = best_mc,
-        pace_reasoning       = pace_out.reasoning,
-        tire_reasoning       = tire_out.reasoning,
-        situation_reasoning  = situation_out.reasoning,
-        pit_reasoning        = pit_out.reasoning if pit_out else "",
-        radio_reasoning      = radio_out.reasoning,
-        regulation_context   = regulation_context,
+        race_state         = race_state,
+        mc_results         = mc_results,
+        best_mc            = best_mc,
+        pace_out           = pace_out,
+        tire_out           = tire_out,
+        situation_out      = situation_out,
+        pit_out            = pit_out,
+        radio_out          = radio_out,
+        regulation_context = regulation_context,
     )
 
     synth: _LLMSynthesis = _get_orchestrator_llm().invoke(prompt)
-    return StrategyRecommendation(
-        action             = synth.action,
-        reasoning          = synth.reasoning,
-        confidence         = synth.confidence,
-        scenario_scores    = mc_results,
-        regulation_context = regulation_context,
-    )
+    return _assemble_recommendation(synth, pit_out, mc_results, regulation_context)
 
 
 def run_strategy_orchestrator_from_state(
@@ -891,22 +1268,16 @@ def run_strategy_orchestrator_from_state(
 
     # Layer 3 — LLM synthesis (same as primary entry point)
     prompt = _build_orchestrator_prompt(
-        race_state           = race_state,
-        mc_results           = mc_results,
-        best_mc              = best_mc,
-        pace_reasoning       = pace_out.reasoning,
-        tire_reasoning       = tire_out.reasoning,
-        situation_reasoning  = situation_out.reasoning,
-        pit_reasoning        = pit_out.reasoning if pit_out else "",
-        radio_reasoning      = radio_out.reasoning,
-        regulation_context   = regulation_context,
+        race_state         = race_state,
+        mc_results         = mc_results,
+        best_mc            = best_mc,
+        pace_out           = pace_out,
+        tire_out           = tire_out,
+        situation_out      = situation_out,
+        pit_out            = pit_out,
+        radio_out          = radio_out,
+        regulation_context = regulation_context,
     )
 
     synth: _LLMSynthesis = _get_orchestrator_llm().invoke(prompt)
-    return StrategyRecommendation(
-        action             = synth.action,
-        reasoning          = synth.reasoning,
-        confidence         = synth.confidence,
-        scenario_scores    = mc_results,
-        regulation_context = regulation_context,
-    )
+    return _assemble_recommendation(synth, pit_out, mc_results, regulation_context)
