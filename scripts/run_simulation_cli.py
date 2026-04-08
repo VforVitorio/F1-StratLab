@@ -1293,10 +1293,16 @@ def _run_no_llm(
     race_state:   RaceState,
     lap_state:    dict[str, Any],
     laps_df:      pd.DataFrame,
-    extra_radio:  dict | None = None,
-    extra_rcm:    dict | None = None,
+    extra_radios: list[dict] | None = None,
+    extra_rcms:   list[dict] | None = None,
 ) -> dict[str, Any]:
-    """Run ML models only — no LLM synthesis at any layer."""
+    """Run ML models only — no LLM synthesis at any layer.
+
+    extra_radios / extra_rcms are optional lists of dicts injected on top of
+    whatever the race_state buffers already carry. The CLI uses this entry
+    point to forward both the static OpenF1 corpus radios for the current
+    lap and any synthetic --radio-every fallback events in a single shot.
+    """
     from src.agents.pace_agent           import run_pace_agent_from_state, PaceOutput
     from src.agents.tire_agent           import run_tire_agent_from_state, TireOutput
     from src.agents.race_situation_agent import (
@@ -1342,11 +1348,11 @@ def _run_no_llm(
     sit_out   = _safe_call(run_race_situation_agent_from_state, lap_state, laps_df, stub=sit_stub)
 
     radio_msgs = list(race_state.radio_msgs)
-    if extra_radio:
-        radio_msgs.append(extra_radio)
+    if extra_radios:
+        radio_msgs.extend(extra_radios)
     rcm_events = list(race_state.rcm_events)
-    if extra_rcm:
-        rcm_events.append(extra_rcm)
+    if extra_rcms:
+        rcm_events.extend(extra_rcms)
     radio_out = _safe_call(
         run_radio_agent_from_state,
         {**lap_state, "lap": race_state.lap,
@@ -1442,8 +1448,49 @@ def run(args: argparse.Namespace) -> None:
         laps_df = pd.read_parquet(featured_path)
         engine  = RaceReplayEngine(race_dir, args.driver, args.team, interval_seconds=args.interval)
 
+    # ── Static OpenF1 radio corpus (replaces --radio-every when available) ───
+    # Constructed once per run before the Live loop so the per-lap hot path
+    # only pays the dict-lookup cost. Eager Whisper transcription on first
+    # call writes a JSON cache under data/processed/radio_nlp/<year>/<slug>/
+    # so re-runs of the same GP skip the model entirely. Any failure (missing
+    # parquet, missing MP3 directory, Whisper unavailable) downgrades to the
+    # synthetic --radio-every fallback with a yellow warning instead of
+    # crashing the run — keeps fresh checkouts and CI machines functional.
+    radio_runner = None
+    if not args.no_real_radios:
+        try:
+            from src.nlp.radio_runner import RadioPipelineRunner
+            from src.f1_strat_manager.data_cache import get_data_root
+            with console.status(
+                f"[dim]Loading radio corpus + Whisper {args.whisper_model}…[/dim]",
+                spinner="dots",
+            ):
+                radio_runner = RadioPipelineRunner(
+                    year               = args.year,
+                    gp_name            = args.gp_name,
+                    laps_df            = laps_df,
+                    data_root          = get_data_root(),
+                    whisper_model_name = args.whisper_model,
+                    eager_transcribe   = True,
+                )
+            console.print(
+                f"[dim]radio corpus  : {radio_runner.total_radios()} radios + "
+                f"{radio_runner.total_rcms()} rcms loaded for "
+                f"{radio_runner.slug}[/dim]"
+            )
+        except Exception as exc:
+            console.print(
+                f"[yellow]radio corpus unavailable ({exc.__class__.__name__}: "
+                f"{exc}) — falling back to synthetic --radio-every[/yellow]"
+            )
+            radio_runner = None
+
     # ── Pre-warm NLP models (suppresses tqdm + LOAD REPORT noise) ────────────
-    mode_label = "no-LLM" if args.no_llm else f"LLM · {args.provider}"
+    radio_label = (
+        f" · radios={radio_runner.total_radios()}"
+        if radio_runner is not None else ""
+    )
+    mode_label = ("no-LLM" if args.no_llm else f"LLM · {args.provider}") + radio_label
     with console.status("[dim]Loading agents…[/dim]", spinner="dots"):
         _prewarm_agents(args.no_llm)
 
@@ -1631,10 +1678,26 @@ def run(args: argparse.Namespace) -> None:
                 race_state = _build_race_state(lap_state, args.driver, prev_lap_time)
                 prev_lap_time = lap_time or prev_lap_time
 
-                # Simulated radio / RCM events (--radio-every N)
+                # Real radios from the static OpenF1 corpus take precedence
+                # over the synthetic --radio-every generator. Both produce
+                # dicts shaped for run_radio_agent_from_state. When the
+                # runner is active synthetic events are suppressed entirely
+                # (the corpus already encodes the natural per-lap distribution
+                # so layering random injections on top would distort the
+                # narrative for no benefit).
+                real_radios: list[dict] = []
+                real_rcms:   list[dict] = []
+                if radio_runner is not None:
+                    real_radios, real_rcms = radio_runner.radios_for_lap(lap_num)
+
                 sim_radio: dict | None = None
                 sim_rcm:   dict | None = None
-                if args.radio_every and args.radio_every > 0 and lap_num % args.radio_every == 0:
+                if (
+                    radio_runner is None
+                    and args.radio_every
+                    and args.radio_every > 0
+                    and lap_num % args.radio_every == 0
+                ):
                     sim_radio = _generate_radio_event(
                         lap_num, args.driver, compound, tyre_life, position, gap_ahead
                     )
@@ -1642,8 +1705,11 @@ def run(args: argparse.Namespace) -> None:
 
                 if args.no_llm:
                     # No-LLM: full ML stack (pace + tire + sit + radio + conditional + MC)
-                    result     = _run_no_llm(race_state, lap_state, laps_df,
-                                             extra_radio=sim_radio, extra_rcm=sim_rcm)
+                    result     = _run_no_llm(
+                        race_state, lap_state, laps_df,
+                        extra_radios = real_radios + ([sim_radio] if sim_radio else []),
+                        extra_rcms   = real_rcms   + ([sim_rcm]   if sim_rcm   else []),
+                    )
                     scores     = result["scenario_scores"]
                     action     = result["action"]
                     confidence = result["confidence"]
@@ -1661,9 +1727,18 @@ def run(args: argparse.Namespace) -> None:
                         strategy_rec  = None,
                     )
                 else:
-                    # LLM mode: inject simulated radio BEFORE probing so the
-                    # radio agent sees the generated events, then run the
-                    # full orchestrator.
+                    # LLM mode: inject the lap's real-corpus radios + RCMs
+                    # (and any synthetic fallback) BEFORE probing so the
+                    # radio agent sees the events, then run the full
+                    # orchestrator. We extend instead of append because a
+                    # single lap can carry several team-radio rows.
+                    try:
+                        if real_radios:
+                            race_state.radio_msgs.extend(real_radios)
+                        if real_rcms:
+                            race_state.rcm_events.extend(real_rcms)
+                    except (AttributeError, TypeError):
+                        pass
                     if sim_radio:
                         try:
                             race_state.radio_msgs.append(sim_radio)
@@ -1852,10 +1927,17 @@ def run(args: argparse.Namespace) -> None:
     action_mix_line = "  ".join(action_parts) if action_parts else "[dim]none[/dim]"
 
     # ── Block 2 — Agents fired (conditional Layer 1b) ─────────────────────
+    radio_source = (
+        f"[dim]radio src[/dim] [white]corpus[/white]"
+        f"[dim]/{radio_runner.total_radios()}r·{radio_runner.total_rcms()}rcm[/dim]"
+        if radio_runner is not None
+        else f"[dim]radio src[/dim] [white]synthetic[/white]"
+    )
     agents_line = (
         f"[dim]pit[/dim] [white]{pit_agent_calls}[/white]  "
         f"[dim]rag[/dim] [white]{rag_agent_calls}[/white]  "
-        f"[dim]radio alerts[/dim] [white]{radio_alert_total}[/white]"
+        f"[dim]radio alerts[/dim] [white]{radio_alert_total}[/white]  "
+        f"{radio_source}"
     )
 
     # ── Block 3 — Position P→P (±Δ) ───────────────────────────────────────
@@ -2017,7 +2099,22 @@ def _parse_args() -> argparse.Namespace:
         default=0,
         metavar="N",
         help="Simulate a radio/RCM event every N laps to activate NLP agents "
-             "(e.g. --radio-every 5).  0 = disabled (default).",
+             "(e.g. --radio-every 5).  0 = disabled (default). Suppressed when "
+             "the real radio corpus loads successfully — see --no-real-radios.",
+    )
+    p.add_argument(
+        "--no-real-radios",
+        action="store_true",
+        help="Skip the static OpenF1 radio corpus and Whisper transcription. "
+             "Falls back to the synthetic --radio-every generator. Useful for "
+             "smoke tests on machines without the data tree or without GPU.",
+    )
+    p.add_argument(
+        "--whisper-model",
+        default="turbo",
+        metavar="NAME",
+        help="Whisper model name passed to RadioPipelineRunner (default: turbo). "
+             "Smaller variants like 'base' or 'small' trade accuracy for speed.",
     )
     p.add_argument(
         "--rival",
