@@ -1460,7 +1460,17 @@ def run(args: argparse.Namespace) -> None:
     if not args.no_real_radios:
         try:
             from src.nlp.radio_runner import RadioPipelineRunner
-            from src.f1_strat_manager.data_cache import get_data_root
+            from src.f1_strat_manager.data_cache import (
+                ensure_radio_corpus,
+                get_data_root,
+            )
+            # Lazy on-demand pull: when running from a uv-tool install with
+            # an empty cache the parquets land via the default first-run
+            # snapshot, but the per-GP MP3 tree only arrives the first time
+            # someone simulates that race. ensure_radio_corpus is a no-op
+            # when the audio is already on disk so the warm-cache path
+            # pays nothing beyond the slug lookup.
+            ensure_radio_corpus(args.year, args.gp_name)
             with console.status(
                 f"[dim]Loading radio corpus + Whisper {args.whisper_model}…[/dim]",
                 spinner="dots",
