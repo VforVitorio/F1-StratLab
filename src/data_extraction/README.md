@@ -60,6 +60,19 @@ so the discovery loop and `resolve_session` both filter client-side by
 `session_name == "Race"`. Without that filter, China / Miami / Spa / Austin
 / São Paulo / Qatar overwrite the Sunday GP parquet with Sprint data.
 
+Multi-race countries: a few countries host more than one Grand Prix per
+season — Italy (Imola + Monza) and the United States (Miami + Austin + Las
+Vegas) — and the naive `country_name.lower().replace(" ", "_")` slug
+collides for both. The builder fixes this by appending the OpenF1
+`circuit_short_name` (lowercased) to the country slug for the countries in
+the static `_MULTI_RACE_COUNTRIES = {"Italy", "United States"}` set, which
+produces `italy_imola` / `italy_monza` /  `united_states_miami` /
+`united_states_austin` / `united_states_las_vegas`. Single-race countries
+(Bahrain, Australia, ...) are unaffected and stay on the cheap legacy slug,
+so the disambiguation never reshuffles existing GPs on disk. Adding another
+double-header country in a future season is a one-line change to the
+constant followed by a rebuild of just the affected GPs.
+
 What it does **not** do: no Whisper / Nemotron transcription, no
 sentiment / intent / NER inference. Those steps live in N18/N24 today and
 will move into a runtime `RadioPipelineRunner` consumed by the simulation
@@ -158,11 +171,19 @@ data/
 │   ├── {gp}_{year}_openf1_intervals.parquet
 │   └── radio_audio/                         ← OpenF1 radio MP3s
 │       └── 2025/
-│           ├── bahrain/
+│           ├── bahrain/                     ← single-race country: country slug
 │           │   ├── driver_1/   *.mp3
 │           │   ├── driver_44/  *.mp3
 │           │   └── ...
-│           ├── australia/
+│           ├── italy_imola/                 ← multi-race country: country_circuit
+│           │   └── ...
+│           ├── italy_monza/
+│           │   └── ...
+│           ├── united_states_miami/
+│           │   └── ...
+│           ├── united_states_austin/
+│           │   └── ...
+│           ├── united_states_las_vegas/
 │           │   └── ...
 │           └── ...
 └── processed/
@@ -171,7 +192,13 @@ data/
             ├── bahrain/
             │   ├── radios.parquet           ← team radios (10 cols, incl. audio_path)
             │   └── rcm.parquet              ← race control (13 cols)
-            ├── australia/
+            ├── italy_imola/
+            │   ├── radios.parquet
+            │   └── rcm.parquet
+            ├── italy_monza/
+            │   ├── radios.parquet
+            │   └── rcm.parquet
+            ├── united_states_miami/
             │   ├── radios.parquet
             │   └── rcm.parquet
             └── ...
