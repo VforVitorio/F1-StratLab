@@ -156,7 +156,7 @@ historical reference scripts.
 
 | File                                                                                                       | Description                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| [src/data_extraction/openf1/radio_dataset_builder.py](src/data_extraction/openf1/radio_dataset_builder.py) | OpenF1 team-radio + RCM dataset builder with lap mapping; consumed by the radio CLI and the future N29 Radio Agent |
+| [src/data_extraction/openf1/radio_dataset_builder.py](src/data_extraction/openf1/radio_dataset_builder.py) | OpenF1 team-radio + RCM + MP3 dataset builder with lap mapping and Sprint-session filtering; consumed by the radio CLI and the future N29 Radio Agent |
 | [src/data_extraction/openf1/intervals_extractor.py](src/data_extraction/openf1/intervals_extractor.py)     | Pulls inter-car interval data from the OpenF1 `/v1/intervals` endpoint (reference script, Spain 2023 only)         |
 
 #### `fastf1/` — reference
@@ -182,4 +182,4 @@ historical reference scripts.
 | [scripts/download_data.py](scripts/download_data.py)         | Downloads the full raw + processed dataset from Hugging Face Hub (`VforVitorio/f1-strategy-dataset`)                              |
 | [scripts/download_fia_pdfs.py](scripts/download_fia_pdfs.py) | Scrapes and downloads FIA Sporting and Technical Regulation PDFs (2023-2025) into `data/rag/documents/`; falls back to known URLs |
 | [scripts/build_rag_index.py](scripts/build_rag_index.py)     | One-shot ingestion: PDF → article chunks → BGE-M3 embeddings → local Qdrant collection; idempotent (hash-based deduplication)     |
-| [scripts/build_radio_dataset.py](scripts/build_radio_dataset.py) | Multi-GP CLI wrapper around `RadioDatasetBuilder`; writes per-GP team-radio + RCM parquets under `data/processed/race_radios/` (default season: 2025) |
+| [scripts/build_radio_dataset.py](scripts/build_radio_dataset.py) | Multi-GP CLI wrapper around `RadioDatasetBuilder`; writes per-GP `radios.parquet` + `rcm.parquet` under `data/processed/race_radios/{year}/{slug}/` and downloads radio MP3s under `data/raw/radio_audio/{year}/{slug}/driver_{N}/` (default season: 2025; `--skip-audio` for parquets only) |
