@@ -102,6 +102,23 @@ OUTPUT_SCHEMA: tuple[str, ...] = (
     "audio_path",
 )
 
+# Countries that host more than one Grand Prix in the same season. The default
+# slug rule (``country_name.lower().replace(" ", "_")``) collides for these
+# because two distinct races share the same country, so an early build of the
+# 2025 calendar overwrote Imola with Monza under ``italy/`` and silently kept
+# only one of {Miami, Austin, Las Vegas} under ``united_states/``. The
+# :meth:`RadioDatasetBuilder._gp_directory` helper appends the OpenF1
+# ``circuit_short_name`` (lowercased) to the country slug **only** for these
+# countries, producing ``italy_imola`` / ``italy_monza`` /
+# ``united_states_miami`` / ``united_states_cota`` etc. while leaving every
+# single-race country (Bahrain, Australia, ...) on the cheap legacy slug. The
+# choice is keyed on the country alone — not the year — because the only way
+# this set changes is if the FIA adds another double-header country, at which
+# point the constant gets one more entry and a single rebuild fixes the affected
+# slugs without touching any single-race GP on disk.
+_MULTI_RACE_COUNTRIES: frozenset[str] = frozenset({"Italy", "United States"})
+
+
 # Canonical RCM output schema. Mirrors the OpenF1 ``/v1/race_control`` payload
 # plus the same session metadata columns as the radio schema, so downstream
 # code that joins radios + RCMs by ``(session_key, lap_number)`` does not need
@@ -785,19 +802,27 @@ class RadioDatasetBuilder:
         audio_root: Path,
         *,
         overwrite: bool = False,
+        circuit_short_name: Optional[str] = None,
     ) -> pd.DataFrame:
         """Download every radio MP3 referenced in ``table`` under ``audio_root``.
 
         Each row's ``recording_url`` is fetched once and saved to
         ``{audio_root}/{year}/{slug}/driver_{N}/{basename}.mp3``, where
-        ``slug`` is the lowercase, underscore-joined country name (matching
-        the parquet filename convention) and ``basename`` is the filename
-        component of the URL itself. The URL basenames OpenF1 emits already
-        include the driver name, number, and a UTC timestamp
+        ``slug`` is produced by :meth:`_compute_slug` (matching the parquet
+        filename convention exactly, including the multi-race-country
+        disambiguation for Italy and the United States) and ``basename`` is
+        the filename component of the URL itself. The URL basenames OpenF1
+        emits already include the driver name, number, and a UTC timestamp
         (``HAMILTON_44_20250413_151002.mp3``), so they are unique within a
         session and the filename is fully deterministic — re-running the
         build over the same parquet is idempotent and existing files are
         skipped unless ``overwrite=True``.
+
+        ``circuit_short_name`` is required to disambiguate Italy and the
+        United States; for any other country it is ignored. The slug is
+        computed once before the row loop because every row in ``table``
+        belongs to the same GP — recomputing it per row would just be busy
+        work.
 
         The ``audio_path`` column on the returned DataFrame is populated
         with the path **relative to** ``audio_root``, so the parquet stays
@@ -821,16 +846,20 @@ class RadioDatasetBuilder:
         n_skipped = 0
         n_failed = 0
 
+        # Compute the slug once for the whole table — every row belongs to
+        # the same GP so the country name is constant across the loop.
+        first_row = table.iloc[0]
+        gp_country = str(first_row["gp"])
+        slug = self._compute_slug(gp_country, circuit_short_name)
+
         # Stream downloads through the same retry-enabled session as the
         # metadata fetches, so 429 throttling on the static MP3 host is
         # absorbed by the same backoff policy without any extra glue.
         for _, row in table.iterrows():
             year = int(row["year"])
-            gp = str(row["gp"])
             driver = int(row["driver_number"])
             url = str(row["recording_url"])
 
-            slug = gp.lower().replace(" ", "_")
             filename = Path(url).name or f"{driver}_{int(row['lap_number'])}.mp3"
 
             target_dir = audio_root / str(year) / slug / f"driver_{driver}"
@@ -873,15 +902,57 @@ class RadioDatasetBuilder:
     # ── Persistence ──────────────────────────────────────────────────────────
 
     @staticmethod
-    def _gp_directory(output_dir: Path, year: int, country_name: str) -> Path:
+    def _compute_slug(
+        country_name: str,
+        circuit_short_name: Optional[str] = None,
+    ) -> str:
+        """Return the on-disk slug for a single ``(country, circuit)`` GP.
+
+        For the ~18 single-race countries on the calendar the slug is just
+        ``country_name.lower().replace(" ", "_")`` (``bahrain``,
+        ``united_kingdom``, ``saudi_arabia``, …). For the countries listed
+        in :data:`_MULTI_RACE_COUNTRIES` — currently Italy (Imola + Monza)
+        and the United States (Miami + Austin + Las Vegas) — the slug is
+        suffixed with the lowercased ``circuit_short_name`` so the two/three
+        races never collide on disk: ``italy_imola`` / ``italy_monza`` /
+        ``united_states_miami`` / ``united_states_cota`` etc.
+
+        The single-place implementation is reused by both
+        :meth:`_gp_directory` (parquet path) and :meth:`download_audio_files`
+        (MP3 path) so the metadata tree and the audio tree always agree on
+        the slug for any given GP. Falls back to the bare country slug when
+        ``circuit_short_name`` is missing, even for a multi-race country —
+        this keeps the helper safe to call from legacy code paths that
+        haven't been threaded through yet, at the cost of being unable to
+        disambiguate until the caller is updated.
+        """
+        country_slug = country_name.lower().replace(" ", "_")
+        if country_name in _MULTI_RACE_COUNTRIES and circuit_short_name:
+            circuit_slug = circuit_short_name.lower().replace(" ", "_")
+            return f"{country_slug}_{circuit_slug}"
+        return country_slug
+
+    @staticmethod
+    def _gp_directory(
+        output_dir: Path,
+        year: int,
+        country_name: str,
+        *,
+        circuit_short_name: Optional[str] = None,
+    ) -> Path:
         """Compute the per-GP subdirectory under the output root.
 
         The radio + RCM parquets for a single GP live together in
-        ``{output_dir}/{year}/{slug}/``, where ``slug`` lowercases the
-        country name and replaces spaces with underscores. The slug rule
-        is the same one used by the audio download path, so the metadata
-        tree under ``data/processed/race_radios/`` and the MP3 tree under
-        ``data/raw/radio_audio/`` share an identical
+        ``{output_dir}/{year}/{slug}/``, where ``slug`` is computed by
+        :meth:`_compute_slug` so the rule is shared with the audio
+        download path. For single-race countries the slug is just the
+        lowercased country name; for multi-race countries (Italy, United
+        States) the OpenF1 ``circuit_short_name`` is appended so Imola
+        and Monza (or Miami / Austin / Las Vegas) never overwrite each
+        other under a shared ``italy/`` or ``united_states/`` folder.
+
+        The metadata tree under ``data/processed/race_radios/`` and the
+        MP3 tree under ``data/raw/radio_audio/`` share an identical
         ``{year}/{slug}/`` substructure: a consumer that knows the GP
         builds both paths with the same fragment.
 
@@ -890,7 +961,7 @@ class RadioDatasetBuilder:
         instantiating a builder, and a future test can assert on the
         layout without going through ``write_parquet``.
         """
-        slug = country_name.lower().replace(" ", "_")
+        slug = RadioDatasetBuilder._compute_slug(country_name, circuit_short_name)
         return output_dir / str(year) / slug
 
     def write_parquet(
@@ -898,12 +969,16 @@ class RadioDatasetBuilder:
         table: pd.DataFrame,
         year: int,
         country_name: str,
+        *,
+        circuit_short_name: Optional[str] = None,
     ) -> Path:
         """Persist a built radio table to the per-GP subdirectory.
 
         The on-disk layout is ``{output_dir}/{year}/{slug}/radios.parquet``
-        where ``slug`` lowercases the country name and replaces spaces with
-        underscores. The per-GP folder mirrors the audio download tree
+        where ``slug`` is produced by :meth:`_compute_slug`: the lowercased
+        country for single-race countries, and ``country_circuit`` for the
+        multi-race countries listed in :data:`_MULTI_RACE_COUNTRIES`. The
+        per-GP folder mirrors the audio download tree
         (``data/raw/radio_audio/{year}/{slug}/driver_{N}/``) so the radio
         + RCM corpus and the MP3 corpus share an identical
         ``{year}/{slug}/`` substructure that downstream consumers can
@@ -915,11 +990,21 @@ class RadioDatasetBuilder:
         created lazily on the first call so constructing a builder stays
         side-effect free.
 
+        ``circuit_short_name`` is required to disambiguate Italy and the
+        United States; for any other country the value is ignored. Callers
+        that hold a :class:`SessionBundle` already have it in
+        ``bundle.session["circuit_short_name"]``.
+
         Returns the absolute path of the written parquet so the caller can
         log it, print it from the CLI, or feed it to a follow-up step
         without reconstructing the filename.
         """
-        gp_dir = self._gp_directory(self._output_dir, year, country_name)
+        gp_dir = self._gp_directory(
+            self._output_dir,
+            year,
+            country_name,
+            circuit_short_name=circuit_short_name,
+        )
         gp_dir.mkdir(parents=True, exist_ok=True)
         path = gp_dir / "radios.parquet"
         table.to_parquet(path, index=False)
@@ -937,6 +1022,8 @@ class RadioDatasetBuilder:
         table: pd.DataFrame,
         year: int,
         country_name: str,
+        *,
+        circuit_short_name: Optional[str] = None,
     ) -> Path:
         """Persist a built RCM table to the per-GP subdirectory.
 
@@ -949,11 +1036,21 @@ class RadioDatasetBuilder:
         the first call, exactly like the radio variant, so a dry run that
         fails before any successful write does not pollute the filesystem.
 
+        ``circuit_short_name`` is forwarded to :meth:`_gp_directory` so
+        the multi-race-country disambiguation rule (Italy, United States)
+        is applied identically to the radio parquet — keeping both halves
+        of a GP under the same suffixed slug.
+
         Returns the absolute path of the written parquet for the same
         reasons as :meth:`write_parquet` — logging, summaries, and
         follow-up steps that consume the freshly built file.
         """
-        gp_dir = self._gp_directory(self._output_dir, year, country_name)
+        gp_dir = self._gp_directory(
+            self._output_dir,
+            year,
+            country_name,
+            circuit_short_name=circuit_short_name,
+        )
         gp_dir.mkdir(parents=True, exist_ok=True)
         path = gp_dir / "rcm.parquet"
         table.to_parquet(path, index=False)
@@ -984,10 +1081,24 @@ class RadioDatasetBuilder:
         record them in a build summary without reconstructing the filenames.
         """
         bundle = self.prepare_session_bundle(year, country_name)
+        # Pull the circuit name from the already-fetched session payload so
+        # both writers can apply the multi-race-country disambiguation rule
+        # without a second /v1/sessions round trip.
+        circuit_short_name = bundle.session.get("circuit_short_name")
         radio_table = self.build_radio_table(year, country_name, bundle=bundle)
         rcm_table = self.build_rcm_table(year, country_name, bundle=bundle)
-        radio_path = self.write_parquet(radio_table, year, country_name)
-        rcm_path = self.write_rcm_parquet(rcm_table, year, country_name)
+        radio_path = self.write_parquet(
+            radio_table,
+            year,
+            country_name,
+            circuit_short_name=circuit_short_name,
+        )
+        rcm_path = self.write_rcm_parquet(
+            rcm_table,
+            year,
+            country_name,
+            circuit_short_name=circuit_short_name,
+        )
         return radio_path, rcm_path
 
     # ── Private helpers ──────────────────────────────────────────────────────
@@ -1065,7 +1176,9 @@ if __name__ == "__main__":
         print()
 
         bahrain_radios = builder.download_audio_files(
-            bahrain_radios, audio_root=tmp_root / "audio",
+            bahrain_radios,
+            audio_root=tmp_root / "audio",
+            circuit_short_name=bundle.session.get("circuit_short_name"),
         )
         print("RADIOS (post-audio):")
         print(bahrain_radios[["lap_number", "driver_number", "audio_path"]].head(10))
