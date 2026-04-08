@@ -27,41 +27,59 @@ by `scripts/` and consumed by the multi-agent system.
 ### `radio_dataset_builder.py`
 
 Production module that turns OpenF1 team radios + Race Control Messages into
-two lap-mapped parquets per Grand Prix. Wraps the prototype validated in
+two lap-mapped parquets per Grand Prix **plus** the matching MP3 files on
+disk. Wraps the prototype validated in
 [`notebooks/nlp/N33_radio_dataset_builder.ipynb`](../../notebooks/nlp/N33_radio_dataset_builder.ipynb)
 and is the canonical upstream for the future N29 Radio Agent.
 
-What it builds, per GP:
-- `{year}_{slug}.parquet` — team radios filtered by structural rule (lap not
-  in formation/race-start, lap before chequered flag), 9-column schema
-- `{year}_{slug}_rcm.parquet` — race control messages mapped to laps via
-  OpenF1's own `lap_number` when present and interval matching otherwise,
-  13-column schema (driver-specific RCMs use the targeted driver's intervals,
+What it builds, per GP (under `{output_dir}/{year}/{slug}/`):
+- `radios.parquet` — team radios filtered by structural rule (lap not
+  in formation/race-start, lap before chequered flag), 10-column schema with
+  the `audio_path` column pointing to the downloaded MP3 (relative to the
+  audio root)
+- `rcm.parquet` — race control messages mapped to laps via OpenF1's own
+  `lap_number` when present and interval matching otherwise, 13-column
+  schema (driver-specific RCMs use the targeted driver's intervals,
   track-wide RCMs fall back to the leader)
+- `{audio_dir}/{year}/{slug}/driver_{N}/*.mp3` — one file per radio row,
+  fetched with the same retry-enabled session as the metadata calls. Re-runs
+  are idempotent: existing files are skipped, missing ones are downloaded.
 
-The two builds share a `SessionBundle` so each GP only costs four HTTP calls
-(`/sessions`, `/laps`, `/team_radio`, `/race_control`) instead of the naive
-six. The class also reuses a single `requests.Session` across the whole
-multi-GP loop for connection pooling.
+Both trees use the identical `{year}/{slug}/` substructure on purpose, so
+a consumer that knows the GP builds the radio parquet path and the MP3
+directory path from the same fragment.
 
-What it does **not** do: no MP3 download, no transcription, no NLP. Those
-steps live in N18/N24 today and will move into a runtime
-`RadioPipelineRunner` consumed by the simulation CLI later.
+The two metadata builds share a `SessionBundle` so each GP only costs four
+HTTP calls (`/sessions`, `/laps`, `/team_radio`, `/race_control`) instead of
+the naive six. The same `requests.Session` is reused for both metadata and
+audio fetches across the whole multi-GP loop, so 429 throttling on either
+host is absorbed by the same exponential-backoff policy.
 
-**Run the smoke test (single GP, in-memory only):**
+Sprint weekends: OpenF1 returns Sprint sessions with `session_type="Race"`,
+so the discovery loop and `resolve_session` both filter client-side by
+`session_name == "Race"`. Without that filter, China / Miami / Spa / Austin
+/ São Paulo / Qatar overwrite the Sunday GP parquet with Sprint data.
+
+What it does **not** do: no Whisper / Nemotron transcription, no
+sentiment / intent / NER inference. Those steps live in N18/N24 today and
+will move into a runtime `RadioPipelineRunner` consumed by the simulation
+CLI later — the static build only goes as far as the MP3 file.
+
+**Run the smoke test (single GP, isolated tmpdir):**
 
 ```bash
 python -m src.data_extraction.openf1.radio_dataset_builder
 ```
 
-This builds the radio + RCM tables for Bahrain 2025 to a temporary directory
-and prints `head(10)` for both, so you can sanity-check the schema and the
-filter attrition without touching the on-disk corpus.
+This builds the radio + RCM tables for Bahrain 2025 in a temporary directory,
+runs the audio download stage against the same tmpdir, and prints `head(10)`
+for radios, RCMs, and the post-audio `audio_path` column so you can
+sanity-check the schema, the filter attrition, and the MP3 layout in one run.
 
 **Run the multi-GP build via the CLI wrapper:**
 
 ```bash
-# Default — full 2025 calendar into data/processed/race_radios/
+# Default — full 2025 calendar into data/processed/race_radios/ + data/raw/radio_audio/
 python scripts/build_radio_dataset.py
 
 # Subset of GPs (case-insensitive country names)
@@ -69,6 +87,12 @@ python scripts/build_radio_dataset.py --gps Bahrain Australia
 
 # Historical seasons
 python scripts/build_radio_dataset.py --years 2023 2024 2025
+
+# Parquets only, no MP3 download (fast iteration)
+python scripts/build_radio_dataset.py --skip-audio
+
+# Custom MP3 destination
+python scripts/build_radio_dataset.py --audio-dir data/raw/radio_audio
 
 # Resume after a crash without re-downloading already-built GPs
 python scripts/build_radio_dataset.py --skip-existing
@@ -131,12 +155,24 @@ data/
 │   ├── {gp}_{year}_laps.parquet
 │   ├── {gp}_{year}_pitstops.parquet
 │   ├── {gp}_{year}_weather.parquet
-│   └── {gp}_{year}_openf1_intervals.parquet
+│   ├── {gp}_{year}_openf1_intervals.parquet
+│   └── radio_audio/                         ← OpenF1 radio MP3s
+│       └── 2025/
+│           ├── bahrain/
+│           │   ├── driver_1/   *.mp3
+│           │   ├── driver_44/  *.mp3
+│           │   └── ...
+│           ├── australia/
+│           │   └── ...
+│           └── ...
 └── processed/
     └── race_radios/                         ← OpenF1 radio + RCM corpus
-        ├── 2025_bahrain.parquet             ← team radios (9 cols)
-        ├── 2025_bahrain_rcm.parquet         ← race control (13 cols)
-        ├── 2025_australia.parquet
-        ├── 2025_australia_rcm.parquet
-        └── ...
+        └── 2025/
+            ├── bahrain/
+            │   ├── radios.parquet           ← team radios (10 cols, incl. audio_path)
+            │   └── rcm.parquet              ← race control (13 cols)
+            ├── australia/
+            │   ├── radios.parquet
+            │   └── rcm.parquet
+            └── ...
 ```
