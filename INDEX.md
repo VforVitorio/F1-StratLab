@@ -96,6 +96,7 @@ Notebooks are the primary development artefact. `src/` modules are extracted fro
 | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [N25_pace_agent.ipynb](notebooks/agents/N25_pace_agent.ipynb) | Pace Agent — wraps the N06 XGBoost model into a LangGraph ReAct agent; returns `PaceOutput` (lap time prediction + delta signals + bootstrap CI); first of seven sub-agents                 |
 | [N30_rag_agent.ipynb](notebooks/agents/N30_rag_agent.ipynb)   | RAG Agent — retrieval-augmented generation over FIA Sporting and Technical Regulations (2023-2025) via local Qdrant; returns structured `RegulationContext` objects with article references |
+| [N34_radio_runner_smoke.ipynb](notebooks/agents/N34_radio_runner_smoke.ipynb) | Radio runner smoke test — end-to-end validation of `src/nlp/radio_runner.py`: cache hit/miss, per-lap radio distribution, transcript sanity, and N29 round-trip via `run_radio_agent_from_state` on Bahrain 2025 (28 radios + 76 RCMs, lap 4 emits a PROBLEM alert) |
 
 > Notebooks N26 (Tire), N27 (Race Situation), N28 (Pit Strategy), N29 (Radio), and N31 (Orchestrator) are planned but not yet developed.
 
@@ -121,6 +122,7 @@ Notebooks are the primary development artefact. `src/` modules are extracted fro
 
 | File                                                       | Description                                                                                                                |
 | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| [src/nlp/radio_runner.py](src/nlp/radio_runner.py)         | `RadioPipelineRunner` — replay-time consumer of the static OpenF1 radio corpus built by N33; lazily transcribes per-lap MP3 slices with Whisper (cached under `data/processed/radio_nlp/…/transcripts.json` keyed by model name) and feeds the N29 Radio Agent via `run_radio_agent_from_state`. Wired into `scripts/run_simulation_cli.py` by default |
 | [src/nlp/pipeline.py](src/nlp/pipeline.py)                 | Legacy jupytext-exported NLP pipeline (pre-N24); uses old model paths and `roberta-large` intent model — superseded by N24 |
 | [src/nlp/ner.py](src/nlp/ner.py)                           | NER inference wrapper                                                                                                      |
 | [src/nlp/sentiment.py](src/nlp/sentiment.py)               | Sentiment inference wrapper                                                                                                |
@@ -156,7 +158,7 @@ historical reference scripts.
 
 | File                                                                                                       | Description                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| [src/data_extraction/openf1/radio_dataset_builder.py](src/data_extraction/openf1/radio_dataset_builder.py) | OpenF1 team-radio + RCM + MP3 dataset builder with lap mapping and Sprint-session filtering; consumed by the radio CLI and the future N29 Radio Agent |
+| [src/data_extraction/openf1/radio_dataset_builder.py](src/data_extraction/openf1/radio_dataset_builder.py) | OpenF1 team-radio + RCM + MP3 dataset builder with lap mapping, Sprint-session filtering, and circuit-suffixed slugs for multi-race countries (Italy / United States); the corpus is consumed live by `src/nlp/radio_runner.py` and reaches N29 through `scripts/run_simulation_cli.py` |
 | [src/data_extraction/openf1/intervals_extractor.py](src/data_extraction/openf1/intervals_extractor.py)     | Pulls inter-car interval data from the OpenF1 `/v1/intervals` endpoint (reference script, Spain 2023 only)         |
 
 #### `fastf1/` — reference
@@ -183,3 +185,5 @@ historical reference scripts.
 | [scripts/download_fia_pdfs.py](scripts/download_fia_pdfs.py) | Scrapes and downloads FIA Sporting and Technical Regulation PDFs (2023-2025) into `data/rag/documents/`; falls back to known URLs |
 | [scripts/build_rag_index.py](scripts/build_rag_index.py)     | One-shot ingestion: PDF → article chunks → BGE-M3 embeddings → local Qdrant collection; idempotent (hash-based deduplication)     |
 | [scripts/build_radio_dataset.py](scripts/build_radio_dataset.py) | Multi-GP CLI wrapper around `RadioDatasetBuilder`; writes per-GP `radios.parquet` + `rcm.parquet` under `data/processed/race_radios/{year}/{slug}/` and downloads radio MP3s under `data/raw/radio_audio/{year}/{slug}/driver_{N}/` (default season: 2025; `--skip-audio` for parquets only) |
+| [scripts/upload_radio_corpus.py](scripts/upload_radio_corpus.py) | Publish-side helper — `HfApi.upload_folder` pushes both the parquet tree (`data/processed/race_radios/…`) and the MP3 tree (`data/raw/radio_audio/…`) to `VforVitorio/f1-strategy-dataset` preserving the on-disk layout. Idempotent (content-hash dedup). Flags: `--year`, `--dry-run`, `--skip-parquets`, `--skip-audio`, `--commit-message` |
+| [scripts/run_simulation_cli.py](scripts/run_simulation_cli.py) | Headless multi-agent simulator. Consumes the static radio corpus at replay time via `src/nlp/radio_runner.py`; `ensure_radio_corpus(year, gp_name)` lazily downloads the per-GP MP3 tree on first run. Flags: `--no-real-radios` (fall back to legacy mock injection), `--whisper-model NAME` (default `turbo`) |

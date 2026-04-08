@@ -419,7 +419,24 @@ f1-sim Bahrain NOR McLaren --laps 15-25 --provider openai
 
 # LLM mode with LM Studio (local, OpenAI-compatible API on :1234)
 f1-sim Monaco LEC Ferrari --laps 1-10 --provider lmstudio
+
+# Skip the real radio corpus (legacy mock radios only, fastest path)
+f1-sim Bahrain NOR McLaren --laps 1-10 --no-real-radios
+
+# Use a lighter Whisper model for slower machines (default: turbo)
+f1-sim Bahrain NOR McLaren --laps 1-10 --whisper-model small
 ```
+
+By default every run feeds the N29 Radio Agent from the static OpenF1
+team-radio corpus built by `scripts/build_radio_dataset.py`. The first
+time you run a given GP on a fresh cache, `ensure_radio_corpus` lazily
+downloads the per-GP MP3 tree (~3 MB/race) from the HuggingFace Dataset
+and the CLI then transcribes only the radios that fall inside the lap
+range of the run. Transcripts are cached under
+`data/processed/radio_nlp/{year}/{slug}/transcripts.json` keyed by
+Whisper model name, so switching `--whisper-model` invalidates the cache
+for that run only. Pass `--no-real-radios` to fall back to the legacy
+`--radio-every` mock injection path for stress tests.
 
 Use `f1-sim --help` for the full option list (rival tracking, radio
 cadence, year, custom parquet paths, verbose traceback, etc.).

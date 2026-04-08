@@ -159,6 +159,34 @@ python scripts/run_simulation_cli.py Monaco LEC Ferrari --laps 50-78 `
     --featured data/processed/laps_featured_2025.parquet
 ```
 
+### Real team-radio corpus (default) vs legacy mock injection
+
+By default every run feeds the N29 Radio Agent from the static OpenF1
+corpus built by `scripts/build_radio_dataset.py`. At startup the CLI
+calls `ensure_radio_corpus(year, gp_name)` in
+`src/f1_strat_manager/data_cache.py` to lazily download the per-GP MP3
+tree (~3 MB/race) from the HuggingFace Dataset if it is not already on
+disk, then builds a `RadioPipelineRunner`
+(`src/nlp/radio_runner.py`) that transcribes per-lap slices with Whisper
+on demand. Transcripts land in
+`data/processed/radio_nlp/{year}/{slug}/transcripts.json`, keyed by
+Whisper model name so switching `--whisper-model` re-transcribes cleanly.
+The run header advertises `radios=N` and the summary panel shows a
+`radio src corpus/Nr·Mrcm` row so you can tell where the radios came
+from. End-to-end validation lives in
+[`notebooks/agents/N34_radio_runner_smoke.ipynb`](../../notebooks/agents/N34_radio_runner_smoke.ipynb).
+
+```powershell
+# Skip the real corpus — legacy mock radios only (fastest path)
+python scripts/run_simulation_cli.py Bahrain NOR McLaren --laps 1-10 --no-real-radios
+
+# Override the Whisper model (default: turbo; also tiny / base / small / medium / large)
+python scripts/run_simulation_cli.py Bahrain NOR McLaren --laps 1-10 --whisper-model small
+```
+
+`--radio-every` still works on top of the real corpus, so stress tests
+that need extra mock radios keep layering them over the OpenF1 stream.
+
 **Output columns:**
 ```
 Lap | Cmpd | Life | Action | Conf | STAY / PIT / UDCT / OVCT | Reasoning

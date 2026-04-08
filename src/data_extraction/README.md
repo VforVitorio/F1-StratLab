@@ -74,9 +74,30 @@ double-header country in a future season is a one-line change to the
 constant followed by a rebuild of just the affected GPs.
 
 What it does **not** do: no Whisper / Nemotron transcription, no
-sentiment / intent / NER inference. Those steps live in N18/N24 today and
-will move into a runtime `RadioPipelineRunner` consumed by the simulation
-CLI later — the static build only goes as far as the MP3 file.
+sentiment / intent / NER inference. The static build only goes as far as
+the MP3 file on disk. The runtime consumer that turns those MP3s into
+structured radio events lives in
+[`src/nlp/radio_runner.py`](../nlp/radio_runner.py) — a
+`RadioPipelineRunner` that lazily transcribes per-lap slices with Whisper
+and hands them to the N29 Radio Agent. The simulation CLI
+(`scripts/run_simulation_cli.py`) wires this runner in automatically and
+auto-fetches the audio tree for the requested GP via
+`ensure_radio_corpus` in `src/f1_strat_manager/data_cache.py`, so a user
+running `f1-sim Bahrain NOR McLaren` never needs to touch the builder or
+download the MP3s by hand. See
+[`notebooks/agents/N34_radio_runner_smoke.ipynb`](../../notebooks/agents/N34_radio_runner_smoke.ipynb)
+for the end-to-end smoke test (28 radios + 76 RCMs on Bahrain 2025,
+lap 4 emits a PROBLEM alert through N29).
+
+**Publishing the corpus:** `scripts/upload_radio_corpus.py` is the
+companion helper that uploads both trees (the parquets under
+`data/processed/race_radios/{year}/{slug}/` and the MP3s under
+`data/raw/radio_audio/{year}/{slug}/`) to the
+`VforVitorio/f1-strategy-dataset` HuggingFace Dataset. It preserves the
+on-disk layout, parquets upload first (fail fast), and re-runs are
+idempotent because HF Hub deduplicates by content hash. CLI flags cover
+`--year`, `--dry-run`, `--skip-parquets`, `--skip-audio`, and
+`--commit-message`.
 
 **Run the smoke test (single GP, isolated tmpdir):**
 
