@@ -405,17 +405,31 @@ class PitStrategyAgent:
     def _get_lap_row(self, driver: str, lap_number: int) -> Optional[pd.Series]:
         """Return the single self.laps_df row for driver at lap_number, or None if missing.
 
+        When no exact lap match exists (common at lap 1 because FastF1 sometimes
+        omits the opening lap row, or at the very end of a stint when the LLM
+        ReAct loop reasons about a lap that has not been recorded yet), fall back
+        to the most recent prior lap for the same driver. This keeps the
+        feature-builder usable instead of forcing the caller to raise.
+
         Args:
             driver: FastF1 driver abbreviation.
             lap_number: Lap number as int.
 
         Returns:
-            Pandas Series for that lap, or None.
+            Pandas Series for that lap, the closest prior lap, or None.
         """
-        rows = self.laps_df[
-            (self.laps_df['Driver'] == driver) & (self.laps_df['LapNumber'] == lap_number)
-        ]
-        return rows.iloc[0] if not rows.empty else None
+        driver_rows = self.laps_df[self.laps_df['Driver'] == driver]
+        if driver_rows.empty:
+            return None
+        exact = driver_rows[driver_rows['LapNumber'] == lap_number]
+        if not exact.empty:
+            return exact.iloc[0]
+        prior = driver_rows[driver_rows['LapNumber'] < lap_number]
+        if not prior.empty:
+            return prior.sort_values('LapNumber').iloc[-1]
+        # No prior lap either — fall back to the earliest later lap so the
+        # feature builder still has something to work with.
+        return driver_rows.sort_values('LapNumber').iloc[0]
 
     def _get_position_map(self, lap_number: int) -> dict[str, float]:
         """Return {driver: position} for all drivers at lap_number with valid position.

@@ -1650,6 +1650,28 @@ def run(args: argparse.Namespace) -> None:
                 action_counts["DNF"] = action_counts.get("DNF", 0) + 1
                 continue
 
+            # Incomplete-lap-data guard. FastF1 occasionally lands a row with
+            # NaN position / lap_time / tyre_life on the opening laps of some
+            # 2025 GPs (notably VER at Spielberg lap 1). The display columns
+            # collapse those to 0 with `or 0`, but the agents downstream
+            # consume the raw lap_state dict and crash on the first numeric
+            # subtraction (e.g. delta_vs_prev). Skip the agents for that lap
+            # and emit an INCOMPLETE row instead, mirroring the DNF path.
+            _pos_raw  = driver_st.get("position")
+            _life_raw = driver_st.get("tyre_life")
+            _ltime_raw = driver_st.get("lap_time_s")
+            if _pos_raw is None or _life_raw is None or _ltime_raw is None:
+                inc_row: list[Any] = [str(lap_num), "—", "—", "—", "—", "—"]
+                if has_rival:
+                    inc_row.append("—")
+                inc_row.extend([Text("[INCOMPLETE]", style="dim"), "", "", "", "", "", ""])
+                inc_tbl = _make_table(has_rival, show_header=False)
+                inc_tbl.add_row(*inc_row)
+                live.console.print(inc_tbl)
+                live.console.print()
+                action_counts["INCOMPLETE"] = action_counts.get("INCOMPLETE", 0) + 1
+                continue
+
             compound  = driver_st.get("compound", "?")
             tyre_life = int(driver_st.get("tyre_life") or 0)
             position  = int(driver_st.get("position") or 0)

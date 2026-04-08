@@ -631,16 +631,40 @@ def _run_mc_simulation(
 
     sigma_pace = (pace_out.ci_p90 - pace_out.ci_p10) / (2 * 1.645)
 
-    p10_cliff = tire_out.laps_to_cliff_p10
-    p50_cliff = tire_out.laps_to_cliff_p50
-    p90_cliff = tire_out.laps_to_cliff_p90
+    # Clamp Triangular(left, mode, right) inputs so left < right always holds.
+    # numpy raises ValueError("left == right") when the bounds collapse, which
+    # happens at lap 1 because the N26 tire model and the N15 pit-duration
+    # quantile regressors can return identical p10/p50/p90 when there is no
+    # historical lap data yet (TyreLife=0). The clamp keeps the strategy
+    # orchestrator running on the opening lap with a degenerate but valid
+    # distribution instead of crashing the whole MC layer.
+    def _clamp_triangular(p10: float, p50: float, p90: float,
+                          eps: float = 1e-3) -> tuple[float, float, float]:
+        left  = float(p10)
+        mode  = float(p50)
+        right = float(p90)
+        if right <= left:
+            right = left + eps
+        if mode < left:
+            mode = left
+        if mode > right:
+            mode = right
+        return left, mode, right
+
+    p10_cliff, p50_cliff, p90_cliff = _clamp_triangular(
+        tire_out.laps_to_cliff_p10,
+        tire_out.laps_to_cliff_p50,
+        tire_out.laps_to_cliff_p90,
+    )
 
     sc_prob = situation_out.sc_prob_3lap
 
     if pit_out is not None:
-        pit_p05   = pit_out.stop_duration_p05
-        pit_p50   = pit_out.stop_duration_p50
-        pit_p95   = pit_out.stop_duration_p95
+        pit_p05, pit_p50, pit_p95 = _clamp_triangular(
+            pit_out.stop_duration_p05,
+            pit_out.stop_duration_p50,
+            pit_out.stop_duration_p95,
+        )
         ucut_prob = (
             pit_out.undercut_prob
             if pit_out.undercut_prob is not None
