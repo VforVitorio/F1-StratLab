@@ -200,21 +200,36 @@ class RaceMeta:
     optimisation needs it.
 
     Attributes:
-        year:         Season the race belongs to. Used for the output filename
-                      and to disambiguate the same circuit visited across
-                      multiple seasons.
-        country_name: Exact country string returned by OpenF1, used as the
-                      ``country_name`` argument to ``RadioDatasetBuilder``.
-                      Must be passed through unchanged because the builder
-                      slugifies it for the parquet filename.
-        session_key:  OpenF1 session identifier. Carried for log lines and as
-                      a stable handle in case future versions of the script
-                      need to fetch additional session-specific data.
+        year:               Season the race belongs to. Used for the output
+                            filename and to disambiguate the same circuit
+                            visited across multiple seasons.
+        country_name:       Exact country string returned by OpenF1, used as
+                            the ``country_name`` argument to
+                            ``RadioDatasetBuilder``. Must be passed through
+                            unchanged because the builder slugifies it for
+                            the parquet filename.
+        session_key:        OpenF1 session identifier. Carried for log lines
+                            and as a stable handle in case future versions of
+                            the script need to fetch additional
+                            session-specific data.
+        circuit_short_name: OpenF1 circuit short name (e.g. ``"Imola"`` /
+                            ``"Monza"`` / ``"Miami"`` / ``"COTA"``). Required
+                            to disambiguate countries that host more than one
+                            GP per season — Italy (Imola + Monza) and the
+                            United States (Miami + Austin + Las Vegas) — so
+                            the builder writes them to distinct ``italy_imola`` /
+                            ``italy_monza`` / ``united_states_*`` slugs instead
+                            of overwriting each other under a shared
+                            ``italy/`` or ``united_states/`` folder. Optional
+                            for backwards compatibility with code paths that
+                            haven't been updated yet, but every code path
+                            inside this script populates it.
     """
 
-    year:         int
-    country_name: str
-    session_key:  int
+    year:               int
+    country_name:       str
+    session_key:        int
+    circuit_short_name: Optional[str] = None
 
 
 @dataclass
@@ -367,8 +382,18 @@ class RadioDatasetCLI:
                 if session.get("session_name") != "Race":
                     sprint_count += 1
                     continue
+                # circuit_short_name is captured here so the build loop can
+                # apply the multi-race-country slug disambiguation rule
+                # (Italy → italy_imola / italy_monza, United States →
+                # united_states_miami / united_states_cota / ...) without a
+                # second /v1/sessions round trip per GP.
                 races.append(
-                    RaceMeta(year=year, country_name=country, session_key=int(key))
+                    RaceMeta(
+                        year=year,
+                        country_name=country,
+                        session_key=int(key),
+                        circuit_short_name=session.get("circuit_short_name"),
+                    )
                 )
                 year_count += 1
 
@@ -386,12 +411,21 @@ class RadioDatasetCLI:
         races:     list[RaceMeta],
         gp_filter: Optional[list[str]],
     ) -> list[RaceMeta]:
-        """Restrict the discovered race list to a subset of country names.
+        """Restrict the discovered race list to a subset of country / circuit names.
 
         Case-insensitive match because the user may pass ``"bahrain"`` from
         the CLI even though OpenF1 stores ``"Bahrain"``. Returns the input
         list unchanged when ``gp_filter`` is ``None`` or empty so the
         ``--gps`` argument behaves as a no-op when the user does not pass it.
+
+        A token matches a race when it equals **either** the race's
+        ``country_name`` or its ``circuit_short_name`` (both lowercased).
+        Matching by circuit name is essential for double-header countries
+        (Italy → Imola/Monza, United States → Miami/Austin/Las Vegas)
+        because the country alone would rebuild every sibling race for
+        that country. With circuit-name matching the operator can target a
+        single race precisely — ``--gps Imola`` only rebuilds Imola, while
+        ``--gps Italy`` rebuilds both Imola and Monza in one go.
 
         Logs a warning for any GP name that did not match anything so a typo
         in ``--gps`` does not silently produce a zero-row run that the
@@ -400,10 +434,22 @@ class RadioDatasetCLI:
         if not gp_filter:
             return races
 
-        wanted   = {name.lower() for name in gp_filter}
-        filtered = [r for r in races if r.country_name.lower() in wanted]
+        wanted = {name.lower() for name in gp_filter}
 
-        matched = {r.country_name.lower() for r in filtered}
+        def _matches(r: RaceMeta) -> bool:
+            if r.country_name.lower() in wanted:
+                return True
+            if r.circuit_short_name and r.circuit_short_name.lower() in wanted:
+                return True
+            return False
+
+        filtered = [r for r in races if _matches(r)]
+
+        matched: set[str] = set()
+        for r in filtered:
+            matched.add(r.country_name.lower())
+            if r.circuit_short_name:
+                matched.add(r.circuit_short_name.lower())
         for name in wanted - matched:
             log.warning("--gps filter: no match for '%s'", name)
 
@@ -484,6 +530,15 @@ class RadioDatasetCLI:
                 bundle = self._builder.prepare_session_bundle(
                     race.year, race.country_name,
                 )
+                # Prefer the value already on the RaceMeta (captured in
+                # discover_races) so the slug rule stays consistent across
+                # the discovery and build phases. Fall back to the bundle's
+                # session payload if discover_races somehow saw a row that
+                # was missing the field.
+                circuit_short_name = (
+                    race.circuit_short_name
+                    or bundle.session.get("circuit_short_name")
+                )
                 radio_table = self._builder.build_radio_table(
                     race.year, race.country_name, bundle=bundle,
                 )
@@ -492,13 +547,21 @@ class RadioDatasetCLI:
                 )
                 if not self._cfg.skip_audio:
                     radio_table = self._builder.download_audio_files(
-                        radio_table, audio_root=self._cfg.audio_dir,
+                        radio_table,
+                        audio_root=self._cfg.audio_dir,
+                        circuit_short_name=circuit_short_name,
                     )
                 radio_path = self._builder.write_parquet(
-                    radio_table, race.year, race.country_name,
+                    radio_table,
+                    race.year,
+                    race.country_name,
+                    circuit_short_name=circuit_short_name,
                 )
                 rcm_path = self._builder.write_rcm_parquet(
-                    rcm_table, race.year, race.country_name,
+                    rcm_table,
+                    race.year,
+                    race.country_name,
+                    circuit_short_name=circuit_short_name,
                 )
             except Exception as exc:
                 log.error(
@@ -540,9 +603,19 @@ class RadioDatasetCLI:
         radio half of a GP lives at
         ``{output_dir}/{year}/{slug}/radios.parquet``; this method just
         appends the role filename onto the shared per-GP directory.
+
+        ``race.circuit_short_name`` is forwarded to the directory helper so
+        multi-race countries (Italy, United States) resolve to their
+        suffixed slugs (``italy_imola`` / ``united_states_miami`` / ...).
+        Without this, the skip-existing check would compare against the
+        legacy ``italy/`` or ``united_states/`` path and either falsely
+        skip a different race or rebuild on top of the wrong slug.
         """
         gp_dir = RadioDatasetBuilder._gp_directory(
-            self._cfg.output_dir, race.year, race.country_name,
+            self._cfg.output_dir,
+            race.year,
+            race.country_name,
+            circuit_short_name=race.circuit_short_name,
         )
         return gp_dir / "radios.parquet"
 
@@ -554,10 +627,14 @@ class RadioDatasetCLI:
         :meth:`RadioDatasetBuilder.write_rcm_parquet` writes to. Both
         targets are checked together by the skip-existing logic so a GP
         is only skipped when both halves of its corpus are already on
-        disk.
+        disk. ``race.circuit_short_name`` is forwarded to the directory
+        helper for the same multi-race-country reason as the radio path.
         """
         gp_dir = RadioDatasetBuilder._gp_directory(
-            self._cfg.output_dir, race.year, race.country_name,
+            self._cfg.output_dir,
+            race.year,
+            race.country_name,
+            circuit_short_name=race.circuit_short_name,
         )
         return gp_dir / "rcm.parquet"
 
