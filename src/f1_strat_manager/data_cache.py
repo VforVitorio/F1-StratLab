@@ -111,6 +111,13 @@ _DEFAULT_MODEL_PATTERNS: tuple[str, ...] = (
     "data/processed/tiredeg_feature_manifest.json",
     "data/processed/tiredeg_sequence_config.json",
     "data/processed/circuit_clustering/**",
+    # Radio corpus metadata — small parquets (~430 KB total for the full
+    # 2025 calendar) that the runner reads to enumerate per-lap team-radio
+    # rows and FIA race-control messages. The matching MP3 audio tree under
+    # data/raw/radio_audio/** is intentionally NOT pulled by default
+    # (~80 MB) — :func:`ensure_radio_corpus` downloads it lazily per GP
+    # only when the simulation actually targets that race.
+    "data/processed/race_radios/**",
     # RAG index — optional, the Hub may not have it yet. snapshot_download
     # ignores missing patterns silently.
     "data/rag/**",
@@ -427,6 +434,65 @@ def ensure_race(year: int, gp_name: str, show_progress: bool = True) -> Path:
     return race_dir
 
 
+def ensure_radio_corpus(
+    year: int,
+    gp_name: str,
+    show_progress: bool = True,
+) -> Path:
+    """Download the static OpenF1 radio corpus for a single GP on demand.
+
+    The metadata parquets under ``data/processed/race_radios/**`` are
+    pulled by the default first-run setup because they are tiny, but the
+    matching MP3 audio tree (~3 MB per GP) only lands on disk when the
+    user actually runs a simulation against that race. This helper is the
+    lazy bridge: it resolves the friendly GP name to the on-disk slug via
+    :mod:`src.f1_strat_manager.gp_slugs`, checks whether the audio folder
+    is already populated, and triggers a focused
+    ``snapshot_download`` for just that one slug when it is not.
+
+    Returns the resolved audio directory path so callers can immediately
+    pass it to :class:`src.nlp.radio_runner.RadioPipelineRunner`. Skips the
+    network entirely when ``F1_STRAT_OFFLINE=1`` is set, returning the
+    (possibly empty) directory and letting the runner decide whether to
+    raise or downgrade to the synthetic fallback.
+
+    Idempotent: re-running on a populated cache short-circuits before
+    importing huggingface_hub, so the hot path of an already-warm install
+    pays no startup cost beyond the slug lookup itself.
+    """
+    # Lightweight import — gp_slugs has zero heavy deps so this stays cheap
+    # even when the rest of src.agents has not been touched yet.
+    from src.f1_strat_manager.gp_slugs import resolve_gp_slug
+
+    try:
+        slug = resolve_gp_slug(gp_name)
+    except ValueError:
+        # Unknown friendly name — let the caller handle it. We do NOT raise
+        # here because the runner may itself accept the raw gp_name path
+        # and the user gets a clearer error from the runner constructor.
+        return get_data_root() / "raw" / "radio_audio" / str(year) / gp_name
+
+    data_root  = get_data_root()
+    audio_dir  = data_root / "raw" / "radio_audio" / str(year) / slug
+
+    if audio_dir.exists() and any(audio_dir.iterdir()):
+        return audio_dir
+
+    if os.environ.get("F1_STRAT_OFFLINE") == "1":
+        return audio_dir
+
+    # Pull both the audio tree and the matching parquets in one shot. The
+    # parquets are usually already on disk from the default first-run pull
+    # but listing them here makes ensure_radio_corpus self-contained for
+    # the case where the user manually deleted data/processed/race_radios/.
+    patterns = [
+        f"data/raw/radio_audio/{year}/{slug}/**",
+        f"data/processed/race_radios/{year}/{slug}/**",
+    ]
+    _snapshot_download(patterns, show_progress=show_progress)
+    return audio_dir
+
+
 def ensure_models(show_progress: bool = True) -> Path:
     """Download the full model tree when any critical file is missing.
 
@@ -459,5 +525,6 @@ __all__ = [
     "is_first_run",
     "ensure_setup",
     "ensure_race",
+    "ensure_radio_corpus",
     "ensure_models",
 ]
