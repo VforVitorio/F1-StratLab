@@ -49,12 +49,25 @@ from typing import Optional
 
 import pandas as pd
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 # ── Module-level constants ───────────────────────────────────────────────────
 # OpenF1 REST base URL. Centralised so tests or mirrors can monkeypatch it in
 # one place instead of hunting through every request call.
 OPENF1_BASE: str = "https://api.openf1.org/v1"
+
+# Default retry policy for OpenF1 HTTP calls. OpenF1 throttles aggressively
+# when a client re-hits the same session_key in quick succession (our smoke
+# tests triggered it), so every GET retries up to five times on 429 and the
+# 5xx family with an exponential backoff (1s, 2s, 4s, 8s, 16s = 31s total
+# worst case per request before giving up). ``Retry.respect_retry_after_header``
+# honours OpenF1's own ``Retry-After`` value when present so we back off for
+# at least as long as the server asks us to.
+RETRY_TOTAL: int = 5
+RETRY_BACKOFF_FACTOR: float = 1.0
+RETRY_STATUS_FORCELIST: tuple[int, ...] = (429, 500, 502, 503, 504)
 
 # Laps with no strategic value. Lap 0 is the formation lap, lap 1 is the
 # flying-start chaos window: neither carries any actionable pit/tyre call so
@@ -66,9 +79,16 @@ RACE_START_LAPS: frozenset[int] = frozenset({0, 1})
 # total_laps for the leader, so the strict filter is ``lap_number < total_laps``.
 DROP_LAST_LAP: bool = True
 
-# Canonical output schema — the 9 columns the downstream NLP/agent code relies
+# Canonical output schema — the 10 columns the downstream NLP/agent code relies
 # on. Exported as a tuple so callers can assert DataFrame shape without copying
 # a literal list around. Keep this in sync with ``build_radio_table``.
+#
+# ``audio_path`` is the relative path of the downloaded MP3 under the audio
+# root configured by the CLI (e.g. ``2025/bahrain/driver_44/HAM_044_xxx.mp3``).
+# It is populated by :meth:`RadioDatasetBuilder.download_audio_files` after
+# the metadata table is built; ``build_radio_table`` itself emits ``None``
+# for this column so the schema stays consistent even when the caller skips
+# the audio download step (in-memory smoke tests, dry runs, etc.).
 OUTPUT_SCHEMA: tuple[str, ...] = (
     "session_key",
     "meeting_key",
@@ -79,6 +99,7 @@ OUTPUT_SCHEMA: tuple[str, ...] = (
     "lap_number",
     "date",
     "recording_url",
+    "audio_path",
 )
 
 # Canonical RCM output schema. Mirrors the OpenF1 ``/v1/race_control`` payload
@@ -105,6 +126,43 @@ RCM_OUTPUT_SCHEMA: tuple[str, ...] = (
 
 
 logger = logging.getLogger(__name__)
+
+
+def build_retry_session() -> requests.Session:
+    """Build a ``requests.Session`` that retries OpenF1 rate-limit responses.
+
+    OpenF1 throttles clients that re-hit the same session_key in quick
+    succession — the smoke test hit a 429 the second time it ran within
+    the same minute, and a naive full-season build would trip the limit
+    even harder because it touches every session_key on the calendar in a
+    tight loop. Mounting a retry-enabled :class:`HTTPAdapter` at the
+    session level fixes this transparently: every ``GET`` issued through
+    the session inherits the backoff, so neither the builder nor the CLI
+    loop has to reason about rate limits at the call site.
+
+    The policy retries on 429 and the 5xx transient-server family with an
+    exponential backoff (1s, 2s, 4s, 8s, 16s = 31s worst-case cumulative
+    wait before giving up per request). ``respect_retry_after_header``
+    honours any ``Retry-After`` value OpenF1 supplies so we back off for
+    at least as long as the server asks us to before the client timer
+    kicks back in. The factory is kept as a module-level free function so
+    both :class:`RadioDatasetBuilder` (when the caller does not inject its
+    own session) and the multi-GP CLI wrapper share the exact same policy
+    without duplicating the configuration block.
+    """
+    session = requests.Session()
+    retry = Retry(
+        total=RETRY_TOTAL,
+        backoff_factor=RETRY_BACKOFF_FACTOR,
+        status_forcelist=list(RETRY_STATUS_FORCELIST),
+        allowed_methods=frozenset({"GET"}),
+        respect_retry_after_header=True,
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
 
 
 @dataclass(frozen=True)
@@ -184,11 +242,19 @@ class RadioDatasetBuilder:
         ``session`` lets the caller inject a pre-configured
         ``requests.Session`` (useful for tests with a mock transport adapter,
         or for wiring retry/backoff middleware). When omitted the builder
-        creates its own session and owns it for the rest of its lifetime.
+        creates its own session via :func:`build_retry_session`, which
+        mounts an ``HTTPAdapter`` configured to retry OpenF1's 429 and 5xx
+        responses with exponential backoff — this is what keeps the
+        smoke test and the multi-GP CLI from crashing the first time the
+        public API throttles a rapid sequence of calls. An injected
+        session is used as-is so callers that need a custom retry policy
+        (tests, custom mirrors) stay in full control.
         """
         self._output_dir: Path = Path(output_dir)
         self._http_timeout: int = http_timeout
-        self._session: requests.Session = session if session is not None else requests.Session()
+        self._session: requests.Session = (
+            session if session is not None else build_retry_session()
+        )
 
     # ── Public properties ────────────────────────────────────────────────────
 
@@ -221,6 +287,16 @@ class RadioDatasetBuilder:
         to surface the problem early instead of propagating an opaque
         empty-radio build.
 
+        On Sprint weekends OpenF1 returns **two** entries with
+        ``session_type="Race"`` for the same country (the Saturday Sprint
+        and the Sunday Grand Prix), and ``sessions[0]`` is whichever one
+        OpenF1 happens to list first. The early 2025 China build hit
+        exactly this footgun and overwrote the main-race parquet with the
+        Sprint payload. To prevent that, the method filters the response
+        client-side by ``session_name == "Race"`` whenever the caller is
+        asking for the main race, so the Sprint sibling is never selected
+        even on weekends where it shares the country name with the GP.
+
         Returns the full session dict so the caller can also read
         ``meeting_key``, ``date_start`` and ``circuit_short_name`` without a
         second round trip to ``/v1/sessions``.
@@ -240,6 +316,19 @@ class RadioDatasetBuilder:
             raise ValueError(
                 f"No {session_type} session found for {country_name} {year}"
             )
+        # Sprint weekends: drop the Sprint sibling so we never accidentally
+        # pick it up instead of the main GP race.
+        if session_type == "Race":
+            main_race = [
+                s for s in sessions if s.get("session_name") == "Race"
+            ]
+            if not main_race:
+                raise ValueError(
+                    f"No main Race session (session_name='Race') found for "
+                    f"{country_name} {year}; got "
+                    f"{[s.get('session_name') for s in sessions]}"
+                )
+            return main_race[0]
         return sessions[0]
 
     def fetch_team_radio(self, session_key: int) -> pd.DataFrame:
@@ -542,6 +631,11 @@ class RadioDatasetBuilder:
         radios["gp"] = country_name
         radios["total_laps"] = bundle.total_laps
 
+        # ``audio_path`` is populated by download_audio_files when the caller
+        # asks for the MP3 download step. Default it to None so the parquet
+        # always conforms to OUTPUT_SCHEMA even when the caller skips audio.
+        radios["audio_path"] = None
+
         logger.info(
             "[%s %d] total radios: %d", country_name, year, n_total,
         )
@@ -683,7 +777,121 @@ class RadioDatasetBuilder:
 
         return rcms[list(RCM_OUTPUT_SCHEMA)]
 
+    # ── Audio download ───────────────────────────────────────────────────────
+
+    def download_audio_files(
+        self,
+        table: pd.DataFrame,
+        audio_root: Path,
+        *,
+        overwrite: bool = False,
+    ) -> pd.DataFrame:
+        """Download every radio MP3 referenced in ``table`` under ``audio_root``.
+
+        Each row's ``recording_url`` is fetched once and saved to
+        ``{audio_root}/{year}/{slug}/driver_{N}/{basename}.mp3``, where
+        ``slug`` is the lowercase, underscore-joined country name (matching
+        the parquet filename convention) and ``basename`` is the filename
+        component of the URL itself. The URL basenames OpenF1 emits already
+        include the driver name, number, and a UTC timestamp
+        (``HAMILTON_44_20250413_151002.mp3``), so they are unique within a
+        session and the filename is fully deterministic — re-running the
+        build over the same parquet is idempotent and existing files are
+        skipped unless ``overwrite=True``.
+
+        The ``audio_path`` column on the returned DataFrame is populated
+        with the path **relative to** ``audio_root``, so the parquet stays
+        portable across machines: a consumer that knows the audio root can
+        reconstruct the absolute path with a single ``Path.__truediv__``
+        without depending on where the build was run. Rows whose download
+        fails (network error, dead URL) get ``audio_path=None`` and the
+        method continues with the next row instead of aborting the whole
+        GP — a few missing MP3s are recoverable, an aborted multi-GP build
+        is not.
+
+        Returns the DataFrame with ``audio_path`` populated. Empty input is
+        handled gracefully (no directories are created) so dry-run paths
+        and zero-radio sessions stay side-effect free.
+        """
+        if table.empty:
+            return table
+
+        audio_paths: list[Optional[str]] = []
+        n_downloaded = 0
+        n_skipped = 0
+        n_failed = 0
+
+        # Stream downloads through the same retry-enabled session as the
+        # metadata fetches, so 429 throttling on the static MP3 host is
+        # absorbed by the same backoff policy without any extra glue.
+        for _, row in table.iterrows():
+            year = int(row["year"])
+            gp = str(row["gp"])
+            driver = int(row["driver_number"])
+            url = str(row["recording_url"])
+
+            slug = gp.lower().replace(" ", "_")
+            filename = Path(url).name or f"{driver}_{int(row['lap_number'])}.mp3"
+
+            target_dir = audio_root / str(year) / slug / f"driver_{driver}"
+            target = target_dir / filename
+            relative = target.relative_to(audio_root)
+
+            if target.exists() and not overwrite:
+                n_skipped += 1
+                audio_paths.append(str(relative))
+                continue
+
+            try:
+                target_dir.mkdir(parents=True, exist_ok=True)
+                resp = self._session.get(
+                    url, timeout=self._http_timeout, stream=True,
+                )
+                resp.raise_for_status()
+                with target.open("wb") as fh:
+                    for chunk in resp.iter_content(chunk_size=8192):
+                        if chunk:
+                            fh.write(chunk)
+                n_downloaded += 1
+                audio_paths.append(str(relative))
+            except Exception as exc:  # noqa: BLE001 — log + continue per row
+                logger.error(
+                    "Failed to download radio MP3 %s: %s", url, exc,
+                )
+                n_failed += 1
+                audio_paths.append(None)
+
+        table = table.copy()
+        table["audio_path"] = audio_paths
+
+        logger.info(
+            "audio download: %d new, %d cached, %d failed (root=%s)",
+            n_downloaded, n_skipped, n_failed, audio_root,
+        )
+        return table
+
     # ── Persistence ──────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _gp_directory(output_dir: Path, year: int, country_name: str) -> Path:
+        """Compute the per-GP subdirectory under the output root.
+
+        The radio + RCM parquets for a single GP live together in
+        ``{output_dir}/{year}/{slug}/``, where ``slug`` lowercases the
+        country name and replaces spaces with underscores. The slug rule
+        is the same one used by the audio download path, so the metadata
+        tree under ``data/processed/race_radios/`` and the MP3 tree under
+        ``data/raw/radio_audio/`` share an identical
+        ``{year}/{slug}/`` substructure: a consumer that knows the GP
+        builds both paths with the same fragment.
+
+        Kept as a static method so the path computation lives in exactly
+        one place — the CLI's skip-existing logic can call it without
+        instantiating a builder, and a future test can assert on the
+        layout without going through ``write_parquet``.
+        """
+        slug = country_name.lower().replace(" ", "_")
+        return output_dir / str(year) / slug
 
     def write_parquet(
         self,
@@ -691,22 +899,29 @@ class RadioDatasetBuilder:
         year: int,
         country_name: str,
     ) -> Path:
-        """Persist a built radio table to the configured output directory.
+        """Persist a built radio table to the per-GP subdirectory.
 
-        The filename follows the convention ``{year}_{country_slug}.parquet``
-        where ``country_slug`` lowercases the country name and replaces
-        spaces with underscores — this keeps the multi-GP build layout
-        predictable and glob-friendly for the downstream loader. The parent
-        directory is created lazily on the first call so constructing a
-        builder stays side-effect free.
+        The on-disk layout is ``{output_dir}/{year}/{slug}/radios.parquet``
+        where ``slug`` lowercases the country name and replaces spaces with
+        underscores. The per-GP folder mirrors the audio download tree
+        (``data/raw/radio_audio/{year}/{slug}/driver_{N}/``) so the radio
+        + RCM corpus and the MP3 corpus share an identical
+        ``{year}/{slug}/`` substructure that downstream consumers can
+        construct from a single fragment. The radio and RCM parquets are
+        named by **role** (``radios.parquet`` / ``rcm.parquet``) rather
+        than by year and slug because both pieces of metadata are already
+        encoded in the path itself, which avoids redundant naming like
+        ``2025_bahrain/2025_bahrain.parquet``. The parent directory is
+        created lazily on the first call so constructing a builder stays
+        side-effect free.
 
         Returns the absolute path of the written parquet so the caller can
         log it, print it from the CLI, or feed it to a follow-up step
         without reconstructing the filename.
         """
-        self._output_dir.mkdir(parents=True, exist_ok=True)
-        slug = country_name.lower().replace(" ", "_")
-        path = self._output_dir / f"{year}_{slug}.parquet"
+        gp_dir = self._gp_directory(self._output_dir, year, country_name)
+        gp_dir.mkdir(parents=True, exist_ok=True)
+        path = gp_dir / "radios.parquet"
         table.to_parquet(path, index=False)
         logger.info(
             "[%s %d] wrote %d rows to %s",
@@ -723,22 +938,24 @@ class RadioDatasetBuilder:
         year: int,
         country_name: str,
     ) -> Path:
-        """Persist a built RCM table to the configured output directory.
+        """Persist a built RCM table to the per-GP subdirectory.
 
-        Mirrors :meth:`write_parquet` but appends an ``_rcm`` suffix to the
-        filename so the radio and RCM parquets sit side by side under the
-        same directory and can be located by glob without ambiguity. The
-        parent directory is created lazily on the first call, exactly like
-        the radio variant, so a dry run that fails before any successful
-        write does not pollute the filesystem.
+        Sibling of :meth:`write_parquet`: writes to
+        ``{output_dir}/{year}/{slug}/rcm.parquet`` so the radio and RCM
+        parquets for a single GP live in the same folder. Loading both
+        halves for a GP becomes a one-liner that just appends the role
+        filename to the per-GP path, with no string templating on year or
+        slug at the call site. The parent directory is created lazily on
+        the first call, exactly like the radio variant, so a dry run that
+        fails before any successful write does not pollute the filesystem.
 
         Returns the absolute path of the written parquet for the same
-        reasons as :meth:`write_parquet` — logging, summaries, and follow-up
-        steps that consume the freshly built file.
+        reasons as :meth:`write_parquet` — logging, summaries, and
+        follow-up steps that consume the freshly built file.
         """
-        self._output_dir.mkdir(parents=True, exist_ok=True)
-        slug = country_name.lower().replace(" ", "_")
-        path = self._output_dir / f"{year}_{slug}_rcm.parquet"
+        gp_dir = self._gp_directory(self._output_dir, year, country_name)
+        gp_dir.mkdir(parents=True, exist_ok=True)
+        path = gp_dir / "rcm.parquet"
         table.to_parquet(path, index=False)
         logger.info(
             "[%s %d] wrote %d RCM rows to %s",
@@ -760,11 +977,11 @@ class RadioDatasetBuilder:
         bundle once via :meth:`prepare_session_bundle`, then runs both build
         methods sharing the same bundle so the GP only costs two HTTP fetches
         for the shared bits (sessions + laps) plus one each for radios and
-        race control. Writes the radio parquet as ``{year}_{slug}.parquet``
-        and the RCM parquet as ``{year}_{slug}_rcm.parquet`` in the same
-        output directory, then returns both paths as a tuple so a multi-GP
-        loop can record them in a build summary without reconstructing the
-        filenames.
+        race control. Writes both parquets into the per-GP subdirectory
+        ``{output_dir}/{year}/{slug}/`` as ``radios.parquet`` and
+        ``rcm.parquet`` (see :meth:`write_parquet` for the rationale of the
+        layout) and returns both paths as a tuple so a multi-GP loop can
+        record them in a build summary without reconstructing the filenames.
         """
         bundle = self.prepare_session_bundle(year, country_name)
         radio_table = self.build_radio_table(year, country_name, bundle=bundle)
@@ -806,8 +1023,10 @@ if __name__ == "__main__":
     # Smoke test — mirrors the notebook's Bahrain 2025 demo so a developer
     # can run `python -m src.data_extraction.openf1.radio_dataset_builder` and
     # verify the module works end-to-end without setting up a notebook.
-    # Now also exercises the RCM build path so both halves of the parquet
-    # contract are checked in a single smoke run.
+    # Exercises the radio build, the RCM build, and the audio download path
+    # so all three halves of the on-disk contract are checked in a single
+    # smoke run. Everything writes to a tmpdir so the smoke test never
+    # touches the real data/ tree.
     import tempfile
 
     logging.basicConfig(
@@ -816,7 +1035,8 @@ if __name__ == "__main__":
     )
 
     with tempfile.TemporaryDirectory() as tmp:
-        builder = RadioDatasetBuilder(output_dir=Path(tmp))
+        tmp_root = Path(tmp)
+        builder = RadioDatasetBuilder(output_dir=tmp_root / "parquets")
 
         # Share the session bundle so the smoke test exercises the same
         # one-fetch path the multi-GP CLI loop uses.
@@ -825,7 +1045,7 @@ if __name__ == "__main__":
         bahrain_radios = builder.build_radio_table(
             year=2025, country_name="Bahrain", bundle=bundle,
         )
-        print("RADIOS:")
+        print("RADIOS (pre-audio):")
         print(bahrain_radios.head(10))
         print(
             f"radio rows: {len(bahrain_radios)} | "
@@ -841,4 +1061,15 @@ if __name__ == "__main__":
         print(
             f"rcm rows: {len(bahrain_rcms)} | "
             f"columns: {list(bahrain_rcms.columns)}"
+        )
+        print()
+
+        bahrain_radios = builder.download_audio_files(
+            bahrain_radios, audio_root=tmp_root / "audio",
+        )
+        print("RADIOS (post-audio):")
+        print(bahrain_radios[["lap_number", "driver_number", "audio_path"]].head(10))
+        print(
+            f"audio populated: {int(bahrain_radios['audio_path'].notna().sum())}/"
+            f"{len(bahrain_radios)}"
         )
