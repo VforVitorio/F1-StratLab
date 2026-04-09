@@ -76,12 +76,9 @@ if str(_REPO_ROOT) not in sys.path:
 # dev checkouts where the helper is not yet on the path.
 try:
     from src.f1_strat_manager.data_cache import get_data_root as _get_data_root
-    from src.f1_strat_manager.data_cache import get_models_root as _get_models_root
     _DATA_ROOT = _get_data_root()
-    _MODELS_ROOT = _get_models_root()
 except Exception:
     _DATA_ROOT = _REPO_ROOT / "data"
-    _MODELS_ROOT = _REPO_ROOT / "models"
 
 # ── Module-level globals (populated by entry points) ──────────────────────────
 LAPS:         pd.DataFrame = pd.DataFrame()
@@ -349,7 +346,7 @@ class RadioAgentCFG:
     # ------------------------------------------------------------------
 
     def __post_init__(self):
-        nlp_dir = _MODELS_ROOT / "nlp"
+        nlp_dir = _DATA_ROOT / "models" / "nlp"
 
         s_tok,  s_model                = self._load_sentiment_model(nlp_dir, self.device)
         i_model, _intent_names         = self._load_intent_model(nlp_dir)

@@ -35,16 +35,13 @@ while not (_REPO_ROOT / '.git').exists():
 # transparently in both editable-dev mode and the ``uv tool install`` flow.
 try:
     from src.f1_strat_manager.data_cache import get_data_root as _get_data_root
-    from src.f1_strat_manager.data_cache import get_models_root as _get_models_root
     _DATA_ROOT = _get_data_root()
-    _MODELS_ROOT = _get_models_root()
 except Exception:
     _DATA_ROOT = _REPO_ROOT / 'data'
-    _MODELS_ROOT = _REPO_ROOT / 'models'
 
-_MODELS    = _MODELS_ROOT
+_MODELS    = _DATA_ROOT / 'models'
 _PROCESSED = _DATA_ROOT / 'processed'
-_AGENTS    = _MODELS_ROOT / 'agents'
+_AGENTS    = _DATA_ROOT / 'models' / 'agents'
 
 # ── Compound allocation (SOFT/MEDIUM/HARD → Cx per GP/year) ───────────────────
 _compounds_path = _DATA_ROOT / 'tire_compounds_by_race.json'

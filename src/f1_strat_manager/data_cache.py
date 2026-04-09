@@ -89,22 +89,22 @@ _CRITICAL_MODEL_FILES: tuple[str, ...] = (
 # around 7-8 GB instead of the full 31.7 GB (which includes 6 redundant
 # DeBERTa intent checkpoints that N24's production path never touches).
 _DEFAULT_MODEL_PATTERNS: tuple[str, ...] = (
-    "models/tire_degradation/**",
-    "models/overtake_probability/**",
-    "models/safety_car_probability/**",
-    "models/pit_prediction/**",
-    "models/lap_time/**",
-    "models/k_means_circuit_clustering/**",
-    "models/agents/**",
-    "models/nlp/pipeline_config_v1.json",
-    "models/nlp/sentiment_classifier_v1/**",
-    "models/nlp/intent_setfit_modernbert_v1/**",
-    "models/nlp/ner_v1/bert_bio_v1/**",
-    "models/nlp/rcm_parser_v1/**",
-    "models/xgb_laptime_final.json",
-    "models/xgb_laptime_final_feature_names.json",
-    "models/xgb_laptime_global_v1.json",
-    "models/model_registry.json",
+    "data/models/tire_degradation/**",
+    "data/models/overtake_probability/**",
+    "data/models/safety_car_probability/**",
+    "data/models/pit_prediction/**",
+    "data/models/lap_time/**",
+    "data/models/k_means_circuit_clustering/**",
+    "data/models/agents/**",
+    "data/models/nlp/pipeline_config_v1.json",
+    "data/models/nlp/sentiment_classifier_v1/**",
+    "data/models/nlp/intent_setfit_modernbert_v1/**",
+    "data/models/nlp/ner_v1/bert_bio_v1/**",
+    "data/models/nlp/rcm_parser_v1/**",
+    "data/models/xgb_laptime_final.json",
+    "data/models/xgb_laptime_final_feature_names.json",
+    "data/models/xgb_laptime_global_v1.json",
+    "data/models/model_registry.json",
     # Featured parquet + supporting configs — the CLI loads these directly
     "data/processed/laps_featured_2025.parquet",
     "data/processed/feature_manifest_laptime.json",
@@ -173,18 +173,15 @@ def get_data_root() -> Path:
 def get_models_root() -> Path:
     """Resolve the models directory using the same precedence as data root.
 
-    When running from a repo checkout the models live at ``<repo>/models/``
-    (a sibling of ``data/``, **not** inside it).  ``_snapshot_download``
-    uses ``local_dir = repo`` so HF patterns like ``models/**`` land at
-    ``<repo>/models/…``.  For the user-cache layout (``~/.f1-strat/``) the
-    same sibling relationship holds: ``~/.f1-strat/models/``.
+    Returns ``<data_root>/../models`` when running from a repo checkout
+    (because the repo keeps models under ``data/models/``… actually the
+    on-disk layout is ``data/models/<family>/``) and mirrors that structure
+    under the user cache. In all cases the resolved path sits beneath
+    ``get_data_root()`` so a single HF ``snapshot_download`` call populates
+    both trees in one pass.
     """
-    repo = _find_repo_root()
-    if repo is not None:
-        root = repo / "models"
-    else:
-        # User cache layout: ~/.f1-strat/ contains both data/ and models/
-        root = get_data_root().parent / "models"
+    # Both editable-dev and user-cache layouts keep models under data/models/
+    root = get_data_root() / "models"
     root.mkdir(parents=True, exist_ok=True)
     return root
 

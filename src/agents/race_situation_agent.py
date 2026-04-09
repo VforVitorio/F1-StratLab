@@ -40,16 +40,13 @@ while not (_REPO_ROOT / '.git').exists():
 # ``uv tool install`` flow (``~/.f1-strat/data/``).
 try:
     from src.f1_strat_manager.data_cache import get_data_root as _get_data_root
-    from src.f1_strat_manager.data_cache import get_models_root as _get_models_root
     _DATA_ROOT = _get_data_root()
-    _MODELS_ROOT = _get_models_root()
 except Exception:
     _DATA_ROOT = _REPO_ROOT / 'data'
-    _MODELS_ROOT = _REPO_ROOT / 'models'
 
-_MODELS    = _MODELS_ROOT
+_MODELS    = _DATA_ROOT / 'models'
 _PROCESSED = _DATA_ROOT / 'processed'
-_AGENTS    = _MODELS_ROOT / 'agents'
+_AGENTS    = _DATA_ROOT / 'models' / 'agents'
 
 
 # ── Authoritative compound allocation ─────────────────────────────────────────
