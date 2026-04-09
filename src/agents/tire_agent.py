@@ -46,13 +46,16 @@ while not (_REPO_ROOT / '.git').exists():
 # to the repo-relative layout when the helper is not importable.
 try:
     from src.f1_strat_manager.data_cache import get_data_root as _get_data_root
+    from src.f1_strat_manager.data_cache import get_models_root as _get_models_root
     _DATA_ROOT = _get_data_root()
+    _MODELS_ROOT = _get_models_root()
 except Exception:
     _DATA_ROOT = _REPO_ROOT / 'data'
+    _MODELS_ROOT = _REPO_ROOT / 'models'
 
-_MODEL_DIR  = _DATA_ROOT / 'models' / 'tire_degradation'
+_MODEL_DIR  = _MODELS_ROOT / 'tire_degradation'
 _PROCESSED  = _DATA_ROOT / 'processed'
-_AGENTS_DIR = _DATA_ROOT / 'models' / 'agents'
+_AGENTS_DIR = _MODELS_ROOT / 'agents'
 
 
 # ─────────────────────────────────────────────────────────────────────────────

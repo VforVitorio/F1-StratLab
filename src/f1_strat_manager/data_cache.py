@@ -173,15 +173,18 @@ def get_data_root() -> Path:
 def get_models_root() -> Path:
     """Resolve the models directory using the same precedence as data root.
 
-    Returns ``<data_root>/../models`` when running from a repo checkout
-    (because the repo keeps models under ``data/models/``… actually the
-    on-disk layout is ``data/models/<family>/``) and mirrors that structure
-    under the user cache. In all cases the resolved path sits beneath
-    ``get_data_root()`` so a single HF ``snapshot_download`` call populates
-    both trees in one pass.
+    When running from a repo checkout the models live at ``<repo>/models/``
+    (a sibling of ``data/``, **not** inside it).  ``_snapshot_download``
+    uses ``local_dir = repo`` so HF patterns like ``models/**`` land at
+    ``<repo>/models/…``.  For the user-cache layout (``~/.f1-strat/``) the
+    same sibling relationship holds: ``~/.f1-strat/models/``.
     """
-    # Both editable-dev and user-cache layouts keep models under data/models/
-    root = get_data_root() / "models"
+    repo = _find_repo_root()
+    if repo is not None:
+        root = repo / "models"
+    else:
+        # User cache layout: ~/.f1-strat/ contains both data/ and models/
+        root = get_data_root().parent / "models"
     root.mkdir(parents=True, exist_ok=True)
     return root
 

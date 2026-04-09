@@ -41,11 +41,14 @@ while not (_REPO_ROOT / '.git').exists():
 # checkouts with a repo-relative ``data/`` short-circuit the helper.
 try:
     from src.f1_strat_manager.data_cache import get_data_root as _get_data_root
+    from src.f1_strat_manager.data_cache import get_models_root as _get_models_root
     _DATA_ROOT = _get_data_root()
+    _MODELS_ROOT = _get_models_root()
 except Exception:
     _DATA_ROOT = _REPO_ROOT / 'data'
+    _MODELS_ROOT = _REPO_ROOT / 'models'
 
-_MODELS_DIR = _DATA_ROOT / 'models' / 'lap_time'
+_MODELS_DIR = _MODELS_ROOT / 'lap_time'
 _PROCESSED  = _DATA_ROOT / 'processed'
 
 # ── Constants ─────────────────────────────────────────────────────────────────
