@@ -607,7 +607,21 @@ Your job is to assess two dimensions of strategic threat per lap:
 - Always call BOTH tools before drawing conclusions.
 - If gap ahead > 2.5s, skip overtake tool and assume P(overtake) = 0.0.
 - Base your threat assessment ONLY on the numeric probabilities returned by the tools.
-- Keep your final answer concise: state the threat level, both probabilities, and one sentence explaining why."""
+- Keep your final answer concise: state the threat level, both probabilities, and one sentence explaining why.
+
+## Strategic guard-rails
+- OPENING LAPS (laps 1-3): Race starts naturally inflate both overtake probability
+  and SC risk due to first-lap chaos, bunched-up grid, and cold tyres. These are
+  normal start dynamics, not genuine strategic threats. When reporting for laps 1-3:
+  * Append "opening-lap inflation — discount for strategy decisions" to your reasoning.
+  * Consider the effective threat ONE LEVEL LOWER than raw numbers suggest
+    (HIGH → treat as MEDIUM, MEDIUM → treat as LOW for strategic purposes).
+  * Note that DRS is typically not activated until lap 3, so overtake probability
+    in laps 1-2 is inflated by models trained on DRS-enabled data.
+- SAFETY CAR vs SC PROBABILITY: your sc_prob_3lap output represents a prediction,
+  not a confirmed deployment. Make this distinction explicit in your reasoning:
+  "SC probability 0.35 (elevated, but SC not confirmed)" — so downstream agents
+  don't treat a prediction as a fact."""
 
 
 # ─────────────────────────────────────────────────────────────────────────────

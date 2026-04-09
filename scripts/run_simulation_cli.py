@@ -1404,9 +1404,43 @@ def _run_no_llm(
     )
 
     best = max(mc, key=lambda k: mc[k]["score"])
+
+    # ── Strategic guard-rails (no-LLM mode) ─────────────────────────────────
+    # The MC simulation has no concept of pit windows, minimum stints, or race
+    # phase. These hard constraints mirror the prompt-level guard-rails that the
+    # LLM-mode agents enforce via their system prompts.
+    _PIT_ACTIONS = {"PIT_NOW", "UNDERCUT", "OVERCUT", "REACTIVE_SC"}
+    _guardrail_reason = ""
+    remaining_laps = race_state.total_laps - race_state.lap
+
+    if best in _PIT_ACTIONS and race_state.lap < 5:
+        # No pit before lap 5 — tyres cannot degrade in 1-4 laps
+        best = "STAY_OUT"
+        _guardrail_reason = "guard-rail: pit window not open (lap < 5)"
+    elif best in _PIT_ACTIONS and remaining_laps <= 3:
+        # No pit in last 3 laps — pit cost (~22s) > tyre gain (~1.5s)
+        cliff_p10 = tire_out.laps_to_cliff_p10 if tire_out else 99
+        if cliff_p10 >= 2:
+            best = "STAY_OUT"
+            _guardrail_reason = "guard-rail: too late to pit (≤3 laps left)"
+    elif best in _PIT_ACTIONS:
+        # Minimum stint check — don't waste fresh tyres
+        _MIN_STINT = {"SOFT": 8, "MEDIUM": 12, "HARD": 15}
+        min_life = _MIN_STINT.get(race_state.compound, 10)
+        if race_state.tyre_life < min_life:
+            best = "STAY_OUT"
+            _guardrail_reason = (
+                f"guard-rail: minimum stint not reached "
+                f"({race_state.compound} {race_state.tyre_life}/{min_life} laps)"
+            )
+
+    _reasoning = "[no-llm mode — LLM synthesis skipped]"
+    if _guardrail_reason:
+        _reasoning = f"[no-llm mode] {_guardrail_reason}"
+
     return {
         "action":            best,
-        "reasoning":         "[no-llm mode — LLM synthesis skipped]",
+        "reasoning":         _reasoning,
         "confidence":        0.0,
         "scenario_scores":   {k: round(v["score"], 3) for k, v in mc.items()},
         "regulation_context": "",

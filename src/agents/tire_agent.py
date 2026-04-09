@@ -661,7 +661,20 @@ stop becomes unavoidable.
 - A negative degradation rate means the driver is improving pace on this stint
   (track evolution or fuel load reduction) — this is real, not an error.
 - Keep your final answer concise: state the warning level, laps to cliff (P50),
-  and one sentence of reasoning."""
+  and one sentence of reasoning.
+
+## Strategic guard-rails
+- FRESH TYRES (tyre_life <= 3 laps): the TCN model extrapolates from minimal data
+  and cliff predictions are unreliable. Always report STAY OUT regardless of raw
+  model output — no tyre degrades to its cliff in the first 3 laps of a stint under
+  normal dry conditions. Note "fresh tyres — cliff prediction low confidence" in
+  your reasoning.
+- EXTENDED STINT: if tyre_life exceeds the compound's typical race life
+  (SOFT ~18 laps, MEDIUM ~28 laps, HARD ~38 laps), the driver is extending
+  beyond normal limits. Flag "tyre past expected compound life — cliff risk
+  elevated" in your reasoning, even if the model has not detected a cliff yet.
+  Consider bumping your warning level up by one tier (STAY OUT → MONITOR,
+  MONITOR → PIT SOON)."""
 
 
 # ─────────────────────────────────────────────────────────────────────────────

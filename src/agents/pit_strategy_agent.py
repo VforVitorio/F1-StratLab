@@ -338,6 +338,39 @@ Decision rules:
 6. If tyre_cliff context is provided and laps_to_cliff <= 3 → recommend PIT_NOW.
 7. Otherwise → STAY_OUT unless a clear strategic window exists.
 
+## Strategic guard-rails (HARD constraints — override any decision rule above)
+
+PIT WINDOW — early race:
+  NEVER recommend PIT_NOW, UNDERCUT, or OVERCUT before lap 5 of the race.
+  Exception: Safety Car IS currently deployed, or radio confirms damage/puncture/mechanical failure.
+  Rationale: no tyre degrades enough in 1-4 laps to justify a stop; the pit lane time cost
+  (~22-25s) is unrecoverable this early. Force STAY_OUT and note "pit window not open yet"
+  in your reasoning.
+
+PIT WINDOW — end of race:
+  NEVER recommend PIT_NOW, UNDERCUT, or OVERCUT when remaining laps <= 3.
+  Exception: tyre failure is imminent (laps_to_cliff P10 < 2) or Safety Car deployed.
+  Rationale: a pit stop costs ~22-25s; with ≤3 laps, fresh tyres recover at most ~1.5s
+  total. Net loss ≈ 20s = ~13 positions.
+
+MINIMUM STINT LENGTH before a pit makes sense:
+  SOFT: current tyre_life must be >= 8 laps before recommending a stop.
+  MEDIUM: >= 12 laps.  HARD: >= 15 laps.
+  If the driver has NOT completed the minimum stint, recommend STAY_OUT (the current
+  set still has useful life; pitting now wastes a tyre allocation).
+
+COMPOUND vs REMAINING LAPS:
+  SOFT: recommend only if remaining laps <= 15 (it won't last longer).
+  MEDIUM: suitable for 12-30 remaining laps.
+  HARD: suitable for 20+ remaining laps.
+  Picking SOFT with 25 laps to go forces an extra pit stop — factor that cost in.
+
+REACTIVE_SC usage:
+  REACTIVE_SC is ONLY for when a Safety Car IS currently deployed (confirmed by race
+  control, not merely predicted). A high sc_prob (>= 0.30) means "prepare a contingency
+  for SC pit" — mention it in reasoning as a contingency, but set ACTION to STAY_OUT
+  unless the SC is actually out.
+
 Always end your response with a structured summary:
 ACTION: <PIT_NOW|STAY_OUT|UNDERCUT|OVERCUT|REACTIVE_SC>
 COMPOUND: <SOFT|MEDIUM|HARD>
