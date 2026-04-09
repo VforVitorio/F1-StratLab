@@ -438,9 +438,20 @@ At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). Thi
 - [ ] **Moshi** (Kyutai, open-source, local GPU, ~160ms full-duplex — offline fallback)
 - [ ] Keep N24 NLP pipeline active for text-based analysis in parallel
 
+**Integration (Hybrid Architecture):**
+
+- [ ] Add WebSocket endpoints to existing FastAPI backend (hybrid REST + WebSocket)
+- [ ] MVP: /ws/replay endpoint for offline race replay from CSV/Parquet files
+- [ ] WebSocket client implementation for Streamlit dashboard
+- [ ] WebSocket client implementation for Arcade visualization
+- [ ] Frame streaming at 10Hz for smooth visualization
+- [ ] Extension: /ws/live endpoint with Kafka consumer for real-time data
+
+**Note:** REST endpoints remain unchanged. WebSocket is added only for real-time streaming needs.
+
 **R3 — Streamlit + Backend Release:**
 
-- [ ] Docker Compose: FastAPI backend + Streamlit frontend + Qdrant + LM Studio sidecar
+- [ ] Docker Compose: FastAPI backend + Streamlit frontend + Qdrant + Kafka + LM Studio sidecar
 - [ ] Alternative: Streamlit Cloud + hosted FastAPI
 - [ ] Legacy cleanup: archive `base_agent.py`, `strategy_agent.py`, `rules/`; update `src/nlp/pipeline.py` to match N24
 
@@ -450,6 +461,7 @@ At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). Thi
 - [ ] FastMCP tools callable from `/chat/` with structured rendering
 - [ ] Streamlit load time <3 seconds
 - [ ] Arcade maintains >30 FPS during race replay
+- [ ] Zero packet loss during Kafka streaming
 
 ---
 
@@ -471,15 +483,19 @@ End-to-end system validation across multiple race scenarios and circuit clusters
 
 - [ ] E2E CLI simulation on each test scenario (no-llm + LLM mode)
 - [ ] ML metrics validation per circuit cluster (overtake AUC-PR, SC lift, tire MAE)
+- [ ] Streaming performance verification (no Kafka packet loss)
 - [ ] FastAPI endpoint integration tests (strategy router round-trip)
 - [ ] FastMCP tool call validation from `/chat/` endpoint
-- [ ] Memory profiling: CLI simulation <4 GB peak
+- [ ] Load testing: API throughput >100 req/s, latency p95 <50ms
+- [ ] Memory profiling: system usage <4 GB peak
 
 **Success Metrics:**
 
 - [ ] All four circuit-cluster test scenarios pass without errors
 - [ ] Per-cluster ML metrics within documented tolerances
 - [ ] Strategy endpoints return valid outputs under concurrent requests
+- [ ] Zero packet loss during Kafka streaming
+- [ ] System stable under load
 - [ ] All critical bugs resolved before v1.0 tag
 
 ---
