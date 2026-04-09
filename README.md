@@ -369,24 +369,21 @@ If `python -m venv .venv` produces a venv without `pip` (rare, happens
 on broken Python installs), recreate it with `python -m venv --upgrade-deps .venv`
 or just use the `uv` flow above — `uv` builds its own venv from scratch.
 
-#### Future work — wheel-based release
+#### Wheel-based release (v0.1.0)
 
 The `uv tool install git+...` flow above works but pulls the **entire git
 history** plus the current tree (notebooks with embedded outputs, Streamlit
 audio component, etc.), which makes the install slower than it should be.
-The proper Python distribution path is a built wheel hosted on a GitHub
-Release:
+The faster alternative is a pre-built wheel hosted on GitHub Releases — it
+ships only the Python source (~360 KB) with no notebooks, data, or model
+weights:
 
 ```bash
-# Planned for v0.1.0 — not live yet
 uv tool install https://github.com/VforVitorio/F1_Strat_Manager/releases/download/v0.1.0/f1_strat_manager-0.1.0-py3-none-any.whl
 ```
 
-A wheel only ships the Python source under `src/` plus the entry-point
-metadata — typically a few MB instead of the full repo. This will become
-the recommended install path once the CLI release is cut. The first-run
-HuggingFace data download is unaffected — it runs the same way regardless
-of whether the code came from a wheel or a git source.
+The first-run HuggingFace data download is unaffected — it runs the same
+way regardless of whether the code came from a wheel or a git source.
 
 #### What you get
 
