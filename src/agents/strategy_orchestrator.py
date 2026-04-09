@@ -44,9 +44,11 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
-# ── Repo root ──────────────────────────────────────────────────────────────────
+# ── Repo root (with root-stop guard for uv tool install) ─────────────────────
 _REPO_ROOT = Path(__file__).resolve()
 while not (_REPO_ROOT / ".git").exists():
+    if _REPO_ROOT.parent == _REPO_ROOT:
+        break
     _REPO_ROOT = _REPO_ROOT.parent
 
 if str(_REPO_ROOT) not in sys.path:
@@ -629,16 +631,40 @@ def _run_mc_simulation(
 
     sigma_pace = (pace_out.ci_p90 - pace_out.ci_p10) / (2 * 1.645)
 
-    p10_cliff = tire_out.laps_to_cliff_p10
-    p50_cliff = tire_out.laps_to_cliff_p50
-    p90_cliff = tire_out.laps_to_cliff_p90
+    # Clamp Triangular(left, mode, right) inputs so left < right always holds.
+    # numpy raises ValueError("left == right") when the bounds collapse, which
+    # happens at lap 1 because the N26 tire model and the N15 pit-duration
+    # quantile regressors can return identical p10/p50/p90 when there is no
+    # historical lap data yet (TyreLife=0). The clamp keeps the strategy
+    # orchestrator running on the opening lap with a degenerate but valid
+    # distribution instead of crashing the whole MC layer.
+    def _clamp_triangular(p10: float, p50: float, p90: float,
+                          eps: float = 1e-3) -> tuple[float, float, float]:
+        left  = float(p10)
+        mode  = float(p50)
+        right = float(p90)
+        if right <= left:
+            right = left + eps
+        if mode < left:
+            mode = left
+        if mode > right:
+            mode = right
+        return left, mode, right
+
+    p10_cliff, p50_cliff, p90_cliff = _clamp_triangular(
+        tire_out.laps_to_cliff_p10,
+        tire_out.laps_to_cliff_p50,
+        tire_out.laps_to_cliff_p90,
+    )
 
     sc_prob = situation_out.sc_prob_3lap
 
     if pit_out is not None:
-        pit_p05   = pit_out.stop_duration_p05
-        pit_p50   = pit_out.stop_duration_p50
-        pit_p95   = pit_out.stop_duration_p95
+        pit_p05, pit_p50, pit_p95 = _clamp_triangular(
+            pit_out.stop_duration_p05,
+            pit_out.stop_duration_p50,
+            pit_out.stop_duration_p95,
+        )
         ucut_prob = (
             pit_out.undercut_prob
             if pit_out.undercut_prob is not None
@@ -825,6 +851,22 @@ def _build_orchestrator_prompt(
         f"with MC numbers alone — cite at least one tire, one situation or radio, and\n"
         f"(if present) one regulation signal. If evidence across agents disagrees, say so\n"
         f"and explain which signal you trusted and why.\n\n"
+        f"STRATEGIC GUARD-RAILS (HARD — override any sub-agent or MC signal that conflicts):\n"
+        f"  1. NO pit action (PIT_NOW / UNDERCUT / OVERCUT) before lap 5 unless SC deployed\n"
+        f"     or damage/puncture confirmed by radio. Fresh tyres cannot degrade in 1-4 laps;\n"
+        f"     pit lane costs ~22-25s which is unrecoverable this early. Force STAY_OUT.\n"
+        f"  2. NO pit action when remaining laps <= 3 unless tyre failure imminent\n"
+        f"     (cliff P10 < 2 laps). Pit cost ~22s vs ~1.5s recovery = ~13 positions lost.\n"
+        f"  3. REACTIVE_SC only when SC IS deployed (confirmed). High sc_prob is a\n"
+        f"     contingency trigger, not a primary action — use STAY_OUT with SC contingency.\n"
+        f"  4. Minimum stint before pit: SOFT >= 8 laps, MEDIUM >= 12, HARD >= 15.\n"
+        f"     If tyre_life is below minimum, override to STAY_OUT (current set has life left).\n"
+        f"  5. Compound must fit remaining laps: SOFT only if <= 15 laps remain,\n"
+        f"     MEDIUM for 12-30, HARD for 20+. Wrong compound forces an extra stop.\n"
+        f"  6. Opening laps 1-3: threat levels from N27 are inflated by start chaos.\n"
+        f"     Discount them one tier (HIGH→MEDIUM, MEDIUM→LOW) for decision-making.\n"
+        f"  If a sub-agent recommends an action that violates these rules, override to\n"
+        f"  STAY_OUT and explain why in reasoning.\n\n"
         f"RACE CONTEXT:\n"
         f"  Driver: {race_state.driver} | Lap: {race_state.lap}/{race_state.total_laps}\n"
         f"  Position: P{race_state.position} | Compound: {race_state.compound} "

@@ -133,6 +133,14 @@ ACTION_STYLE: dict[str, str] = {
     "ALERT":    "bold cyan",
 }
 
+# Abbreviations for v2 tactical fields rendered in the Decision column
+_PM_SHORT: dict[str, str] = {
+    "PUSH": "PUSH", "NEUTRAL": "NTRL", "MANAGE": "MNGR", "LIFT_AND_COAST": "L&C",
+}
+_RP_SHORT: dict[str, str] = {
+    "AGGRESSIVE": "AGG", "BALANCED": "BAL", "DEFENSIVE": "DEF",
+}
+
 # Pirelli tyre-compound colours
 _COMPOUND_STYLE: dict[str, str] = {
     "SOFT":         "bold red",
@@ -492,7 +500,8 @@ def _make_table(has_rival: bool = False, show_header: bool = True) -> Table:
     table.add_column("Gap Fwd",   justify="right",  style="dim",    width=7)
     if has_rival:
         table.add_column("Rival",  justify="left",                  width=15)
-    table.add_column("Decision",  justify="left",                   width=10)
+    table.add_column("Decision",  justify="left",                   width=20)
+    table.add_column("Plan",      justify="left",  style="#60a5fa", width=18)
     table.add_column("Conf",      justify="right",                  width=5)
     table.add_column("Stay",      justify="right",  style="green",  width=6)
     table.add_column("Pit",       justify="right",  style="red",    width=6)
@@ -1293,10 +1302,16 @@ def _run_no_llm(
     race_state:   RaceState,
     lap_state:    dict[str, Any],
     laps_df:      pd.DataFrame,
-    extra_radio:  dict | None = None,
-    extra_rcm:    dict | None = None,
+    extra_radios: list[dict] | None = None,
+    extra_rcms:   list[dict] | None = None,
 ) -> dict[str, Any]:
-    """Run ML models only — no LLM synthesis at any layer."""
+    """Run ML models only — no LLM synthesis at any layer.
+
+    extra_radios / extra_rcms are optional lists of dicts injected on top of
+    whatever the race_state buffers already carry. The CLI uses this entry
+    point to forward both the static OpenF1 corpus radios for the current
+    lap and any synthetic --radio-every fallback events in a single shot.
+    """
     from src.agents.pace_agent           import run_pace_agent_from_state, PaceOutput
     from src.agents.tire_agent           import run_tire_agent_from_state, TireOutput
     from src.agents.race_situation_agent import (
@@ -1342,11 +1357,11 @@ def _run_no_llm(
     sit_out   = _safe_call(run_race_situation_agent_from_state, lap_state, laps_df, stub=sit_stub)
 
     radio_msgs = list(race_state.radio_msgs)
-    if extra_radio:
-        radio_msgs.append(extra_radio)
+    if extra_radios:
+        radio_msgs.extend(extra_radios)
     rcm_events = list(race_state.rcm_events)
-    if extra_rcm:
-        rcm_events.append(extra_rcm)
+    if extra_rcms:
+        rcm_events.extend(extra_rcms)
     radio_out = _safe_call(
         run_radio_agent_from_state,
         {**lap_state, "lap": race_state.lap,
@@ -1389,9 +1404,43 @@ def _run_no_llm(
     )
 
     best = max(mc, key=lambda k: mc[k]["score"])
+
+    # ── Strategic guard-rails (no-LLM mode) ─────────────────────────────────
+    # The MC simulation has no concept of pit windows, minimum stints, or race
+    # phase. These hard constraints mirror the prompt-level guard-rails that the
+    # LLM-mode agents enforce via their system prompts.
+    _PIT_ACTIONS = {"PIT_NOW", "UNDERCUT", "OVERCUT", "REACTIVE_SC"}
+    _guardrail_reason = ""
+    remaining_laps = race_state.total_laps - race_state.lap
+
+    if best in _PIT_ACTIONS and race_state.lap < 5:
+        # No pit before lap 5 — tyres cannot degrade in 1-4 laps
+        best = "STAY_OUT"
+        _guardrail_reason = "guard-rail: pit window not open (lap < 5)"
+    elif best in _PIT_ACTIONS and remaining_laps <= 3:
+        # No pit in last 3 laps — pit cost (~22s) > tyre gain (~1.5s)
+        cliff_p10 = tire_out.laps_to_cliff_p10 if tire_out else 99
+        if cliff_p10 >= 2:
+            best = "STAY_OUT"
+            _guardrail_reason = "guard-rail: too late to pit (≤3 laps left)"
+    elif best in _PIT_ACTIONS:
+        # Minimum stint check — don't waste fresh tyres
+        _MIN_STINT = {"SOFT": 8, "MEDIUM": 12, "HARD": 15}
+        min_life = _MIN_STINT.get(race_state.compound, 10)
+        if race_state.tyre_life < min_life:
+            best = "STAY_OUT"
+            _guardrail_reason = (
+                f"guard-rail: minimum stint not reached "
+                f"({race_state.compound} {race_state.tyre_life}/{min_life} laps)"
+            )
+
+    _reasoning = "[no-llm mode — LLM synthesis skipped]"
+    if _guardrail_reason:
+        _reasoning = f"[no-llm mode] {_guardrail_reason}"
+
     return {
         "action":            best,
-        "reasoning":         "[no-llm mode — LLM synthesis skipped]",
+        "reasoning":         _reasoning,
         "confidence":        0.0,
         "scenario_scores":   {k: round(v["score"], 3) for k, v in mc.items()},
         "regulation_context": "",
@@ -1414,6 +1463,17 @@ def run(args: argparse.Namespace) -> None:
     # Set provider before any agent singleton is created
     os.environ["F1_LLM_PROVIDER"] = args.provider
 
+    # First-run bootstrap: pull data + models from HF Hub when the cache is
+    # empty. Dev checkouts with a populated data/ tree short-circuit
+    # is_first_run() so this is a no-op for the repo contributor workflow.
+    if not args.no_first_run:
+        try:
+            from src.f1_strat_manager.data_cache import ensure_setup, is_first_run
+            if is_first_run():
+                ensure_setup()
+        except ImportError:
+            pass
+
     raw_dir  = Path(args.raw_dir)
     race_dir = raw_dir / args.gp_name
 
@@ -1431,8 +1491,59 @@ def run(args: argparse.Namespace) -> None:
         laps_df = pd.read_parquet(featured_path)
         engine  = RaceReplayEngine(race_dir, args.driver, args.team, interval_seconds=args.interval)
 
+    # ── Static OpenF1 radio corpus (replaces --radio-every when available) ───
+    # Constructed once per run before the Live loop so the per-lap hot path
+    # only pays the dict-lookup cost. Eager Whisper transcription on first
+    # call writes a JSON cache under data/processed/radio_nlp/<year>/<slug>/
+    # so re-runs of the same GP skip the model entirely. Any failure (missing
+    # parquet, missing MP3 directory, Whisper unavailable) downgrades to the
+    # synthetic --radio-every fallback with a yellow warning instead of
+    # crashing the run — keeps fresh checkouts and CI machines functional.
+    radio_runner = None
+    if not args.no_real_radios:
+        try:
+            from src.nlp.radio_runner import RadioPipelineRunner
+            from src.f1_strat_manager.data_cache import (
+                ensure_radio_corpus,
+                get_data_root,
+            )
+            # Lazy on-demand pull: when running from a uv-tool install with
+            # an empty cache the parquets land via the default first-run
+            # snapshot, but the per-GP MP3 tree only arrives the first time
+            # someone simulates that race. ensure_radio_corpus is a no-op
+            # when the audio is already on disk so the warm-cache path
+            # pays nothing beyond the slug lookup.
+            ensure_radio_corpus(args.year, args.gp_name)
+            with console.status(
+                f"[dim]Loading radio corpus + Whisper {args.whisper_model}…[/dim]",
+                spinner="dots",
+            ):
+                radio_runner = RadioPipelineRunner(
+                    year               = args.year,
+                    gp_name            = args.gp_name,
+                    laps_df            = laps_df,
+                    data_root          = get_data_root(),
+                    whisper_model_name = args.whisper_model,
+                    eager_transcribe   = True,
+                )
+            console.print(
+                f"[dim]radio corpus  : {radio_runner.total_radios()} radios + "
+                f"{radio_runner.total_rcms()} rcms loaded for "
+                f"{radio_runner.slug}[/dim]"
+            )
+        except Exception as exc:
+            console.print(
+                f"[yellow]radio corpus unavailable ({exc.__class__.__name__}: "
+                f"{exc}) — falling back to synthetic --radio-every[/yellow]"
+            )
+            radio_runner = None
+
     # ── Pre-warm NLP models (suppresses tqdm + LOAD REPORT noise) ────────────
-    mode_label = "no-LLM" if args.no_llm else f"LLM · {args.provider}"
+    radio_label = (
+        f" · radios={radio_runner.total_radios()}"
+        if radio_runner is not None else ""
+    )
+    mode_label = ("no-LLM" if args.no_llm else f"LLM · {args.provider}") + radio_label
     with console.status("[dim]Loading agents…[/dim]", spinner="dots"):
         _prewarm_agents(args.no_llm)
 
@@ -1482,8 +1593,8 @@ def run(args: argparse.Namespace) -> None:
     )
     legend_grid.add_row(
         "Columns",
-        "[dim]Stay/Pit/Ucut/Ocut = MC scenario scores  ·  "
-        "Conf = LLM confidence  ·  panel below = per-agent inference + plan[/dim]",
+        "[dim]Decision = action·pace·risk  ·  Plan = pit target → compound  ·  "
+        "Stay/Pit/Ucut/Ocut = MC scores  ·  Conf = LLM confidence[/dim]",
     )
 
     header_body = Group(info_grid, Text(""), legend_grid)
@@ -1574,12 +1685,34 @@ def run(args: argparse.Namespace) -> None:
                 dnf_row: list[Any] = [str(lap_num), "—", "—", "—", "—", "—"]
                 if has_rival:
                     dnf_row.append("—")
-                dnf_row.extend([Text("[DNF]", style="dim"), "", "", "", "", "", ""])
+                dnf_row.extend([Text("[DNF]", style="dim"), "", "", "", "", "", "", ""])
                 dnf_tbl = _make_table(has_rival, show_header=False)
                 dnf_tbl.add_row(*dnf_row)
                 live.console.print(dnf_tbl)
                 live.console.print()  # visual breathing room between rows
                 action_counts["DNF"] = action_counts.get("DNF", 0) + 1
+                continue
+
+            # Incomplete-lap-data guard. FastF1 occasionally lands a row with
+            # NaN position / lap_time / tyre_life on the opening laps of some
+            # 2025 GPs (notably VER at Spielberg lap 1). The display columns
+            # collapse those to 0 with `or 0`, but the agents downstream
+            # consume the raw lap_state dict and crash on the first numeric
+            # subtraction (e.g. delta_vs_prev). Skip the agents for that lap
+            # and emit an INCOMPLETE row instead, mirroring the DNF path.
+            _pos_raw  = driver_st.get("position")
+            _life_raw = driver_st.get("tyre_life")
+            _ltime_raw = driver_st.get("lap_time_s")
+            if _pos_raw is None or _life_raw is None or _ltime_raw is None:
+                inc_row: list[Any] = [str(lap_num), "—", "—", "—", "—", "—"]
+                if has_rival:
+                    inc_row.append("—")
+                inc_row.extend([Text("[INCOMPLETE]", style="dim"), "", "", "", "", "", "", ""])
+                inc_tbl = _make_table(has_rival, show_header=False)
+                inc_tbl.add_row(*inc_row)
+                live.console.print(inc_tbl)
+                live.console.print()
+                action_counts["INCOMPLETE"] = action_counts.get("INCOMPLETE", 0) + 1
                 continue
 
             compound  = driver_st.get("compound", "?")
@@ -1620,10 +1753,26 @@ def run(args: argparse.Namespace) -> None:
                 race_state = _build_race_state(lap_state, args.driver, prev_lap_time)
                 prev_lap_time = lap_time or prev_lap_time
 
-                # Simulated radio / RCM events (--radio-every N)
+                # Real radios from the static OpenF1 corpus take precedence
+                # over the synthetic --radio-every generator. Both produce
+                # dicts shaped for run_radio_agent_from_state. When the
+                # runner is active synthetic events are suppressed entirely
+                # (the corpus already encodes the natural per-lap distribution
+                # so layering random injections on top would distort the
+                # narrative for no benefit).
+                real_radios: list[dict] = []
+                real_rcms:   list[dict] = []
+                if radio_runner is not None:
+                    real_radios, real_rcms = radio_runner.radios_for_lap(lap_num)
+
                 sim_radio: dict | None = None
                 sim_rcm:   dict | None = None
-                if args.radio_every and args.radio_every > 0 and lap_num % args.radio_every == 0:
+                if (
+                    radio_runner is None
+                    and args.radio_every
+                    and args.radio_every > 0
+                    and lap_num % args.radio_every == 0
+                ):
                     sim_radio = _generate_radio_event(
                         lap_num, args.driver, compound, tyre_life, position, gap_ahead
                     )
@@ -1631,8 +1780,11 @@ def run(args: argparse.Namespace) -> None:
 
                 if args.no_llm:
                     # No-LLM: full ML stack (pace + tire + sit + radio + conditional + MC)
-                    result     = _run_no_llm(race_state, lap_state, laps_df,
-                                             extra_radio=sim_radio, extra_rcm=sim_rcm)
+                    result     = _run_no_llm(
+                        race_state, lap_state, laps_df,
+                        extra_radios = real_radios + ([sim_radio] if sim_radio else []),
+                        extra_rcms   = real_rcms   + ([sim_rcm]   if sim_rcm   else []),
+                    )
                     scores     = result["scenario_scores"]
                     action     = result["action"]
                     confidence = result["confidence"]
@@ -1650,9 +1802,18 @@ def run(args: argparse.Namespace) -> None:
                         strategy_rec  = None,
                     )
                 else:
-                    # LLM mode: inject simulated radio BEFORE probing so the
-                    # radio agent sees the generated events, then run the
-                    # full orchestrator.
+                    # LLM mode: inject the lap's real-corpus radios + RCMs
+                    # (and any synthetic fallback) BEFORE probing so the
+                    # radio agent sees the events, then run the full
+                    # orchestrator. We extend instead of append because a
+                    # single lap can carry several team-radio rows.
+                    try:
+                        if real_radios:
+                            race_state.radio_msgs.extend(real_radios)
+                        if real_rcms:
+                            race_state.rcm_events.extend(real_rcms)
+                    except (AttributeError, TypeError):
+                        pass
                     if sim_radio:
                         try:
                             race_state.radio_msgs.append(sim_radio)
@@ -1695,7 +1856,42 @@ def run(args: argparse.Namespace) -> None:
                 else:
                     stay = pit = ucut = ocut = 0.0
 
-                action_text = Text(str(action), style=ACTION_STYLE.get(str(action).upper(), ""))
+                # Extract v2 tactical fields for Decision + Plan columns.
+                # LLM mode: result is StrategyRecommendation with all fields.
+                # No-LLM mode: result is a dict — infer plan from _pit_out.
+                if isinstance(result, dict):
+                    _pm, _rp = None, None
+                    _plt, _cnx, _uct = None, None, None
+                    _pit_local_v2 = result.get("_pit_out")
+                    if _pit_local_v2 is not None:
+                        _plt = getattr(_pit_local_v2, "recommended_lap", None)
+                        _cnx = getattr(_pit_local_v2, "compound_recommendation", None)
+                        _uct = getattr(_pit_local_v2, "undercut_target", None)
+                else:
+                    _pm  = getattr(result, "pace_mode", None)
+                    _rp  = getattr(result, "risk_posture", None)
+                    _plt = getattr(result, "pit_lap_target", None)
+                    _cnx = getattr(result, "compound_next", None)
+                    _uct = getattr(result, "undercut_target", None)
+
+                decision_text = Text()
+                decision_text.append(
+                    str(action),
+                    style=ACTION_STYLE.get(str(action).upper(), ""),
+                )
+                if _pm and _rp:
+                    _pm_s = _PM_SHORT.get(str(_pm), str(_pm)[:4])
+                    _rp_s = _RP_SHORT.get(str(_rp), str(_rp)[:3])
+                    decision_text.append(f"·{_pm_s}·{_rp_s}", style="dim")
+
+                if _plt is not None and _cnx is not None:
+                    plan_text = Text(f"→ L{_plt} {_cnx}", style="#60a5fa")
+                    if _uct:
+                        plan_text.append(f" vs {_uct}", style="#f59e0b")
+                elif _plt is not None:
+                    plan_text = Text(f"→ L{_plt}", style="#60a5fa")
+                else:
+                    plan_text = Text("—", style="dim")
 
                 # Rival cell (only when --rival is set)
                 if has_rival:
@@ -1724,7 +1920,8 @@ def run(args: argparse.Namespace) -> None:
                 if has_rival:
                     row.append(rival_cell)
                 row.extend([
-                    action_text,
+                    decision_text,
+                    plan_text,
                     f"{confidence:.2f}",
                     f"{stay:.3f}",
                     f"{pit:.3f}",
@@ -1794,7 +1991,7 @@ def run(args: argparse.Namespace) -> None:
                 if has_rival:
                     err_row.append("—")
                 err_row.extend([
-                    Text("[ERROR]", style="bold red"), "", "", "", "", "",
+                    Text("[ERROR]", style="bold red"), "", "", "", "", "", "",
                     str(exc)[:60],
                 ])
                 err_tbl = _make_table(has_rival, show_header=False)
@@ -1841,10 +2038,17 @@ def run(args: argparse.Namespace) -> None:
     action_mix_line = "  ".join(action_parts) if action_parts else "[dim]none[/dim]"
 
     # ── Block 2 — Agents fired (conditional Layer 1b) ─────────────────────
+    radio_source = (
+        f"[dim]radio src[/dim] [white]corpus[/white]"
+        f"[dim]/{radio_runner.total_radios()}r·{radio_runner.total_rcms()}rcm[/dim]"
+        if radio_runner is not None
+        else f"[dim]radio src[/dim] [white]synthetic[/white]"
+    )
     agents_line = (
         f"[dim]pit[/dim] [white]{pit_agent_calls}[/white]  "
         f"[dim]rag[/dim] [white]{rag_agent_calls}[/white]  "
-        f"[dim]radio alerts[/dim] [white]{radio_alert_total}[/white]"
+        f"[dim]radio alerts[/dim] [white]{radio_alert_total}[/white]  "
+        f"{radio_source}"
     )
 
     # ── Block 3 — Position P→P (±Δ) ───────────────────────────────────────
@@ -1915,6 +2119,36 @@ def run(args: argparse.Namespace) -> None:
 # Entry point
 # ---------------------------------------------------------------------------
 
+def _default_raw_dir() -> str:
+    """Return the default ``--raw-dir`` value as a string path.
+
+    Routes through :func:`src.f1_strat_manager.data_cache.get_data_root`
+    when that helper is importable so that ``uv tool install`` users
+    (whose data lives under ``~/.f1-strat/data/``) see a sensible default
+    instead of the legacy repo-relative ``data/raw/2025``. Dev checkouts
+    without the helper fall back to the historical string.
+    """
+    try:
+        from src.f1_strat_manager.data_cache import get_data_root
+        return str(get_data_root() / "raw" / "2025")
+    except ImportError:
+        return "data/raw/2025"
+
+
+def _default_featured() -> str:
+    """Return the default ``--featured`` value as a string path.
+
+    Same rationale as :func:`_default_raw_dir` — the featured parquet lives
+    under ``data/processed/`` in every layout, and we want the path to
+    match wherever ``get_data_root()`` ends up resolving to.
+    """
+    try:
+        from src.f1_strat_manager.data_cache import get_data_root
+        return str(get_data_root() / "processed" / "laps_featured_2025.parquet")
+    except ImportError:
+        return "data/processed/laps_featured_2025.parquet"
+
+
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="F1 Strategy Manager — headless CLI simulation demo",
@@ -1932,13 +2166,19 @@ def _parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--raw-dir",
-        default="data/raw/2025",
-        help="Base directory for raw race parquets (default: data/raw/2025)",
+        default=_default_raw_dir(),
+        help="Base directory for raw race parquets (default: <data_root>/raw/2025)",
     )
     p.add_argument(
         "--featured",
-        default="data/processed/laps_featured_2025.parquet",
+        default=_default_featured(),
         help="Path to featured parquet for agent RSM adapters",
+    )
+    p.add_argument(
+        "--no-first-run",
+        action="store_true",
+        help="Skip the first-run HuggingFace Hub download check. Useful for CI "
+             "or when the data cache is already populated out-of-band.",
     )
     p.add_argument(
         "--laps",
@@ -1970,7 +2210,22 @@ def _parse_args() -> argparse.Namespace:
         default=0,
         metavar="N",
         help="Simulate a radio/RCM event every N laps to activate NLP agents "
-             "(e.g. --radio-every 5).  0 = disabled (default).",
+             "(e.g. --radio-every 5).  0 = disabled (default). Suppressed when "
+             "the real radio corpus loads successfully — see --no-real-radios.",
+    )
+    p.add_argument(
+        "--no-real-radios",
+        action="store_true",
+        help="Skip the static OpenF1 radio corpus and Whisper transcription. "
+             "Falls back to the synthetic --radio-every generator. Useful for "
+             "smoke tests on machines without the data tree or without GPU.",
+    )
+    p.add_argument(
+        "--whisper-model",
+        default="turbo",
+        metavar="NAME",
+        help="Whisper model name passed to RadioPipelineRunner (default: turbo). "
+             "Smaller variants like 'base' or 'small' trade accuracy for speed.",
     )
     p.add_argument(
         "--rival",

@@ -33,6 +33,11 @@ dependencies = [
     # NLP
     # ===================
     "transformers>=4.30.0",
+    # Explicit dep even though transformers pulls it transitively — the
+    # first-run data cache (src/f1_strat_manager/data_cache.py) imports
+    # huggingface_hub.snapshot_download directly and needs a version with
+    # local_dir + allow_patterns support (>=0.20).
+    "huggingface_hub>=0.20",
     "sentencepiece>=0.1.99",
     "openai-whisper>=20230918",
     "sentence-transformers>=2.2.0",

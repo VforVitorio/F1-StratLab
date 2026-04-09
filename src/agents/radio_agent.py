@@ -61,13 +61,24 @@ except ImportError:
         return fn
 
 
-# ── Repo root ──────────────────────────────────────────────────────────────────
+# ── Repo root (with root-stop guard for uv tool install) ─────────────────────
 _REPO_ROOT = Path(__file__).resolve()
 while not (_REPO_ROOT / ".git").exists():
+    if _REPO_ROOT.parent == _REPO_ROOT:
+        break
     _REPO_ROOT = _REPO_ROOT.parent
 
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+
+# Resolve the data root (models + processed parquets) through the cache
+# helper when importable; fall back to the repo-relative layout for bare
+# dev checkouts where the helper is not yet on the path.
+try:
+    from src.f1_strat_manager.data_cache import get_data_root as _get_data_root
+    _DATA_ROOT = _get_data_root()
+except Exception:
+    _DATA_ROOT = _REPO_ROOT / "data"
 
 # ── Module-level globals (populated by entry points) ──────────────────────────
 LAPS:         pd.DataFrame = pd.DataFrame()
@@ -335,7 +346,7 @@ class RadioAgentCFG:
     # ------------------------------------------------------------------
 
     def __post_init__(self):
-        nlp_dir = _REPO_ROOT / "data" / "models" / "nlp"
+        nlp_dir = _DATA_ROOT / "models" / "nlp"
 
         s_tok,  s_model                = self._load_sentiment_model(nlp_dir, self.device)
         i_model, _intent_names         = self._load_intent_model(nlp_dir)
@@ -357,6 +368,37 @@ CFG = RadioAgentCFG()
 
 # O(1) intent label lookup — populated immediately after CFG is created
 _intent_name_to_idx: dict = {name: i for i, name in enumerate(CFG.intent_names)}
+
+
+# ── LLM availability predicate ─────────────────────────────────────────────────
+# Mirrors scripts/run_simulation_cli.py::_is_llm_unavailable so the radio agent
+# can degrade gracefully when the synthesis layer is offline (no provider,
+# --no-llm mode, network glitch, LM Studio without a loaded model). Kept inline
+# instead of imported to avoid a script -> module dependency.
+_LLM_SYNTH_ERR_TYPES = (
+    "Connection", "APIConnection", "OpenAI", "HTTP", "Timeout",
+    "RemoteDisconnected", "BadRequest", "NotFound", "Authentication",
+    "APIError", "APIStatusError", "RateLimit", "InternalServerError",
+    "ServiceUnavailable", "PermissionDenied",
+)
+_LLM_SYNTH_ERR_MSGS = (
+    "Connection error", "connect ECONNREFUSED", "No models loaded",
+    "model_not_found", "invalid_api_key", "Could not connect",
+    "ENOTFOUND", "getaddrinfo failed", "F1_LLM_PROVIDER",
+)
+
+
+def _is_llm_synthesis_unavailable(exc: Exception) -> bool:
+    """Return True when the radio synthesis LLM call cannot reach a backend.
+
+    Used by run_radio_agent to swap stage 3 for an empty reasoning string when
+    the LLM is offline. Errors unrelated to LLM connectivity (NLP model bugs,
+    bad lap_state, missing fields) must NOT match — those should propagate up.
+    """
+    tn  = type(exc).__name__
+    msg = str(exc)[:300]
+    return any(k in tn  for k in _LLM_SYNTH_ERR_TYPES) or \
+           any(k in msg for k in _LLM_SYNTH_ERR_MSGS)
 
 
 # ==============================================================================
@@ -856,7 +898,7 @@ def _save_nlp_json(lap: int, radio_results: list, rcm_results: list) -> Path:
 
     Returns the Path of the saved file.
     """
-    out_dir   = _REPO_ROOT / "data" / "processed" / "radio_outputs"
+    out_dir   = _DATA_ROOT / "processed" / "radio_outputs"
     out_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     path      = out_dir / f"radio_nlp_lap{lap:03d}_{timestamp}.json"
@@ -936,19 +978,33 @@ def run_radio_agent(lap_state: dict, persist: bool = False) -> "RadioOutput":
     # Stage 2 — Deterministic alerts from NLP results (before LLM)
     alerts = _build_alerts(radio_results, rcm_results, radio_msgs)
 
-    # Stage 3 — LLM synthesises structured RadioSynthesis via with_structured_output
-    prompt    = _build_synthesis_prompt(lap, radio_results, rcm_results)
-    synthesis: RadioSynthesis = _get_radio_llm().invoke([
-        SystemMessage(content=_RADIO_SYSTEM_PROMPT),
-        HumanMessage(content=prompt),
-    ])
+    # Stage 3 — LLM synthesises structured RadioSynthesis via with_structured_output.
+    # Wrapped in try/except so a missing or unreachable LLM backend (no provider,
+    # --no-llm mode, network glitch, LM Studio without a loaded model) does not
+    # discard the load-bearing stages 1+2. radio_events / rcm_events / alerts are
+    # the contract the orchestrator and the inference panel actually consume —
+    # reasoning + corrections are presentation-only and acceptable to drop when
+    # the synthesis layer is offline.
+    try:
+        prompt    = _build_synthesis_prompt(lap, radio_results, rcm_results)
+        synthesis: RadioSynthesis = _get_radio_llm().invoke([
+            SystemMessage(content=_RADIO_SYSTEM_PROMPT),
+            HumanMessage(content=prompt),
+        ])
+        reasoning   = synthesis.reasoning
+        corrections = [c.model_dump() for c in synthesis.corrections]
+    except Exception as exc:
+        if not _is_llm_synthesis_unavailable(exc):
+            raise
+        reasoning   = "[no-LLM mode — radio synthesis skipped, NLP stages 1+2 still applied]"
+        corrections = []
 
     return RadioOutput(
         radio_events=radio_results,
         rcm_events=rcm_results,
         alerts=alerts,
-        reasoning=synthesis.reasoning,
-        corrections=[c.model_dump() for c in synthesis.corrections],
+        reasoning=reasoning,
+        corrections=corrections,
     )
 
 

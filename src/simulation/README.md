@@ -1,0 +1,77 @@
+# src/simulation — Race replay engine
+
+Offline replay path for the multi-agent strategy system. Loads a race
+parquet from disk, walks it lap by lap, and emits a `lap_state` dict per
+lap that the agents and the orchestrator can consume directly. The same
+contract is the planned drop-in for a future Kafka live-ingestion path
+(v0.14+) — every downstream component (agents → orchestrator → Arcade
+frame) reads `lap_state` dicts and does not care whether they came from a
+parquet or a live topic.
+
+The `single-driver data boundary` enforced here is the critical
+architectural constraint: agents see full telemetry for *our* driver but
+only timing-screen-equivalent fields (position, gap, compound, tyre life)
+for rivals, mirroring what a real team strategy wall observes during a
+race.
+
+---
+
+## Files
+
+| File | Description |
+|---|---|
+| [`race_state_manager.py`](race_state_manager.py) | `RaceStateManager` class — owns the per-driver lap-state computation and enforces the data boundary. Reads `LapTime`, `Sector1/2/3Time`, `TyreLife`, `Compound`, `Stint`, `Position`, `SpeedI1/I2/FL/ST`, `FuelLoad` for our driver and only `Position` / `LapTime` / `Compound` / `TyreLife` / `gap_to_leader_s` / `interval_to_driver_s` for rivals. Gap computation uses the FastF1 `Time` column (session elapsed time) so safety-car bunching does not skew the on-track gap |
+| [`replay_engine.py`](replay_engine.py) | `RaceReplayEngine` class — loads `laps.parquet` (and optionally `weather.parquet`) from a race directory, sets up an `RaceStateManager`, and yields one `lap_state` dict per lap with an optional `interval_seconds` sleep so a demo can run in real time or as fast as possible |
+| [`__main__.py`](__main__.py) | CLI entry point — `python -m src.simulation <gp_name> <driver> <team> [--interval N] [--laps N-M]`. Loads the race directory under `data/raw/2025/`, applies a small `_GP_FOLDER_ALIASES` map for folder names that differ from the canonical key (`Miami_Gardens` → `Miami`, `Mexico_City` → `Mexico City`, …), and prints a per-lap summary |
+| `__init__.py` | Empty package marker |
+
+---
+
+## Usage
+
+```python
+from src.simulation.replay_engine import RaceReplayEngine
+
+engine = RaceReplayEngine("data/raw/2025/Melbourne", "NOR", "McLaren")
+for lap_state in engine.replay():
+    rec = run_strategy_orchestrator_from_state(...)
+    frame = engine.to_arcade_frame(lap_state, rec)
+    # do something with `frame` (websocket, log, render)
+```
+
+```bash
+# CLI replay (no agents, just iterates and prints)
+python -m src.simulation Melbourne NOR McLaren
+python -m src.simulation Monaco HAM Mercedes --interval 2
+python -m src.simulation Monza LEC Ferrari --laps 10-30
+python -m src.simulation Silverstone VER "Red Bull Racing" --interval 0
+```
+
+---
+
+## Relationship to `scripts/run_simulation_cli.py`
+
+The `scripts/run_simulation_cli.py` headless simulator uses
+`RaceStateManager` directly (without the `RaceReplayEngine` wrapper) so it
+can interleave the radio runner, the strategy orchestrator, and the Rich
+inference panel within a single Live render loop. The replay engine here
+is the simpler "load and yield" entry point intended for demos, smoke
+tests, and the future Arcade frontend; the headless CLI is the production
+path that ships with the R1 release.
+
+---
+
+## Future Kafka swap
+
+Substituting the offline replay for live ingestion is a one-line change:
+
+```python
+# Offline (today)
+for lap_state in engine.replay(): ...
+
+# Live (v0.14+)
+for lap_state in LiveKafkaConsumer.consume_lap(): ...
+```
+
+Every consumer downstream of the iterator already speaks the `lap_state`
+dict contract, so the agents and the orchestrator do not need to change.

@@ -54,6 +54,12 @@ _REPO_ROOT  = next(
 if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
 
+# Also add the repo root (or tool install parent) so `from src.f1_strat_manager…`
+# resolves when running from a clone. uv tool install already installs src/* as
+# an importable package, so this is a no-op in that case.
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
 try:
     from dotenv import load_dotenv
     _env = _REPO_ROOT / ".env"
@@ -77,6 +83,19 @@ from rich.rule import Rule
 def main() -> None:
     console.print()
     console.print(make_banner())
+
+    # First-run bootstrap: download race data + model weights from HF Hub when
+    # the cache is fresh. Editable-dev checkouts (repo has data/raw/2025/<gp>/
+    # + data/models/...) short-circuit is_first_run() so this is a no-op for
+    # the repo contributor workflow.
+    try:
+        from src.f1_strat_manager.data_cache import ensure_setup, is_first_run
+        if is_first_run():
+            ensure_setup()
+    except ImportError:
+        # Package not installed (extremely rare — only if the user copied
+        # scripts/ in isolation). Fall through and let discover_races error.
+        pass
 
     races = discover_races(_REPO_ROOT, year=2025)
     if not races:

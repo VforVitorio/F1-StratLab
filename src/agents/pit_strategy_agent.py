@@ -24,17 +24,27 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-# ── Repo root ─────────────────────────────────────────────────────────────────
+# ── Repo root (with root-stop guard for uv tool install) ─────────────────────
 _REPO_ROOT = Path(__file__).resolve().parent
 while not (_REPO_ROOT / '.git').exists():
+    if _REPO_ROOT.parent == _REPO_ROOT:
+        break
     _REPO_ROOT = _REPO_ROOT.parent
 
-_MODELS    = _REPO_ROOT / 'data' / 'models'
-_PROCESSED = _REPO_ROOT / 'data' / 'processed'
-_AGENTS    = _REPO_ROOT / 'data' / 'models' / 'agents'
+# Route every artefact path through the cache helper so the agent works
+# transparently in both editable-dev mode and the ``uv tool install`` flow.
+try:
+    from src.f1_strat_manager.data_cache import get_data_root as _get_data_root
+    _DATA_ROOT = _get_data_root()
+except Exception:
+    _DATA_ROOT = _REPO_ROOT / 'data'
+
+_MODELS    = _DATA_ROOT / 'models'
+_PROCESSED = _DATA_ROOT / 'processed'
+_AGENTS    = _DATA_ROOT / 'models' / 'agents'
 
 # ── Compound allocation (SOFT/MEDIUM/HARD → Cx per GP/year) ───────────────────
-_compounds_path = _REPO_ROOT / 'data' / 'tire_compounds_by_race.json'
+_compounds_path = _DATA_ROOT / 'tire_compounds_by_race.json'
 TIRE_COMPOUNDS: dict = (
     json.loads(_compounds_path.read_text(encoding='utf-8'))
     if _compounds_path.exists() else {}
@@ -328,6 +338,39 @@ Decision rules:
 6. If tyre_cliff context is provided and laps_to_cliff <= 3 → recommend PIT_NOW.
 7. Otherwise → STAY_OUT unless a clear strategic window exists.
 
+## Strategic guard-rails (HARD constraints — override any decision rule above)
+
+PIT WINDOW — early race:
+  NEVER recommend PIT_NOW, UNDERCUT, or OVERCUT before lap 5 of the race.
+  Exception: Safety Car IS currently deployed, or radio confirms damage/puncture/mechanical failure.
+  Rationale: no tyre degrades enough in 1-4 laps to justify a stop; the pit lane time cost
+  (~22-25s) is unrecoverable this early. Force STAY_OUT and note "pit window not open yet"
+  in your reasoning.
+
+PIT WINDOW — end of race:
+  NEVER recommend PIT_NOW, UNDERCUT, or OVERCUT when remaining laps <= 3.
+  Exception: tyre failure is imminent (laps_to_cliff P10 < 2) or Safety Car deployed.
+  Rationale: a pit stop costs ~22-25s; with ≤3 laps, fresh tyres recover at most ~1.5s
+  total. Net loss ≈ 20s = ~13 positions.
+
+MINIMUM STINT LENGTH before a pit makes sense:
+  SOFT: current tyre_life must be >= 8 laps before recommending a stop.
+  MEDIUM: >= 12 laps.  HARD: >= 15 laps.
+  If the driver has NOT completed the minimum stint, recommend STAY_OUT (the current
+  set still has useful life; pitting now wastes a tyre allocation).
+
+COMPOUND vs REMAINING LAPS:
+  SOFT: recommend only if remaining laps <= 15 (it won't last longer).
+  MEDIUM: suitable for 12-30 remaining laps.
+  HARD: suitable for 20+ remaining laps.
+  Picking SOFT with 25 laps to go forces an extra pit stop — factor that cost in.
+
+REACTIVE_SC usage:
+  REACTIVE_SC is ONLY for when a Safety Car IS currently deployed (confirmed by race
+  control, not merely predicted). A high sc_prob (>= 0.30) means "prepare a contingency
+  for SC pit" — mention it in reasoning as a contingency, but set ACTION to STAY_OUT
+  unless the SC is actually out.
+
 Always end your response with a structured summary:
 ACTION: <PIT_NOW|STAY_OUT|UNDERCUT|OVERCUT|REACTIVE_SC>
 COMPOUND: <SOFT|MEDIUM|HARD>
@@ -395,17 +438,31 @@ class PitStrategyAgent:
     def _get_lap_row(self, driver: str, lap_number: int) -> Optional[pd.Series]:
         """Return the single self.laps_df row for driver at lap_number, or None if missing.
 
+        When no exact lap match exists (common at lap 1 because FastF1 sometimes
+        omits the opening lap row, or at the very end of a stint when the LLM
+        ReAct loop reasons about a lap that has not been recorded yet), fall back
+        to the most recent prior lap for the same driver. This keeps the
+        feature-builder usable instead of forcing the caller to raise.
+
         Args:
             driver: FastF1 driver abbreviation.
             lap_number: Lap number as int.
 
         Returns:
-            Pandas Series for that lap, or None.
+            Pandas Series for that lap, the closest prior lap, or None.
         """
-        rows = self.laps_df[
-            (self.laps_df['Driver'] == driver) & (self.laps_df['LapNumber'] == lap_number)
-        ]
-        return rows.iloc[0] if not rows.empty else None
+        driver_rows = self.laps_df[self.laps_df['Driver'] == driver]
+        if driver_rows.empty:
+            return None
+        exact = driver_rows[driver_rows['LapNumber'] == lap_number]
+        if not exact.empty:
+            return exact.iloc[0]
+        prior = driver_rows[driver_rows['LapNumber'] < lap_number]
+        if not prior.empty:
+            return prior.sort_values('LapNumber').iloc[-1]
+        # No prior lap either — fall back to the earliest later lap so the
+        # feature builder still has something to work with.
+        return driver_rows.sort_values('LapNumber').iloc[0]
 
     def _get_position_map(self, lap_number: int) -> dict[str, float]:
         """Return {driver: position} for all drivers at lap_number with valid position.

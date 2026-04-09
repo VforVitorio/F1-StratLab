@@ -28,18 +28,29 @@ import joblib
 import numpy as np
 import pandas as pd
 
-# ── Repo root ─────────────────────────────────────────────────────────────────
+# ── Repo root (with root-stop guard for uv tool install) ─────────────────────
 _REPO_ROOT = Path(__file__).resolve().parent
 while not (_REPO_ROOT / '.git').exists():
+    if _REPO_ROOT.parent == _REPO_ROOT:
+        break
     _REPO_ROOT = _REPO_ROOT.parent
 
-_MODELS    = _REPO_ROOT / 'data' / 'models'
-_PROCESSED = _REPO_ROOT / 'data' / 'processed'
-_AGENTS    = _REPO_ROOT / 'data' / 'models' / 'agents'
+# Route every artefact path through the cache helper so the agent works
+# transparently in both editable-dev mode (repo ``data/`` folder) and the
+# ``uv tool install`` flow (``~/.f1-strat/data/``).
+try:
+    from src.f1_strat_manager.data_cache import get_data_root as _get_data_root
+    _DATA_ROOT = _get_data_root()
+except Exception:
+    _DATA_ROOT = _REPO_ROOT / 'data'
+
+_MODELS    = _DATA_ROOT / 'models'
+_PROCESSED = _DATA_ROOT / 'processed'
+_AGENTS    = _DATA_ROOT / 'models' / 'agents'
 
 
 # ── Authoritative compound allocation ─────────────────────────────────────────
-_compounds_path = _REPO_ROOT / 'data' / 'tire_compounds_by_race.json'
+_compounds_path = _DATA_ROOT / 'tire_compounds_by_race.json'
 TIRE_COMPOUNDS: dict = (
     json.loads(_compounds_path.read_text(encoding='utf-8'))
     if _compounds_path.exists() else {}
@@ -596,7 +607,21 @@ Your job is to assess two dimensions of strategic threat per lap:
 - Always call BOTH tools before drawing conclusions.
 - If gap ahead > 2.5s, skip overtake tool and assume P(overtake) = 0.0.
 - Base your threat assessment ONLY on the numeric probabilities returned by the tools.
-- Keep your final answer concise: state the threat level, both probabilities, and one sentence explaining why."""
+- Keep your final answer concise: state the threat level, both probabilities, and one sentence explaining why.
+
+## Strategic guard-rails
+- OPENING LAPS (laps 1-3): Race starts naturally inflate both overtake probability
+  and SC risk due to first-lap chaos, bunched-up grid, and cold tyres. These are
+  normal start dynamics, not genuine strategic threats. When reporting for laps 1-3:
+  * Append "opening-lap inflation — discount for strategy decisions" to your reasoning.
+  * Consider the effective threat ONE LEVEL LOWER than raw numbers suggest
+    (HIGH → treat as MEDIUM, MEDIUM → treat as LOW for strategic purposes).
+  * Note that DRS is typically not activated until lap 3, so overtake probability
+    in laps 1-2 is inflated by models trained on DRS-enabled data.
+- SAFETY CAR vs SC PROBABILITY: your sc_prob_3lap output represents a prediction,
+  not a confirmed deployment. Make this distinction explicit in your reasoning:
+  "SC probability 0.35 (elevated, but SC not confirmed)" — so downstream agents
+  don't treat a prediction as a fact."""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
