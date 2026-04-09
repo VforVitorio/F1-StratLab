@@ -59,6 +59,7 @@ def test_agent_module_importable(module_path):
 # Entry-point function existence
 # ---------------------------------------------------------------------------
 
+@_skip_no_models
 def test_pace_agent_entry_points():
     from src.agents.pace_agent import run_pace_agent_from_state
     assert callable(run_pace_agent_from_state)
@@ -105,6 +106,7 @@ def test_orchestrator_entry_points():
 # Output dataclass fields
 # ---------------------------------------------------------------------------
 
+@_skip_no_models
 def test_pace_output_fields():
     import dataclasses
 

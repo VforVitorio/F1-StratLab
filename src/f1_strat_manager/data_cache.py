@@ -38,7 +38,6 @@ F1_STRAT_NO_FIRST_RUN
 from __future__ import annotations
 
 import os
-import sys
 from pathlib import Path
 from typing import Iterable
 
@@ -316,7 +315,6 @@ def _render_header(console, data_root: Path) -> None:
     """
     from rich.panel import Panel
     from rich.table import Table
-    from rich.text import Text
 
     grid = Table.grid(padding=(0, 2), expand=False)
     grid.add_column(style=COL_DIM, justify="right", min_width=10)

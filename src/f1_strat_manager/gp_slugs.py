@@ -24,7 +24,6 @@ path on first run.
 
 from __future__ import annotations
 
-
 # Map from the friendly GP names used by the CLI / featured-laps parquet to
 # the on-disk slug produced by ``RadioDatasetBuilder._compute_slug``. Single
 # entries for single-race countries, distinct entries per circuit for the

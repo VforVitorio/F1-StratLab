@@ -16,7 +16,12 @@ This project develops an intelligent multi-agent system for real-time Formula 1 
 
 ## Release Strategy
 
-Development follows an incremental approach. v0.1–v0.5 covered project setup and integration; v0.6 closed out the data engineering phase. Subsequent releases track the ML, agent, and interface phases.
+Development follows an incremental approach. v0.1–v0.5 covered project setup and integration; v0.6 closed out the data engineering phase; v0.7–v0.8.2 built the ML and NLP foundations; v0.9–v0.11 delivered the multi-agent system, RAG, and CLI distribution.
+
+**Three-release distribution model (v0.12+):** The project ships as three independent artifacts because each has different distribution mechanics:
+- **R1 — CLI wheel** (`f1-strat`, `f1-sim`): pip-installable wheel on GitHub Releases, lazy HF data download
+- **R2 — Arcade**: container deploy for interactive race replay visualization
+- **R3 — Streamlit + Backend**: Docker Compose (FastAPI + Streamlit + Qdrant + LM Studio) or Streamlit Cloud
 
 ---
 
@@ -279,120 +284,52 @@ N24 Race Control Messages → structured SC/VSC/flags/penalties
 
 ---
 
-## v0.9.0 - src/ Extraction & Backend Modularization
+## v0.9.0 - src/ Extraction & CLI Distribution
 
-- [ ] **Status:** Next up
-- [ ] **Target:** Post-notebooks (after v0.10 notebooks are re-executed)
+- [X] **Status:** Completed
+- [X] **Release Date:** April 2026
 
-Extract N25-N31 agent entry points to importable `src/agents/` modules and modularize the FastAPI backend. Ordered execution plan in `memory/project_v09_src_extraction_plan.md`.
+Extracted N25-N31 agent entry points to importable `src/agents/` modules. Built headless CLI simulation (`f1-sim`) with Rich Live rendering. Integrated OpenF1 team radio corpus with Whisper transcription pipeline. Published dataset and models to HuggingFace Hub.
 
-**Ordered extraction steps:**
+**Agent extraction (all complete):**
 
-1. [X] Update `.nb_py/` transcriptions (all 6 agent notebooks post-SRP)
-2. [ ] `src/agents/pace_agent.py` — `run_pace_agent()` → `PaceOutput`
-3. [ ] `src/agents/tire_agent.py` — `run_tire_agent()` → `TireOutput` (TireDegTCN bundles)
-4. [ ] `src/agents/race_situation_agent.py` — `run_race_situation_agent()` → `RaceSituationOutput`
-5. [ ] `src/agents/radio_agent.py` — `run_radio_agent()` → `RadioOutput` (3 NLP models)
-6. [ ] `src/agents/pit_strategy_agent.py` — `run_pit_strategy_agent()` → `PitStrategyOutput`
-7. [ ] `src/agents/rag_agent.py` — `run_rag_agent()` → `RagOutput` (wraps src/rag/)
-8. [ ] `src/agents/strategy_orchestrator.py` — `run_strategy_orchestrator()` → `StrategyRecommendation` (replaces legacy Experta)
-9. [ ] **FastAPI modularization** — split monolithic backend into routers: `routers/chat.py`, `routers/strategy.py`, `routers/telemetry.py`. Add `/strategy/recommend` endpoint calling `run_strategy_orchestrator`.
-1. [ ] **FastMCP integration** — mount MCP server alongside FastAPI (`fastmcp`). Expose LangGraph tools as MCP tools so the /chat/ LLM can call them natively and render structured tool results in the chat UI. See `memory/project_fastmcp_architecture.md`.
+1. [X] `src/agents/pace_agent.py` — `run_pace_agent()` → `PaceOutput`
+2. [X] `src/agents/tire_agent.py` — `run_tire_agent()` → `TireOutput` (TireDegTCN bundles)
+3. [X] `src/agents/race_situation_agent.py` — `run_race_situation_agent()` → `RaceSituationOutput`
+4. [X] `src/agents/radio_agent.py` — `run_radio_agent()` → `RadioOutput` (3 NLP models)
+5. [X] `src/agents/pit_strategy_agent.py` — `run_pit_strategy_agent()` → `PitStrategyOutput`
+6. [X] `src/agents/rag_agent.py` — `run_rag_agent()` → `RegulationContext` (wraps src/rag/)
+7. [X] `src/agents/strategy_orchestrator.py` — `run_strategy_orchestrator()` → `StrategyRecommendation`
 
-**Additional scope:**
+**CLI simulation (`scripts/run_simulation_cli.py`):**
 
-- [ ] Extract shared utilities to src/shared/
-- [ ] Implement structured logging
-- [ ] Unit tests with >50% coverage (target)
-- [ ] Linting passes (black, ruff)
+- [X] Rich Live lap-by-lap rendering with inference detail panel
+- [X] Decision column: `ACTION·PACE·RISK` + Plan column (`→ L8 HARD vs NOR`)
+- [X] No-LLM mode: ML models + MC simulation only, no API keys required
+- [X] LLM mode: Full N31 orchestrator synthesis via OpenAI/LM Studio
+- [X] Lap-1 hardening: `_get_lap_row` fallback, `_clamp_triangular`, incomplete-data guard
+- [X] F1 strategic guard-rails: pit window (laps 5-last 3), minimum stint, compound-vs-distance, opening-lap threat discount, REACTIVE_SC only on confirmed SC
 
-**Circuit-cluster-aware thresholds (N26 notebook done; src/ extraction target v0.9):**
+**Radio corpus pipeline (Track A):**
 
-N26 `TireAgentConfig` already loads cluster-aware thresholds from `tire_agent_config_v1.json`
-at runtime via `get_cliff_thresholds(gp_name)` — notebook implementation complete as of March 2026.
-The `src/agents/` extraction will carry this forward without additional design work.
+- [X] `src/f1_strat_manager/gp_slugs.py` — GP name → corpus slug resolution
+- [X] `src/nlp/radio_runner.py` — `RadioPipelineRunner` + `WhisperTranscriber` + JSON cache
+- [X] `src/f1_strat_manager/data_cache.py` — `ensure_radio_corpus()` lazy per-GP downloader
+- [X] OpenF1 slug disambiguation for multi-race countries (Italy, United States)
+- [X] Radio corpus published: 529 MP3s + 48 parquets on HuggingFace Hub
 
-Only two agents need src/ changes — the rest are already cluster-aware via ML features:
+**CLI distribution:**
 
-- **`src/agents/orchestrator.py`** — replace `sc_prob_threshold: float = 0.30` with
-  `SC_PROB_THRESHOLD_BY_CLUSTER: dict = {0: 0.25, 1: 0.35, 2: 0.20, 3: 0.30}`
-  (validated against Pirelli compound nomination tiers and Heilmeier et al. 2020, DOI:10.3390/app10124229)
-- **`src/agents/tire_agent.py`** (extracted from N26) — replace `cliff_pit_soon_laps: int = 3`
-  and `cliff_monitor_laps: int = 7` with `{0:3, 1:4, 2:2, 3:5}` / `{0:7, 1:8, 2:5, 3:9}`.
-  Counter-intuitive: Cluster 1 (1-stop) gets MORE warning (4 laps) because missing the single
-  window is very costly; Cluster 0 (multi-stop) is already in reactive mode (3 laps).
-  Note: `cluster_id` is already stored in N26's `SESSION_META` — it just isn't used yet.
-  Add `overrides_by_gp = {"Mexico City": {"pit_soon": 3, "monitor": 7}}` for Cluster 3 split.
-
-Cluster assignments from `data/processed/circuit_clustering/circuit_features_with_clusters_k4_2025.parquet`:
-Cluster 0 (high-energy/deg): Sakhir, Melbourne, Silverstone, Spa, Suzuka, Lusail, São Paulo, Zandvoort, Las Vegas |
-Cluster 1 (stable/technical): Monza, Budapest, Yas Island, Marina Bay, Jeddah, Baku, Imola, Barcelona, Austin, Miami, Spielberg, Shanghai |
-Cluster 2 (SC haven): Montréal only (avg 4.15 pit stops/race) |
-Cluster 3 (outliers): Monaco (72-lap max stint), Mexico City (780 mbar altitude)
-
-Threshold values to be finalized after circuit classification research
-(see `documents/dev_docs/tasks/circuit_cluster_thresholds.md` when generated).
-
-**Critical design constraint — single-driver perspective (MUST implement in v0.9):**
-
-The system operates as the strategy engineer of **one specific driver**. This is not a cosmetic choice — it is a hard architectural constraint that makes the system realistic and academically honest.
-
-When extracting `run_*` functions from notebooks to `src/agents/`, the data boundary must be enforced at the `RaceStateManager` level:
-
-- **Our driver** — receives the full telemetry slice: LapTime, Sector1/2/3, TyreLife, DegradationRate, CumulativeDeg, SpeedI1/I2/FL/ST, FuelLoad (estimated), Stint, Position, all weather fields. This is the data the team's own sensors and timing system produce.
-- **Rival drivers** — receive only the fields that are publicly available on the timing screen: Position, LapTime, Compound, TyreLife (estimated from last pit), gap_to_leader, interval (gap to our driver), SpeedST. Nothing else. Teams cannot see rivals' internal degradation rates, fuel loads, ERS state, or brake temperatures.
-
-This boundary is already naturally respected by the current notebooks (N25/N26/N28 use our driver's full data; N27 uses gap + pace_delta + tyre_life_diff, which are timing-screen fields), but it must be made explicit and enforced in `src/agents/race_state_manager.py` so that no future feature accidentally leaks rival internal data into the models.
-
-See `documents/dev_docs/tasks/single_driver_perspective.md` for the full data availability matrix, data flow diagram, and implementation spec.
+- [X] `pyproject.toml` with `[project.scripts]` entry points (`f1-strat`, `f1-sim`)
+- [X] Lazy first-run data download from HuggingFace Hub (`ensure_setup()`)
+- [X] Installable via `uv tool install git+https://github.com/VforVitorio/F1_Strat_Manager.git`
 
 **Success Metrics:**
 
-- [ ] All 7 `run_*` agent functions importable from `src/agents/`
-- [ ] `/strategy/recommend` FastAPI endpoint operational
-- [ ] FastMCP server mounted, at least 3 tools exposed
-- [ ] Test coverage >50%
-- [ ] Linting passes
-
-**Circuit-cluster-aware thresholds (N26 notebook done; src/ extraction target v0.9):**
-
-N26 `TireAgentConfig` already loads cluster-aware thresholds from `tire_agent_config_v1.json`
-at runtime via `get_cliff_thresholds(gp_name)` — notebook implementation complete as of March 2026.
-The `src/agents/` extraction will carry this forward without additional design work.
-
-Only two agents need src/ changes — the rest are already cluster-aware via ML features:
-
-- **`src/agents/orchestrator.py`** — replace `sc_prob_threshold: float = 0.30` with
-  `SC_PROB_THRESHOLD_BY_CLUSTER: dict = {0: 0.25, 1: 0.35, 2: 0.20, 3: 0.30}`
-  (validated against Pirelli compound nomination tiers and Heilmeier et al. 2020, DOI:10.3390/app10124229)
-- **`src/agents/tire_agent.py`** (extracted from N26) — replace `cliff_pit_soon_laps: int = 3`
-  and `cliff_monitor_laps: int = 7` with `{0:3, 1:4, 2:2, 3:5}` / `{0:7, 1:8, 2:5, 3:9}`.
-  Counter-intuitive: Cluster 1 (1-stop) gets MORE warning (4 laps) because missing the single
-  window is very costly; Cluster 0 (multi-stop) is already in reactive mode (3 laps).
-  Note: `cluster_id` is already stored in N26's `SESSION_META` — it just isn't used yet.
-  Add `overrides_by_gp = {"Mexico City": {"pit_soon": 3, "monitor": 7}}` for Cluster 3 split.
-
-Cluster assignments from `data/processed/circuit_clustering/circuit_features_with_clusters_k4_2025.parquet`:
-Cluster 0 (high-energy/deg): Sakhir, Melbourne, Silverstone, Spa, Suzuka, Lusail, São Paulo, Zandvoort, Las Vegas |
-Cluster 1 (stable/technical): Monza, Budapest, Yas Island, Marina Bay, Jeddah, Baku, Imola, Barcelona, Austin, Miami, Spielberg, Shanghai |
-Cluster 2 (SC haven): Montréal only (avg 4.15 pit stops/race) |
-Cluster 3 (outliers): Monaco (72-lap max stint), Mexico City (780 mbar altitude)
-
-Threshold values to be finalized after circuit classification research
-(see `documents/dev_docs/tasks/circuit_cluster_thresholds.md` when generated).
-
-**Critical design constraint — single-driver perspective (MUST implement in v0.9):**
-
-The system operates as the strategy engineer of **one specific driver**. This is not a cosmetic choice — it is a hard architectural constraint that makes the system realistic and academically honest.
-
-When extracting `run_*` functions from notebooks to `src/agents/`, the data boundary must be enforced at the `RaceStateManager` level:
-
-- **Our driver** — receives the full telemetry slice: LapTime, Sector1/2/3, TyreLife, DegradationRate, CumulativeDeg, SpeedI1/I2/FL/ST, FuelLoad (estimated), Stint, Position, all weather fields. This is the data the team's own sensors and timing system produce.
-- **Rival drivers** — receive only the fields that are publicly available on the timing screen: Position, LapTime, Compound, TyreLife (estimated from last pit), gap_to_leader, interval (gap to our driver), SpeedST. Nothing else. Teams cannot see rivals' internal degradation rates, fuel loads, ERS state, or brake temperatures.
-
-This boundary is already naturally respected by the current notebooks (N25/N26/N28 use our driver's full data; N27 uses gap + pace_delta + tyre_life_diff, which are timing-screen fields), but it must be made explicit and enforced in `src/agents/race_state_manager.py` so that no future feature accidentally leaks rival internal data into the models.
-
-See `documents/dev_docs/tasks/single_driver_perspective.md` for the full data availability matrix, data flow diagram, and implementation spec.
+- [X] All 7 `run_*` agent functions importable from `src/agents/`
+- [X] CLI 4-gate test: Sakhir, Sakhir LLM, Spielberg VER, Imola — all pass
+- [X] Linting passes (ruff)
+- [X] Typecheck passes (mypy)
 
 ---
 
@@ -452,54 +389,65 @@ Retrieval-augmented generation over FIA Sporting Regulations (2023–2025). Prov
 
 ---
 
-## v0.12.0 - User Interfaces
+## v0.12.0 - Interfaces & Distribution
 
-- [ ] **Status:** Not Started
-- [ ] **Target:** Late May 2025
+- [ ] **Status:** In Progress
+- [ ] **Target:** May 2026
 
-Develop dual interface system: Streamlit dashboard for analysis/configuration and Arcade visualization for real-time circuit representation.
+Wire the multi-agent system into the FastAPI backend, expose strategy tools via FastMCP, build Streamlit dashboard pages, and integrate Arcade for race replay visualization. Three independent releases ship from this work (R1 CLI wheel, R2 Arcade, R3 Streamlit + Backend).
 
-**Driver + Team selection (entry point for single-driver perspective):**
+**R1 — CLI Release (wheel):**
 
-The UI is the point where the user declares whose strategy they are running. At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). This pair is passed to `RaceStateManager`, which from that moment constructs every `RaceState` from NOR's perspective — full telemetry for NOR, timing-only data for everyone else. All downstream agents, ML models, and the orchestrator operate within this boundary automatically. See `documents/dev_docs/tasks/single_driver_perspective.md`.
+- [X] `pyproject.toml` entry points (`f1-strat`, `f1-sim`) ✅
+- [X] Lazy first-run HF data download (`ensure_setup()`) ✅
+- [X] Wheel build via `uv build` → `dist/f1_strat_manager-*.whl` ✅
+- [ ] Tag v0.1.1, attach wheel to GitHub Release
+- [ ] README install section: `uv tool install <release-url>/*.whl`
 
-**Streamlit Dashboard:**
+**Step 9 — FastAPI wiring (`src/telemetry/backend/`):**
 
-- [ ] Driver + Team selector at session start (feeds RaceStateManager)
-- [ ] ML prediction displays with confidence metrics
-- [ ] Agent recommendation panels
-- [ ] Configuration interface for model parameters
-- [ ] Historical data analysis views
+- [ ] 9a: New router `api/v1/endpoints/strategy.py` — HTTP endpoints for each agent + orchestrator
+  - POST /strategy/pace, /tire, /situation, /pit, /radio, /rag, /recommend
+- [ ] 9b: Upgrade `chat.py` — route strategy-intent queries to orchestrator via MCP tools
+- [ ] Fix sys.path so telemetry backend imports from `src/agents/`
 
-**Voice Mode — low-latency upgrade (see `memory/project_voice_models.md`):**
+**Step 10 — FastMCP + Streamlit pages:**
 
-Current pipeline (Whisper → NLP → TTS) has ~1.5-2s latency. Replace with:
+- [ ] FastMCP server mounted alongside FastAPI (`app.mount("/mcp", ...)`)
+  - Tools: `get_strategy_recommendation`, `get_tire_status`, `get_race_situation`, `query_regulations`
+  - LangGraph agent in `/chat/` connects to MCP server for tool calls
+- [ ] `pages/strategy.py` — Live strategy card (action badge, confidence bar, scenario scores, reasoning)
+  - Sub-agent tabs: Pace (CI ribbon), Tyres (cliff gauge), Race Situation (overtake + SC gauges), Pit Analysis (undercut + duration)
+- [ ] `pages/race_analysis.py` — 5-tab race view (Overview, Competitive, Gap Analysis, Degradation, Predictions)
+  - Port legacy components from `legacy/app_streamlit_v1/` with N25-N31 API data sources
 
-- [ ] **GPT-4o Realtime API** (preferred for demo — integrates with existing OpenAI SDK, ~200-300ms)
+**Driver + Team selection (single-driver perspective):**
+
+At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). This pair feeds `RaceStateManager`, which constructs every `RaceState` from that driver's perspective. All downstream agents operate within this boundary automatically.
+
+**Arcade Visualization (R2):**
+
+- [ ] 2D circuit layout rendering with real-time car positions
+- [ ] DRS zone overlays + pit lane visualization
+- [ ] Frame streaming from `RaceReplayEngine` at 10Hz
+- [ ] Deployed via container (Modal or similar)
+
+**Voice Mode — low-latency upgrade (optional):**
+
+- [ ] **GPT-4o Realtime API** (preferred — integrates with existing OpenAI SDK, ~200-300ms)
 - [ ] **Moshi** (Kyutai, open-source, local GPU, ~160ms full-duplex — offline fallback)
-- [ ] Keep N24 NLP pipeline active for text-based analysis in parallel; voice mode bypasses it
+- [ ] Keep N24 NLP pipeline active for text-based analysis in parallel
 
-**Arcade Visualization:**
+**R3 — Streamlit + Backend Release:**
 
-- [ ] 2D circuit layout rendering
-- [ ] Real-time car position updates (20 cars)
-- [ ] DRS zone overlays
-- [ ] Pit lane visualization
-
-**Integration (Hybrid Architecture):**
-
-- [ ] Add WebSocket endpoints to existing FastAPI backend (hybrid REST + WebSocket)
-- [ ] MVP: /ws/replay endpoint for offline race replay from CSV/Parquet files
-- [ ] WebSocket client implementation for Streamlit dashboard
-- [ ] WebSocket client implementation for Arcade visualization
-- [ ] Frame streaming at 10Hz for smooth visualization
-- [ ] Extension: /ws/live endpoint with Kafka consumer for real-time data
-
-**Note:** REST endpoints remain unchanged. WebSocket is added only for real-time streaming needs.
+- [ ] Docker Compose: FastAPI backend + Streamlit frontend + Qdrant + LM Studio sidecar
+- [ ] Alternative: Streamlit Cloud + hosted FastAPI
+- [ ] Legacy cleanup: archive `base_agent.py`, `strategy_agent.py`, `rules/`; update `src/nlp/pipeline.py` to match N24
 
 **Success Metrics:**
 
-- [ ] Both UIs operational and connected to backend
+- [ ] Strategy endpoints return valid agent outputs via REST
+- [ ] FastMCP tools callable from `/chat/` with structured rendering
 - [ ] Streamlit load time <3 seconds
 - [ ] Arcade maintains >30 FPS during race replay
 
@@ -508,72 +456,79 @@ Current pipeline (Whisper → NLP → TTS) has ~1.5-2s latency. Replace with:
 ## v0.13.0 - Testing & Validation
 
 - [ ] **Status:** Not Started
-- [ ] **Target:** Early June 2025
+- [ ] **Target:** June 2026
 
-End-to-end system validation across multiple race scenarios. Performance testing and critical bug resolution.
+End-to-end system validation across multiple race scenarios and circuit clusters. Performance testing and critical bug resolution.
 
-**Test Scenarios:**
+**Test Scenarios (one per circuit cluster):**
 
-- [ ] Monaco 2025 (street circuit, high downforce)
-- [ ] Monza 2025 (power circuit, low downforce)
-- [ ] Singapore 2025 (night race, humidity factors)
+- [ ] Monaco 2025 — street circuit cluster (high downforce, overtake-starved)
+- [ ] Monza 2025 — power circuit cluster (low downforce, DRS-heavy)
+- [ ] Spielberg 2025 — standard circuit cluster (baseline validation)
+- [ ] Singapore 2025 — street/night circuit (humidity, safety car frequency)
 
 **Validation Activities:**
 
-- [ ] E2E workflow testing with race replays
-- [ ] ML metrics validation per circuit cluster
-- [ ] Streaming performance verification (no packet loss)
-- [ ] Load testing: API throughput >100 req/s, latency p95 <50ms
-- [ ] Memory profiling: system usage <4GB
+- [ ] E2E CLI simulation on each test scenario (no-llm + LLM mode)
+- [ ] ML metrics validation per circuit cluster (overtake AUC-PR, SC lift, tire MAE)
+- [ ] FastAPI endpoint integration tests (strategy router round-trip)
+- [ ] FastMCP tool call validation from `/chat/` endpoint
+- [ ] Memory profiling: CLI simulation <4 GB peak
 
 **Success Metrics:**
 
-- [ ] All critical bugs resolved
-- [ ] Per-cluster ML metrics meet targets
-- [ ] System stable under load
-- [ ] Zero packet loss during streaming
+- [ ] All four circuit-cluster test scenarios pass without errors
+- [ ] Per-cluster ML metrics within documented tolerances
+- [ ] Strategy endpoints return valid outputs under concurrent requests
+- [ ] All critical bugs resolved before v1.0 tag
 
 ---
 
 ## v1.0.0 - Final Release
 
 - [ ] **Status:** Not Started
-- [ ] **Target:** June 20, 2025
+- [ ] **Target:** June 2026
 
-Complete project delivery with thesis documentation and defense materials.
+Complete project delivery with thesis documentation, defense materials, and three distribution artifacts (CLI wheel, Arcade deploy, Streamlit app).
 
 **Deliverables:**
 
 - [ ] Complete thesis document with methodology, results, and conclusions
 - [ ] Defense presentation (20 slides)
-- [ ] 5-minute demonstration video
+- [ ] 5-minute demonstration video (CLI + Streamlit + Arcade)
 - [ ] Technical documentation: API docs, deployment guide
-- [ ] Final code release with all features operational
+- [ ] R1 CLI wheel on GitHub Releases (tagged)
+- [ ] R2 Arcade deployment (container)
+- [ ] R3 Streamlit + Backend (Docker Compose or Streamlit Cloud)
 
 **Success Criteria:**
 
 - [ ] Thesis submitted on time
-- [ ] Demonstration successfully showcases all system capabilities
+- [ ] Demonstration showcases: CLI inference, Streamlit dashboard, Arcade replay, voice mode
+- [ ] All three release artifacts installable/deployable from scratch
 - [ ] Code repository production-ready with comprehensive documentation
 
 ---
 
 ## Key Milestones
 
-| Release | Milestone                 | Criteria                                                                           | Status |
-| ------- | ------------------------- | ---------------------------------------------------------------------------------- | ------ |
-| v0.5    | Code Integration Complete | Docker Compose operational, API verified                                           | ✅     |
-| v0.6    | Data Engineering Complete | 4 clusters, 45k laps, 2025 held-out, HuggingFace published                         | ✅     |
-| v0.7    | Base Models Complete      | Lap Time MAE 0.392s ✅ / Tire Deg TCN + MC Dropout ✅                              | ✅     |
-| v0.8    | Core ML Models Complete   | Overtake ✅ / SC ✅ (soft prior, lift 1.67×) / Sector descoped                    | ✅     |
-| v0.8.1  | Extended ML Models        | N12B archived (neg. result) / N15 MAE 0.487s ✅ / N16 AUC-ROC 0.7708 ✅            | ✅     |
-| v0.8.2  | NLP Radio Pipeline        | N17–N24: RoBERTa sentiment 87.5% / SetFit intent / BERT NER / pipeline P95 59.4ms | ✅     |
-| v0.9    | Code Refactoring          | Deferred to post-notebooks                                                         | ⏸️   |
-| v0.10   | Multi-Agent Operational   | N25–N31 all complete, Bahrain 2025 end-to-end demo ✅                             | ✅     |
-| v0.11   | RAG Integrated            | 2,279 chunks indexed, BGE-M3,`src/rag/` module complete                          | ✅     |
-| v0.12   | Interfaces Live           | Streamlit + Arcade connected to backend                                            | ⬜     |
-| v0.13   | Testing Complete          | 3 race scenarios validated, critical bugs resolved                                 | ⬜     |
-| v1.0    | Thesis Delivered          | Documentation complete, defense ready                                              | ⬜     |
+| Release | Milestone                     | Criteria                                                                           | Status |
+| ------- | ----------------------------- | ---------------------------------------------------------------------------------- | ------ |
+| v0.5    | Code Integration Complete     | Docker Compose operational, API verified                                           | ✅     |
+| v0.6    | Data Engineering Complete     | 4 clusters, 45k laps, 2025 held-out, HuggingFace published                        | ✅     |
+| v0.7    | Base Models Complete          | Lap Time MAE 0.392s ✅ / Tire Deg TCN + MC Dropout ✅                             | ✅     |
+| v0.8    | Core ML Models Complete       | Overtake ✅ / SC ✅ (soft prior, lift 1.67×) / Sector descoped                    | ✅     |
+| v0.8.1  | Extended ML Models            | N12B archived (neg. result) / N15 MAE 0.487s ✅ / N16 AUC-ROC 0.7708 ✅          | ✅     |
+| v0.8.2  | NLP Radio Pipeline            | N17–N24: RoBERTa 87.5% / SetFit intent / BERT NER / pipeline P95 59.4ms          | ✅     |
+| v0.9    | src/ Extraction + CLI + Radio | 7 agents extracted, CLI sim, radio corpus, HF lazy download, guard-rails          | ✅     |
+| v0.10   | Multi-Agent Operational       | N25–N31 all complete, Bahrain 2025 end-to-end demo ✅                             | ✅     |
+| v0.11   | RAG Integrated                | 2,279 chunks indexed, BGE-M3, `src/rag/` module complete                          | ✅     |
+| R1      | CLI Wheel Release             | Tagged wheel on GitHub Releases, `uv tool install` works                           | ⬜     |
+| v0.12   | Interfaces + Distribution     | FastAPI endpoints, FastMCP tools, Streamlit pages, Arcade replay                   | ⬜     |
+| R2      | Arcade Release                | Container deploy, 2D circuit replay at >30 FPS                                    | ⬜     |
+| R3      | Streamlit + Backend Release   | Docker Compose / Streamlit Cloud, full web dashboard                               | ⬜     |
+| v0.13   | Testing Complete              | 4 circuit-cluster scenarios validated, critical bugs resolved                      | ⬜     |
+| v1.0    | Thesis Delivered              | Documentation complete, defense ready, all 3 releases shipped                      | ⬜     |
 
 ---
 
@@ -616,5 +571,5 @@ Complete project delivery with thesis documentation and defense materials.
 
 ---
 
-**Last Updated:** March 2026
-**Version:** 1.5
+**Last Updated:** April 2026
+**Version:** 1.6
