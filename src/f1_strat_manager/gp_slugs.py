@@ -33,33 +33,33 @@ from __future__ import annotations
 # affected GPs — no agent code needs to know.
 COUNTRY_SLUG_BY_GP: dict[str, str] = {
     # Single-race countries — slug is just the lowercased country name
-    "Sakhir":            "bahrain",
-    "Jeddah":            "saudi_arabia",
-    "Melbourne":         "australia",
-    "Suzuka":            "japan",
-    "Shanghai":          "china",
-    "Monaco":            "monaco",
-    "Barcelona":         "spain",
-    "Montréal":          "canada",
-    "Montreal":          "canada",            # ASCII fallback for CLI input
-    "Spielberg":         "austria",
-    "Silverstone":       "united_kingdom",
-    "Budapest":          "hungary",
+    "Sakhir": "bahrain",
+    "Jeddah": "saudi_arabia",
+    "Melbourne": "australia",
+    "Suzuka": "japan",
+    "Shanghai": "china",
+    "Monaco": "monaco",
+    "Barcelona": "spain",
+    "Montréal": "canada",
+    "Montreal": "canada",  # ASCII fallback for CLI input
+    "Spielberg": "austria",
+    "Silverstone": "united_kingdom",
+    "Budapest": "hungary",
     "Spa-Francorchamps": "belgium",
-    "Zandvoort":         "netherlands",
-    "Baku":              "azerbaijan",
-    "Marina Bay":        "singapore",
-    "Mexico City":       "mexico",
-    "São Paulo":         "brazil",
-    "Sao Paulo":         "brazil",            # ASCII fallback for CLI input
-    "Lusail":            "qatar",
-    "Yas Island":        "united_arab_emirates",
+    "Zandvoort": "netherlands",
+    "Baku": "azerbaijan",
+    "Marina Bay": "singapore",
+    "Mexico City": "mexico",
+    "São Paulo": "brazil",
+    "Sao Paulo": "brazil",  # ASCII fallback for CLI input
+    "Lusail": "qatar",
+    "Yas Island": "united_arab_emirates",
     # Multi-race countries — slug carries the circuit suffix from Phase 0
-    "Imola":             "italy_imola",
-    "Monza":             "italy_monza",
-    "Miami":             "united_states_miami",
-    "Austin":            "united_states_austin",
-    "Las Vegas":         "united_states_las_vegas",
+    "Imola": "italy_imola",
+    "Monza": "italy_monza",
+    "Miami": "united_states_miami",
+    "Austin": "united_states_austin",
+    "Las Vegas": "united_states_las_vegas",
 }
 
 
@@ -85,6 +85,4 @@ def resolve_gp_slug(gp_name: str) -> str:
         return COUNTRY_SLUG_BY_GP[gp_name]
     if gp_name in set(COUNTRY_SLUG_BY_GP.values()):
         return gp_name
-    raise ValueError(
-        f"Unknown GP {gp_name!r}. Known: {sorted(COUNTRY_SLUG_BY_GP)}"
-    )
+    raise ValueError(f"Unknown GP {gp_name!r}. Known: {sorted(COUNTRY_SLUG_BY_GP)}")

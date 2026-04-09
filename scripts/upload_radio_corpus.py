@@ -85,6 +85,7 @@ console = Console()
 # Filesystem inspection
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 def _walk_size(root: Path) -> tuple[int, int]:
     """Return ``(file_count, total_bytes)`` for every file under ``root``.
 
@@ -125,6 +126,7 @@ def _fmt_bytes(n: int) -> str:
 # Upload
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 def _upload_tree(
     api,
     *,
@@ -153,11 +155,11 @@ def _upload_tree(
         console.print("[gold1]  empty tree — skipped[/gold1]")
         return
     api.upload_folder(
-        folder_path    = str(folder_path),
-        repo_id        = HF_DATASET_REPO_ID,
-        repo_type      = "dataset",
-        path_in_repo   = path_in_repo,
-        commit_message = commit_message,
+        folder_path=str(folder_path),
+        repo_id=HF_DATASET_REPO_ID,
+        repo_type="dataset",
+        path_in_repo=path_in_repo,
+        commit_message=commit_message,
     )
     console.print(f"[green3]  uploaded {n_files} files[/green3]")
 
@@ -165,6 +167,7 @@ def _upload_tree(
 # ──────────────────────────────────────────────────────────────────────────────
 # CLI
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
@@ -209,7 +212,7 @@ def run(args: argparse.Namespace) -> None:
     """
     data_root = get_data_root()
     parquet_root = data_root / "processed" / "race_radios" / str(args.year)
-    audio_root   = data_root / "raw"       / "radio_audio" / str(args.year)
+    audio_root = data_root / "raw" / "radio_audio" / str(args.year)
 
     # ── Pre-flight summary ────────────────────────────────────────────────
     n_pq, sz_pq = _walk_size(parquet_root)
@@ -218,24 +221,38 @@ def run(args: argparse.Namespace) -> None:
     grid = Table.grid(padding=(0, 2), expand=False)
     grid.add_column(style="grey50", justify="right", min_width=12)
     grid.add_column(justify="left")
-    grid.add_row("Dataset",    f"[bright_white]{HF_DATASET_REPO_ID}[/bright_white]")
-    grid.add_row("Year",       f"[bright_white]{args.year}[/bright_white]")
-    grid.add_row("Parquets",   f"{n_pq} files · {_fmt_bytes(sz_pq)}  [grey50]({parquet_root.relative_to(_REPO_ROOT)})[/grey50]")
-    grid.add_row("Audio MP3s", f"{n_au} files · {_fmt_bytes(sz_au)}  [grey50]({audio_root.relative_to(_REPO_ROOT)})[/grey50]")
-    grid.add_row("Total",      f"[bright_white]{n_pq + n_au} files · {_fmt_bytes(sz_pq + sz_au)}[/bright_white]")
-    grid.add_row("Mode",       "[gold1]DRY-RUN[/gold1]" if args.dry_run else "[green3]LIVE UPLOAD[/green3]")
+    grid.add_row("Dataset", f"[bright_white]{HF_DATASET_REPO_ID}[/bright_white]")
+    grid.add_row("Year", f"[bright_white]{args.year}[/bright_white]")
+    grid.add_row(
+        "Parquets",
+        f"{n_pq} files · {_fmt_bytes(sz_pq)}  [grey50]({parquet_root.relative_to(_REPO_ROOT)})[/grey50]",
+    )
+    grid.add_row(
+        "Audio MP3s",
+        f"{n_au} files · {_fmt_bytes(sz_au)}  [grey50]({audio_root.relative_to(_REPO_ROOT)})[/grey50]",
+    )
+    grid.add_row(
+        "Total", f"[bright_white]{n_pq + n_au} files · {_fmt_bytes(sz_pq + sz_au)}[/bright_white]"
+    )
+    grid.add_row(
+        "Mode", "[gold1]DRY-RUN[/gold1]" if args.dry_run else "[green3]LIVE UPLOAD[/green3]"
+    )
 
-    console.print(Panel(
-        grid,
-        title       = "[bold gold1]F1 Strategy Manager — radio corpus upload[/bold gold1]",
-        title_align = "center",
-        border_style= "gold1",
-        padding     = (1, 2),
-        expand      = False,
-    ))
+    console.print(
+        Panel(
+            grid,
+            title="[bold gold1]F1 Strategy Manager — radio corpus upload[/bold gold1]",
+            title_align="center",
+            border_style="gold1",
+            padding=(1, 2),
+            expand=False,
+        )
+    )
 
     if n_pq == 0 and n_au == 0:
-        console.print("[red3]Nothing to upload — both trees are empty. Run scripts/build_radio_dataset.py first.[/red3]")
+        console.print(
+            "[red3]Nothing to upload — both trees are empty. Run scripts/build_radio_dataset.py first.[/red3]"
+        )
         sys.exit(1)
 
     # ── Auth check ────────────────────────────────────────────────────────
@@ -255,7 +272,9 @@ def run(args: argparse.Namespace) -> None:
     if not args.dry_run:
         try:
             who = api.whoami()
-            console.print(f"[grey50]auth ok — uploading as [bright_white]{who['name']}[/bright_white][/grey50]")
+            console.print(
+                f"[grey50]auth ok — uploading as [bright_white]{who['name']}[/bright_white][/grey50]"
+            )
         except Exception as exc:
             console.print(
                 f"[red3]HF Hub auth failed: {exc}\n"
@@ -269,19 +288,19 @@ def run(args: argparse.Namespace) -> None:
     if not args.skip_parquets:
         _upload_tree(
             api,
-            folder_path    = parquet_root,
-            path_in_repo   = f"data/processed/race_radios/{args.year}",
-            commit_message = f"{commit_msg} (parquets)",
-            dry_run        = args.dry_run,
+            folder_path=parquet_root,
+            path_in_repo=f"data/processed/race_radios/{args.year}",
+            commit_message=f"{commit_msg} (parquets)",
+            dry_run=args.dry_run,
         )
 
     if not args.skip_audio:
         _upload_tree(
             api,
-            folder_path    = audio_root,
-            path_in_repo   = f"data/raw/radio_audio/{args.year}",
-            commit_message = f"{commit_msg} (audio)",
-            dry_run        = args.dry_run,
+            folder_path=audio_root,
+            path_in_repo=f"data/raw/radio_audio/{args.year}",
+            commit_message=f"{commit_msg} (audio)",
+            dry_run=args.dry_run,
         )
 
     if args.dry_run:

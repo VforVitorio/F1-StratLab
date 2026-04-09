@@ -40,6 +40,7 @@ from sentence_transformers import SentenceTransformer
 # Configuration
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class IndexConfig:
     """Centralised configuration for the PDF ingestion pipeline.
@@ -68,11 +69,11 @@ class IndexConfig:
                           a safe default for an 8 GB card with BGE-M3.
     """
 
-    collection_name:  str = "fia_regulations"
-    embedding_model:  str = "BAAI/bge-m3"   # MTEB ~67, 1024-dim, ~2 GB VRAM on RTX 5070
-    embedding_dim:    int = 1024
-    chunk_size:       int = 512
-    chunk_overlap:    int = 64
+    collection_name: str = "fia_regulations"
+    embedding_model: str = "BAAI/bge-m3"  # MTEB ~67, 1024-dim, ~2 GB VRAM on RTX 5070
+    embedding_dim: int = 1024
+    chunk_size: int = 512
+    chunk_overlap: int = 64
     embed_batch_size: int = 64
 
     def __post_init__(self) -> None:
@@ -102,6 +103,7 @@ log = logging.getLogger(__name__)
 # Data classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class PDFDocument:
     """Represents a single FIA PDF file before chunking.
@@ -124,10 +126,10 @@ class PDFDocument:
                   cleaned during chunking.
     """
 
-    path:     Path
+    path: Path
     doc_type: str
-    year:     int
-    text:     str = field(default="", repr=False)
+    year: int
+    text: str = field(default="", repr=False)
 
 
 @dataclass
@@ -162,21 +164,19 @@ class TextChunk:
                        so re-running the script only indexes new content.
     """
 
-    text:          str
-    doc_type:      str
-    year:          int
-    article:       str = ""
+    text: str
+    doc_type: str
+    year: int
+    article: str = ""
     section_title: str = ""
-    chunk_hash:    str = ""
+    chunk_hash: str = ""
 
 
 # ---------------------------------------------------------------------------
 # PDF extraction
 # ---------------------------------------------------------------------------
 
-_FILENAME_RE = re.compile(
-    r"^(?P<doc_type>sporting_regs|technical_regs)_(?P<year>20\d{2})\.pdf$"
-)
+_FILENAME_RE = re.compile(r"^(?P<doc_type>sporting_regs|technical_regs)_(?P<year>20\d{2})\.pdf$")
 
 
 def parse_pdf_filename(path: Path) -> tuple[str, int] | None:
@@ -210,7 +210,7 @@ def extract_text_from_pdf(path: Path) -> str:
               the file does not exist — callers should validate the path first.
     """
     reader = pypdf.PdfReader(str(path))
-    pages  = [page.extract_text() or "" for page in reader.pages]
+    pages = [page.extract_text() or "" for page in reader.pages]
     return "\n".join(pages)
 
 
@@ -249,7 +249,7 @@ def load_pdf_documents(docs_dir: Path) -> list[PDFDocument]:
 # Text cleaning + chunking
 # ---------------------------------------------------------------------------
 
-_ARTICLE_RE      = re.compile(r"Article\s+\d+[\.\d]*", re.IGNORECASE)
+_ARTICLE_RE = re.compile(r"Article\s+\d+[\.\d]*", re.IGNORECASE)
 _SECTION_HEAD_RE = re.compile(r"^\s{0,4}(\d+[\.\d]*\s+[A-Z][A-Z\s]{4,})\s*$", re.MULTILINE)
 
 
@@ -263,9 +263,9 @@ def clean_text(text: str) -> str:
     Args:
         text: Raw text as returned by ``extract_text_from_pdf``.
     """
-    text = re.sub(r"-\n", "", text)          # dehyphenate wrapped words
-    text = re.sub(r"[ \t]{2,}", " ", text)   # collapse horizontal whitespace
-    text = re.sub(r"\n{3,}", "\n\n", text)   # collapse blank lines
+    text = re.sub(r"-\n", "", text)  # dehyphenate wrapped words
+    text = re.sub(r"[ \t]{2,}", " ", text)  # collapse horizontal whitespace
+    text = re.sub(r"\n{3,}", "\n\n", text)  # collapse blank lines
     return text.strip()
 
 
@@ -321,7 +321,7 @@ def compute_hash(text: str) -> str:
 
 def iter_chunks(
     document: PDFDocument,
-    chunk_size:    int | None = None,
+    chunk_size: int | None = None,
     chunk_overlap: int | None = None,
 ) -> Iterator[TextChunk]:
     """Yield overlapping text chunks from a ``PDFDocument``.
@@ -341,15 +341,15 @@ def iter_chunks(
         chunk_overlap: Number of characters to repeat at the start of each
                        new window. Must be smaller than ``chunk_size``.
     """
-    chunk_size    = chunk_size    or CFG.chunk_size
+    chunk_size = chunk_size or CFG.chunk_size
     chunk_overlap = chunk_overlap or CFG.chunk_overlap
 
-    text   = clean_text(document.text)
-    start  = 0
+    text = clean_text(document.text)
+    start = 0
     stride = chunk_size - chunk_overlap
 
     while start < len(text):
-        end        = min(start + chunk_size, len(text))
+        end = min(start + chunk_size, len(text))
         chunk_text = text[start:end].strip()
 
         if chunk_text:
@@ -368,6 +368,7 @@ def iter_chunks(
 # ---------------------------------------------------------------------------
 # Qdrant management
 # ---------------------------------------------------------------------------
+
 
 def ensure_collection(client: QdrantClient, name: str, dim: int) -> None:
     """Create the Qdrant collection if it does not already exist.
@@ -434,8 +435,9 @@ def get_existing_hashes(client: QdrantClient, name: str) -> set[str]:
 # Embedding + upsert
 # ---------------------------------------------------------------------------
 
+
 def embed_chunks(
-    chunks:  list[TextChunk],
+    chunks: list[TextChunk],
     encoder: SentenceTransformer,
 ) -> np.ndarray:
     """Embed a list of chunks in batches and return the embedding matrix.
@@ -461,11 +463,11 @@ def embed_chunks(
 
 
 def upsert_chunks(
-    client:     QdrantClient,
-    name:       str,
-    chunks:     list[TextChunk],
+    client: QdrantClient,
+    name: str,
+    chunks: list[TextChunk],
     embeddings: np.ndarray,
-    id_offset:  int = 0,
+    id_offset: int = 0,
 ) -> int:
     """Upsert a list of chunks and their embeddings into a Qdrant collection.
 
@@ -493,12 +495,12 @@ def upsert_chunks(
             id=id_offset + i,
             vector=embeddings[i].tolist(),
             payload={
-                "text":          chunk.text,
-                "doc_type":      chunk.doc_type,
-                "year":          chunk.year,
-                "article":       chunk.article,
+                "text": chunk.text,
+                "doc_type": chunk.doc_type,
+                "year": chunk.year,
+                "article": chunk.article,
                 "section_title": chunk.section_title,
-                "chunk_hash":    chunk.chunk_hash,
+                "chunk_hash": chunk.chunk_hash,
             },
         )
         for i, chunk in enumerate(chunks)
@@ -511,10 +513,11 @@ def upsert_chunks(
 # Main orchestrator
 # ---------------------------------------------------------------------------
 
+
 def build_index(
-    docs_dir:      Path | None = None,
-    qdrant_path:   Path | None = None,
-    force_rebuild: bool        = False,
+    docs_dir: Path | None = None,
+    qdrant_path: Path | None = None,
+    force_rebuild: bool = False,
 ) -> None:
     """Orchestrate the full PDF → Qdrant pipeline.
 
@@ -533,7 +536,7 @@ def build_index(
                        this when the embedding model changes or the chunking
                        parameters are modified.
     """
-    docs_dir    = docs_dir    or CFG.docs_dir
+    docs_dir = docs_dir or CFG.docs_dir
     qdrant_path = qdrant_path or CFG.qdrant_path
 
     if not docs_dir.exists() or not any(docs_dir.glob("*.pdf")):
@@ -541,7 +544,7 @@ def build_index(
         sys.exit(1)
 
     qdrant_path.mkdir(parents=True, exist_ok=True)
-    client  = QdrantClient(path=str(qdrant_path))
+    client = QdrantClient(path=str(qdrant_path))
     encoder = SentenceTransformer(CFG.embedding_model)
 
     if force_rebuild:
@@ -566,9 +569,7 @@ def build_index(
                 all_chunks.append(chunk)
 
     skipped = sum(
-        1 for doc in documents
-        for chunk in iter_chunks(doc)
-        if chunk.chunk_hash in existing_hashes
+        1 for doc in documents for chunk in iter_chunks(doc) if chunk.chunk_hash in existing_hashes
     )
     log.info("New chunks to index: %d  |  skipped (already indexed): %d", len(all_chunks), skipped)
 
@@ -579,10 +580,10 @@ def build_index(
     log.info("Embedding %d chunks with '%s'...", len(all_chunks), CFG.embedding_model)
     embeddings = embed_chunks(all_chunks, encoder)
 
-    id_offset  = client.get_collection(CFG.collection_name).points_count or 0
+    id_offset = client.get_collection(CFG.collection_name).points_count or 0
     n_upserted = upsert_chunks(client, CFG.collection_name, all_chunks, embeddings, id_offset)
 
-    total = (client.get_collection(CFG.collection_name).points_count or 0)
+    total = client.get_collection(CFG.collection_name).points_count or 0
     log.info("Done. Upserted: %d  |  Total in collection: %d", n_upserted, total)
 
 

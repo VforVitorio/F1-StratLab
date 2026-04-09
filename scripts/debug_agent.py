@@ -55,9 +55,13 @@ import pandas as pd
 # Load .env from repo root so OPENAI_API_KEY is available for provider='openai'
 try:
     from dotenv import load_dotenv
+
     _env_path = next(
-        (p / ".env" for p in [Path(__file__).resolve().parent, *Path(__file__).resolve().parents]
-         if (p / ".git").exists() and (p / ".env").exists()),
+        (
+            p / ".env"
+            for p in [Path(__file__).resolve().parent, *Path(__file__).resolve().parents]
+            if (p / ".git").exists() and (p / ".env").exists()
+        ),
         None,
     )
     if _env_path:
@@ -80,13 +84,13 @@ if str(_REPO_ROOT) not in sys.path:
 # ---------------------------------------------------------------------------
 # ANSI helpers
 # ---------------------------------------------------------------------------
-_RESET  = "\033[0m"
-_BOLD   = "\033[1m"
-_GREEN  = "\033[92m"
+_RESET = "\033[0m"
+_BOLD = "\033[1m"
+_GREEN = "\033[92m"
 _YELLOW = "\033[93m"
-_CYAN   = "\033[96m"
-_DIM    = "\033[2m"
-_RED    = "\033[91m"
+_CYAN = "\033[96m"
+_DIM = "\033[2m"
+_RED = "\033[91m"
 
 
 def _header(text: str) -> None:
@@ -126,8 +130,7 @@ def _print_output(out: Any) -> None:
 # Lap state builder
 # ---------------------------------------------------------------------------
 
-_COMPOUND_ID_MAP = {"SOFT": 0, "MEDIUM": 1, "HARD": 2,
-                    "INTERMEDIATE": 3, "WET": 4}
+_COMPOUND_ID_MAP = {"SOFT": 0, "MEDIUM": 1, "HARD": 2, "INTERMEDIATE": 3, "WET": 4}
 
 
 def _build_lap_state(args: argparse.Namespace, laps_df: pd.DataFrame) -> dict[str, Any]:
@@ -138,15 +141,14 @@ def _build_lap_state(args: argparse.Namespace, laps_df: pd.DataFrame) -> dict[st
     defaults when not found.
     """
     gp_name = args.gp_name
-    driver  = args.driver
+    driver = args.driver
     lap_num = args.lap
 
     # Try to find actual lap data from the featured parquet
     real_row = None
     if laps_df is not None and not laps_df.empty:
-        mask = (
-            (laps_df.get("Driver", laps_df.get("driver", pd.Series(dtype=str))) == driver) &
-            (laps_df.get("LapNumber", laps_df.get("lap_number", pd.Series(dtype=int))) == lap_num)
+        mask = (laps_df.get("Driver", laps_df.get("driver", pd.Series(dtype=str))) == driver) & (
+            laps_df.get("LapNumber", laps_df.get("lap_number", pd.Series(dtype=int))) == lap_num
         )
         if "GrandPrix" in laps_df.columns:
             mask &= laps_df["GrandPrix"].str.contains(gp_name, case=False, na=False)
@@ -162,48 +164,48 @@ def _build_lap_state(args: argparse.Namespace, laps_df: pd.DataFrame) -> dict[st
                 return real_row[col]
         return default
 
-    compound   = args.compound or str(_get(["Compound", "compound"], "SOFT"))
-    tyre_life  = args.tyre_life or int(_get(["TyreLife", "tyre_life"], 10))
-    position   = int(_get(["Position", "position"], 1))
+    compound = args.compound or str(_get(["Compound", "compound"], "SOFT"))
+    tyre_life = args.tyre_life or int(_get(["TyreLife", "tyre_life"], 10))
+    position = int(_get(["Position", "position"], 1))
     lap_time_s = float(_get(["LapTime_s", "lap_time_s", "LapTime"], 91.0))
-    speed_st   = float(_get(["SpeedST", "speed_st"], 305.0))
-    fuel_load  = float(_get(["FuelLoad", "fuel_load"], max(0.0, 110 - lap_num * 1.8)))
-    air_temp   = float(_get(["AirTemp", "air_temp"], 28.0))
+    speed_st = float(_get(["SpeedST", "speed_st"], 305.0))
+    fuel_load = float(_get(["FuelLoad", "fuel_load"], max(0.0, 110 - lap_num * 1.8)))
+    air_temp = float(_get(["AirTemp", "air_temp"], 28.0))
     track_temp = float(_get(["TrackTemp", "track_temp"], 45.0))
-    rainfall   = bool(_get(["Rainfall", "rainfall"], False))
+    rainfall = bool(_get(["Rainfall", "rainfall"], False))
 
     lap_state: dict[str, Any] = {
         "lap_number": lap_num,
         "driver": {
-            "driver":       driver,
-            "team":         args.team,
-            "lap_number":   lap_num,
-            "compound":     compound,
-            "compound_id":  _COMPOUND_ID_MAP.get(compound.upper(), 0),
-            "tyre_life":    tyre_life,
-            "position":     position,
-            "lap_time_s":   lap_time_s,
-            "speed_st":     speed_st,
-            "fuel_load":    fuel_load,
-            "stint":        1,
-            "fresh_tyre":   tyre_life <= 2,
+            "driver": driver,
+            "team": args.team,
+            "lap_number": lap_num,
+            "compound": compound,
+            "compound_id": _COMPOUND_ID_MAP.get(compound.upper(), 0),
+            "tyre_life": tyre_life,
+            "position": position,
+            "lap_time_s": lap_time_s,
+            "speed_st": speed_st,
+            "fuel_load": fuel_load,
+            "stint": 1,
+            "fresh_tyre": tyre_life <= 2,
             "track_status": "1",
-            "is_in_lap":    False,
-            "is_out_lap":   False,
+            "is_in_lap": False,
+            "is_out_lap": False,
             "gap_to_leader_s": 0.0 if position == 1 else float(position - 1) * 1.5,
         },
         "rivals": [],
         "weather": {
-            "air_temp":    air_temp,
-            "track_temp":  track_temp,
-            "rainfall":    rainfall,
+            "air_temp": air_temp,
+            "track_temp": track_temp,
+            "rainfall": rainfall,
             "track_status": "1",
         },
         "session_meta": {
-            "gp_name":    gp_name,
-            "year":       args.year,
-            "driver":     driver,
-            "team":       args.team,
+            "gp_name": gp_name,
+            "year": args.year,
+            "driver": driver,
+            "team": args.team,
             "total_laps": args.total_laps,
         },
     }
@@ -212,7 +214,9 @@ def _build_lap_state(args: argparse.Namespace, laps_df: pd.DataFrame) -> dict[st
     if args.override:
         for kv in args.override:
             if "=" not in kv:
-                print(f"{_YELLOW}[WARN] Ignoring malformed --override '{kv}' (expected key=value){_RESET}")
+                print(
+                    f"{_YELLOW}[WARN] Ignoring malformed --override '{kv}' (expected key=value){_RESET}"
+                )
                 continue
             k, v = kv.split("=", 1)
             # Try to auto-cast
@@ -232,32 +236,38 @@ def _build_lap_state(args: argparse.Namespace, laps_df: pd.DataFrame) -> dict[st
 # Agent runners
 # ---------------------------------------------------------------------------
 
+
 def _run_pace(lap_state: dict, laps_df: pd.DataFrame, args: argparse.Namespace) -> None:
     from src.agents.pace_agent import run_pace_agent_from_state
+
     out = run_pace_agent_from_state(lap_state)
     _print_output(out)
 
 
 def _run_tire(lap_state: dict, laps_df: pd.DataFrame, args: argparse.Namespace) -> None:
     from src.agents.tire_agent import run_tire_agent_from_state
+
     out = run_tire_agent_from_state(lap_state, laps_df)
     _print_output(out)
 
 
 def _run_situation(lap_state: dict, laps_df: pd.DataFrame, args: argparse.Namespace) -> None:
     from src.agents.race_situation_agent import run_race_situation_agent_from_state
+
     out = run_race_situation_agent_from_state(lap_state, laps_df)
     _print_output(out)
 
 
 def _run_pit(lap_state: dict, laps_df: pd.DataFrame, args: argparse.Namespace) -> None:
     from src.agents.pit_strategy_agent import run_pit_strategy_agent_from_state
+
     out = run_pit_strategy_agent_from_state(lap_state, laps_df)
     _print_output(out)
 
 
 def _run_radio(lap_state: dict, laps_df: pd.DataFrame, args: argparse.Namespace) -> None:
     from src.agents.radio_agent import run_radio_agent_from_state
+
     radio_msgs = []
     if args.radio:
         radio_msgs = [{"driver": args.driver, "text": args.radio, "lap": args.lap}]
@@ -268,6 +278,7 @@ def _run_radio(lap_state: dict, laps_df: pd.DataFrame, args: argparse.Namespace)
 
 def _run_rag(lap_state: dict, laps_df: pd.DataFrame, args: argparse.Namespace) -> None:
     from src.agents.rag_agent import run_rag_agent
+
     query = args.query or f"What are the safety car regulations for the {args.gp_name} GP?"
     out = run_rag_agent(query)
     _print_output(out)
@@ -278,29 +289,29 @@ def _run_orchestrator(lap_state: dict, laps_df: pd.DataFrame, args: argparse.Nam
 
     driver_st = lap_state["driver"]
     race_state = RaceState(
-        driver      = args.driver,
-        lap         = args.lap,
-        total_laps  = args.total_laps,
-        position    = driver_st["position"],
-        compound    = driver_st["compound"],
-        tyre_life   = driver_st["tyre_life"],
-        gap_ahead_s = 0.0,
-        pace_delta_s= 0.0,
-        air_temp    = lap_state["weather"].get("air_temp", 28.0),
-        track_temp  = lap_state["weather"].get("track_temp", 45.0),
-        rainfall    = bool(lap_state["weather"].get("rainfall", False)),
+        driver=args.driver,
+        lap=args.lap,
+        total_laps=args.total_laps,
+        position=driver_st["position"],
+        compound=driver_st["compound"],
+        tyre_life=driver_st["tyre_life"],
+        gap_ahead_s=0.0,
+        pace_delta_s=0.0,
+        air_temp=lap_state["weather"].get("air_temp", 28.0),
+        track_temp=lap_state["weather"].get("track_temp", 45.0),
+        rainfall=bool(lap_state["weather"].get("rainfall", False)),
     )
     out = run_strategy_orchestrator_from_state(race_state, laps_df, lap_state)
     _print_output(out)
 
 
 _RUNNERS = {
-    "pace":        _run_pace,
-    "tire":        _run_tire,
-    "situation":   _run_situation,
-    "pit":         _run_pit,
-    "radio":       _run_radio,
-    "rag":         _run_rag,
+    "pace": _run_pace,
+    "tire": _run_tire,
+    "situation": _run_situation,
+    "pit": _run_pit,
+    "radio": _run_radio,
+    "rag": _run_rag,
     "orchestrator": _run_orchestrator,
 }
 
@@ -309,43 +320,64 @@ _RUNNERS = {
 # Main
 # ---------------------------------------------------------------------------
 
+
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Single-agent debug harness — run any agent in isolation",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-    p.add_argument("--agent", required=True, choices=list(_RUNNERS),
-                   help="Which agent to run")
-    p.add_argument("--gp",      dest="gp_name",  required=True,
-                   help="Grand Prix name (e.g. Melbourne, Bahrain)")
-    p.add_argument("--driver",  required=True,
-                   help="FIA three-letter driver code (e.g. NOR, HAM)")
-    p.add_argument("--team",    required=True,
-                   help="Team name as in the parquet (e.g. McLaren)")
-    p.add_argument("--lap",     type=int, default=20,
-                   help="Lap number to simulate (default: 20)")
-    p.add_argument("--compound", default=None,
-                   help="Tyre compound override (SOFT/MEDIUM/HARD/INTERMEDIATE/WET)")
-    p.add_argument("--tyre-life", dest="tyre_life", type=int, default=None,
-                   help="Tyre life in laps override")
-    p.add_argument("--total-laps", dest="total_laps", type=int, default=57,
-                   help="Total race laps (default: 57)")
-    p.add_argument("--year",    type=int, default=2025,
-                   help="Season year (default: 2025)")
-    p.add_argument("--featured",
-                   default="data/processed/laps_featured_2025.parquet",
-                   help="Path to featured parquet (default: data/processed/laps_featured_2025.parquet)")
-    p.add_argument("--override", nargs="+", metavar="KEY=VALUE",
-                   help="Override individual driver state fields, e.g. --override tyre_life=25 position=3")
-    p.add_argument("--radio", default=None,
-                   help="Radio message text for --agent radio (e.g. 'Box box, tyres gone')")
-    p.add_argument("--query", default=None,
-                   help="Query string for --agent rag")
-    p.add_argument("--print-state", action="store_true",
-                   help="Print the full lap_state dict before running the agent")
-    p.add_argument("--provider", default="lmstudio", choices=["lmstudio", "openai"],
-                   help="LLM provider: 'lmstudio' (default, localhost:1234) or 'openai' (real API, needs OPENAI_API_KEY)")
+    p.add_argument("--agent", required=True, choices=list(_RUNNERS), help="Which agent to run")
+    p.add_argument(
+        "--gp", dest="gp_name", required=True, help="Grand Prix name (e.g. Melbourne, Bahrain)"
+    )
+    p.add_argument("--driver", required=True, help="FIA three-letter driver code (e.g. NOR, HAM)")
+    p.add_argument("--team", required=True, help="Team name as in the parquet (e.g. McLaren)")
+    p.add_argument("--lap", type=int, default=20, help="Lap number to simulate (default: 20)")
+    p.add_argument(
+        "--compound",
+        default=None,
+        help="Tyre compound override (SOFT/MEDIUM/HARD/INTERMEDIATE/WET)",
+    )
+    p.add_argument(
+        "--tyre-life", dest="tyre_life", type=int, default=None, help="Tyre life in laps override"
+    )
+    p.add_argument(
+        "--total-laps",
+        dest="total_laps",
+        type=int,
+        default=57,
+        help="Total race laps (default: 57)",
+    )
+    p.add_argument("--year", type=int, default=2025, help="Season year (default: 2025)")
+    p.add_argument(
+        "--featured",
+        default="data/processed/laps_featured_2025.parquet",
+        help="Path to featured parquet (default: data/processed/laps_featured_2025.parquet)",
+    )
+    p.add_argument(
+        "--override",
+        nargs="+",
+        metavar="KEY=VALUE",
+        help="Override individual driver state fields, e.g. --override tyre_life=25 position=3",
+    )
+    p.add_argument(
+        "--radio",
+        default=None,
+        help="Radio message text for --agent radio (e.g. 'Box box, tyres gone')",
+    )
+    p.add_argument("--query", default=None, help="Query string for --agent rag")
+    p.add_argument(
+        "--print-state",
+        action="store_true",
+        help="Print the full lap_state dict before running the agent",
+    )
+    p.add_argument(
+        "--provider",
+        default="lmstudio",
+        choices=["lmstudio", "openai"],
+        help="LLM provider: 'lmstudio' (default, localhost:1234) or 'openai' (real API, needs OPENAI_API_KEY)",
+    )
     return p.parse_args()
 
 
@@ -369,7 +401,9 @@ def main() -> None:
         laps_df = pd.read_parquet(featured_path)
         print(f"done ({len(laps_df):,} rows)")
     else:
-        print(f"{_YELLOW}[WARN] Featured parquet not found at {featured_path} — using synthetic defaults{_RESET}")
+        print(
+            f"{_YELLOW}[WARN] Featured parquet not found at {featured_path} — using synthetic defaults{_RESET}"
+        )
         laps_df = pd.DataFrame()
 
     # Build lap_state
@@ -381,12 +415,12 @@ def main() -> None:
     else:
         d = lap_state["driver"]
         _kv("lap_number", lap_state["lap_number"])
-        _kv("compound",   d["compound"])
-        _kv("tyre_life",  d["tyre_life"])
-        _kv("position",   d["position"])
+        _kv("compound", d["compound"])
+        _kv("tyre_life", d["tyre_life"])
+        _kv("position", d["position"])
         _kv("lap_time_s", d["lap_time_s"])
-        _kv("fuel_load",  d["fuel_load"])
-        _kv("gp_name",    lap_state["session_meta"]["gp_name"])
+        _kv("fuel_load", d["fuel_load"])
+        _kv("gp_name", lap_state["session_meta"]["gp_name"])
 
     # Run
     runner = _RUNNERS[args.agent]

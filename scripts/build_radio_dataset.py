@@ -164,15 +164,13 @@ class BuildConfig:
                       mirror or a mocked transport.
     """
 
-    output_dir:   Path = field(
+    output_dir: Path = field(
         default_factory=lambda: _REPO_ROOT / "data" / "processed" / "race_radios"
     )
-    audio_dir:    Path = field(
-        default_factory=lambda: _REPO_ROOT / "data" / "raw" / "radio_audio"
-    )
-    skip_audio:   bool  = False
-    http_timeout: int   = 30
-    gp_delay_s:   float = 1.0
+    audio_dir: Path = field(default_factory=lambda: _REPO_ROOT / "data" / "raw" / "radio_audio")
+    skip_audio: bool = False
+    http_timeout: int = 30
+    gp_delay_s: float = 1.0
 
 
 CFG = BuildConfig()
@@ -188,6 +186,7 @@ log = logging.getLogger("build_radio_dataset")
 # ---------------------------------------------------------------------------
 # Data classes
 # ---------------------------------------------------------------------------
+
 
 @dataclass(frozen=True)
 class RaceMeta:
@@ -226,9 +225,9 @@ class RaceMeta:
                             inside this script populates it.
     """
 
-    year:               int
-    country_name:       str
-    session_key:        int
+    year: int
+    country_name: str
+    session_key: int
     circuit_short_name: Optional[str] = None
 
 
@@ -272,19 +271,20 @@ class BuildResult:
                      exceptions.
     """
 
-    race:       RaceMeta
-    status:     str
-    radio_rows: int            = 0
-    rcm_rows:   int            = 0
-    audio_rows: int            = 0
+    race: RaceMeta
+    status: str
+    radio_rows: int = 0
+    rcm_rows: int = 0
+    audio_rows: int = 0
     radio_path: Optional[Path] = None
-    rcm_path:   Optional[Path] = None
-    error:      Optional[str]  = None
+    rcm_path: Optional[Path] = None
+    error: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
 # Multi-GP CLI orchestrator
 # ---------------------------------------------------------------------------
+
 
 class RadioDatasetCLI:
     """Multi-GP wrapper around :class:`RadioDatasetBuilder`.
@@ -318,8 +318,8 @@ class RadioDatasetCLI:
         call site. The session is owned by the builder and closed
         implicitly when the process exits.
         """
-        self._cfg     = cfg
-        self._http    = build_retry_session()
+        self._cfg = cfg
+        self._http = build_retry_session()
         self._builder = RadioDatasetBuilder(
             output_dir=cfg.output_dir,
             http_timeout=cfg.http_timeout,
@@ -374,7 +374,7 @@ class RadioDatasetCLI:
             sprint_count = 0
             for session in payload:
                 country = session.get("country_name")
-                key     = session.get("session_key")
+                key = session.get("session_key")
                 if country is None or key is None:
                     continue
                 # Sprint weekends: drop the Sprint so we never overwrite the
@@ -399,7 +399,9 @@ class RadioDatasetCLI:
 
             log.info(
                 "  → found %d main-race sessions for %d (filtered %d non-Race siblings)",
-                year_count, year, sprint_count,
+                year_count,
+                year,
+                sprint_count,
             )
 
         return races
@@ -408,7 +410,7 @@ class RadioDatasetCLI:
 
     @staticmethod
     def filter_races(
-        races:     list[RaceMeta],
+        races: list[RaceMeta],
         gp_filter: Optional[list[str]],
     ) -> list[RaceMeta]:
         """Restrict the discovered race list to a subset of country / circuit names.
@@ -459,7 +461,7 @@ class RadioDatasetCLI:
 
     def build_all(
         self,
-        races:         list[RaceMeta],
+        races: list[RaceMeta],
         skip_existing: bool,
     ) -> list[BuildResult]:
         """Iterate over every race and build both parquets, collecting results.
@@ -509,12 +511,13 @@ class RadioDatasetCLI:
             did_http_work = False
 
             radio_target = self._radio_target_path(race)
-            rcm_target   = self._rcm_target_path(race)
+            rcm_target = self._rcm_target_path(race)
 
             if skip_existing and radio_target.exists() and rcm_target.exists():
                 log.info(
                     "[%d %s] skipped — both parquets already exist",
-                    race.year, race.country_name,
+                    race.year,
+                    race.country_name,
                 )
                 results.append(
                     BuildResult(
@@ -528,22 +531,26 @@ class RadioDatasetCLI:
 
             try:
                 bundle = self._builder.prepare_session_bundle(
-                    race.year, race.country_name,
+                    race.year,
+                    race.country_name,
                 )
                 # Prefer the value already on the RaceMeta (captured in
                 # discover_races) so the slug rule stays consistent across
                 # the discovery and build phases. Fall back to the bundle's
                 # session payload if discover_races somehow saw a row that
                 # was missing the field.
-                circuit_short_name = (
-                    race.circuit_short_name
-                    or bundle.session.get("circuit_short_name")
+                circuit_short_name = race.circuit_short_name or bundle.session.get(
+                    "circuit_short_name"
                 )
                 radio_table = self._builder.build_radio_table(
-                    race.year, race.country_name, bundle=bundle,
+                    race.year,
+                    race.country_name,
+                    bundle=bundle,
                 )
                 rcm_table = self._builder.build_rcm_table(
-                    race.year, race.country_name, bundle=bundle,
+                    race.year,
+                    race.country_name,
+                    bundle=bundle,
                 )
                 if not self._cfg.skip_audio:
                     radio_table = self._builder.download_audio_files(
@@ -566,11 +573,11 @@ class RadioDatasetCLI:
             except Exception as exc:
                 log.error(
                     "[%d %s] build failed: %s",
-                    race.year, race.country_name, exc,
+                    race.year,
+                    race.country_name,
+                    exc,
                 )
-                results.append(
-                    BuildResult(race=race, status="failed", error=str(exc))
-                )
+                results.append(BuildResult(race=race, status="failed", error=str(exc)))
                 did_http_work = True  # a failed build still hit OpenF1
                 continue
 
@@ -653,12 +660,12 @@ class RadioDatasetCLI:
         so the next ``--years`` re-run can target only the missing slices
         via ``--gps``.
         """
-        built   = [r for r in results if r.status == "built"]
+        built = [r for r in results if r.status == "built"]
         skipped = [r for r in results if r.status == "skipped"]
-        failed  = [r for r in results if r.status == "failed"]
+        failed = [r for r in results if r.status == "failed"]
 
         total_radio_rows = sum(r.radio_rows for r in built)
-        total_rcm_rows   = sum(r.rcm_rows   for r in built)
+        total_rcm_rows = sum(r.rcm_rows for r in built)
         total_audio_rows = sum(r.audio_rows for r in built)
 
         log.info("")
@@ -666,7 +673,10 @@ class RadioDatasetCLI:
         log.info("Build summary")
         log.info(
             "  built:   %3d GP  (%d radios, %d RCMs, %d MP3s total)",
-            len(built), total_radio_rows, total_rcm_rows, total_audio_rows,
+            len(built),
+            total_radio_rows,
+            total_rcm_rows,
+            total_audio_rows,
         )
         log.info("  skipped: %3d GP  (already on disk)", len(skipped))
         log.info("  failed:  %3d GP", len(failed))
@@ -681,8 +691,8 @@ class RadioDatasetCLI:
 
     def run(
         self,
-        years:         Iterable[int],
-        gp_filter:     Optional[list[str]],
+        years: Iterable[int],
+        gp_filter: Optional[list[str]],
         skip_existing: bool,
     ) -> list[BuildResult]:
         """Discover races, filter them, build each GP, and log the summary.
@@ -712,6 +722,7 @@ class RadioDatasetCLI:
 # ---------------------------------------------------------------------------
 # CLI entry point
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     """Parse CLI arguments and run the multi-GP radio dataset build.

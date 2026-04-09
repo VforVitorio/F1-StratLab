@@ -25,11 +25,11 @@ console = Console()
 # F1 brand palette
 # ─────────────────────────────────────────────────────────────────────────────
 
-F1_RED   = "#e10600"   # official Formula 1 primary red
-F1_WHITE = "#f0f0f0"   # warm white for primary text
-F1_GRAY  = "#6b7280"   # muted gray for metadata / hints
-F1_GREEN = "#10b981"   # success / green flag
-F1_AMBER = "#f59e0b"   # warning / yellow flag / driver 2 accent
+F1_RED = "#e10600"  # official Formula 1 primary red
+F1_WHITE = "#f0f0f0"  # warm white for primary text
+F1_GRAY = "#6b7280"  # muted gray for metadata / hints
+F1_GREEN = "#10b981"  # success / green flag
+F1_AMBER = "#f59e0b"  # warning / yellow flag / driver 2 accent
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ASCII art — "F1" + "STRAT" in Unicode block chars
@@ -79,13 +79,13 @@ def make_banner() -> Panel:
     lines: list = []
     for f1_row, strat_row in zip(_ART_F1, _ART_STRAT):
         t = Text()
-        t.append(f1_row,    style=f"bold {F1_RED}")
+        t.append(f1_row, style=f"bold {F1_RED}")
         t.append(strat_row, style=f"bold {F1_WHITE}")
         lines.append(Align.center(t))
 
     lines += [
         Text(""),
-        Align.center(Text("Formula 1 Strategy Manager",              style=f"bold {F1_GRAY}")),
+        Align.center(Text("Formula 1 Strategy Manager", style=f"bold {F1_GRAY}")),
         Align.center(Text("Multi-Agent Race Intelligence System · v0.9", style=F1_GRAY)),
     ]
 

@@ -438,16 +438,13 @@ At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). Thi
 - [ ] **Moshi** (Kyutai, open-source, local GPU, ~160ms full-duplex — offline fallback)
 - [ ] Keep N24 NLP pipeline active for text-based analysis in parallel
 
-**Integration (Hybrid Architecture):**
+**Streaming (Kafka + WebSocket) — descoped, optional extension:**
 
-- [ ] Add WebSocket endpoints to existing FastAPI backend (hybrid REST + WebSocket)
-- [ ] MVP: /ws/replay endpoint for offline race replay from CSV/Parquet files
-- [ ] WebSocket client implementation for Streamlit dashboard
-- [ ] WebSocket client implementation for Arcade visualization
-- [ ] Frame streaming at 10Hz for smooth visualization
-- [ ] Extension: /ws/live endpoint with Kafka consumer for real-time data
+- [ ] ~~Add WebSocket endpoints to FastAPI backend (hybrid REST + WebSocket)~~
+- [ ] ~~MVP: /ws/replay endpoint for offline race replay @ 10Hz~~
+- [ ] ~~Extension: /ws/live endpoint with Kafka consumer for real-time data~~
 
-**Note:** REST endpoints remain unchanged. WebSocket is added only for real-time streaming needs.
+**Note:** Kafka + WebSocket streaming descoped from core TFG scope (April 2026). All data is historical replay from parquet — REST endpoints are sufficient for both Streamlit and Arcade. Kafka adds infrastructure complexity (ZooKeeper, broker, topics) without a real-time data source to justify it. If implemented, it would be as a final architectural demo showing the system could scale to live telemetry (e.g. OpenF1 API during a live race). See `documents/dev_docs/tasks/planning/PLANIFICACION_DETALLADA_TFG_v2.md` Phase 7.4 for full rationale.
 
 **R3 — Streamlit + Backend Release:**
 
@@ -461,7 +458,6 @@ At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). Thi
 - [ ] FastMCP tools callable from `/chat/` with structured rendering
 - [ ] Streamlit load time <3 seconds
 - [ ] Arcade maintains >30 FPS during race replay
-- [ ] Zero packet loss during Kafka streaming
 
 ---
 
@@ -483,7 +479,6 @@ End-to-end system validation across multiple race scenarios and circuit clusters
 
 - [ ] E2E CLI simulation on each test scenario (no-llm + LLM mode)
 - [ ] ML metrics validation per circuit cluster (overtake AUC-PR, SC lift, tire MAE)
-- [ ] Streaming performance verification (no Kafka packet loss)
 - [ ] FastAPI endpoint integration tests (strategy router round-trip)
 - [ ] FastMCP tool call validation from `/chat/` endpoint
 - [ ] Load testing: API throughput >100 req/s, latency p95 <50ms
@@ -494,7 +489,6 @@ End-to-end system validation across multiple race scenarios and circuit clusters
 - [ ] All four circuit-cluster test scenarios pass without errors
 - [ ] Per-cluster ML metrics within documented tolerances
 - [ ] Strategy endpoints return valid outputs under concurrent requests
-- [ ] Zero packet loss during Kafka streaming
 - [ ] System stable under load
 - [ ] All critical bugs resolved before v1.0 tag
 
@@ -554,7 +548,7 @@ Complete project delivery with thesis documentation, defense materials, and thre
 
 **LLM Latency:** Use quantized 7B models with INT8 precision. Target inference <2s. Fallback to smaller models if necessary.
 
-**Kafka Streaming Reliability:** Implement buffering and retry logic. Monitor for packet loss with alerting.
+**Kafka Streaming Reliability:** ~~Implement buffering and retry logic.~~ Descoped — only relevant if live telemetry extension is implemented post-TFG.
 
 **Test Data Availability:** If 2025 race data incomplete, use late 2024 season as fallback test set.
 
@@ -575,7 +569,7 @@ Complete project delivery with thesis documentation, defense materials, and thre
 
 **System Performance:**
 
-- Streaming latency: p95 <50ms
+- ~~Streaming latency: p95 <50ms~~ (descoped — optional extension)
 - API throughput: >100 requests/second
 - Test coverage: >70%
 - Memory usage: <4GB

@@ -1,4 +1,5 @@
 """Smoke tests — verify CI infrastructure and project structure."""
+
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
@@ -34,6 +35,7 @@ def test_simulation_imports():
 def test_race_state_manager_melbourne():
     """RaceStateManager produces a valid lap_state from the Melbourne 2025 parquet."""
     import pytest
+
     pd = pytest.importorskip("pandas", reason="pandas not installed in this environment")
     from src.simulation.race_state_manager import RaceStateManager
 

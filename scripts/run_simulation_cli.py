@@ -77,6 +77,7 @@ if str(_REPO_ROOT) not in sys.path:
 # Load .env so OPENAI_API_KEY is available when --provider openai is used
 try:
     from dotenv import load_dotenv
+
     _env = _REPO_ROOT / ".env"
     if _env.exists():
         load_dotenv(_env)
@@ -100,7 +101,8 @@ except ImportError as e:
 #     would otherwise be flushed to the terminal after fds are restored.
 _dn = os.open(os.devnull, os.O_WRONLY)
 _fd1_save, _fd2_save = os.dup(1), os.dup(2)
-os.dup2(_dn, 1); os.dup2(_dn, 2)  # noqa: E702
+os.dup2(_dn, 1)
+os.dup2(_dn, 2)  # noqa: E702
 _py_out_save, _py_err_save = sys.stdout, sys.stderr
 sys.stdout = sys.stderr = io.StringIO()
 os.environ["TQDM_DISABLE"] = "1"
@@ -111,8 +113,11 @@ except ImportError as _e:
     _import_err = str(_e)
 finally:
     sys.stdout, sys.stderr = _py_out_save, _py_err_save
-    os.dup2(_fd1_save, 1); os.dup2(_fd2_save, 2)  # noqa: E702
-    os.close(_fd1_save); os.close(_fd2_save); os.close(_dn)  # noqa: E702
+    os.dup2(_fd1_save, 1)
+    os.dup2(_fd2_save, 2)  # noqa: E702
+    os.close(_fd1_save)
+    os.close(_fd2_save)
+    os.close(_dn)  # noqa: E702
     os.environ.pop("TQDM_DISABLE", None)
 if _import_err:
     sys.exit(f"[FATAL] Cannot import strategy orchestrator: {_import_err}")
@@ -125,28 +130,33 @@ console = Console()
 
 ACTION_STYLE: dict[str, str] = {
     "STAY_OUT": "bold green",
-    "PIT_NOW":  "bold red",
+    "PIT_NOW": "bold red",
     "UNDERCUT": "bold yellow",
-    "OVERCUT":  "bold yellow",
-    "ALERT":    "bold cyan",
+    "OVERCUT": "bold yellow",
+    "ALERT": "bold cyan",
 }
 
 # Abbreviations for v2 tactical fields rendered in the Decision column
 _PM_SHORT: dict[str, str] = {
-    "PUSH": "PUSH", "NEUTRAL": "NTRL", "MANAGE": "MNGR", "LIFT_AND_COAST": "L&C",
+    "PUSH": "PUSH",
+    "NEUTRAL": "NTRL",
+    "MANAGE": "MNGR",
+    "LIFT_AND_COAST": "L&C",
 }
 _RP_SHORT: dict[str, str] = {
-    "AGGRESSIVE": "AGG", "BALANCED": "BAL", "DEFENSIVE": "DEF",
+    "AGGRESSIVE": "AGG",
+    "BALANCED": "BAL",
+    "DEFENSIVE": "DEF",
 }
 
 # Pirelli tyre-compound colours
 _COMPOUND_STYLE: dict[str, str] = {
-    "SOFT":         "bold red",
-    "MEDIUM":       "bold yellow",
-    "HARD":         "white",
+    "SOFT": "bold red",
+    "MEDIUM": "bold yellow",
+    "HARD": "white",
     "INTERMEDIATE": "bold green",
-    "WET":          "bold blue",
-    "INT":          "bold green",
+    "WET": "bold blue",
+    "INT": "bold green",
 }
 
 # Loaded once in run() — maps year → gp → compound → Cx
@@ -155,23 +165,38 @@ _TIRE_ALLOC: dict = {}
 # ── Driver / team colours (mirrored from src/telemetry/backend/core/driver_colors.py) ──
 # No import to avoid heavy telemetry import chain at CLI startup.
 _DRIVER_COLORS: dict[str, str] = {
-    "VER": "#0600EF", "PER": "#3671C6",          # Red Bull
-    "LEC": "#DC0000", "SAI": "#FF6B6B",           # Ferrari
-    "HAM": "#C0C0C0", "RUS": "#E8E8E8",           # Mercedes
-    "NOR": "#FF8700", "PIA": "#FFB347",           # McLaren
-    "ALO": "#00665F", "STR": "#2BA572",           # Aston Martin
-    "GAS": "#FF87BC", "OCO": "#FFC0E3",           # Alpine
-    "ALB": "#041E42", "SAR": "#1B4F91", "COL": "#2E6DB5",  # Williams
-    "TSU": "#FFFFFF", "RIC": "#F5F5F5", "LAW": "#DCDCDC",  # RB
-    "BOT": "#52E252", "ZHO": "#90EE90",           # Kick Sauber
-    "MAG": "#787878", "HUL": "#A8A8A8", "BEA": "#959595",  # Haas
-    "DOO": "#FFB0D3",                             # Reserve
+    "VER": "#0600EF",
+    "PER": "#3671C6",  # Red Bull
+    "LEC": "#DC0000",
+    "SAI": "#FF6B6B",  # Ferrari
+    "HAM": "#C0C0C0",
+    "RUS": "#E8E8E8",  # Mercedes
+    "NOR": "#FF8700",
+    "PIA": "#FFB347",  # McLaren
+    "ALO": "#00665F",
+    "STR": "#2BA572",  # Aston Martin
+    "GAS": "#FF87BC",
+    "OCO": "#FFC0E3",  # Alpine
+    "ALB": "#041E42",
+    "SAR": "#1B4F91",
+    "COL": "#2E6DB5",  # Williams
+    "TSU": "#FFFFFF",
+    "RIC": "#F5F5F5",
+    "LAW": "#DCDCDC",  # RB
+    "BOT": "#52E252",
+    "ZHO": "#90EE90",  # Kick Sauber
+    "MAG": "#787878",
+    "HUL": "#A8A8A8",
+    "BEA": "#959595",  # Haas
+    "DOO": "#FFB0D3",  # Reserve
 }
 _DEFAULT_DRIVER_COLOR = "#A259F7"
+
 
 def _drv_color(code: str) -> str:
     """Return the hex colour for *code*, or a purple fallback."""
     return _DRIVER_COLORS.get(code.upper(), _DEFAULT_DRIVER_COLOR)
+
 
 # ── Simulated radio message pool ──────────────────────────────────────────────
 import random as _random  # noqa: E402
@@ -206,21 +231,36 @@ _RADIO_POOL: dict[str, list[str]] = {
 }
 
 _RCM_POOL: list[dict] = [
-    {"message": "TRACK LIMITS AT TURN 12 — NOTED",  "flag": "YELLOW",     "category": "Track Limits", "scope": "Track"},
-    {"message": "YELLOW FLAG SECTOR 2",              "flag": "YELLOW",     "category": "Flag",         "scope": "Sector"},
-    {"message": "VSC ENDING — SAFETY CAR IN THIS LAP","flag": "SAFETY CAR","category": "SafetyCar",    "scope": "Track"},
-    {"message": "DRS ENABLED",                       "flag": "GREEN",      "category": "DRS",          "scope": "Track"},
-    {"message": "INCIDENT UNDER INVESTIGATION",      "flag": "YELLOW",     "category": "Other",        "scope": "Driver"},
+    {
+        "message": "TRACK LIMITS AT TURN 12 — NOTED",
+        "flag": "YELLOW",
+        "category": "Track Limits",
+        "scope": "Track",
+    },
+    {"message": "YELLOW FLAG SECTOR 2", "flag": "YELLOW", "category": "Flag", "scope": "Sector"},
+    {
+        "message": "VSC ENDING — SAFETY CAR IN THIS LAP",
+        "flag": "SAFETY CAR",
+        "category": "SafetyCar",
+        "scope": "Track",
+    },
+    {"message": "DRS ENABLED", "flag": "GREEN", "category": "DRS", "scope": "Track"},
+    {
+        "message": "INCIDENT UNDER INVESTIGATION",
+        "flag": "YELLOW",
+        "category": "Other",
+        "scope": "Driver",
+    },
 ]
 
 
 def _generate_radio_event(
     lap_num: int,
-    driver:     str,
-    compound:   str,
-    tyre_life:  int,
-    position:   int,
-    gap_ahead:  float,
+    driver: str,
+    compound: str,
+    tyre_life: int,
+    position: int,
+    gap_ahead: float,
 ) -> dict:
     """Return a context-aware simulated radio message dict."""
     if compound in ("SOFT", "MEDIUM") and tyre_life > 22:
@@ -234,9 +274,9 @@ def _generate_radio_event(
     else:
         intent = _random.choice(["info", "manage"])
     return {
-        "driver":    driver,
-        "lap":       lap_num,
-        "text":      _random.choice(_RADIO_POOL[intent]),
+        "driver": driver,
+        "lap": lap_num,
+        "text": _random.choice(_RADIO_POOL[intent]),
         "timestamp": None,
     }
 
@@ -246,7 +286,7 @@ def _generate_rcm_event(lap_num: int) -> dict | None:
     if _random.random() > 0.3:
         return None
     evt = dict(_random.choice(_RCM_POOL))
-    evt["lap"]           = lap_num
+    evt["lap"] = lap_num
     evt["racing_number"] = None
     return evt
 
@@ -281,9 +321,9 @@ def _compound_text(compound: str, gp_name: str, year: int) -> Text:
     cu = compound.upper()
     cx = _TIRE_ALLOC.get(str(year), {}).get(gp_name, {}).get(cu)
     if cx:
-        label = f"{cu[:3]}/{cx}"   # SOF/C4, MED/C3, HAR/C2
+        label = f"{cu[:3]}/{cx}"  # SOF/C4, MED/C3, HAR/C2
     else:
-        label = cu[:4]             # INTE, WET (no Cx for wet compounds)
+        label = cu[:4]  # INTE, WET (no Cx for wet compounds)
     return Text(label, style=_COMPOUND_STYLE.get(cu, ""))
 
 
@@ -297,14 +337,17 @@ def _devnull_fds():
     suppression on all platforms including Windows.
     """
     import warnings
+
     devnull_fd = os.open(os.devnull, os.O_WRONLY)
     saved = {1: os.dup(1), 2: os.dup(2)}
     try:
         os.dup2(devnull_fd, 1)
         os.dup2(devnull_fd, 2)
-        with contextlib.redirect_stdout(io.StringIO()), \
-             contextlib.redirect_stderr(io.StringIO()), \
-             warnings.catch_warnings():
+        with (
+            contextlib.redirect_stdout(io.StringIO()),
+            contextlib.redirect_stderr(io.StringIO()),
+            warnings.catch_warnings(),
+        ):
             warnings.simplefilter("ignore")
             yield
     finally:
@@ -325,10 +368,21 @@ def _devnull_fds():
 # ServiceUnavailableError) and raw httpx/urllib failures (ConnectTimeout,
 # RemoteDisconnected, etc.).
 _LLM_ERR_TYPES = (
-    "Connection", "APIConnection", "OpenAI", "HTTP", "Timeout",
-    "RemoteDisconnected", "BadRequest", "NotFound", "Authentication",
-    "APIError", "APIStatusError", "RateLimit", "InternalServerError",
-    "ServiceUnavailable", "PermissionDenied",
+    "Connection",
+    "APIConnection",
+    "OpenAI",
+    "HTTP",
+    "Timeout",
+    "RemoteDisconnected",
+    "BadRequest",
+    "NotFound",
+    "Authentication",
+    "APIError",
+    "APIStatusError",
+    "RateLimit",
+    "InternalServerError",
+    "ServiceUnavailable",
+    "PermissionDenied",
 )
 
 # Substrings that reliably indicate "LLM backend alive but unusable" — used
@@ -336,9 +390,14 @@ _LLM_ERR_TYPES = (
 # "No models loaded" is the exact LM Studio message when the developer forgot
 # to `lms load` a model; "model_not_found" covers OpenAI 404s.
 _LLM_ERR_MSGS = (
-    "Connection error", "connect ECONNREFUSED", "No models loaded",
-    "model_not_found", "invalid_api_key", "Could not connect",
-    "ENOTFOUND", "getaddrinfo failed",
+    "Connection error",
+    "connect ECONNREFUSED",
+    "No models loaded",
+    "model_not_found",
+    "invalid_api_key",
+    "Could not connect",
+    "ENOTFOUND",
+    "getaddrinfo failed",
 )
 
 
@@ -356,10 +415,9 @@ def _is_llm_unavailable(exc: Exception) -> bool:
     "No models loaded" (BadRequestError), OpenAI rate limits, and plain
     socket failures uniformly.
     """
-    tn  = type(exc).__name__
+    tn = type(exc).__name__
     msg = str(exc)[:300]
-    return any(k in tn  for k in _LLM_ERR_TYPES) or \
-           any(k in msg for k in _LLM_ERR_MSGS)
+    return any(k in tn for k in _LLM_ERR_TYPES) or any(k in msg for k in _LLM_ERR_MSGS)
 
 
 def _prewarm_agents(no_llm: bool) -> None:
@@ -384,6 +442,7 @@ def _prewarm_agents(no_llm: bool) -> None:
             from src.agents.race_situation_agent import _get_default_situation_agent
             from src.agents.radio_agent import CFG as _r  # noqa: F401
             from src.agents.tire_agent import _get_default_tire_agent
+
             _get_default_pace_agent()
             _get_default_situation_agent()
             _get_default_pit_agent()
@@ -399,8 +458,8 @@ def _prewarm_agents(no_llm: bool) -> None:
 
 def _probe_core_agents(
     race_state: "RaceState",
-    lap_state:  dict,
-    laps_df:    "pd.DataFrame",
+    lap_state: dict,
+    laps_df: "pd.DataFrame",
 ):
     """Run pace + tire + situation + radio agents and return their outputs.
 
@@ -427,25 +486,39 @@ def _probe_core_agents(
             raise
 
     pace_stub = PaceOutput(
-        lap_time_pred=90.0, delta_vs_prev=0.0, delta_vs_median=0.0,
-        ci_p10=88.0, ci_p90=92.0, reasoning="[probe]",
+        lap_time_pred=90.0,
+        delta_vs_prev=0.0,
+        delta_vs_median=0.0,
+        ci_p10=88.0,
+        ci_p90=92.0,
+        reasoning="[probe]",
     )
     tire_stub = TireOutput(
-        compound=race_state.compound, current_tyre_life=race_state.tyre_life,
-        deg_rate=0.05, laps_to_cliff_p10=20.0, laps_to_cliff_p50=25.0,
-        laps_to_cliff_p90=30.0, gp_name="", reasoning="[probe]",
+        compound=race_state.compound,
+        current_tyre_life=race_state.tyre_life,
+        deg_rate=0.05,
+        laps_to_cliff_p10=20.0,
+        laps_to_cliff_p50=25.0,
+        laps_to_cliff_p90=30.0,
+        gp_name="",
+        reasoning="[probe]",
     )
     sit_stub = RaceSituationOutput(
-        overtake_prob=0.1, sc_prob_3lap=0.05, reasoning="[probe]",
+        overtake_prob=0.1,
+        sc_prob_3lap=0.05,
+        reasoning="[probe]",
     )
     radio_stub = RadioOutput(
-        radio_events=[], rcm_events=[], alerts=[],
-        reasoning="[probe]", corrections=[],
+        radio_events=[],
+        rcm_events=[],
+        alerts=[],
+        reasoning="[probe]",
+        corrections=[],
     )
 
     pace_out = _safe(run_pace_agent_from_state, lap_state, stub=pace_stub)
     tire_out = _safe(run_tire_agent_from_state, lap_state, laps_df, stub=tire_stub)
-    sit_out  = _safe(run_race_situation_agent_from_state, lap_state, laps_df, stub=sit_stub)
+    sit_out = _safe(run_race_situation_agent_from_state, lap_state, laps_df, stub=sit_stub)
 
     # Radio probe — build a lap_state shim with the current race_state
     # radio/RCM buffers so the NLP pipeline sees whatever the wizard-level
@@ -453,7 +526,7 @@ def _probe_core_agents(
     # always see an empty buffer and render idle.
     radio_ls = {
         **lap_state,
-        "lap":        race_state.lap,
+        "lap": race_state.lap,
         "radio_msgs": list(race_state.radio_msgs),
         "rcm_events": list(race_state.rcm_events),
     }
@@ -491,22 +564,22 @@ def _make_table(has_rival: bool = False, show_header: bool = True) -> Table:
         expand=False,
         padding=(0, 1),
     )
-    table.add_column("Lap",       justify="right",  style="dim",    width=4)
-    table.add_column("Tyre",      justify="left",                   width=8)
-    table.add_column("Age",       justify="right",  style="dim",    width=4)
-    table.add_column("Pos",       justify="right",  style="dim",    width=4)
-    table.add_column("Lap (s)",   justify="right",                  width=8)
-    table.add_column("Gap Fwd",   justify="right",  style="dim",    width=7)
+    table.add_column("Lap", justify="right", style="dim", width=4)
+    table.add_column("Tyre", justify="left", width=8)
+    table.add_column("Age", justify="right", style="dim", width=4)
+    table.add_column("Pos", justify="right", style="dim", width=4)
+    table.add_column("Lap (s)", justify="right", width=8)
+    table.add_column("Gap Fwd", justify="right", style="dim", width=7)
     if has_rival:
-        table.add_column("Rival",  justify="left",                  width=15)
-    table.add_column("Decision",  justify="left",                   width=20)
-    table.add_column("Plan",      justify="left",  style="#60a5fa", width=18)
-    table.add_column("Conf",      justify="right",                  width=5)
-    table.add_column("Stay",      justify="right",  style="green",  width=6)
-    table.add_column("Pit",       justify="right",  style="red",    width=6)
-    table.add_column("Ucut",      justify="right",  style="yellow", width=6)
-    table.add_column("Ocut",      justify="right",  style="yellow", width=6)
-    table.add_column("Reasoning",                                   min_width=40, max_width=70)
+        table.add_column("Rival", justify="left", width=15)
+    table.add_column("Decision", justify="left", width=20)
+    table.add_column("Plan", justify="left", style="#60a5fa", width=18)
+    table.add_column("Conf", justify="right", width=5)
+    table.add_column("Stay", justify="right", style="green", width=6)
+    table.add_column("Pit", justify="right", style="red", width=6)
+    table.add_column("Ucut", justify="right", style="yellow", width=6)
+    table.add_column("Ocut", justify="right", style="yellow", width=6)
+    table.add_column("Reasoning", min_width=40, max_width=70)
     return table
 
 
@@ -529,21 +602,21 @@ def _make_table(has_rival: bool = False, show_header: bool = True) -> Table:
 # Purple is reserved for the live table (fastest-lap highlight), the panel
 # uses green/yellow/red + neutral greys so status is readable at a glance
 # without competing with the table colouring.
-COL_OK       = "green3"
-COL_WATCH    = "gold1"
-COL_ALERT    = "red3"
-COL_LABEL    = "grey70"
-COL_DIM      = "grey50"
+COL_OK = "green3"
+COL_WATCH = "gold1"
+COL_ALERT = "red3"
+COL_LABEL = "grey70"
+COL_DIM = "grey50"
 COL_HEADLINE = "bright_white"
 
 # Dot-style glyphs — one column wide, render identically on Windows Terminal,
 # iTerm2, and kitty. ● for filled states, ◐ for the "watch" half-state, ○ for
 # idle/no-op. Putting the glyph in its own column lets the eye scan the status
 # column first and only drill into labels/headlines when something is hot.
-GLYPH_OK    = "●"
+GLYPH_OK = "●"
 GLYPH_WATCH = "◐"
 GLYPH_ALERT = "●"
-GLYPH_IDLE  = "○"
+GLYPH_IDLE = "○"
 
 # Friendly short names for conditional sub-agents — used in the panel subtitle
 # (and nowhere else now that the Routing row is gone).
@@ -574,10 +647,10 @@ def _mini_grid() -> Table:
     can be scanned top-to-bottom without reading any text.
     """
     t = Table.grid(padding=(0, 1), expand=False)
-    t.add_column("glyph",    width=1,  justify="center")
-    t.add_column("label",    width=10, justify="left",  no_wrap=True)
-    t.add_column("headline", width=24, justify="left",  no_wrap=True)
-    t.add_column("context",  justify="left",  no_wrap=False)
+    t.add_column("glyph", width=1, justify="center")
+    t.add_column("label", width=10, justify="left", no_wrap=True)
+    t.add_column("headline", width=24, justify="left", no_wrap=True)
+    t.add_column("context", justify="left", no_wrap=False)
     return t
 
 
@@ -594,7 +667,7 @@ def _glyph_for(status: str) -> tuple[str, str]:
     s = (status or "").upper()
     if s in ("PIT_SOON", "HIGH", "ALERT"):
         return GLYPH_ALERT, COL_ALERT
-    if s in ("MONITOR",  "MEDIUM", "WATCH"):
+    if s in ("MONITOR", "MEDIUM", "WATCH"):
         return GLYPH_WATCH, COL_WATCH
     if s in ("OK", "LOW", "GOOD"):
         return GLYPH_OK, COL_OK
@@ -614,6 +687,7 @@ def _glyph_for(status: str) -> tuple[str, str]:
 # context explains what *triggers* the agent so the viewer learns the
 # activation rules by watching the panel.
 
+
 def _pace_status(delta_vs_prev: float) -> str:
     """Bucket a Δprev lap-time delta onto the shared ok/watch/alert vocab.
 
@@ -627,7 +701,7 @@ def _pace_status(delta_vs_prev: float) -> str:
         return "OK"
     if delta_vs_prev <= 0.25:
         return "MONITOR"
-    return "PIT_SOON"          # reuse the alert bucket (red glyph)
+    return "PIT_SOON"  # reuse the alert bucket (red glyph)
 
 
 def _idle_row(tbl: Table, label: str, hint: str) -> None:
@@ -641,9 +715,9 @@ def _idle_row(tbl: Table, label: str, hint: str) -> None:
     """
     tbl.add_row(
         Text(GLYPH_IDLE, style=COL_DIM),
-        Text(label,      style=COL_DIM),
-        Text("idle",     style=COL_DIM),
-        Text(hint,       style=COL_DIM),
+        Text(label, style=COL_DIM),
+        Text("idle", style=COL_DIM),
+        Text(hint, style=COL_DIM),
     )
 
 
@@ -661,24 +735,24 @@ def _idle_row(tbl: Table, label: str, hint: str) -> None:
 
 _REASONING_PATTERNS: list[tuple[str, str]] = [
     # Action tokens — bold coloured so the recommended call jumps out
-    (r"\bSTAY_OUT\b",               "bold green"),
-    (r"\bPIT_NOW\b",                "bold red"),
-    (r"\bUNDERCUT\b",               "bold yellow"),
-    (r"\bOVERCUT\b",                "bold yellow"),
-    (r"\bALERT\b",                  "bold cyan"),
+    (r"\bSTAY_OUT\b", "bold green"),
+    (r"\bPIT_NOW\b", "bold red"),
+    (r"\bUNDERCUT\b", "bold yellow"),
+    (r"\bOVERCUT\b", "bold yellow"),
+    (r"\bALERT\b", "bold cyan"),
     # Quantile tokens from MC-Dropout tire model and HistGBT pit model
-    (r"\bP(?:05|10|50|90|95)\b",    "bold #60a5fa"),    # blue
+    (r"\bP(?:05|10|50|90|95)\b", "bold #60a5fa"),  # blue
     # Regulation article references ("Article 30.5", "Art. 32.4(b)")
     (r"\bArt(?:icle|\.)\s*\d+(?:\.\d+)?(?:\([a-z]\))?", "bold #fbbf24"),  # amber
     # Lap references ("lap 22", "laps 15-20")
     (r"\blap[s]?\s+\d+(?:\s*[-–]\s*\d+)?", "#f472b6"),  # pink
     # Percentages — always interesting (probabilities, deltas)
-    (r"[-+]?\d+(?:\.\d+)?\s*%",     "bold #a78bfa"),    # violet
+    (r"[-+]?\d+(?:\.\d+)?\s*%", "bold #a78bfa"),  # violet
     # Signed time deltas ("+0.42s", "-1.28s")
-    (r"[-+]\d+(?:\.\d+)?\s*s(?:/lap)?\b",  "bold #fb923c"),  # orange
+    (r"[-+]\d+(?:\.\d+)?\s*s(?:/lap)?\b", "bold #fb923c"),  # orange
     # Plain positive durations / lap-time numbers (only 2+ digit integers or
     # decimals with a trailing 's' to avoid matching every number in prose)
-    (r"\b\d+(?:\.\d+)?\s*s(?:/lap)?\b",    "#f97316"),        # orange-dim
+    (r"\b\d+(?:\.\d+)?\s*s(?:/lap)?\b", "#f97316"),  # orange-dim
 ]
 
 
@@ -769,10 +843,10 @@ def _add_pace_row(tbl: Table, pace_out) -> None:
         _idle_row(tbl, "Pace", "no prediction — stub")
         return
 
-    dv  = getattr(pace_out, "delta_vs_prev",   0.0)
-    dm  = getattr(pace_out, "delta_vs_median", 0.0)
-    p10 = getattr(pace_out, "ci_p10",          0.0)
-    p90 = getattr(pace_out, "ci_p90",          0.0)
+    dv = getattr(pace_out, "delta_vs_prev", 0.0)
+    dm = getattr(pace_out, "delta_vs_median", 0.0)
+    p10 = getattr(pace_out, "ci_p10", 0.0)
+    p90 = getattr(pace_out, "ci_p90", 0.0)
     ci_half = (p90 - p10) / 2.0
 
     glyph, g_col = _glyph_for(_pace_status(dv))
@@ -786,9 +860,9 @@ def _add_pace_row(tbl: Table, pace_out) -> None:
 
     # Context — absolute prediction + vs-median + ±CI half-range
     ctx = Text()
-    ctx.append(f"pred {pred:.2f}s",                     style=COL_DIM)
+    ctx.append(f"pred {pred:.2f}s", style=COL_DIM)
     ctx.append(f"  vs median {'+' if dm >= 0 else ''}{dm:.2f}s", style=COL_DIM)
-    ctx.append(f"  ±{ci_half:.2f}s",                    style=COL_DIM)
+    ctx.append(f"  ±{ci_half:.2f}s", style=COL_DIM)
 
     tbl.add_row(
         Text(glyph, style=g_col),
@@ -807,11 +881,11 @@ def _add_tire_row(tbl: Table, tire_out) -> None:
     degradation rate, and the warning-level badge colour-coded via the
     shared glyph palette.
     """
-    deg = getattr(tire_out, "deg_rate",          None)
+    deg = getattr(tire_out, "deg_rate", None)
     p10 = getattr(tire_out, "laps_to_cliff_p10", None)
     p50 = getattr(tire_out, "laps_to_cliff_p50", None)
     p90 = getattr(tire_out, "laps_to_cliff_p90", None)
-    wl  = getattr(tire_out, "warning_level",     "OK")
+    wl = getattr(tire_out, "warning_level", "OK")
 
     if p50 is None:
         _idle_row(tbl, "Tire", "no prediction — stub")
@@ -845,14 +919,14 @@ def _add_situation_row(tbl: Table, sit_out) -> None:
     unreadable at first glance.
     """
     ot = float(getattr(sit_out, "overtake_prob", 0.0)) * 100
-    sc = float(getattr(sit_out, "sc_prob_3lap",  0.0)) * 100
+    sc = float(getattr(sit_out, "sc_prob_3lap", 0.0)) * 100
     th = getattr(sit_out, "threat_level", "LOW")
 
     glyph, g_col = _glyph_for(th)
     headline = Text(f"threat {th}", style=f"bold {g_col}")
 
     ctx = Text()
-    ctx.append(f"overtake {ot:.0f}%",                style=COL_DIM)
+    ctx.append(f"overtake {ot:.0f}%", style=COL_DIM)
     ctx.append(
         f"  safety car {sc:.0f}%",
         style=COL_WATCH if sc > 15 else COL_DIM,
@@ -883,12 +957,12 @@ def _add_pit_row(tbl: Table, pit_out) -> None:
         )
         return
 
-    p05 = getattr(pit_out, "stop_duration_p05",       None)
-    p50 = getattr(pit_out, "stop_duration_p50",       None)
-    p95 = getattr(pit_out, "stop_duration_p95",       None)
+    p05 = getattr(pit_out, "stop_duration_p05", None)
+    p50 = getattr(pit_out, "stop_duration_p50", None)
+    p95 = getattr(pit_out, "stop_duration_p95", None)
     rec = getattr(pit_out, "compound_recommendation", None)
-    up  = getattr(pit_out, "undercut_prob",           None)
-    ut  = getattr(pit_out, "undercut_target",         None)
+    up = getattr(pit_out, "undercut_prob", None)
+    ut = getattr(pit_out, "undercut_target", None)
 
     glyph, g_col = _glyph_for("WATCH")
 
@@ -933,8 +1007,8 @@ def _add_radio_row(tbl: Table, radio_out) -> None:
         _idle_row(tbl, "Radio", "no radio/rcm pipeline output")
         return
 
-    n_r   = len(getattr(radio_out, "radio_events", []) or [])
-    n_rcm = len(getattr(radio_out, "rcm_events",   []) or [])
+    n_r = len(getattr(radio_out, "radio_events", []) or [])
+    n_rcm = len(getattr(radio_out, "rcm_events", []) or [])
     alrts = getattr(radio_out, "alerts", []) or []
 
     if alrts:
@@ -994,11 +1068,11 @@ def _add_rag_row(tbl: Table, rag_text: str) -> None:
 
 
 def _plan_row(
-    tbl:      Table,
-    label:    str,
+    tbl: Table,
+    label: str,
     headline: Text,
-    context:  Text,
-    status:   str = "IDLE",
+    context: Text,
+    status: str = "IDLE",
 ) -> None:
     """Append one row to the execution-plan grid using the shared layout.
 
@@ -1030,14 +1104,14 @@ def _build_plan_table(strategy_rec) -> Table | None:
     if strategy_rec is None:
         return None
 
-    pit_lap   = getattr(strategy_rec, "pit_lap_target",     None)
-    cmpd      = getattr(strategy_rec, "compound_next",      None)
-    ucut_t    = getattr(strategy_rec, "undercut_target",    None)
-    pm        = getattr(strategy_rec, "pace_mode",          None)
-    tgt_lt    = getattr(strategy_rec, "target_lap_time_s",  None)
-    rp        = getattr(strategy_rec, "risk_posture",       None)
-    cont      = getattr(strategy_rec, "contingencies",      []) or []
-    risks     = getattr(strategy_rec, "key_risks",          []) or []
+    pit_lap = getattr(strategy_rec, "pit_lap_target", None)
+    cmpd = getattr(strategy_rec, "compound_next", None)
+    ucut_t = getattr(strategy_rec, "undercut_target", None)
+    pm = getattr(strategy_rec, "pace_mode", None)
+    tgt_lt = getattr(strategy_rec, "target_lap_time_s", None)
+    rp = getattr(strategy_rec, "risk_posture", None)
+    cont = getattr(strategy_rec, "contingencies", []) or []
+    risks = getattr(strategy_rec, "key_risks", []) or []
     stint_end = getattr(strategy_rec, "expected_stint_end", None)
 
     # Treat NEUTRAL / BALANCED as "no explicit choice" so the default values
@@ -1045,11 +1119,19 @@ def _build_plan_table(strategy_rec) -> Table | None:
     pm_populated = bool(pm) and pm != "NEUTRAL"
     rp_populated = bool(rp) and rp != "BALANCED"
 
-    has_plan = any([
-        pit_lap is not None, cmpd, ucut_t,
-        pm_populated, tgt_lt is not None, rp_populated,
-        cont, risks, stint_end is not None,
-    ])
+    has_plan = any(
+        [
+            pit_lap is not None,
+            cmpd,
+            ucut_t,
+            pm_populated,
+            tgt_lt is not None,
+            rp_populated,
+            cont,
+            risks,
+            stint_end is not None,
+        ]
+    )
     if not has_plan:
         return None
 
@@ -1072,8 +1154,8 @@ def _build_plan_table(strategy_rec) -> Table | None:
     # ── Pace mode row — mode as headline, target lap time in context ─────────
     if pm_populated or tgt_lt is not None:
         pm_status = {
-            "PUSH":           "ALERT",
-            "MANAGE":         "WATCH",
+            "PUSH": "ALERT",
+            "MANAGE": "WATCH",
             "LIFT_AND_COAST": "WATCH",
         }.get(pm or "", "IDLE")
         _, pm_col = _glyph_for(pm_status)
@@ -1087,11 +1169,12 @@ def _build_plan_table(strategy_rec) -> Table | None:
     if rp_populated:
         rp_status = {
             "AGGRESSIVE": "ALERT",
-            "DEFENSIVE":  "WATCH",
+            "DEFENSIVE": "WATCH",
         }.get(rp or "", "IDLE")
         _, rp_col = _glyph_for(rp_status)
         _plan_row(
-            tbl, "Risk",
+            tbl,
+            "Risk",
             Text(rp, style=f"bold {rp_col}"),
             Text(""),
             status=rp_status,
@@ -1100,7 +1183,8 @@ def _build_plan_table(strategy_rec) -> Table | None:
     # ── Expected stint end row ──────────────────────────────────────────────
     if stint_end is not None:
         _plan_row(
-            tbl, "Stint end",
+            tbl,
+            "Stint end",
             Text(f"lap {stint_end}", style=f"bold {COL_HEADLINE}"),
             Text(""),
             status="IDLE",
@@ -1108,29 +1192,28 @@ def _build_plan_table(strategy_rec) -> Table | None:
 
     # ── Contingencies row — first branch as headline, rest in context ───────
     if cont:
+
         def _unpack(c):
             if isinstance(c, dict):
                 return (
-                    c.get("trigger",  "?"),
-                    c.get("switch_to","?"),
+                    c.get("trigger", "?"),
+                    c.get("switch_to", "?"),
                     c.get("priority", ""),
                 )
             return (
-                getattr(c, "trigger",  "?"),
-                getattr(c, "switch_to","?"),
+                getattr(c, "trigger", "?"),
+                getattr(c, "switch_to", "?"),
                 getattr(c, "priority", ""),
             )
 
         trig, sw, pr = _unpack(cont[0])
-        pr_status = {"HIGH": "ALERT", "MEDIUM": "WATCH", "LOW": "IDLE"}.get(
-            str(pr), "IDLE"
-        )
+        pr_status = {"HIGH": "ALERT", "MEDIUM": "WATCH", "LOW": "IDLE"}.get(str(pr), "IDLE")
         _, pr_col = _glyph_for(pr_status)
         headline = Text()
-        headline.append("if ",       style=COL_DIM)
+        headline.append("if ", style=COL_DIM)
         headline.append(f"{str(trig)[:28]}", style=COL_HEADLINE)
-        headline.append(" → ",       style=COL_DIM)
-        headline.append(str(sw),     style=f"bold {pr_col}")
+        headline.append(" → ", style=COL_DIM)
+        headline.append(str(sw), style=f"bold {pr_col}")
 
         # Any further branches collapse into a dim summary line.
         ctx = Text()
@@ -1156,16 +1239,16 @@ def _build_plan_table(strategy_rec) -> Table | None:
 
 
 def _make_inference_panel(
-    pace_out       = None,
-    tire_out       = None,
-    sit_out        = None,
-    active_agents  = None,
-    rival_data:   dict | None = None,
-    lap_num:       int         = 0,
-    radio_out      = None,
-    pit_out        = None,
-    strategy_rec   = None,
-    rag_text:      str         = "",
+    pace_out=None,
+    tire_out=None,
+    sit_out=None,
+    active_agents=None,
+    rival_data: dict | None = None,
+    lap_num: int = 0,
+    radio_out=None,
+    pit_out=None,
+    strategy_rec=None,
+    rag_text: str = "",
 ) -> Panel:
     """Build the Rich Panel shown below the history table for the current lap.
 
@@ -1207,17 +1290,17 @@ def _make_inference_panel(
     # system feel smaller than it really is. The order matches the logical
     # execution order: always-on block first, then conditional block.
     inf = _mini_grid()
-    _add_pace_row(inf,      pace_out)
-    _add_reasoning_continuation(inf, getattr(pace_out,  "reasoning", None))
-    _add_tire_row(inf,      tire_out)
-    _add_reasoning_continuation(inf, getattr(tire_out,  "reasoning", None))
+    _add_pace_row(inf, pace_out)
+    _add_reasoning_continuation(inf, getattr(pace_out, "reasoning", None))
+    _add_tire_row(inf, tire_out)
+    _add_reasoning_continuation(inf, getattr(tire_out, "reasoning", None))
     _add_situation_row(inf, sit_out)
-    _add_reasoning_continuation(inf, getattr(sit_out,   "reasoning", None))
-    _add_radio_row(inf,     radio_out)
+    _add_reasoning_continuation(inf, getattr(sit_out, "reasoning", None))
+    _add_radio_row(inf, radio_out)
     _add_reasoning_continuation(inf, getattr(radio_out, "reasoning", None))
-    _add_pit_row(inf,       pit_out)
-    _add_reasoning_continuation(inf, getattr(pit_out,   "reasoning", None))
-    _add_rag_row(inf,       rag_text)
+    _add_pit_row(inf, pit_out)
+    _add_reasoning_continuation(inf, getattr(pit_out, "reasoning", None))
+    _add_rag_row(inf, rag_text)
 
     plan_table = _build_plan_table(strategy_rec)
 
@@ -1227,12 +1310,12 @@ def _make_inference_panel(
         items.append(plan_table)
 
     if rival_data is not None:
-        pos      = rival_data.get("position", "?")
-        cmpd     = str(rival_data.get("compound", "?"))[:3]
-        age      = rival_data.get("tyre_life", "?")
-        intv     = rival_data.get("interval_to_driver_s")
+        pos = rival_data.get("position", "?")
+        cmpd = str(rival_data.get("compound", "?"))[:3]
+        age = rival_data.get("tyre_life", "?")
+        intv = rival_data.get("interval_to_driver_s")
         drv_code = rival_data.get("driver", "")
-        r_color  = _drv_color(drv_code) if drv_code else "#f59e0b"
+        r_color = _drv_color(drv_code) if drv_code else "#f59e0b"
         intv_str = f" {intv:+.1f}s" if intv is not None else ""
         rival_line = Text()
         rival_line.append("  Rival  ", style=COL_DIM)
@@ -1247,17 +1330,18 @@ def _make_inference_panel(
 
     return Panel(
         Group(*items),
-        title          = title,
-        title_align    = "center",
-        border_style   = COL_DIM,
-        padding        = (0, 1),
-        expand         = False,
+        title=title,
+        title_align="center",
+        border_style=COL_DIM,
+        padding=(0, 1),
+        expand=False,
     )
 
 
 # ---------------------------------------------------------------------------
 # RaceState builder
 # ---------------------------------------------------------------------------
+
 
 def _build_race_state(
     lap_state: dict[str, Any],
@@ -1266,30 +1350,28 @@ def _build_race_state(
 ) -> RaceState:
     """Map RaceStateManager's lap_state dict → RaceState Pydantic model."""
     driver_st = lap_state["driver"]
-    rivals    = lap_state.get("rivals", [])
-    weather   = lap_state.get("weather", {})
+    rivals = lap_state.get("rivals", [])
+    weather = lap_state.get("weather", {})
 
     our_pos = driver_st.get("position", 99)
-    car_ahead = next(
-        (r for r in rivals if r.get("position") == our_pos - 1), None
-    )
+    car_ahead = next((r for r in rivals if r.get("position") == our_pos - 1), None)
     gap_ahead_s = abs(car_ahead.get("interval_to_driver_s") or 0.0) if car_ahead else 0.0
 
     cur_lap_time = driver_st.get("lap_time_s") or 0.0
     pace_delta_s = cur_lap_time - prev_lap_time if prev_lap_time else 0.0
 
     return RaceState(
-        driver        = driver_code,
-        lap           = driver_st["lap_number"],
-        total_laps    = lap_state["session_meta"]["total_laps"],
-        position      = our_pos,
-        compound      = driver_st.get("compound", "UNKNOWN"),
-        tyre_life     = driver_st.get("tyre_life", 0),
-        gap_ahead_s   = gap_ahead_s,
-        pace_delta_s  = pace_delta_s,
-        air_temp      = weather.get("air_temp", 25.0),
-        track_temp    = weather.get("track_temp", 40.0),
-        rainfall      = bool(weather.get("rainfall", False)),
+        driver=driver_code,
+        lap=driver_st["lap_number"],
+        total_laps=lap_state["session_meta"]["total_laps"],
+        position=our_pos,
+        compound=driver_st.get("compound", "UNKNOWN"),
+        tyre_life=driver_st.get("tyre_life", 0),
+        gap_ahead_s=gap_ahead_s,
+        pace_delta_s=pace_delta_s,
+        air_temp=weather.get("air_temp", 25.0),
+        track_temp=weather.get("track_temp", 40.0),
+        rainfall=bool(weather.get("rainfall", False)),
     )
 
 
@@ -1297,12 +1379,13 @@ def _build_race_state(
 # no-LLM mode: run sub-agents + MC sim, skip LLM synthesis
 # ---------------------------------------------------------------------------
 
+
 def _run_no_llm(
-    race_state:   RaceState,
-    lap_state:    dict[str, Any],
-    laps_df:      pd.DataFrame,
+    race_state: RaceState,
+    lap_state: dict[str, Any],
+    laps_df: pd.DataFrame,
     extra_radios: list[dict] | None = None,
-    extra_rcms:   list[dict] | None = None,
+    extra_rcms: list[dict] | None = None,
 ) -> dict[str, Any]:
     """Run ML models only — no LLM synthesis at any layer.
 
@@ -1333,28 +1416,39 @@ def _run_no_llm(
             raise
 
     pace_stub = PaceOutput(
-        lap_time_pred=90.0, delta_vs_prev=0.0, delta_vs_median=0.0,
-        ci_p10=88.0, ci_p90=92.0, reasoning="[stub — LLM unreachable]",
+        lap_time_pred=90.0,
+        delta_vs_prev=0.0,
+        delta_vs_median=0.0,
+        ci_p10=88.0,
+        ci_p90=92.0,
+        reasoning="[stub — LLM unreachable]",
     )
     tire_stub = TireOutput(
         compound=race_state.compound,
         current_tyre_life=race_state.tyre_life,
         deg_rate=0.05,
-        laps_to_cliff_p10=20.0, laps_to_cliff_p50=25.0, laps_to_cliff_p90=30.0,
-        gp_name="", reasoning="[stub — LLM unreachable]",
+        laps_to_cliff_p10=20.0,
+        laps_to_cliff_p50=25.0,
+        laps_to_cliff_p90=30.0,
+        gp_name="",
+        reasoning="[stub — LLM unreachable]",
     )
     sit_stub = RaceSituationOutput(
-        overtake_prob=0.1, sc_prob_3lap=0.05,
+        overtake_prob=0.1,
+        sc_prob_3lap=0.05,
         reasoning="[stub — LLM unreachable]",
     )
     radio_stub = RadioOutput(
-        radio_events=[], rcm_events=[], alerts=[],
-        reasoning="[stub — LLM unreachable]", corrections=[],
+        radio_events=[],
+        rcm_events=[],
+        alerts=[],
+        reasoning="[stub — LLM unreachable]",
+        corrections=[],
     )
 
-    pace_out  = _safe_call(run_pace_agent_from_state, lap_state, stub=pace_stub)
-    tire_out  = _safe_call(run_tire_agent_from_state, lap_state, laps_df, stub=tire_stub)
-    sit_out   = _safe_call(run_race_situation_agent_from_state, lap_state, laps_df, stub=sit_stub)
+    pace_out = _safe_call(run_pace_agent_from_state, lap_state, stub=pace_stub)
+    tire_out = _safe_call(run_tire_agent_from_state, lap_state, laps_df, stub=tire_stub)
+    sit_out = _safe_call(run_race_situation_agent_from_state, lap_state, laps_df, stub=sit_stub)
 
     radio_msgs = list(race_state.radio_msgs)
     if extra_radios:
@@ -1364,8 +1458,7 @@ def _run_no_llm(
         rcm_events.extend(extra_rcms)
     radio_out = _safe_call(
         run_radio_agent_from_state,
-        {**lap_state, "lap": race_state.lap,
-         "radio_msgs": radio_msgs, "rcm_events": rcm_events},
+        {**lap_state, "lap": race_state.lap, "radio_msgs": radio_msgs, "rcm_events": rcm_events},
         laps_df,
         stub=radio_stub,
     )
@@ -1378,7 +1471,7 @@ def _run_no_llm(
     alerts = list(radio_out.alerts) if radio_out else []
     active = _decide_agents_to_call(
         tire_out.warning_level if tire_out else "OK",
-        sit_out.sc_prob_3lap   if sit_out  else 0.0,
+        sit_out.sc_prob_3lap if sit_out else 0.0,
         alerts,
     )
 
@@ -1392,14 +1485,17 @@ def _run_no_llm(
         )
     except Exception as exc:
         if _is_llm_unavailable(exc):
-            pit_out  = None
+            pit_out = None
             rag_text = ""
         else:
             raise
     rag_text = rag_text or ""
 
     mc = _run_mc_simulation(
-        pace_out, tire_out, sit_out, pit_out,
+        pace_out,
+        tire_out,
+        sit_out,
+        pit_out,
         alpha=race_state.risk_tolerance,
     )
 
@@ -1439,25 +1535,26 @@ def _run_no_llm(
         _reasoning = f"[no-llm mode] {_guardrail_reason}"
 
     return {
-        "action":            best,
-        "reasoning":         _reasoning,
-        "confidence":        0.0,
-        "scenario_scores":   {k: round(v["score"], 3) for k, v in mc.items()},
+        "action": best,
+        "reasoning": _reasoning,
+        "confidence": 0.0,
+        "scenario_scores": {k: round(v["score"], 3) for k, v in mc.items()},
         "regulation_context": "",
         # Sub-agent outputs exposed for the detail panel
-        "_pace_out":         pace_out,
-        "_tire_out":         tire_out,
-        "_sit_out":          sit_out,
-        "_pit_out":          pit_out,
-        "_radio_out":        radio_out,
-        "_rag_text":         rag_text,
-        "_active_agents":    set(active),
+        "_pace_out": pace_out,
+        "_tire_out": tire_out,
+        "_sit_out": sit_out,
+        "_pit_out": pit_out,
+        "_radio_out": radio_out,
+        "_rag_text": rag_text,
+        "_active_agents": set(active),
     }
 
 
 # ---------------------------------------------------------------------------
 # Main loop
 # ---------------------------------------------------------------------------
+
 
 def run(args: argparse.Namespace) -> None:
     # Set provider before any agent singleton is created
@@ -1469,12 +1566,13 @@ def run(args: argparse.Namespace) -> None:
     if not args.no_first_run:
         try:
             from src.f1_strat_manager.data_cache import ensure_setup, is_first_run
+
             if is_first_run():
                 ensure_setup()
         except ImportError:
             pass
 
-    raw_dir  = Path(args.raw_dir)
+    raw_dir = Path(args.raw_dir)
     race_dir = raw_dir / args.gp_name
 
     if not race_dir.exists():
@@ -1489,7 +1587,7 @@ def run(args: argparse.Namespace) -> None:
     # ── Load data ────────────────────────────────────────────────────────────
     with console.status("[dim]Loading parquets…[/dim]", spinner="dots"):
         laps_df = pd.read_parquet(featured_path)
-        engine  = RaceReplayEngine(race_dir, args.driver, args.team, interval_seconds=args.interval)
+        engine = RaceReplayEngine(race_dir, args.driver, args.team, interval_seconds=args.interval)
 
     # ── Static OpenF1 radio corpus (replaces --radio-every when available) ───
     # Constructed once per run before the Live loop so the per-lap hot path
@@ -1507,6 +1605,7 @@ def run(args: argparse.Namespace) -> None:
                 get_data_root,
             )
             from src.nlp.radio_runner import RadioPipelineRunner
+
             # Lazy on-demand pull: when running from a uv-tool install with
             # an empty cache the parquets land via the default first-run
             # snapshot, but the per-GP MP3 tree only arrives the first time
@@ -1519,12 +1618,12 @@ def run(args: argparse.Namespace) -> None:
                 spinner="dots",
             ):
                 radio_runner = RadioPipelineRunner(
-                    year               = args.year,
-                    gp_name            = args.gp_name,
-                    laps_df            = laps_df,
-                    data_root          = get_data_root(),
-                    whisper_model_name = args.whisper_model,
-                    eager_transcribe   = True,
+                    year=args.year,
+                    gp_name=args.gp_name,
+                    laps_df=laps_df,
+                    data_root=get_data_root(),
+                    whisper_model_name=args.whisper_model,
+                    eager_transcribe=True,
                 )
             console.print(
                 f"[dim]radio corpus  : {radio_runner.total_radios()} radios + "
@@ -1539,10 +1638,7 @@ def run(args: argparse.Namespace) -> None:
             radio_runner = None
 
     # ── Pre-warm NLP models (suppresses tqdm + LOAD REPORT noise) ────────────
-    radio_label = (
-        f" · radios={radio_runner.total_radios()}"
-        if radio_runner is not None else ""
-    )
+    radio_label = f" · radios={radio_runner.total_radios()}" if radio_runner is not None else ""
     mode_label = ("no-LLM" if args.no_llm else f"LLM · {args.provider}") + radio_label
     with console.status("[dim]Loading agents…[/dim]", spinner="dots"):
         _prewarm_agents(args.no_llm)
@@ -1550,9 +1646,9 @@ def run(args: argparse.Namespace) -> None:
     # ── Header panel ─────────────────────────────────────────────────────────
     lap_start, lap_end = 1, engine.total_laps
     if args.laps:
-        parts     = args.laps.split("-")
+        parts = args.laps.split("-")
         lap_start = int(parts[0])
-        lap_end   = int(parts[1]) if len(parts) > 1 else int(parts[0])
+        lap_end = int(parts[1]) if len(parts) > 1 else int(parts[0])
 
     # ── Header panel — Table.grid layout ────────────────────────────────────
     # Two-column key/value grid instead of a long text blob. Race info up
@@ -1562,24 +1658,30 @@ def run(args: argparse.Namespace) -> None:
     drv_hex = _drv_color(args.driver)
 
     info_grid = Table.grid(padding=(0, 2), expand=False)
-    info_grid.add_column(style=COL_DIM,   justify="right", min_width=7)
-    info_grid.add_column(justify="left",  min_width=22)
-    info_grid.add_column(style=COL_DIM,   justify="right", min_width=7)
+    info_grid.add_column(style=COL_DIM, justify="right", min_width=7)
+    info_grid.add_column(justify="left", min_width=22)
+    info_grid.add_column(style=COL_DIM, justify="right", min_width=7)
     info_grid.add_column(justify="left")
 
     info_grid.add_row(
-        "GP",   f"[bold {COL_HEADLINE}]{args.gp_name}[/bold {COL_HEADLINE}]",
-        "Mode", f"[{COL_HEADLINE}]{mode_label}[/{COL_HEADLINE}]",
+        "GP",
+        f"[bold {COL_HEADLINE}]{args.gp_name}[/bold {COL_HEADLINE}]",
+        "Mode",
+        f"[{COL_HEADLINE}]{mode_label}[/{COL_HEADLINE}]",
     )
     info_grid.add_row(
-        "Driver", f"[bold {drv_hex}]{args.driver}[/bold {drv_hex}]  [dim]{args.team}[/dim]",
-        "Laps",   f"[{COL_HEADLINE}]{lap_start}–{lap_end}[/{COL_HEADLINE}]  [dim]/ {engine.total_laps} total[/dim]",
+        "Driver",
+        f"[bold {drv_hex}]{args.driver}[/bold {drv_hex}]  [dim]{args.team}[/dim]",
+        "Laps",
+        f"[{COL_HEADLINE}]{lap_start}–{lap_end}[/{COL_HEADLINE}]  [dim]/ {engine.total_laps} total[/dim]",
     )
     if args.rival:
         riv_hex = _drv_color(args.rival)
         info_grid.add_row(
-            "Rival", f"[bold {riv_hex}]{args.rival}[/bold {riv_hex}]  [dim]tracked[/dim]",
-            "", "",
+            "Rival",
+            f"[bold {riv_hex}]{args.rival}[/bold {riv_hex}]  [dim]tracked[/dim]",
+            "",
+            "",
         )
 
     legend_grid = Table.grid(padding=(0, 2), expand=False)
@@ -1599,21 +1701,23 @@ def run(args: argparse.Namespace) -> None:
 
     header_body = Group(info_grid, Text(""), legend_grid)
 
-    console.print(Panel(
-        header_body,
-        title        = "[bold cyan]F1 Strategy Manager[/bold cyan]",
-        title_align  = "center",
-        border_style = "cyan",
-        padding      = (1, 2),
-        expand       = False,
-    ))
+    console.print(
+        Panel(
+            header_body,
+            title="[bold cyan]F1 Strategy Manager[/bold cyan]",
+            title_align="center",
+            border_style="cyan",
+            padding=(1, 2),
+            expand=False,
+        )
+    )
     console.print()
 
     has_rival = bool(args.rival)
-    errors:        list[str]   = []
-    lap_times_s:   list[float] = []   # elapsed wall-clock time per lap
-    prev_lap_time: float       = 0.0
-    _detail: list = [None]     # mutable slot for the last-lap sub-agent detail Group
+    errors: list[str] = []
+    lap_times_s: list[float] = []  # elapsed wall-clock time per lap
+    prev_lap_time: float = 0.0
+    _detail: list = [None]  # mutable slot for the last-lap sub-agent detail Group
 
     # ── Run-level counters — used by the final "Run complete" summary ────────
     # Kept as plain locals (no class) because they only live for one run().
@@ -1621,17 +1725,17 @@ def run(args: argparse.Namespace) -> None:
     # the agent-activation counters; DNF and ERROR laps only bump their own
     # bucket. The summary block below reads these to produce a race digest
     # instead of the bare "All N laps OK" line from v1.
-    action_counts:     dict[str, int]  = {}
-    pit_stops_seen:    int             = 0
-    last_compound:     Optional[str]   = None
-    last_tyre_life:    int             = 0
-    start_position:    Optional[int]   = None
-    last_position:     Optional[int]   = None
-    best_lap_s:        float           = 0.0
-    worst_lap_s:       float           = 0.0
-    pit_agent_calls:   int             = 0
-    rag_agent_calls:   int             = 0
-    radio_alert_total: int             = 0
+    action_counts: dict[str, int] = {}
+    pit_stops_seen: int = 0
+    last_compound: Optional[str] = None
+    last_tyre_life: int = 0
+    start_position: Optional[int] = None
+    last_position: Optional[int] = None
+    best_lap_s: float = 0.0
+    worst_lap_s: float = 0.0
+    pit_agent_calls: int = 0
+    rag_agent_calls: int = 0
+    radio_alert_total: int = 0
 
     # Print the history header ONCE, outside the Live region. Per-lap rows
     # below emit headerless sibling tables via live.console.print so they
@@ -1668,9 +1772,9 @@ def run(args: argparse.Namespace) -> None:
     # (the terminal cursor cannot rewind above the topmost visible line).
     with Live(
         _live_content(),
-        console            = console,
-        refresh_per_second = 4,
-        auto_refresh       = True,
+        console=console,
+        refresh_per_second=4,
+        auto_refresh=True,
     ) as live:
         for lap_state in engine.replay():
             lap_num = lap_state["lap_number"]
@@ -1700,7 +1804,7 @@ def run(args: argparse.Namespace) -> None:
             # consume the raw lap_state dict and crash on the first numeric
             # subtraction (e.g. delta_vs_prev). Skip the agents for that lap
             # and emit an INCOMPLETE row instead, mirroring the DNF path.
-            _pos_raw  = driver_st.get("position")
+            _pos_raw = driver_st.get("position")
             _life_raw = driver_st.get("tyre_life")
             _ltime_raw = driver_st.get("lap_time_s")
             if _pos_raw is None or _life_raw is None or _ltime_raw is None:
@@ -1715,9 +1819,9 @@ def run(args: argparse.Namespace) -> None:
                 action_counts["INCOMPLETE"] = action_counts.get("INCOMPLETE", 0) + 1
                 continue
 
-            compound  = driver_st.get("compound", "?")
+            compound = driver_st.get("compound", "?")
             tyre_life = int(driver_st.get("tyre_life") or 0)
-            position  = int(driver_st.get("position") or 0)
+            position = int(driver_st.get("position") or 0)
             # Force float — parquet columns can arrive as numpy scalars or dicts on edge cases
             try:
                 lap_time = float(driver_st.get("lap_time_s") or 0.0)
@@ -1725,10 +1829,12 @@ def run(args: argparse.Namespace) -> None:
                 lap_time = 0.0
 
             # Gap to car directly ahead (from rivals list)
-            rivals    = lap_state.get("rivals", [])
+            rivals = lap_state.get("rivals", [])
             car_ahead = next((r for r in rivals if r.get("position") == position - 1), None)
             try:
-                gap_ahead = abs(float(car_ahead.get("interval_to_driver_s") or 0.0)) if car_ahead else 0.0
+                gap_ahead = (
+                    abs(float(car_ahead.get("interval_to_driver_s") or 0.0)) if car_ahead else 0.0
+                )
             except (TypeError, ValueError):
                 gap_ahead = 0.0
             gap_str = f"{gap_ahead:.2f}" if gap_ahead > 0 else "—"
@@ -1761,12 +1867,12 @@ def run(args: argparse.Namespace) -> None:
                 # so layering random injections on top would distort the
                 # narrative for no benefit).
                 real_radios: list[dict] = []
-                real_rcms:   list[dict] = []
+                real_rcms: list[dict] = []
                 if radio_runner is not None:
                     real_radios, real_rcms = radio_runner.radios_for_lap(lap_num)
 
                 sim_radio: dict | None = None
-                sim_rcm:   dict | None = None
+                sim_rcm: dict | None = None
                 if (
                     radio_runner is None
                     and args.radio_every
@@ -1780,26 +1886,28 @@ def run(args: argparse.Namespace) -> None:
 
                 if args.no_llm:
                     # No-LLM: full ML stack (pace + tire + sit + radio + conditional + MC)
-                    result     = _run_no_llm(
-                        race_state, lap_state, laps_df,
-                        extra_radios = real_radios + ([sim_radio] if sim_radio else []),
-                        extra_rcms   = real_rcms   + ([sim_rcm]   if sim_rcm   else []),
+                    result = _run_no_llm(
+                        race_state,
+                        lap_state,
+                        laps_df,
+                        extra_radios=real_radios + ([sim_radio] if sim_radio else []),
+                        extra_rcms=real_rcms + ([sim_rcm] if sim_rcm else []),
                     )
-                    scores     = result["scenario_scores"]
-                    action     = result["action"]
+                    scores = result["scenario_scores"]
+                    action = result["action"]
                     confidence = result["confidence"]
-                    reasoning  = result["reasoning"]
+                    reasoning = result["reasoning"]
                     _detail[0] = _make_inference_panel(
-                        pace_out      = result.get("_pace_out"),
-                        tire_out      = result.get("_tire_out"),
-                        sit_out       = result.get("_sit_out"),
-                        active_agents = result.get("_active_agents"),
-                        rival_data    = rival_data,
-                        lap_num       = lap_num,
-                        radio_out     = result.get("_radio_out"),
-                        pit_out       = result.get("_pit_out"),
-                        rag_text      = result.get("_rag_text", ""),
-                        strategy_rec  = None,
+                        pace_out=result.get("_pace_out"),
+                        tire_out=result.get("_tire_out"),
+                        sit_out=result.get("_sit_out"),
+                        active_agents=result.get("_active_agents"),
+                        rival_data=rival_data,
+                        lap_num=lap_num,
+                        radio_out=result.get("_radio_out"),
+                        pit_out=result.get("_pit_out"),
+                        rag_text=result.get("_rag_text", ""),
+                        strategy_rec=None,
                     )
                 else:
                     # LLM mode: inject the lap's real-corpus radios + RCMs
@@ -1828,21 +1936,21 @@ def run(args: argparse.Namespace) -> None:
                     probe_pace, probe_tire, probe_sit, probe_radio = _probe_core_agents(
                         race_state, lap_state, laps_df
                     )
-                    result     = run_strategy_orchestrator_from_state(race_state, laps_df, lap_state)
-                    scores     = getattr(result, "scenario_scores", {})
-                    action     = getattr(result, "action", "?")
+                    result = run_strategy_orchestrator_from_state(race_state, laps_df, lap_state)
+                    scores = getattr(result, "scenario_scores", {})
+                    action = getattr(result, "action", "?")
                     confidence = getattr(result, "confidence", 0.0)
-                    reasoning  = getattr(result, "reasoning", "")
+                    reasoning = getattr(result, "reasoning", "")
                     _detail[0] = _make_inference_panel(
-                        pace_out      = probe_pace,
-                        tire_out      = probe_tire,
-                        sit_out       = probe_sit,
-                        radio_out     = probe_radio,
-                        active_agents = None,
-                        rival_data    = rival_data,
-                        lap_num       = lap_num,
-                        strategy_rec  = result,
-                        rag_text      = getattr(result, "regulation_context", "") or "",
+                        pace_out=probe_pace,
+                        tire_out=probe_tire,
+                        sit_out=probe_sit,
+                        radio_out=probe_radio,
+                        active_agents=None,
+                        rival_data=rival_data,
+                        lap_num=lap_num,
+                        strategy_rec=result,
+                        rag_text=getattr(result, "regulation_context", "") or "",
                     )
 
                 elapsed = time.monotonic() - lap_t0
@@ -1850,9 +1958,9 @@ def run(args: argparse.Namespace) -> None:
 
                 if isinstance(scores, dict):
                     stay = _score_float(scores.get("STAY_OUT", 0.0))
-                    pit  = _score_float(scores.get("PIT_NOW",  0.0))
+                    pit = _score_float(scores.get("PIT_NOW", 0.0))
                     ucut = _score_float(scores.get("UNDERCUT", 0.0))
-                    ocut = _score_float(scores.get("OVERCUT",  0.0))
+                    ocut = _score_float(scores.get("OVERCUT", 0.0))
                 else:
                     stay = pit = ucut = ocut = 0.0
 
@@ -1868,8 +1976,8 @@ def run(args: argparse.Namespace) -> None:
                         _cnx = getattr(_pit_local_v2, "compound_recommendation", None)
                         _uct = getattr(_pit_local_v2, "undercut_target", None)
                 else:
-                    _pm  = getattr(result, "pace_mode", None)
-                    _rp  = getattr(result, "risk_posture", None)
+                    _pm = getattr(result, "pace_mode", None)
+                    _rp = getattr(result, "risk_posture", None)
                     _plt = getattr(result, "pit_lap_target", None)
                     _cnx = getattr(result, "compound_next", None)
                     _uct = getattr(result, "undercut_target", None)
@@ -1896,9 +2004,9 @@ def run(args: argparse.Namespace) -> None:
                 # Rival cell (only when --rival is set)
                 if has_rival:
                     if rival_data:
-                        r_pos  = rival_data.get("position", "?")
+                        r_pos = rival_data.get("position", "?")
                         r_cmpd = str(rival_data.get("compound", "?"))[:3]
-                        r_age  = rival_data.get("tyre_life", "?")
+                        r_age = rival_data.get("tyre_life", "?")
                         r_intv = rival_data.get("interval_to_driver_s")
                         r_intv_str = f" {r_intv:+.1f}s" if r_intv is not None else ""
                         rival_cell: Any = Text(
@@ -1919,16 +2027,18 @@ def run(args: argparse.Namespace) -> None:
                 ]
                 if has_rival:
                     row.append(rival_cell)
-                row.extend([
-                    decision_text,
-                    plan_text,
-                    f"{confidence:.2f}",
-                    f"{stay:.3f}",
-                    f"{pit:.3f}",
-                    f"{ucut:.3f}",
-                    f"{ocut:.3f}",
-                    _style_reasoning(reasoning[:200]),
-                ])
+                row.extend(
+                    [
+                        decision_text,
+                        plan_text,
+                        f"{confidence:.2f}",
+                        f"{stay:.3f}",
+                        f"{pit:.3f}",
+                        f"{ucut:.3f}",
+                        f"{ocut:.3f}",
+                        _style_reasoning(reasoning[:200]),
+                    ]
+                )
                 row_tbl = _make_table(has_rival, show_header=False)
                 row_tbl.add_row(*row)
                 live.console.print(row_tbl)
@@ -1949,7 +2059,7 @@ def run(args: argparse.Namespace) -> None:
                 # above, not from result.
                 action_counts[action] = action_counts.get(action, 0) + 1
                 if lap_time:
-                    best_lap_s  = min(best_lap_s, lap_time)  if best_lap_s  else lap_time
+                    best_lap_s = min(best_lap_s, lap_time) if best_lap_s else lap_time
                     worst_lap_s = max(worst_lap_s, lap_time) if worst_lap_s else lap_time
                 # Track first/last position so the summary can show P → P (+Δ)
                 if start_position is None:
@@ -1962,15 +2072,15 @@ def run(args: argparse.Namespace) -> None:
                 last_compound = compound
 
                 if isinstance(result, dict):
-                    _pit_out_local   = result.get("_pit_out")
-                    _rag_text_local  = result.get("_rag_text", "")
+                    _pit_out_local = result.get("_pit_out")
+                    _rag_text_local = result.get("_rag_text", "")
                     _radio_out_local = result.get("_radio_out")
                 else:
                     # LLM mode — orchestrator runs pit/rag internally. Infer
                     # rag from regulation_context; pit firings are counted
                     # implicitly via the PIT_NOW action bucket in action_counts.
-                    _pit_out_local   = None
-                    _rag_text_local  = getattr(result, "regulation_context", "") or ""
+                    _pit_out_local = None
+                    _rag_text_local = getattr(result, "regulation_context", "") or ""
                     _radio_out_local = probe_radio
 
                 if _pit_out_local is not None:
@@ -1978,9 +2088,7 @@ def run(args: argparse.Namespace) -> None:
                 if _rag_text_local:
                     rag_agent_calls += 1
                 if _radio_out_local is not None:
-                    radio_alert_total += len(
-                        getattr(_radio_out_local, "alerts", []) or []
-                    )
+                    radio_alert_total += len(getattr(_radio_out_local, "alerts", []) or [])
 
             except Exception as exc:
                 elapsed = time.monotonic() - lap_t0
@@ -1988,14 +2096,27 @@ def run(args: argparse.Namespace) -> None:
                 err_msg = f"LAP {lap_num}: {type(exc).__name__}: {exc}"
                 errors.append(err_msg)
                 err_row: list[Any] = [
-                    str(lap_num), cmpd_text, str(tyre_life), str(position), "—", gap_str,
+                    str(lap_num),
+                    cmpd_text,
+                    str(tyre_life),
+                    str(position),
+                    "—",
+                    gap_str,
                 ]
                 if has_rival:
                     err_row.append("—")
-                err_row.extend([
-                    Text("[ERROR]", style="bold red"), "", "", "", "", "", "",
-                    str(exc)[:60],
-                ])
+                err_row.extend(
+                    [
+                        Text("[ERROR]", style="bold red"),
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        str(exc)[:60],
+                    ]
+                )
                 err_tbl = _make_table(has_rival, show_header=False)
                 err_tbl.add_row(*err_row)
                 live.console.print(err_tbl)
@@ -2012,24 +2133,27 @@ def run(args: argparse.Namespace) -> None:
     # stints played out (pit stops + final compound), WHICH conditional
     # agents actually fired, and the headline timing numbers — all without
     # scrolling back through the history.
-    total_s   = time.monotonic() - sim_start
-    avg_s     = sum(lap_times_s) / len(lap_times_s) if lap_times_s else 0.0
-    n_laps    = len(lap_times_s)
+    total_s = time.monotonic() - sim_start
+    avg_s = sum(lap_times_s) / len(lap_times_s) if lap_times_s else 0.0
+    n_laps = len(lap_times_s)
     err_count = len(errors)
-    ok        = err_count == 0
+    ok = err_count == 0
 
     status_line = (
         f"[green]All {n_laps} lap(s) OK[/green]"
-        if ok else
-        f"[yellow]{n_laps} lap(s) · {err_count} error(s)[/yellow]"
+        if ok
+        else f"[yellow]{n_laps} lap(s) · {err_count} error(s)[/yellow]"
     )
 
     # ── Block 1 — Decision mix ────────────────────────────────────────────
     _action_colours = {
-        "STAY_OUT": "green", "PIT_NOW": "red",
-        "UNDERCUT": "yellow", "OVERCUT": "yellow",
-        "ALERT":    "cyan",   "DNF":     "grey50",
-        "ERROR":    "red",
+        "STAY_OUT": "green",
+        "PIT_NOW": "red",
+        "UNDERCUT": "yellow",
+        "OVERCUT": "yellow",
+        "ALERT": "cyan",
+        "DNF": "grey50",
+        "ERROR": "red",
     }
     action_parts: list[str] = []
     for act in ("STAY_OUT", "PIT_NOW", "UNDERCUT", "OVERCUT", "ALERT", "DNF", "ERROR"):
@@ -2058,7 +2182,7 @@ def run(args: argparse.Namespace) -> None:
     # "did we gain or lose places?" before anything else. Green when we
     # gained positions, red when we lost, dim when we held station.
     if start_position is not None and last_position is not None:
-        delta = start_position - last_position   # + means gained places
+        delta = start_position - last_position  # + means gained places
         if delta > 0:
             delta_fmt = f"[green]+{delta}[/green]"
         elif delta < 0:
@@ -2082,7 +2206,7 @@ def run(args: argparse.Namespace) -> None:
     )
 
     # ── Block 5 — Timing ──────────────────────────────────────────────────
-    best_str  = f"{best_lap_s:.3f}s"  if best_lap_s  else "—"
+    best_str = f"{best_lap_s:.3f}s" if best_lap_s else "—"
     worst_str = f"{worst_lap_s:.3f}s" if worst_lap_s else "—"
     timing_line = (
         f"[dim]wallclock[/dim] [white]{total_s:.1f}s[/white]  "
@@ -2094,22 +2218,24 @@ def run(args: argparse.Namespace) -> None:
     summary_grid = Table.grid(padding=(0, 2), expand=False)
     summary_grid.add_column(style=COL_DIM, justify="right", min_width=10)
     summary_grid.add_column(justify="left")
-    summary_grid.add_row("Status",    status_line)
+    summary_grid.add_row("Status", status_line)
     summary_grid.add_row("Positions", position_line)
-    summary_grid.add_row("Actions",   action_mix_line)
-    summary_grid.add_row("Agents",    agents_line)
-    summary_grid.add_row("Stint",     compound_line)
-    summary_grid.add_row("Timing",    timing_line)
+    summary_grid.add_row("Actions", action_mix_line)
+    summary_grid.add_row("Agents", agents_line)
+    summary_grid.add_row("Stint", compound_line)
+    summary_grid.add_row("Timing", timing_line)
 
     console.print()
-    console.print(Panel(
-        summary_grid,
-        title        = "[bold]Run complete[/bold]",
-        title_align  = "center",
-        border_style = "green" if ok else "yellow",
-        padding      = (1, 2),
-        expand       = False,
-    ))
+    console.print(
+        Panel(
+            summary_grid,
+            title="[bold]Run complete[/bold]",
+            title_align="center",
+            border_style="green" if ok else "yellow",
+            padding=(1, 2),
+            expand=False,
+        )
+    )
 
     if errors:
         console.print()
@@ -2120,6 +2246,7 @@ def run(args: argparse.Namespace) -> None:
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+
 
 def _default_raw_dir() -> str:
     """Return the default ``--raw-dir`` value as a string path.
@@ -2132,6 +2259,7 @@ def _default_raw_dir() -> str:
     """
     try:
         from src.f1_strat_manager.data_cache import get_data_root
+
         return str(get_data_root() / "raw" / "2025")
     except ImportError:
         return "data/raw/2025"
@@ -2146,6 +2274,7 @@ def _default_featured() -> str:
     """
     try:
         from src.f1_strat_manager.data_cache import get_data_root
+
         return str(get_data_root() / "processed" / "laps_featured_2025.parquet")
     except ImportError:
         return "data/processed/laps_featured_2025.parquet"
@@ -2158,8 +2287,8 @@ def _parse_args() -> argparse.Namespace:
         epilog=__doc__,
     )
     p.add_argument("gp_name", help="Grand Prix folder name (e.g. Melbourne, Bahrain)")
-    p.add_argument("driver",  help="FIA three-letter driver code (e.g. NOR, HAM)")
-    p.add_argument("team",    help="Team name as stored in laps parquet (e.g. McLaren)")
+    p.add_argument("driver", help="FIA three-letter driver code (e.g. NOR, HAM)")
+    p.add_argument("team", help="Team name as stored in laps parquet (e.g. McLaren)")
     p.add_argument(
         "--year",
         type=int,
@@ -2180,7 +2309,7 @@ def _parse_args() -> argparse.Namespace:
         "--no-first-run",
         action="store_true",
         help="Skip the first-run HuggingFace Hub download check. Useful for CI "
-             "or when the data cache is already populated out-of-band.",
+        "or when the data cache is already populated out-of-band.",
     )
     p.add_argument(
         "--laps",
@@ -2204,7 +2333,7 @@ def _parse_args() -> argparse.Namespace:
         default=0.0,
         metavar="SECONDS",
         help="Pause between laps in seconds (default: 0.0 — no pause). "
-             "E.g. --interval 2.0 pauses 2 s after each lap row is printed.",
+        "E.g. --interval 2.0 pauses 2 s after each lap row is printed.",
     )
     p.add_argument(
         "--radio-every",
@@ -2212,30 +2341,30 @@ def _parse_args() -> argparse.Namespace:
         default=0,
         metavar="N",
         help="Simulate a radio/RCM event every N laps to activate NLP agents "
-             "(e.g. --radio-every 5).  0 = disabled (default). Suppressed when "
-             "the real radio corpus loads successfully — see --no-real-radios.",
+        "(e.g. --radio-every 5).  0 = disabled (default). Suppressed when "
+        "the real radio corpus loads successfully — see --no-real-radios.",
     )
     p.add_argument(
         "--no-real-radios",
         action="store_true",
         help="Skip the static OpenF1 radio corpus and Whisper transcription. "
-             "Falls back to the synthetic --radio-every generator. Useful for "
-             "smoke tests on machines without the data tree or without GPU.",
+        "Falls back to the synthetic --radio-every generator. Useful for "
+        "smoke tests on machines without the data tree or without GPU.",
     )
     p.add_argument(
         "--whisper-model",
         default="turbo",
         metavar="NAME",
         help="Whisper model name passed to RadioPipelineRunner (default: turbo). "
-             "Smaller variants like 'base' or 'small' trade accuracy for speed.",
+        "Smaller variants like 'base' or 'small' trade accuracy for speed.",
     )
     p.add_argument(
         "--rival",
         default=None,
         metavar="CODE",
         help="FIA three-letter code of a driver to track as rival (e.g. VER). "
-             "Adds a Rival column to the table and shows their position / "
-             "compound / interval in the detail line below.",
+        "Adds a Rival column to the table and shows their position / "
+        "compound / interval in the detail line below.",
     )
     p.add_argument(
         "--verbose",

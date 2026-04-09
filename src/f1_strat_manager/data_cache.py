@@ -44,11 +44,11 @@ from typing import Iterable
 # ── Rich colour palette mirrored from scripts/run_simulation_cli.py ────────────
 # Kept verbatim so the first-run UX blends into the rest of the CLI visual
 # language (gold watch / green ok / red alert / dim grey labels).
-COL_OK       = "green3"
-COL_WATCH    = "gold1"
-COL_ALERT    = "red3"
-COL_LABEL    = "grey70"
-COL_DIM      = "grey50"
+COL_OK = "green3"
+COL_WATCH = "gold1"
+COL_ALERT = "red3"
+COL_LABEL = "grey70"
+COL_DIM = "grey50"
 COL_HEADLINE = "bright_white"
 
 # ── HuggingFace dataset identity ───────────────────────────────────────────────
@@ -127,6 +127,7 @@ _DEFAULT_MODEL_PATTERNS: tuple[str, ...] = (
 # Path resolution
 # ==============================================================================
 
+
 def _find_repo_root() -> Path | None:
     """Walk up from this file looking for a ``.git`` sibling.
 
@@ -189,6 +190,7 @@ def get_models_root() -> Path:
 # First-run detection
 # ==============================================================================
 
+
 def is_first_run() -> bool:
     """Return True when the essential data and models are not on disk yet.
 
@@ -232,6 +234,7 @@ def is_first_run() -> bool:
 # ==============================================================================
 # Download helpers
 # ==============================================================================
+
 
 def _build_allow_patterns(races: Iterable[tuple[int, str]] | None) -> list[str]:
     """Build the snapshot_download allow_patterns list.
@@ -320,7 +323,7 @@ def _render_header(console, data_root: Path) -> None:
     grid.add_column(style=COL_DIM, justify="right", min_width=10)
     grid.add_column(justify="left")
     grid.add_row("Dataset", f"[{COL_HEADLINE}]{HF_DATASET_REPO_ID}[/{COL_HEADLINE}]")
-    grid.add_row("Cache",   f"[{COL_HEADLINE}]{data_root}[/{COL_HEADLINE}]")
+    grid.add_row("Cache", f"[{COL_HEADLINE}]{data_root}[/{COL_HEADLINE}]")
     grid.add_row(
         "Note",
         f"[{COL_DIM}]Downloads ~7-8 GB on first run — models, configs, and one sentinel race.[/{COL_DIM}]",
@@ -330,14 +333,16 @@ def _render_header(console, data_root: Path) -> None:
         f"[{COL_DIM}]$F1_STRAT_DATA_ROOT / $F1_STRAT_OFFLINE=1 / $F1_STRAT_NO_FIRST_RUN=1[/{COL_DIM}]",
     )
 
-    console.print(Panel(
-        grid,
-        title       =f"[bold {COL_WATCH}]F1 Strategy Manager — first-run setup[/bold {COL_WATCH}]",
-        title_align ="center",
-        border_style=COL_WATCH,
-        padding     =(1, 2),
-        expand      =False,
-    ))
+    console.print(
+        Panel(
+            grid,
+            title=f"[bold {COL_WATCH}]F1 Strategy Manager — first-run setup[/bold {COL_WATCH}]",
+            title_align="center",
+            border_style=COL_WATCH,
+            padding=(1, 2),
+            expand=False,
+        )
+    )
 
 
 def ensure_setup(
@@ -373,6 +378,7 @@ def ensure_setup(
         )
 
     from rich.console import Console
+
     console = Console()
 
     data_root = get_data_root()
@@ -401,11 +407,7 @@ def ensure_setup(
             f"  Original error: {exc}"
         ) from exc
 
-    console.print(
-        f"[{COL_OK}]"
-        f"[OK] Setup complete. Cached under {local_dir}"
-        f"[/{COL_OK}]"
-    )
+    console.print(f"[{COL_OK}][OK] Setup complete. Cached under {local_dir}[/{COL_OK}]")
 
 
 def ensure_race(year: int, gp_name: str, show_progress: bool = True) -> Path:
@@ -470,8 +472,8 @@ def ensure_radio_corpus(
         # and the user gets a clearer error from the runner constructor.
         return get_data_root() / "raw" / "radio_audio" / str(year) / gp_name
 
-    data_root  = get_data_root()
-    audio_dir  = data_root / "raw" / "radio_audio" / str(year) / slug
+    data_root = get_data_root()
+    audio_dir = data_root / "raw" / "radio_audio" / str(year) / slug
 
     if audio_dir.exists() and any(audio_dir.iterdir()):
         return audio_dir

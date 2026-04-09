@@ -41,15 +41,16 @@ from .theme import F1_AMBER, F1_GREEN, F1_RED, F1_WHITE, console
 # Subprocess helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def build_sim_cmd(
-    race:        str,
-    driver:      str,
-    team:        str,
-    laps:        str | None,
-    provider:    str,
-    year:        int = 2025,
-    script_dir:  Path | None = None,
-    rival:       str | None = None,
+    race: str,
+    driver: str,
+    team: str,
+    laps: str | None,
+    provider: str,
+    year: int = 2025,
+    script_dir: Path | None = None,
+    rival: str | None = None,
     radio_every: int = 0,
 ) -> list[str]:
     """Return the argv list for run_simulation_cli.py with the given parameters."""
@@ -90,12 +91,13 @@ def run_subprocess(cmd: list[str]) -> int:
 # Mode handlers
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def run_single(races: list[str], repo_root: Path, script_dir: Path) -> None:
     """Collect params for one driver and delegate to run_simulation_cli.py."""
-    race        = pick_race(races)
-    drv, team   = pick_driver("Driver", repo_root)
-    laps        = pick_laps()
-    provider    = pick_provider()
+    race = pick_race(races)
+    drv, team = pick_driver("Driver", repo_root)
+    laps = pick_laps()
+    provider = pick_provider()
     radio_every = pick_radio_every()
 
     console.print()
@@ -107,7 +109,11 @@ def run_single(races: list[str], repo_root: Path, script_dir: Path) -> None:
     console.print()
 
     cmd = build_sim_cmd(
-        race, drv, team, laps, provider,
+        race,
+        drv,
+        team,
+        laps,
+        provider,
         script_dir=script_dir,
         radio_every=radio_every,
     )
@@ -122,23 +128,25 @@ def run_h2h(races: list[str], repo_root: Path, script_dir: Path) -> None:
         f"[dim]full simulation for Driver 1 · Driver 2 tracked as rival[/dim]"
     )
 
-    race        = pick_race(races)
-    drv1, tm1   = pick_driver("Driver 1  (full simulation)", repo_root)
-    drv2        = pick_rival_code(repo_root)
-    laps        = pick_laps()
-    provider    = pick_provider()
+    race = pick_race(races)
+    drv1, tm1 = pick_driver("Driver 1  (full simulation)", repo_root)
+    drv2 = pick_rival_code(repo_root)
+    laps = pick_laps()
+    provider = pick_provider()
     radio_every = pick_radio_every()
 
     console.print()
     console.print(Rule(style=F1_RED))
     console.print()
-    console.print(Panel(
-        f"[bold {F1_RED}]{drv1}[/bold {F1_RED}]  [dim]{tm1}[/dim]  "
-        f"[dim]tracking rival[/dim]  [bold {F1_AMBER}]{drv2}[/bold {F1_AMBER}]",
-        border_style=F1_RED,
-        expand=False,
-        padding=(0, 2),
-    ))
+    console.print(
+        Panel(
+            f"[bold {F1_RED}]{drv1}[/bold {F1_RED}]  [dim]{tm1}[/dim]  "
+            f"[dim]tracking rival[/dim]  [bold {F1_AMBER}]{drv2}[/bold {F1_AMBER}]",
+            border_style=F1_RED,
+            expand=False,
+            padding=(0, 2),
+        )
+    )
     console.print()
     console.print(
         "  [dim]Initializing engine — NLP models loading, this may take a few seconds…[/dim]"
@@ -146,7 +154,11 @@ def run_h2h(races: list[str], repo_root: Path, script_dir: Path) -> None:
     console.print()
 
     cmd = build_sim_cmd(
-        race, drv1, tm1, laps, provider,
+        race,
+        drv1,
+        tm1,
+        laps,
+        provider,
         script_dir=script_dir,
         rival=drv2,
         radio_every=radio_every,
@@ -157,16 +169,18 @@ def run_h2h(races: list[str], repo_root: Path, script_dir: Path) -> None:
     ok = rc == 0
     status = (
         f"[{F1_GREEN}]Simulation completed successfully[/{F1_GREEN}]"
-        if ok else
-        f"[{F1_AMBER}]Completed with errors (rc={rc})[/{F1_AMBER}]"
+        if ok
+        else f"[{F1_AMBER}]Completed with errors (rc={rc})[/{F1_AMBER}]"
     )
     console.print()
-    console.print(Panel(
-        f"[bold {F1_WHITE}]{drv1}[/bold {F1_WHITE}] tracking rival "
-        f"[bold {F1_AMBER}]{drv2}[/bold {F1_AMBER}]  ·  "
-        f"[dim]{race}[/dim]  ·  {status}",
-        title="[bold]Head-to-Head complete[/bold]",
-        border_style=F1_GREEN if ok else F1_AMBER,
-        expand=False,
-        padding=(0, 2),
-    ))
+    console.print(
+        Panel(
+            f"[bold {F1_WHITE}]{drv1}[/bold {F1_WHITE}] tracking rival "
+            f"[bold {F1_AMBER}]{drv2}[/bold {F1_AMBER}]  ·  "
+            f"[dim]{race}[/dim]  ·  {status}",
+            title="[bold]Head-to-Head complete[/bold]",
+            border_style=F1_GREEN if ok else F1_AMBER,
+            expand=False,
+            padding=(0, 2),
+        )
+    )

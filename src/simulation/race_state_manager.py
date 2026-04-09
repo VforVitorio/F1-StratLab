@@ -56,7 +56,7 @@ def _compute_session_times(laps_df: pd.DataFrame) -> pd.DataFrame:
     Returns a copy of ``laps_df`` with both additional columns.
     """
     df = laps_df.copy()
-    df["lap_time_s"]     = df["LapTime"].apply(_to_seconds)
+    df["lap_time_s"] = df["LapTime"].apply(_to_seconds)
     df["session_time_s"] = df["Time"].apply(_to_seconds)
     return df
 
@@ -186,34 +186,34 @@ class RaceStateManager:
             gap_to_leader = None
 
         return {
-            "driver":           self.driver_code,
-            "team":             self.team,
-            "lap_number":       int(lap_number),
+            "driver": self.driver_code,
+            "team": self.team,
+            "lap_number": int(lap_number),
             # --- Timing ---
-            "lap_time_s":       _to_seconds(r.get("LapTime")),
-            "sector1_s":        _to_seconds(r.get("Sector1Time")),
-            "sector2_s":        _to_seconds(r.get("Sector2Time")),
-            "sector3_s":        _to_seconds(r.get("Sector3Time")),
+            "lap_time_s": _to_seconds(r.get("LapTime")),
+            "sector1_s": _to_seconds(r.get("Sector1Time")),
+            "sector2_s": _to_seconds(r.get("Sector2Time")),
+            "sector3_s": _to_seconds(r.get("Sector3Time")),
             # --- Position & gap ---
-            "position":         int(r["Position"]) if pd.notna(r.get("Position")) else None,
-            "gap_to_leader_s":  gap_to_leader,
+            "position": int(r["Position"]) if pd.notna(r.get("Position")) else None,
+            "gap_to_leader_s": gap_to_leader,
             # --- Tyre ---
-            "compound":         str(r.get("Compound", "")),
-            "compound_id":      int(r["CompoundID"]) if pd.notna(r.get("CompoundID")) else None,
-            "tyre_life":        int(r["TyreLife"]) if pd.notna(r.get("TyreLife")) else None,
-            "stint":            int(r["Stint"]) if pd.notna(r.get("Stint")) else None,
-            "fresh_tyre":       bool(r.get("FreshTyre", False)),
+            "compound": str(r.get("Compound", "")),
+            "compound_id": int(r["CompoundID"]) if pd.notna(r.get("CompoundID")) else None,
+            "tyre_life": int(r["TyreLife"]) if pd.notna(r.get("TyreLife")) else None,
+            "stint": int(r["Stint"]) if pd.notna(r.get("Stint")) else None,
+            "fresh_tyre": bool(r.get("FreshTyre", False)),
             # --- Speed traps (all four sensor points) ---
-            "speed_i1":         float(r["SpeedI1"]) if pd.notna(r.get("SpeedI1")) else None,
-            "speed_i2":         float(r["SpeedI2"]) if pd.notna(r.get("SpeedI2")) else None,
-            "speed_fl":         float(r["SpeedFL"]) if pd.notna(r.get("SpeedFL")) else None,
-            "speed_st":         float(r["SpeedST"]) if pd.notna(r.get("SpeedST")) else None,
+            "speed_i1": float(r["SpeedI1"]) if pd.notna(r.get("SpeedI1")) else None,
+            "speed_i2": float(r["SpeedI2"]) if pd.notna(r.get("SpeedI2")) else None,
+            "speed_fl": float(r["SpeedFL"]) if pd.notna(r.get("SpeedFL")) else None,
+            "speed_st": float(r["SpeedST"]) if pd.notna(r.get("SpeedST")) else None,
             # --- Fuel (linear depletion estimate from FuelLoad feature) ---
-            "fuel_load":        float(r["FuelLoad"]) if pd.notna(r.get("FuelLoad")) else None,
+            "fuel_load": float(r["FuelLoad"]) if pd.notna(r.get("FuelLoad")) else None,
             # --- Track & pit state ---
-            "track_status":     str(r.get("TrackStatus", "")),
-            "is_in_lap":        bool(pd.notna(r.get("PitInTime"))),
-            "is_out_lap":       bool(pd.notna(r.get("PitOutTime"))),
+            "track_status": str(r.get("TrackStatus", "")),
+            "is_in_lap": bool(pd.notna(r.get("PitInTime"))),
+            "is_out_lap": bool(pd.notna(r.get("PitOutTime"))),
         }
 
     def get_rival_states(self, lap_number: int) -> list[dict[str, Any]]:
@@ -264,17 +264,17 @@ class RaceStateManager:
 
             states.append(
                 {
-                    "driver":               str(r.get("Driver", "")),
-                    "team":                 str(r.get("Team", "")),
-                    "position":             int(r["Position"]) if pd.notna(r.get("Position")) else None,
-                    "lap_time_s":           _to_seconds(r.get("LapTime")),
-                    "compound":             str(r.get("Compound", "")),
-                    "tyre_life":            int(r["TyreLife"]) if pd.notna(r.get("TyreLife")) else None,
-                    "stint":                int(r["Stint"]) if pd.notna(r.get("Stint")) else None,
-                    "speed_st":             float(r["SpeedST"]) if pd.notna(r.get("SpeedST")) else None,
-                    "gap_to_leader_s":      gap_to_leader,
+                    "driver": str(r.get("Driver", "")),
+                    "team": str(r.get("Team", "")),
+                    "position": int(r["Position"]) if pd.notna(r.get("Position")) else None,
+                    "lap_time_s": _to_seconds(r.get("LapTime")),
+                    "compound": str(r.get("Compound", "")),
+                    "tyre_life": int(r["TyreLife"]) if pd.notna(r.get("TyreLife")) else None,
+                    "stint": int(r["Stint"]) if pd.notna(r.get("Stint")) else None,
+                    "speed_st": float(r["SpeedST"]) if pd.notna(r.get("SpeedST")) else None,
+                    "gap_to_leader_s": gap_to_leader,
                     "interval_to_driver_s": interval_to_driver,
-                    "is_pitting":           bool(pd.notna(r.get("PitInTime"))),
+                    "is_pitting": bool(pd.notna(r.get("PitInTime"))),
                 }
             )
 
@@ -309,11 +309,11 @@ class RaceStateManager:
             w = weather_df.iloc[idx]
             weather.update(
                 {
-                    "air_temp":   float(w["AirTemp"])   if pd.notna(w.get("AirTemp"))   else None,
+                    "air_temp": float(w["AirTemp"]) if pd.notna(w.get("AirTemp")) else None,
                     "track_temp": float(w["TrackTemp"]) if pd.notna(w.get("TrackTemp")) else None,
-                    "humidity":   float(w["Humidity"])  if pd.notna(w.get("Humidity"))  else None,
+                    "humidity": float(w["Humidity"]) if pd.notna(w.get("Humidity")) else None,
                     "wind_speed": float(w["WindSpeed"]) if pd.notna(w.get("WindSpeed")) else None,
-                    "rainfall":   bool(w["Rainfall"])   if pd.notna(w.get("Rainfall"))  else False,
+                    "rainfall": bool(w["Rainfall"]) if pd.notna(w.get("Rainfall")) else False,
                 }
             )
 
@@ -328,10 +328,10 @@ class RaceStateManager:
         deep into the race we are.
         """
         return {
-            "gp_name":    self.gp_name,
-            "year":       self.year,
-            "driver":     self.driver_code,
-            "team":       self.team,
+            "gp_name": self.gp_name,
+            "year": self.year,
+            "driver": self.driver_code,
+            "team": self.team,
             "total_laps": self.total_laps,
         }
 
@@ -366,9 +366,9 @@ class RaceStateManager:
                 }
         """
         return {
-            "lap_number":   lap_number,
-            "driver":       self.get_driver_state(lap_number),
-            "rivals":       self.get_rival_states(lap_number),
-            "weather":      self.get_weather_state(lap_number, weather_df),
+            "lap_number": lap_number,
+            "driver": self.get_driver_state(lap_number),
+            "rivals": self.get_rival_states(lap_number),
+            "weather": self.get_weather_state(lap_number, weather_df),
             "session_meta": self.get_session_meta(),
         }

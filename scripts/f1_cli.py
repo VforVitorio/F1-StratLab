@@ -45,7 +45,7 @@ _logging.getLogger("torch").setLevel(_logging.ERROR)
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 _SCRIPT_DIR = Path(__file__).resolve().parent
-_REPO_ROOT  = next(
+_REPO_ROOT = next(
     (p for p in [_SCRIPT_DIR, *_SCRIPT_DIR.parents] if (p / ".git").exists()),
     _SCRIPT_DIR.parent,
 )
@@ -62,6 +62,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 try:
     from dotenv import load_dotenv
+
     _env = _REPO_ROOT / ".env"
     if _env.exists():
         load_dotenv(_env)
@@ -78,6 +79,7 @@ from rich.rule import Rule  # noqa: E402
 # Main loop
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def main() -> None:
     console.print()
     console.print(make_banner())
@@ -88,6 +90,7 @@ def main() -> None:
     # the repo contributor workflow.
     try:
         from src.f1_strat_manager.data_cache import ensure_setup, is_first_run
+
         if is_first_run():
             ensure_setup()
     except ImportError:

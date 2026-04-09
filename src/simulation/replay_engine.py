@@ -143,25 +143,25 @@ class RaceReplayEngine:
         rivals = lap_state.get("rivals", [])
 
         our_car: dict[str, Any] = {
-            "driver":        driver.get("driver", ""),
-            "team":          driver.get("team", ""),
-            "position":      driver.get("position"),
-            "compound":      driver.get("compound", ""),
-            "tyre_life":     driver.get("tyre_life"),
+            "driver": driver.get("driver", ""),
+            "team": driver.get("team", ""),
+            "position": driver.get("position"),
+            "compound": driver.get("compound", ""),
+            "tyre_life": driver.get("tyre_life"),
             "gap_to_leader": driver.get("gap_to_leader_s"),
-            "interval":      0.0,
+            "interval": 0.0,
             "is_our_driver": True,
         }
 
         rival_cars: list[dict[str, Any]] = [
             {
-                "driver":        r.get("driver", ""),
-                "team":          r.get("team", ""),
-                "position":      r.get("position"),
-                "compound":      r.get("compound", ""),
-                "tyre_life":     r.get("tyre_life"),
+                "driver": r.get("driver", ""),
+                "team": r.get("team", ""),
+                "position": r.get("position"),
+                "compound": r.get("compound", ""),
+                "tyre_life": r.get("tyre_life"),
                 "gap_to_leader": r.get("gap_to_leader_s"),
-                "interval":      r.get("interval_to_driver_s"),
+                "interval": r.get("interval_to_driver_s"),
                 "is_our_driver": False,
             }
             for r in rivals
@@ -170,23 +170,21 @@ class RaceReplayEngine:
         cars = sorted([our_car] + rival_cars, key=lambda c: c["position"] or 99)
 
         frame: dict[str, Any] = {
-            "lap":        lap_state["lap_number"],
-            "gp":         lap_state.get("session_meta", {}).get("gp_name", ""),
+            "lap": lap_state["lap_number"],
+            "gp": lap_state.get("session_meta", {}).get("gp_name", ""),
             "total_laps": lap_state.get("session_meta", {}).get("total_laps"),
-            "cars":       cars,
-            "weather":    lap_state.get("weather", {}),
+            "cars": cars,
+            "weather": lap_state.get("weather", {}),
         }
 
         if recommendation is not None:
             frame["recommendation"] = {
-                "action":               getattr(recommendation, "action", ""),
-                "rationale":            getattr(recommendation, "rationale", ""),
-                "confidence":           getattr(recommendation, "confidence", 0.0),
-                "tyre":                 getattr(recommendation, "tyre", ""),
-                "laps_remaining_on_tyre": getattr(
-                    recommendation, "laps_remaining_on_tyre", None
-                ),
-                "risk_flags":           getattr(recommendation, "risk_flags", []),
+                "action": getattr(recommendation, "action", ""),
+                "rationale": getattr(recommendation, "rationale", ""),
+                "confidence": getattr(recommendation, "confidence", 0.0),
+                "tyre": getattr(recommendation, "tyre", ""),
+                "laps_remaining_on_tyre": getattr(recommendation, "laps_remaining_on_tyre", None),
+                "risk_flags": getattr(recommendation, "risk_flags", []),
             }
 
         if agent_outputs:

@@ -67,8 +67,8 @@ class DownloadConfig:
 
     supported_years: list[int] = field(default_factory=lambda: [2023, 2024, 2025])
     request_timeout: int = 30
-    retry_delay:     int = 2
-    max_retries:     int = 3
+    retry_delay: int = 2
+    max_retries: int = 3
 
     def __post_init__(self) -> None:
         # Derived from this file's location so the module works regardless of
@@ -100,7 +100,7 @@ FIA_CATEGORY_URLS: dict[str, str] = {
 # Patterns that identify an F1 regulation PDF link on the FIA website.
 # The FIA uses "Formula 1" and either "Sporting" or "Technical" in document titles.
 _TITLE_PATTERNS: dict[str, re.Pattern[str]] = {
-    "sporting_regs":  re.compile(r"formula.?1.+sporting.+regulation", re.IGNORECASE),
+    "sporting_regs": re.compile(r"formula.?1.+sporting.+regulation", re.IGNORECASE),
     "technical_regs": re.compile(r"formula.?1.+technical.+regulation", re.IGNORECASE),
 }
 _YEAR_RE = re.compile(r"20(2[3-9])\d*")
@@ -116,6 +116,7 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Data class
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class RegulationLink:
@@ -136,15 +137,16 @@ class RegulationLink:
                   can verify which issue was downloaded.
     """
 
-    url:      str
+    url: str
     doc_type: str
-    year:     int
-    title:    str = ""
+    year: int
+    title: str = ""
 
 
 # ---------------------------------------------------------------------------
 # HTTP helpers
 # ---------------------------------------------------------------------------
+
 
 def _get(url: str, session: requests.Session) -> requests.Response | None:
     """Fetch a URL with retries, returning ``None`` on persistent failure.
@@ -179,20 +181,23 @@ def _make_session() -> requests.Session:
     regulation PDFs are publicly accessible.
     """
     session = requests.Session()
-    session.headers.update({
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/124.0.0.0 Safari/537.36"
-        ),
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    })
+    session.headers.update(
+        {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        }
+    )
     return session
 
 
 # ---------------------------------------------------------------------------
 # Scraping
 # ---------------------------------------------------------------------------
+
 
 def _extract_year_from_text(text: str) -> int | None:
     """Parse a four-digit year (2023–2029) from an arbitrary text string.
@@ -211,7 +216,7 @@ def _extract_year_from_text(text: str) -> int | None:
 
 def scrape_regulation_links(
     doc_type: str,
-    session:  requests.Session,
+    session: requests.Session,
 ) -> list[RegulationLink]:
     """Scrape the FIA category page for a regulation type and return PDF links.
 
@@ -227,8 +232,8 @@ def scrape_regulation_links(
         session:  Active requests session. Passed in so all scraping calls share
                   the same connection pool and cookies.
     """
-    base_url    = FIA_CATEGORY_URLS[doc_type]
-    title_re    = _TITLE_PATTERNS[doc_type]
+    base_url = FIA_CATEGORY_URLS[doc_type]
+    title_re = _TITLE_PATTERNS[doc_type]
     links: list[RegulationLink] = []
 
     log.info("Scraping %s ...", base_url)
@@ -240,7 +245,7 @@ def scrape_regulation_links(
     soup = BeautifulSoup(resp.text, "html.parser")
 
     for tag in soup.find_all("a", href=True):
-        href  = tag["href"]
+        href = tag["href"]
         title = tag.get_text(strip=True)
 
         if not href.lower().endswith(".pdf"):
@@ -268,6 +273,7 @@ def scrape_regulation_links(
 # Known-URLs fallback
 # ---------------------------------------------------------------------------
 
+
 def load_known_urls() -> list[RegulationLink]:
     """Load manually maintained PDF URLs from ``data/rag/fia_known_urls.json``.
 
@@ -290,15 +296,17 @@ def load_known_urls() -> list[RegulationLink]:
 
     links = []
     for entry in entries:
-        if "_comment" in entry:      # skip template/example entries
+        if "_comment" in entry:  # skip template/example entries
             continue
         try:
-            links.append(RegulationLink(
-                url=entry["url"],
-                doc_type=entry["doc_type"],
-                year=int(entry["year"]),
-                title=entry.get("title", ""),
-            ))
+            links.append(
+                RegulationLink(
+                    url=entry["url"],
+                    doc_type=entry["doc_type"],
+                    year=int(entry["year"]),
+                    title=entry.get("title", ""),
+                )
+            )
         except KeyError as exc:
             log.warning("Skipping malformed entry in known_urls (missing key %s)", exc)
 
@@ -320,11 +328,11 @@ def save_known_urls_template() -> None:
     CFG.known_urls_file.parent.mkdir(parents=True, exist_ok=True)
     template = [
         {
-            "url":      "https://www.fia.com/sites/default/files/example_sporting_regs_2025.pdf",
+            "url": "https://www.fia.com/sites/default/files/example_sporting_regs_2025.pdf",
             "doc_type": "sporting_regs",
-            "year":     2025,
-            "title":    "2025 Formula 1 Sporting Regulations — Issue 1",
-            "_comment": "Replace url and title with real values from fia.com/regulation/category/110"
+            "year": 2025,
+            "title": "2025 Formula 1 Sporting Regulations — Issue 1",
+            "_comment": "Replace url and title with real values from fia.com/regulation/category/110",
         }
     ]
     CFG.known_urls_file.write_text(
@@ -337,6 +345,7 @@ def save_known_urls_template() -> None:
 # ---------------------------------------------------------------------------
 # Deduplication + download
 # ---------------------------------------------------------------------------
+
 
 def deduplicate_links(links: list[RegulationLink]) -> list[RegulationLink]:
     """Keep only one link per (doc_type, year) pair — the first one seen.
@@ -354,7 +363,7 @@ def deduplicate_links(links: list[RegulationLink]) -> list[RegulationLink]:
     seen: dict[tuple[str, int], RegulationLink] = {}
     for link in links:
         key = (link.doc_type, link.year)
-        if key not in seen:          # first seen = newest issue
+        if key not in seen:  # first seen = newest issue
             seen[key] = link
     return list(seen.values())
 
@@ -373,7 +382,7 @@ def output_path(link: RegulationLink) -> Path:
 
 
 def download_link(
-    link:    RegulationLink,
+    link: RegulationLink,
     session: requests.Session,
     dry_run: bool = False,
 ) -> bool:
@@ -400,10 +409,12 @@ def download_link(
         log.info("Already exists — skipping %s", dest.name)
         return False
 
-    log.info("%s%s → %s",
-             "[DRY RUN] Would download" if dry_run else "Downloading",
-             f" {link.title[:60]!r}" if link.title else f" {link.url[:80]}",
-             dest.name)
+    log.info(
+        "%s%s → %s",
+        "[DRY RUN] Would download" if dry_run else "Downloading",
+        f" {link.title[:60]!r}" if link.title else f" {link.url[:80]}",
+        dest.name,
+    )
 
     if dry_run:
         return True
@@ -429,8 +440,9 @@ def download_link(
 # Main
 # ---------------------------------------------------------------------------
 
+
 def download_all(
-    years:   list[int] | None = None,
+    years: list[int] | None = None,
     dry_run: bool = False,
 ) -> None:
     """Discover and download all FIA regulation PDFs for the requested years.
@@ -446,7 +458,7 @@ def download_all(
                  writing files.
     """
     target_years = set(years) if years else set(CFG.supported_years)
-    session      = _make_session()
+    session = _make_session()
 
     save_known_urls_template()
 
@@ -463,9 +475,9 @@ def download_all(
 
     if not filtered:
         log.warning(
-            "No links found for years %s. "
-            "Add entries to %s manually if scraping failed.",
-            sorted(target_years), CFG.known_urls_file.name,
+            "No links found for years %s. Add entries to %s manually if scraping failed.",
+            sorted(target_years),
+            CFG.known_urls_file.name,
         )
         sys.exit(1)
 
@@ -483,12 +495,15 @@ def download_all(
 
     log.info(
         "Done — downloaded: %d  |  skipped (exist): %d  |  failed: %d",
-        downloaded, skipped, failed,
+        downloaded,
+        skipped,
+        failed,
     )
     if failed:
         log.warning(
             "%d file(s) failed. Add their URLs to %s and re-run.",
-            failed, CFG.known_urls_file.name,
+            failed,
+            CFG.known_urls_file.name,
         )
 
 

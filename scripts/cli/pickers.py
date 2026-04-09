@@ -38,6 +38,7 @@ _IS_WIN = sys.platform == "win32"
 if _IS_WIN:
     try:
         import ctypes
+
         _k32 = ctypes.windll.kernel32
         # ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING
         _k32.SetConsoleMode(_k32.GetStdHandle(-11), 7)
@@ -48,6 +49,7 @@ if _IS_WIN:
 # ─────────────────────────────────────────────────────────────────────────────
 # Arrow-key selection menu
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def _arrow_pick(title: str, options: list[str], default: int = 0) -> int:
     """Show an interactive arrow-key menu and return the selected 0-based index.
@@ -73,7 +75,7 @@ def _arrow_pick(title: str, options: list[str], default: int = 0) -> int:
         return int(raw) - 1
 
     sel = default
-    n   = len(options)
+    n = len(options)
     # Show index shortcuts when there are enough options to be useful
     _show_idx = n >= 4
 
@@ -83,9 +85,7 @@ def _arrow_pick(title: str, options: list[str], default: int = 0) -> int:
         for i, opt in enumerate(options):
             idx_hint = f"\033[2m{i + 1:>2}.\033[0m " if _show_idx else "   "
             if i == sel:
-                parts.append(
-                    f"  \033[1;31m❯\033[0m {idx_hint}\033[1;97m{opt}\033[0m"
-                )
+                parts.append(f"  \033[1;31m❯\033[0m {idx_hint}\033[1;97m{opt}\033[0m")
             else:
                 parts.append(f"     {idx_hint}\033[2m{opt}\033[0m")
         if _show_idx:
@@ -109,8 +109,7 @@ def _arrow_pick(title: str, options: list[str], default: int = 0) -> int:
     def _confirm() -> None:
         sys.stdout.write(f"\033[{nl}A\033[0J")
         sys.stdout.write(
-            f"\n  \033[2m{title}\033[0m\n\n"
-            f"  \033[1;31m❯\033[0m  \033[1;97m{options[sel]}\033[0m\n"
+            f"\n  \033[2m{title}\033[0m\n\n  \033[1;31m❯\033[0m  \033[1;97m{options[sel]}\033[0m\n"
         )
         sys.stdout.flush()
 
@@ -127,28 +126,30 @@ def _arrow_pick(title: str, options: list[str], default: int = 0) -> int:
 
     if _IS_WIN:
         import msvcrt
+
         while True:
             ch = msvcrt.getwch()
-            if ch in ("\xe0", "\x00"):          # special key prefix
+            if ch in ("\xe0", "\x00"):  # special key prefix
                 arrow = msvcrt.getwch()
-                if arrow == "H":                # up arrow
+                if arrow == "H":  # up arrow
                     sel = (sel - 1) % n
                     _redraw()
-                elif arrow == "P":              # down arrow
+                elif arrow == "P":  # down arrow
                     sel = (sel + 1) % n
                     _redraw()
-            elif ch in ("\r", "\n", " "):       # Enter / Space → confirm
+            elif ch in ("\r", "\n", " "):  # Enter / Space → confirm
                 _confirm()
                 return sel
-            elif ch == "\x03":                  # Ctrl-C
+            elif ch == "\x03":  # Ctrl-C
                 sys.stdout.write("\n")
                 raise KeyboardInterrupt
             else:
-                _jump_to_digit(ch)              # digit shortcut
+                _jump_to_digit(ch)  # digit shortcut
     else:
         import termios
         import tty
-        fd  = sys.stdin.fileno()
+
+        fd = sys.stdin.fileno()
         old = termios.tcgetattr(fd)
         try:
             tty.setraw(fd)
@@ -156,10 +157,10 @@ def _arrow_pick(title: str, options: list[str], default: int = 0) -> int:
                 ch = sys.stdin.read(1)
                 if ch == "\x1b":
                     seq = sys.stdin.read(2)
-                    if seq == "[A":             # up arrow
+                    if seq == "[A":  # up arrow
                         sel = (sel - 1) % n
                         _redraw()
-                    elif seq == "[B":           # down arrow
+                    elif seq == "[B":  # down arrow
                         sel = (sel + 1) % n
                         _redraw()
                 elif ch in ("\r", "\n", " "):
@@ -169,7 +170,7 @@ def _arrow_pick(title: str, options: list[str], default: int = 0) -> int:
                     sys.stdout.write("\n")
                     raise KeyboardInterrupt
                 else:
-                    _jump_to_digit(ch)          # digit shortcut
+                    _jump_to_digit(ch)  # digit shortcut
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
@@ -177,6 +178,7 @@ def _arrow_pick(title: str, options: list[str], default: int = 0) -> int:
 # ─────────────────────────────────────────────────────────────────────────────
 # Race discovery
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def discover_races(repo_root: Path, year: int = 2025) -> list[str]:
     """Return sorted list of race directories found under the data root.
@@ -191,6 +193,7 @@ def discover_races(repo_root: Path, year: int = 2025) -> list[str]:
     """
     try:
         from src.f1_strat_manager.data_cache import get_data_root
+
         raw_dir = get_data_root() / "raw" / str(year)
     except ImportError:
         raw_dir = repo_root / "data" / "raw" / str(year)
@@ -200,10 +203,7 @@ def discover_races(repo_root: Path, year: int = 2025) -> list[str]:
     # Only return folders that actually contain race files — empty
     # placeholders from a partial download would otherwise crash the
     # downstream RaceReplayEngine.
-    return sorted(
-        d.name for d in raw_dir.iterdir()
-        if d.is_dir() and any(d.iterdir())
-    )
+    return sorted(d.name for d in raw_dir.iterdir() if d.is_dir() and any(d.iterdir()))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -226,8 +226,10 @@ def _load_driver_team_map(repo_root: Path) -> dict[str, str]:
         return _DRIVER_TEAM_CACHE
     try:
         import pandas as pd
+
         try:
             from src.f1_strat_manager.data_cache import get_data_root
+
             parquet = get_data_root() / "processed" / "laps_featured_2025.parquet"
         except ImportError:
             parquet = repo_root / "data" / "processed" / "laps_featured_2025.parquet"
@@ -235,9 +237,9 @@ def _load_driver_team_map(repo_root: Path) -> dict[str, str]:
             df = pd.read_parquet(parquet, columns=["Driver", "Team"])
             _DRIVER_TEAM_CACHE = (
                 df.dropna(subset=["Driver", "Team"])
-                  .drop_duplicates("Driver", keep="last")
-                  .set_index("Driver")["Team"]
-                  .to_dict()
+                .drop_duplicates("Driver", keep="last")
+                .set_index("Driver")["Team"]
+                .to_dict()
             )
         else:
             _DRIVER_TEAM_CACHE = {}
@@ -249,6 +251,7 @@ def _load_driver_team_map(repo_root: Path) -> dict[str, str]:
 # ─────────────────────────────────────────────────────────────────────────────
 # Interactive pickers
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def pick_mode() -> str:
     """Arrow-key mode menu. Returns 'single', 'h2h', or 'quit'."""
@@ -279,9 +282,11 @@ def pick_driver(
     manual team entry is requested as fallback.
     """
     console.print()
-    code = Prompt.ask(
-        f"  [bold {F1_RED}]›[/bold {F1_RED}] {label} code  [dim](e.g. NOR)[/dim]"
-    ).upper().strip()
+    code = (
+        Prompt.ask(f"  [bold {F1_RED}]›[/bold {F1_RED}] {label} code  [dim](e.g. NOR)[/dim]")
+        .upper()
+        .strip()
+    )
 
     team = ""
     if repo_root is not None:
@@ -304,9 +309,13 @@ def pick_driver(
 def pick_rival_code(repo_root: Path | None = None) -> str:
     """Ask for a rival driver code; resolves and displays team for confirmation."""
     console.print()
-    code = Prompt.ask(
-        f"  [bold {F1_AMBER}]›[/bold {F1_AMBER}] Rival driver code  [dim](e.g. VER)[/dim]"
-    ).upper().strip()
+    code = (
+        Prompt.ask(
+            f"  [bold {F1_AMBER}]›[/bold {F1_AMBER}] Rival driver code  [dim](e.g. VER)[/dim]"
+        )
+        .upper()
+        .strip()
+    )
 
     if repo_root is not None:
         team = _load_driver_team_map(repo_root).get(code, "")
