@@ -1,0 +1,1219 @@
+"""Race Situation Agent — src/agents/race_situation_agent.py
+
+Extracted from N27_race_situation_agent.ipynb. Combines N12 (overtake LightGBM)
+and N14 (safety car LightGBM) into a single threat assessment per lap.
+
+Public API
+----------
+run_race_situation_agent(lap_state)                       → RaceSituationOutput  (FastF1 session)
+run_race_situation_agent_from_state(lap_state, laps_df)   → RaceSituationOutput  (RSM adapter)
+get_race_situation_react_agent(**kwargs)                   → CompiledGraph
+
+Module-level singletons
+-----------------------
+CFG           — RaceSituationConfig: both model pairs + calibrators + feature lists.
+                Kept at module level so RaceSituationOutput.__post_init__ can read thresholds.
+TIRE_COMPOUNDS — authoritative compound allocation from data/tire_compounds_by_race.json.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Optional
+
+import joblib
+import numpy as np
+import pandas as pd
+
+# ── Repo root (with root-stop guard for uv tool install) ─────────────────────
+_REPO_ROOT = Path(__file__).resolve().parent
+while not (_REPO_ROOT / '.git').exists():
+    if _REPO_ROOT.parent == _REPO_ROOT:
+        break
+    _REPO_ROOT = _REPO_ROOT.parent
+
+# Route every artefact path through the cache helper so the agent works
+# transparently in both editable-dev mode (repo ``data/`` folder) and the
+# ``uv tool install`` flow (``~/.f1-strat/data/``).
+try:
+    from src.f1_strat_manager.data_cache import get_data_root as _get_data_root
+    _DATA_ROOT = _get_data_root()
+except Exception:
+    _DATA_ROOT = _REPO_ROOT / 'data'
+
+_MODELS    = _DATA_ROOT / 'models'
+_PROCESSED = _DATA_ROOT / 'processed'
+_AGENTS    = _DATA_ROOT / 'models' / 'agents'
+
+
+# ── Authoritative compound allocation ─────────────────────────────────────────
+_compounds_path = _DATA_ROOT / 'tire_compounds_by_race.json'
+TIRE_COMPOUNDS: dict = (
+    json.loads(_compounds_path.read_text(encoding='utf-8'))
+    if _compounds_path.exists() else {}
+)
+
+# ── Feature engineering constants (matching N13/N14 training definitions) ─────
+CLIFF_THRESHOLDS = {'SOFT': 20, 'MEDIUM': 35, 'HARD': 50}
+STATUS_ENC       = {'1': 0, '2': 1, '5': 2, '7': 3, '6': 4, '4': 5}
+STATUS_SEVERITY  = {'1': 1, '2': 2, '5': 3, '7': 4, '6': 5, '4': 6}
+_INCIDENT_RE     = r'INCIDENT|COLLISION|CONTACT|SPIN|OFF TRACK|STOPPED CAR|DEBRIS|MARSHAL'
+_EXCLUDE_RE      = r'TRACK LIMITS|LAP TIME|PENALTY|PIT LANE|FORMATION|GRID|DRS|SAFETY CAR|VIRTUAL'
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RaceSituationConfig
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass
+class RaceSituationConfig:
+    """Runtime configuration for the Race Situation Agent.
+
+    Loads both LightGBM model pairs (overtake from N12, SC from N14) plus their
+    Platt calibrators and feature lists. Models are loaded with joblib because
+    the repo path contains non-ASCII characters that break LightGBM's native
+    save_model on Windows.
+
+    Threat-level boundaries map raw calibrated probabilities to LOW/MEDIUM/HIGH
+    categorical signals for N31. Thresholds match the Optuna/F2-score tuning
+    from N12 (overtake) and N14 (SC).
+
+    Attributes:
+        model_name: LM Studio model identifier for the ReAct agent LLM.
+        high_overtake: Probability above which threat_level is HIGH via overtake.
+        medium_overtake: Probability above which threat_level is MEDIUM via overtake.
+        high_sc: Probability above which threat_level is HIGH via SC risk.
+        medium_sc: Probability above which threat_level is MEDIUM via SC risk.
+    """
+
+    model_name: str = 'gpt-4.1-mini'
+
+    high_overtake:   float = 0.80
+    medium_overtake: float = 0.40
+    high_sc:         float = 0.30
+    medium_sc:       float = 0.15
+
+    def __post_init__(self) -> None:
+        self.export_dir = _AGENTS
+        self.export_dir.mkdir(parents=True, exist_ok=True)
+
+        # Overtake model (N12)
+        _ov = _MODELS / 'overtake_probability'
+        self.overtake_model      = joblib.load(_ov / 'lgbm_overtake_v1.pkl')
+        self.overtake_calibrator = joblib.load(_ov / 'calibrator.pkl')
+        with open(_ov / 'model_config.json') as f:
+            ov_cfg = json.load(f)
+        self.overtake_features: list[str]     = ov_cfg['features']
+        self.overtake_cat_features: list[str] = ov_cfg['categorical_features']
+        self.overtake_threshold: float        = ov_cfg['optimal_threshold']
+
+        # SC model (N14)
+        _sc = _MODELS / 'safety_car_probability'
+        self.sc_model      = joblib.load(_sc / 'lgbm_sc_v1.pkl')
+        self.sc_calibrator = joblib.load(_sc / 'calibrator_sc_v1.pkl')
+        with open(_sc / 'feature_list_v1.json') as f:
+            sc_cfg = json.load(f)
+        self.sc_features: list[str] = sc_cfg['features']
+        self.sc_threshold: float    = sc_cfg['best_threshold']
+
+        # Circuit cluster map (k=4 parquet from N05)
+        _cl = pd.read_parquet(_PROCESSED / 'circuit_clustering' / 'circuit_clusters_k4.parquet')
+        self.circuit_cluster_map: dict = dict(
+            zip(_cl['GP_Name'], _cl['Cluster'].astype(int))
+        )
+
+        # Circuit SC base rates (from N13 labeled parquet)
+        _sc_df = pd.read_parquet(
+            _PROCESSED / 'sc_labeled' / 'sc_labeled_2023_2025.parquet',
+            columns=['event_name', 'circuit_sc_rate'],
+        )
+        self.circuit_sc_rate_map: dict = (
+            _sc_df.drop_duplicates('event_name')
+                  .set_index('event_name')['circuit_sc_rate']
+                  .to_dict()
+        )
+
+
+# ── Module-level config singleton ─────────────────────────────────────────────
+# Kept at module level because RaceSituationOutput.__post_init__ reads
+# CFG.high_overtake, CFG.high_sc, CFG.medium_overtake, CFG.medium_sc.
+CFG = RaceSituationConfig()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RaceSituationOutput
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass
+class RaceSituationOutput:
+    """Structured output of the Race Situation Agent for one lap snapshot.
+
+    Combines overtaking opportunity assessment (N12) with safety car risk
+    prediction (N14) into a single threat_level classification that N31 uses
+    to condition pit timing and stint extension decisions.
+
+    threat_level is derived automatically in __post_init__ so downstream agents
+    get a categorical signal (LOW/MEDIUM/HIGH) without re-implementing thresholds.
+
+    Attributes:
+        overtake_prob: Calibrated P(overtake in next few laps) from N12 LightGBM
+            + Platt calibration. Above CFG.high_overtake (0.80) = strong opportunity.
+        sc_prob_3lap: Calibrated P(SC within 3 laps) from N14 LightGBM + Platt
+            calibration. Above CFG.high_sc (0.30) = imminent SC risk.
+        threat_level: LOW / MEDIUM / HIGH derived from both probabilities in __post_init__.
+        gap_ahead_s: Gap to the car directly ahead (seconds). < 1.0s = DRS range.
+        pace_delta_s: 3-lap rolling pace delta vs car ahead (s/lap). Negative = faster.
+        reasoning: LLM synthesis forwarded verbatim to N31 Orchestrator.
+    """
+
+    overtake_prob: float
+    sc_prob_3lap: float
+    threat_level: str = field(init=False)
+    gap_ahead_s: float  = 0.0
+    pace_delta_s: float = 0.0
+    reasoning: str      = ''
+
+    def __post_init__(self) -> None:
+        if self.overtake_prob >= CFG.high_overtake or self.sc_prob_3lap >= CFG.high_sc:
+            self.threat_level = 'HIGH'
+        elif self.overtake_prob >= CFG.medium_overtake or self.sc_prob_3lap >= CFG.medium_sc:
+            self.threat_level = 'MEDIUM'
+        else:
+            self.threat_level = 'LOW'
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Pure feature sub-helpers — accept all state as arguments, read no globals
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _abs_compound(relative: str, gp_name: str, year: int) -> str:
+    """Map SOFT/MEDIUM/HARD → Cx string using TIRE_COMPOUNDS; fallback to input."""
+    return TIRE_COMPOUNDS.get(str(year), {}).get(gp_name, {}).get(relative.upper(), relative)
+
+
+def _agg(grp: pd.DataFrame) -> pd.Series:
+    """Aggregate lap times for one lap group into mean, std, min scalars."""
+    lt = grp['LapTime'].dt.total_seconds().dropna()
+    return pd.Series({
+        'lt_mean': lt.mean() if not lt.empty else np.nan,
+        'lt_std':  lt.std(ddof=1) if len(lt) > 1 else 0.0,
+        'lt_min':  lt.min() if not lt.empty else np.nan,
+    })
+
+
+def _zscore(series: pd.DataFrame, col: str, lap_number: int) -> float:
+    """Standardise the value at lap_number against the full causal history."""
+    mu  = series[col].mean()
+    sig = max(float(series[col].std(ddof=1)), 0.01)
+    val = series.loc[series.index == lap_number, col]
+    return float((val.iloc[0] - mu) / sig) if not val.empty else 0.0
+
+
+def _dominant_status(grp: pd.DataFrame) -> str:
+    """Return the single worst TrackStatus code seen in a lap group."""
+    codes = grp['TrackStatus'].dropna().astype(str).tolist()
+    if not codes:
+        return '1'
+    return max(codes, key=lambda s: STATUS_SEVERITY.get(s[0], 1))
+
+
+def _compute_laptime_features(all_laps: pd.DataFrame, lap_number: int) -> dict:
+    """Compute lap-time aggregate and z-score features for the current lap window.
+
+    Replicates the N13 aggregate_laps logic. Z-scores are causal — only laps up
+    to lap_number are used, matching the N14 training pipeline.
+
+    Args:
+        all_laps: Accurate FastF1 laps from race start to current lap.
+        lap_number: Current lap number.
+
+    Returns:
+        Dict with: lap_time_mean_z, lap_time_std_z, lap_time_min_z,
+        lap_time_cv, lap_time_trend_5.
+    """
+    causal = all_laps[all_laps['LapNumber'] <= lap_number]
+    if causal.empty:
+        # No prior lap data — return neutral defaults matching the N14 schema.
+        # Happens on lap 1 of every replay (no lap has finished yet) and also
+        # when the race has been neutralised (all LapTimes NaN under red flag).
+        return {
+            'lap_time_mean_z':  0.0,
+            'lap_time_std_z':   0.0,
+            'lap_time_min_z':   0.0,
+            'lap_time_cv':      0.0,
+            'lap_time_trend_5': 1.0,
+        }
+
+    per_lap = causal.groupby('LapNumber').apply(_agg)
+    # apply() on an empty-after-filter group can return a DataFrame with no
+    # columns at all — guard before dropna so we don't KeyError on 'lt_mean'.
+    if 'lt_mean' not in per_lap.columns:
+        return {
+            'lap_time_mean_z':  0.0,
+            'lap_time_std_z':   0.0,
+            'lap_time_min_z':   0.0,
+            'lap_time_cv':      0.0,
+            'lap_time_trend_5': 1.0,
+        }
+    per_lap = per_lap.dropna(subset=['lt_mean'])
+
+    lt_mean_z = _zscore(per_lap, 'lt_mean', lap_number)
+    lt_std_z  = _zscore(per_lap, 'lt_std',  lap_number)
+    lt_min_z  = _zscore(per_lap, 'lt_min',  lap_number)
+    lt_cv = (
+        float(per_lap.loc[lap_number, 'lt_std'] / max(per_lap.loc[lap_number, 'lt_mean'], 1.0))
+        if lap_number in per_lap.index else 0.0
+    )
+
+    lt_means = per_lap['lt_mean'].values
+    n = len(lt_means)
+    if n >= 5:
+        last5 = lt_means[-5:].mean()
+        prev5 = lt_means[-10:-5].mean() if n >= 10 else last5
+        lt_trend5 = float(last5 / prev5) if prev5 > 0 else 1.0
+    else:
+        lt_trend5 = 1.0
+
+    return {
+        'lap_time_mean_z':  lt_mean_z,
+        'lap_time_std_z':   lt_std_z,
+        'lap_time_min_z':   lt_min_z,
+        'lap_time_cv':      lt_cv,
+        'lap_time_trend_5': lt_trend5,
+    }
+
+
+def _compute_driver_tyre_features(cur: pd.DataFrame, prev: pd.DataFrame) -> dict:
+    """Compute driver count, tyre life, and pit-stop features for the current lap."""
+    n_drv       = int(cur['Driver'].nunique()) if not cur.empty else 0
+    n_drv_prev  = int(prev['Driver'].nunique()) if not prev.empty else n_drv
+    n_drv_delta = n_drv - n_drv_prev
+
+    tl      = cur['TyreLife'].dropna()
+    tl_mean = float(tl.mean()) if not tl.empty else np.nan
+    tl_max  = float(tl.max())  if not tl.empty else np.nan
+
+    high_risk = 0
+    for _, r in cur.iterrows():
+        cmp = str(r.get('Compound', '')).upper()
+        thr = CLIFF_THRESHOLDS.get(cmp, 999)
+        try:
+            if float(r['TyreLife']) > thr:
+                high_risk += 1
+        except (TypeError, ValueError):
+            pass
+
+    pit_count = int(cur['PitInTime'].notna().sum()) if 'PitInTime' in cur.columns else 0
+    outlap    = int((cur['TyreLife'] <= 2).sum()) if not cur.empty else 0
+
+    return {
+        'n_drivers':                n_drv,
+        'n_drivers_delta':          n_drv_delta,
+        'tyre_life_mean':           tl_mean,
+        'tyre_life_max':            tl_max,
+        'tyre_age_high_risk_count': high_risk,
+        'active_pitstop_count':     pit_count,
+        'outlap_drivers':           outlap,
+    }
+
+
+def _compute_track_status_features(all_laps: pd.DataFrame, lap_number: int) -> dict:
+    """Compute track status encoding and yellow-flag escalation features.
+
+    Returns sentinel keys _cur_code, _prev_code (popped by _build_sc_features)
+    alongside the actual model features.
+
+    Args:
+        all_laps: Full race laps up to lap_number.
+        lap_number: Current lap number.
+
+    Returns:
+        Dict with model features plus '_cur_code', '_prev_code', '_yel_esc' sentinels.
+    """
+    causal_laps = all_laps[all_laps['LapNumber'] <= lap_number]
+    if causal_laps.empty:
+        # No lap data yet — return green-flag defaults. Matches N14's behaviour
+        # when the model receives a pre-race or post-red-flag blank state.
+        return {
+            '_cur_code':               '1',
+            '_prev_code':              '1',
+            '_yel_esc':                0,
+            'track_status_enc':        STATUS_ENC.get('1', 0),
+            'status_changed':          0,
+            'status_change_direction': 0,
+            'yellow_escalation_count': 0,
+            'laps_since_last_yellow':  10,
+        }
+
+    lap_status = (
+        causal_laps
+        .groupby('LapNumber')
+        .apply(_dominant_status)
+        .sort_index()
+    )
+    # Pandas quirk: when the grouped object is empty or apply() returns an
+    # empty result, groupby().apply() can yield an empty DataFrame (with the
+    # full column schema) instead of an empty Series. The early-return above
+    # prevents that, but cheap belt-and-braces check in case of edge cases.
+    if not isinstance(lap_status, pd.Series) or lap_status.empty:
+        return {
+            '_cur_code':               '1',
+            '_prev_code':              '1',
+            '_yel_esc':                0,
+            'track_status_enc':        STATUS_ENC.get('1', 0),
+            'status_changed':          0,
+            'status_change_direction': 0,
+            'yellow_escalation_count': 0,
+            'laps_since_last_yellow':  10,
+        }
+
+    cur_code  = str(lap_status.iloc[-1])
+    prev_code = str(lap_status.iloc[-2]) if len(lap_status) > 1 else cur_code
+
+    cur_sev  = STATUS_SEVERITY.get(cur_code, 1)
+    prev_sev = STATUS_SEVERITY.get(prev_code, 1)
+
+    # Force plain int dtype — FastF1 stores TrackStatus as a Categorical, and
+    # .map() can preserve that dtype, which then blows up on .fillna(1) because
+    # 1 is not in the original category set. Converting via pd.Series(..., dtype=int)
+    # strips the Categorical wrapper so shift/fillna behave like plain numerics.
+    sev_series = pd.Series(
+        [STATUS_SEVERITY.get(str(c), 1) for c in lap_status],
+        index=lap_status.index,
+        dtype=int,
+    )
+    escalated  = (sev_series > sev_series.shift(1).fillna(1)).astype(int)
+    yel_esc    = int(escalated.iloc[:-1].tail(3).sum())
+
+    lsl, since = [], 10
+    for code in lap_status:
+        since = 0 if str(code) != '1' else min(since + 1, 10)
+        lsl.append(since)
+    laps_since_yellow = int(lsl[-2]) if len(lsl) > 1 else 10
+
+    return {
+        '_cur_code':               cur_code,
+        '_prev_code':              prev_code,
+        '_yel_esc':                yel_esc,
+        'track_status_enc':        STATUS_ENC.get(cur_code, 0),
+        'status_changed':          int(cur_code != prev_code),
+        'status_change_direction': int(cur_sev > prev_sev) - int(cur_sev < prev_sev),
+        'yellow_escalation_count': yel_esc,
+        'laps_since_last_yellow':  laps_since_yellow,
+    }
+
+
+def _compute_rcm_features(
+    all_laps: pd.DataFrame,
+    lap_number: int,
+    session_meta: dict,
+    cur_code: str,
+    prev_code: str,
+) -> dict:
+    """Compute Race Control Message incident and yellow-sector features.
+
+    Mirrors the N13 build_clean_incident_mask logic. Returns zero values when
+    no FastF1 session is available in session_meta (replay engine context).
+
+    Args:
+        all_laps: Full race laps up to lap_number.
+        lap_number: Current lap number.
+        session_meta: Must contain 'session' (FastF1 Session) for RCM access.
+            When absent (RSM adapter context) all incident features default to 0.
+        cur_code: Current lap track-status code.
+        prev_code: Previous lap track-status code.
+
+    Returns:
+        Dict with: had_incident_msg, incident_escalation, yellow_sectors_this_lap,
+        yellow_sectors_prev3, rcm_incident_count_prev3.
+    """
+    had_inc = inc_esc = ys_cur = ys_prev3 = rcm_prev3 = 0
+    _sess = session_meta.get('session')
+    if _sess is not None and hasattr(_sess, 'race_control_messages'):
+        rcm = _sess.race_control_messages.copy()
+        if 'Lap' not in rcm.columns:
+            rcm['Lap'] = np.nan
+
+        _caution = rcm.get('Flag', pd.Series(dtype=str)).isin(['YELLOW', 'DOUBLE YELLOW', 'RED'])
+        _keyword = (
+            rcm.get('Message', pd.Series(dtype=str)).str.upper().str.contains(
+                _INCIDENT_RE, na=False, regex=True
+            ) &
+            ~rcm.get('Message', pd.Series(dtype=str)).str.upper().str.contains(
+                _EXCLUDE_RE, na=False, regex=True
+            )
+        )
+        _scope = (
+            rcm['Scope'].str.upper().isin(['TRACK', 'SECTOR']) | rcm['Scope'].isna()
+        ) if 'Scope' in rcm.columns else pd.Series(True, index=rcm.index)
+        clean = (_caution | _keyword) & _scope
+
+        valid    = set(all_laps['LapNumber'].dropna().astype(int))
+        inc_raw  = set(rcm.loc[clean, 'Lap'].dropna().astype(int))
+        inc_laps = {l for r in inc_raw for l in (r - 1, r, r + 1)} & valid
+
+        had_inc  = int(lap_number in inc_laps)
+        inc_prev = int((lap_number - 1) in inc_laps)
+        inc_esc  = inc_prev * int(cur_code != prev_code)
+
+        if 'Scope' in rcm.columns and 'Flag' in rcm.columns:
+            sect_y    = rcm[
+                rcm['Scope'].str.upper().str.contains('SECTOR', na=False) &
+                rcm['Flag'].str.upper().str.contains('YELLOW', na=False)
+            ]
+            sy_per_lap = sect_y.groupby('Lap').size()
+        else:
+            sy_per_lap = pd.Series(dtype=int)
+
+        ys_cur    = int(sy_per_lap.get(lap_number, 0))
+        ys_prev3  = sum(int(sy_per_lap.get(l, 0)) for l in range(max(1, lap_number - 3), lap_number))
+        inc_per   = rcm.loc[clean].groupby('Lap').size() if clean.any() else pd.Series(dtype=int)
+        rcm_prev3 = sum(int(inc_per.get(l, 0)) for l in range(max(1, lap_number - 3), lap_number))
+
+    return {
+        'had_incident_msg':         had_inc,
+        'incident_escalation':      inc_esc,
+        'yellow_sectors_this_lap':  ys_cur,
+        'yellow_sectors_prev3':     ys_prev3,
+        'rcm_incident_count_prev3': rcm_prev3,
+    }
+
+
+def _compute_weather_features(session_meta: dict) -> dict:
+    """Extract weather scalars from session_meta for the SC feature vector."""
+    track_temp       = float(session_meta.get('TrackTemp', 35.0))
+    air_temp         = float(session_meta.get('AirTemp', 28.0))
+    humidity         = float(session_meta.get('Humidity', 50.0))
+    track_temp_start = float(session_meta.get('track_temp_start', track_temp))
+    return {
+        'track_temp':       track_temp,
+        'air_temp':         air_temp,
+        'humidity':         humidity,
+        'track_temp_delta': track_temp - track_temp_start,
+    }
+
+
+def _ensure_timedelta_laps(laps_df: pd.DataFrame) -> pd.DataFrame:
+    """Ensure LapTime column exists as pandas Timedelta, converting from float seconds if needed.
+
+    Feature builders call .dt.total_seconds() on LapTime — this helper normalises
+    the column so both FastF1-native DataFrames and replay-engine parquets work.
+
+    Args:
+        laps_df: Raw laps DataFrame from any source.
+
+    Returns:
+        Copy with LapTime as Timedelta and Sector*Time columns present (NaT if absent).
+    """
+    df = laps_df.copy()
+    if 'LapTime' not in df.columns:
+        if 'LapTime_s' in df.columns:
+            df['LapTime'] = pd.to_timedelta(df['LapTime_s'], unit='s')
+        else:
+            df['LapTime'] = pd.to_timedelta(90.0, unit='s')
+    elif not hasattr(df['LapTime'].iloc[0], 'total_seconds'):
+        df['LapTime'] = pd.to_timedelta(pd.to_numeric(df['LapTime'], errors='coerce'), unit='s')
+
+    for col in ('Sector1Time', 'Sector2Time', 'Sector3Time'):
+        if col not in df.columns:
+            df[col] = pd.NaT
+
+    # Normalise TrackStatus: featured parquet has track_status_clean (int 0/1/2),
+    # but feature builders call _dominant_status() which accesses TrackStatus (string).
+    if 'TrackStatus' not in df.columns:
+        if 'track_status_clean' in df.columns:
+            # Reverse map: 0=green→'1', 1=yellow/VSC→'6', 2=SC/red→'4'
+            ts_reverse = {0: '1', 1: '6', 2: '4'}
+            df['TrackStatus'] = df['track_status_clean'].map(ts_reverse).fillna('1')
+        else:
+            df['TrackStatus'] = '1'
+
+    return df
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stateless output parser
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _parse_tool_outputs(messages: list) -> dict:
+    """Extract numeric probabilities from ToolMessage strings in the agent history.
+
+    Parses the exact output format of predict_overtake_tool and predict_sc_tool
+    rather than the LLM's free-text answer, guaranteeing deterministic values.
+
+    Args:
+        messages: LangChain message objects from the agent's invoke result.
+
+    Returns:
+        Dict with: overtake_prob, sc_prob_3lap, gap_ahead_s, pace_delta_s.
+        Missing fields default to 0.0.
+    """
+    result = {'overtake_prob': 0.0, 'sc_prob_3lap': 0.0, 'gap_ahead_s': 0.0, 'pace_delta_s': 0.0}
+    for msg in messages:
+        content = getattr(msg, 'content', '')
+        if not isinstance(content, str):
+            continue
+        for pattern, key in [
+            (r'P\(overtake\)\s*=\s*(\d+(?:\.\d+)?)', 'overtake_prob'),
+            (r'P\(SC 3-lap\)\s*=\s*(\d+(?:\.\d+)?)', 'sc_prob_3lap'),
+            (r'gap=([\d.]+)s',                        'gap_ahead_s'),
+            (r'pace_delta=([-\d.]+)s/lap',            'pace_delta_s'),
+        ]:
+            m = re.search(pattern, content)
+            if m and result[key] == 0.0:
+                result[key] = float(m.group(1))
+    return result
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LangGraph / LangChain optional imports
+# ─────────────────────────────────────────────────────────────────────────────
+
+try:
+    from langchain_core.tools import tool as lc_tool
+    from langchain_core.messages import HumanMessage
+    from langchain_openai import ChatOpenAI
+    from langchain.agents import create_agent
+    _LANGGRAPH_AVAILABLE = True
+except ImportError:
+    _LANGGRAPH_AVAILABLE = False
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# System prompt (module-level constant — unchanged from N27)
+# ─────────────────────────────────────────────────────────────────────────────
+
+_RACE_SITUATION_SYSTEM_PROMPT = """You are a Formula 1 race situation analyst embedded in a multi-agent strategy system.
+
+Your job is to assess two dimensions of strategic threat per lap:
+
+1. **Overtaking opportunity** — Is there a realistic window for the driver to pass the car directly ahead within the next few laps?
+2. **Safety Car risk** — Is a Safety Car deployment likely within the next 3 laps based on current race chaos indicators?
+
+## Workflow
+
+1. If the gap to the car ahead is less than 2.5 seconds, call `predict_overtake_tool` with the chasing driver (driver_x) and the car ahead (driver_y) at the current lap number.
+2. Always call `predict_sc_tool` with the current lap number to assess SC deployment risk.
+3. Synthesize a **threat level** based on the two probabilities:
+   - **HIGH**: Either P(overtake) >= 0.80 OR P(SC 3-lap) >= 0.30
+   - **MEDIUM**: Either P(overtake) >= 0.40 OR P(SC 3-lap) >= 0.15
+   - **LOW**: Both probabilities below medium thresholds
+
+## Rules
+
+- Always call BOTH tools before drawing conclusions.
+- If gap ahead > 2.5s, skip overtake tool and assume P(overtake) = 0.0.
+- Base your threat assessment ONLY on the numeric probabilities returned by the tools.
+- Keep your final answer concise: state the threat level, both probabilities, and one sentence explaining why.
+
+## Strategic guard-rails
+- OPENING LAPS (laps 1-3): Race starts naturally inflate both overtake probability
+  and SC risk due to first-lap chaos, bunched-up grid, and cold tyres. These are
+  normal start dynamics, not genuine strategic threats. When reporting for laps 1-3:
+  * Append "opening-lap inflation — discount for strategy decisions" to your reasoning.
+  * Consider the effective threat ONE LEVEL LOWER than raw numbers suggest
+    (HIGH → treat as MEDIUM, MEDIUM → treat as LOW for strategic purposes).
+  * Note that DRS is typically not activated until lap 3, so overtake probability
+    in laps 1-2 is inflated by models trained on DRS-enabled data.
+- SAFETY CAR vs SC PROBABILITY: your sc_prob_3lap output represents a prediction,
+  not a confirmed deployment. Make this distinction explicit in your reasoning:
+  "SC probability 0.35 (elevated, but SC not confirmed)" — so downstream agents
+  don't treat a prediction as a fact."""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RaceSituationAgent — encapsulated agent class
+# ─────────────────────────────────────────────────────────────────────────────
+
+class RaceSituationAgent:
+    """Encapsulated Race Situation Agent combining N12 overtake and N14 SC models.
+
+    Owns all mutable state previously held in module-level globals:
+    - laps_df / session_meta: set per call by run() / run_from_state()
+    - _react_agent: lazily created LangGraph CompiledGraph
+
+    LangChain tools are built as closures inside _build_tools() so they read
+    instance attributes (self.laps_df, self.session_meta, self.cfg) without
+    depending on any module-level globals.
+
+    Args:
+        cfg: RaceSituationConfig instance. Defaults to the module-level CFG
+            singleton so RaceSituationOutput.__post_init__ remains consistent.
+    """
+
+    def __init__(self, cfg: RaceSituationConfig = CFG) -> None:
+        self.cfg: RaceSituationConfig = cfg
+        self.laps_df: pd.DataFrame    = pd.DataFrame()
+        self.session_meta: dict       = {}
+        self._react_agent             = None
+        self._tools: list             = self._build_tools()
+
+    # ── Feature builders (instance methods: use self.cfg) ─────────────────────
+
+    def _build_overtake_features(
+        self,
+        driver_x_lap: pd.Series,
+        driver_y_lap: pd.Series,
+        laps_recent: pd.DataFrame,
+        circuit_cluster: int,
+        gp_name: str = '',
+        year: int = 2025,
+    ) -> pd.DataFrame:
+        """Build the 15 N12 overtake model features from a driver pair at one lap.
+
+        Replicates the N12 training feature pipeline exactly. driver_x is the chasing
+        car (attempting overtake), driver_y is the car directly ahead. laps_recent
+        must contain at least 3 laps for both drivers to compute rolling trends.
+
+        Gap is computed via session elapsed Time column when available (same method
+        as N27 / N12 training), falling back to raw lap-time difference.
+
+        Args:
+            driver_x_lap: FastF1 lap Series for the chasing driver. Required:
+                LapTime (Timedelta), TyreLife, Compound, SpeedST, LapNumber, Driver.
+                Optional: Time (session elapsed Timedelta for accurate gap).
+            driver_y_lap: FastF1 lap Series for the car directly ahead.
+            laps_recent: DataFrame of laps for both drivers over the last 3+ laps.
+                Columns: Driver, LapNumber, LapTime, Time (optional).
+            circuit_cluster: Integer cluster ID (0-3) from cfg.circuit_cluster_map.
+            gp_name: GP short name for absolute compound lookup (e.g. 'Sakhir').
+            year: Race year for compound lookup.
+
+        Returns:
+            Single-row DataFrame with 15 columns in cfg.overtake_features order.
+            compound_x/y cast to pandas category for LightGBM categorical encoding.
+        """
+        t_x = driver_x_lap.get('Time')
+        t_y = driver_y_lap.get('Time')
+        if pd.notna(t_x) and pd.notna(t_y):
+            gap_ahead_s = float((t_x - t_y).total_seconds())
+        else:
+            gap_ahead_s = float((driver_x_lap['LapTime'] - driver_y_lap['LapTime']).total_seconds())
+        gap_ahead_s = max(0.0, gap_ahead_s)
+
+        pace_delta_s   = float((driver_x_lap['LapTime'] - driver_y_lap['LapTime']).total_seconds())
+        tyre_life_x    = int(driver_x_lap['TyreLife'])
+        tyre_life_y    = int(driver_y_lap['TyreLife'])
+        tyre_life_diff = tyre_life_x - tyre_life_y
+        speed_trap_delta = (
+            float(driver_x_lap.get('SpeedST', 300.0)) - float(driver_y_lap.get('SpeedST', 300.0))
+        )
+        lap_number      = int(driver_x_lap['LapNumber'])
+        drs_window      = int(gap_ahead_s < 1.0)
+        drs_ready_gap   = gap_ahead_s * drs_window
+
+        compound_x = _abs_compound(str(driver_x_lap.get('Compound', 'MEDIUM')), gp_name, year)
+        compound_y = _abs_compound(str(driver_y_lap.get('Compound', 'MEDIUM')), gp_name, year)
+        gap_pace_product = gap_ahead_s * pace_delta_s
+
+        _dx = laps_recent[laps_recent['Driver'] == driver_x_lap['Driver']].sort_values('LapNumber').tail(3)
+        _dy = laps_recent[laps_recent['Driver'] == driver_y_lap['Driver']].sort_values('LapNumber').tail(3)
+
+        if len(_dx) >= 2 and len(_dy) >= 2:
+            _dx_t = _dx['LapTime'].dt.total_seconds().values
+            _dy_t = _dy['LapTime'].dt.total_seconds().values
+            n_shared = min(len(_dx_t), len(_dy_t))
+            pace_delta_rolling3 = float((_dx_t[:n_shared] - _dy_t[:n_shared]).mean())
+
+            _tx = _dx['Time'] if 'Time' in _dx.columns else None
+            if _tx is not None and pd.notna(_dx.iloc[-2]['Time']) and pd.notna(_dy.iloc[-2]['Time']):
+                prev_gap  = float((_dx.iloc[-2]['Time'] - _dy.iloc[-2]['Time']).total_seconds())
+                gap_trend = gap_ahead_s - prev_gap
+            else:
+                gap_trend = 0.0
+        else:
+            pace_delta_rolling3 = pace_delta_s
+            gap_trend           = 0.0
+
+        return pd.DataFrame([{
+            'gap_ahead_s':         gap_ahead_s,
+            'pace_delta_s':        pace_delta_s,
+            'tyre_life_x':         tyre_life_x,
+            'tyre_life_y':         tyre_life_y,
+            'tyre_life_diff':      tyre_life_diff,
+            'speed_trap_delta':    speed_trap_delta,
+            'LapNumber':           lap_number,
+            'drs_window':          drs_window,
+            'compound_x':          compound_x,
+            'compound_y':          compound_y,
+            'circuit_cluster':     circuit_cluster,
+            'gap_pace_product':    gap_pace_product,
+            'drs_ready_gap':       drs_ready_gap,
+            'gap_trend':           gap_trend,
+            'pace_delta_rolling3': pace_delta_rolling3,
+        }])[self.cfg.overtake_features]
+
+    def _build_sc_features(
+        self,
+        all_laps: pd.DataFrame,
+        lap_number: int,
+        session_meta: dict,
+    ) -> pd.DataFrame:
+        """Build all 32 N14 SC model features for lap_number from the full race history.
+
+        Replicates the N14 training feature pipeline (N13 aggregate_laps +
+        track_status + RCM features). all_laps must contain all accurate laps from
+        lap 1 to the current lap — passing only recent laps breaks the causal
+        z-score normalisation that N14 was trained with.
+
+        Args:
+            all_laps: Accurate FastF1 laps from race start to current lap (inclusive).
+                Required: Driver, LapNumber, LapTime, TyreLife, Compound, TrackStatus.
+            lap_number: Current lap number (strictly causal — no future data used).
+            session_meta: Dict with: circuit_cluster, circuit_sc_rate, total_laps,
+                AirTemp, TrackTemp, Humidity, track_temp_start, and optionally 'session'
+                (FastF1 Session for RCM access; omit in replay engine context).
+
+        Returns:
+            Single-row DataFrame with 32 columns in cfg.sc_features order.
+        """
+        cur  = all_laps[all_laps['LapNumber'] == lap_number]
+        prev = all_laps[all_laps['LapNumber'] == lap_number - 1]
+
+        feat: dict = {}
+        feat.update(_compute_laptime_features(all_laps, lap_number))
+        feat.update(_compute_driver_tyre_features(cur, prev))
+
+        ts_feat   = _compute_track_status_features(all_laps, lap_number)
+        cur_code  = ts_feat.pop('_cur_code')
+        prev_code = ts_feat.pop('_prev_code')
+        ts_feat.pop('_yel_esc')
+        feat.update(ts_feat)
+
+        feat.update(_compute_rcm_features(all_laps, lap_number, session_meta, cur_code, prev_code))
+        feat.update(_compute_weather_features(session_meta))
+
+        total_laps = int(session_meta.get('total_laps', 57))
+        is_lap1    = int(lap_number == 1)
+        lap_pct    = float(lap_number) / max(total_laps, 1)
+
+        anom_hard = 0
+        hist = all_laps[all_laps['LapNumber'] < lap_number]
+        if not cur.empty and not hist.empty:
+            for drv in cur['Driver'].unique():
+                h = hist[hist['Driver'] == drv]['LapTime'].dt.total_seconds().tail(5)
+                if len(h) >= 2:
+                    med    = h.median()
+                    lt_cur = cur.loc[cur['Driver'] == drv, 'LapTime'].dt.total_seconds()
+                    if not lt_cur.empty and med > 0 and float(lt_cur.iloc[0]) / med > 1.30:
+                        anom_hard += 1
+
+        yel_esc = feat.get('yellow_escalation_count', 0)
+        feat['anomaly_and_yellow'] = int(anom_hard > 0 and yel_esc > 0)
+        feat['lap1_chaos']         = is_lap1 * abs(feat.get('n_drivers_delta', 0))
+        feat['circuit_cluster']    = int(session_meta.get('circuit_cluster', 0))
+        feat['circuit_sc_rate']    = float(session_meta.get('circuit_sc_rate', 0.10))
+        feat['lap_pct']            = lap_pct
+        feat['is_lap1']            = is_lap1
+
+        return pd.DataFrame([feat])[self.cfg.sc_features]
+
+    # ── LangChain tool factory ────────────────────────────────────────────────
+
+    def _build_tools(self) -> list:
+        """Build LangChain tools as closures over this RaceSituationAgent instance.
+
+        Each tool reads self.laps_df, self.session_meta, and self.cfg at call time.
+        No module-level globals are accessed. Returns an empty list when LangGraph
+        is not installed so the agent degrades gracefully.
+
+        Returns:
+            List of decorated LangChain tool functions.
+        """
+        if not _LANGGRAPH_AVAILABLE:
+            return []
+
+        agent = self  # capture instance for closures
+
+        @lc_tool
+        def predict_overtake_tool(driver_x: str, driver_y: str, lap_number: int) -> str:
+            """Predict overtaking probability for driver_x chasing driver_y at lap_number.
+
+            Constructs the 15 N12 overtake features from the session loaded into the
+            agent instance, runs LightGBM + Platt calibration, returns calibrated P(overtake).
+
+            Args:
+                driver_x: FastF1 abbreviation of the chasing car (e.g. 'NOR').
+                driver_y: FastF1 abbreviation of the car directly ahead (e.g. 'PIA').
+                lap_number: Current lap number.
+
+            Returns:
+                "P(overtake) = 0.XXX | gap=X.XXs | pace_delta=X.XXXs/lap | DRS: active/inactive"
+            """
+            x_rows = agent.laps_df[
+                (agent.laps_df['Driver'] == driver_x) & (agent.laps_df['LapNumber'] == lap_number)
+            ]
+            y_rows = agent.laps_df[
+                (agent.laps_df['Driver'] == driver_y) & (agent.laps_df['LapNumber'] == lap_number)
+            ]
+
+            if x_rows.empty or y_rows.empty:
+                return f'No lap data for {driver_x} or {driver_y} at lap {lap_number}'
+
+            laps_recent = agent.laps_df[
+                agent.laps_df['Driver'].isin([driver_x, driver_y]) &
+                (agent.laps_df['LapNumber'] >= lap_number - 3) &
+                (agent.laps_df['LapNumber'] <= lap_number)
+            ]
+
+            feat_df = agent._build_overtake_features(
+                x_rows.iloc[0], y_rows.iloc[0], laps_recent,
+                circuit_cluster = agent.session_meta.get('circuit_cluster', 0),
+                gp_name         = agent.session_meta.get('gp_name', ''),
+                year            = agent.session_meta.get('year', 2025),
+            )
+
+            for i, col in enumerate(['compound_x', 'compound_y', 'circuit_cluster']):
+                training_cats = agent.cfg.overtake_model._Booster.pandas_categorical[i]
+                feat_df[col]  = pd.Categorical(feat_df[col], categories=training_cats)
+
+            raw_proba   = agent.cfg.overtake_model.predict_proba(feat_df)[:, 1]
+            calib_proba = agent.cfg.overtake_calibrator.predict_proba(raw_proba.reshape(-1, 1))[:, 1][0]
+
+            gap  = feat_df['gap_ahead_s'].iloc[0]
+            pace = feat_df['pace_delta_s'].iloc[0]
+            drs  = 'active' if feat_df['drs_window'].iloc[0] else 'inactive'
+
+            return (
+                f'P(overtake) = {calib_proba:.3f} | '
+                f'gap={gap:.2f}s | '
+                f'pace_delta={pace:.3f}s/lap | '
+                f'DRS: {drs}'
+            )
+
+        @lc_tool
+        def predict_sc_tool(lap_number: int) -> str:
+            """Predict Safety Car deployment probability within the next 3 laps.
+
+            Constructs the 32 N14 SC features from the session loaded into the agent
+            instance, runs LightGBM + Platt calibration, returns calibrated P(SC within 3 laps).
+
+            Args:
+                lap_number: Current lap number.
+
+            Returns:
+                "P(SC 3-lap) = 0.XXX | lap_time_std_z=X.XX | circuit_sc_rate=X.XX | status: {status} | {incident}"
+            """
+            if len(agent.laps_df) < 10:
+                return f'Insufficient lap data at lap {lap_number}'
+
+            feat_df = agent._build_sc_features(agent.laps_df, lap_number, agent.session_meta)
+
+            raw_proba   = agent.cfg.sc_model.predict_proba(feat_df)[:, 1]
+            calib_proba = agent.cfg.sc_calibrator.predict_proba(raw_proba.reshape(-1, 1))[:, 1][0]
+
+            lt_std_z     = feat_df['lap_time_std_z'].iloc[0]
+            sc_rate      = feat_df['circuit_sc_rate'].iloc[0]
+            status_enc   = int(feat_df['track_status_enc'].iloc[0])
+            had_incident = int(feat_df['had_incident_msg'].iloc[0])
+
+            _status_desc = {0: 'green', 1: 'yellow', 2: 'red flag', 3: 'VSC ending', 4: 'VSC', 5: 'SC'}
+            return (
+                f'P(SC 3-lap) = {calib_proba:.3f} | '
+                f'lap_time_std_z={lt_std_z:.2f} | '
+                f'circuit_sc_rate={sc_rate:.2f} | '
+                f'status: {_status_desc.get(status_enc, "unknown")} | '
+                f'{"incident flagged" if had_incident else "no incidents"}'
+            )
+
+        return [predict_overtake_tool, predict_sc_tool]
+
+    # ── LangGraph agent (lazy) ────────────────────────────────────────────────
+
+    def get_react_agent(
+        self,
+        provider: str = None,
+        model_name: str = 'gpt-4.1-mini',
+        base_url: str = 'http://localhost:1234/v1',
+        api_key: str = 'lm-studio',
+    ):
+        """Return the LangGraph ReAct agent, creating it on the first call (lazy).
+
+        Avoids connecting to the LLM at import time — compiled only when N31 or
+        a test actually invokes the agent.
+
+        Args:
+            provider: 'lmstudio' (default) or 'openai'.
+            model_name: Model identifier for ChatOpenAI.
+            base_url: Base URL for LM Studio (ignored when provider='openai').
+            api_key: API key; use 'lm-studio' for local server.
+
+        Returns:
+            LangGraph CompiledGraph — invoke with {"messages": [HumanMessage(...)]}.
+
+        Raises:
+            ImportError: When LangGraph / LangChain are not installed.
+        """
+        if not _LANGGRAPH_AVAILABLE:
+            raise ImportError('LangGraph / LangChain not installed.')
+
+        if self._react_agent is not None:
+            return self._react_agent
+
+        import os
+        if provider is None:
+            provider = os.environ.get('F1_LLM_PROVIDER', 'lmstudio')
+
+        if provider == 'lmstudio':
+            llm = ChatOpenAI(model=model_name, base_url=base_url, api_key=api_key, temperature=0)
+        else:
+            llm = ChatOpenAI(model=model_name, temperature=0)
+
+        self._react_agent = create_agent(
+            model=llm,
+            tools=self._tools,
+            system_prompt=_RACE_SITUATION_SYSTEM_PROMPT,
+        )
+        return self._react_agent
+
+    # ── Entry point methods ───────────────────────────────────────────────────
+
+    def run(self, lap_state: dict) -> RaceSituationOutput:
+        """Run the Race Situation Agent from a FastF1 session-based lap_state.
+
+        Populates self.laps_df and self.session_meta from the FastF1 Session in
+        lap_state, then invokes the ReAct agent. Probabilities are extracted
+        from tool call results (not LLM free text) for deterministic output.
+
+        Args:
+            lap_state: Dict with keys:
+                session      — Loaded FastF1 Session (laps + weather cached).
+                driver       — FastF1 driver abbreviation (e.g. 'NOR').
+                rival_ahead  — Abbreviation of the car directly ahead. None = skip overtake.
+                lap_number   — Current lap number (int).
+                gp_name      — GP name matching circuit_cluster_map keys (e.g. 'Sakhir').
+                event_name   — Event name matching circuit_sc_rate_map keys.
+                year         — Race year (int).
+
+        Returns:
+            RaceSituationOutput with overtake_prob, sc_prob_3lap, threat_level,
+            gap_ahead_s, pace_delta_s, and LLM reasoning string.
+        """
+        session     = lap_state['session']
+        driver      = lap_state['driver']
+        rival_ahead = lap_state.get('rival_ahead')
+        lap_number  = lap_state['lap_number']
+        gp_name     = lap_state['gp_name']
+        event_name  = lap_state['event_name']
+
+        self.laps_df = session.laps.pick_accurate().copy()
+        _clean       = self.laps_df[self.laps_df['TrackStatus'] == '1']
+        _wx          = session.weather_data
+
+        self.session_meta = {
+            'session':          session,
+            'gp_name':          gp_name,
+            'event_name':       event_name,
+            'year':             lap_state.get('year', 2025),
+            'circuit_cluster':  self.cfg.circuit_cluster_map.get(gp_name, 0),
+            'circuit_sc_rate':  self.cfg.circuit_sc_rate_map.get(event_name, 0.10),
+            'total_laps':       int(session.total_laps),
+            'fastest_lap_s':    _clean['LapTime'].min().total_seconds(),
+            'AirTemp':          float(_wx['AirTemp'].mean())    if 'AirTemp'   in _wx else 28.0,
+            'TrackTemp':        float(_wx['TrackTemp'].mean())  if 'TrackTemp' in _wx else 38.0,
+            'Humidity':         float(_wx['Humidity'].mean())   if 'Humidity'  in _wx else 50.0,
+            'track_temp_start': float(_wx['TrackTemp'].iloc[0]) if 'TrackTemp' in _wx else 38.0,
+        }
+
+        return self._run_core(driver, rival_ahead, lap_number)
+
+    def run_from_state(self, lap_state: dict, laps_df: pd.DataFrame) -> RaceSituationOutput:
+        """RSM adapter: run the Race Situation Agent from a RaceStateManager lap_state.
+
+        Translates the nested RSM lap_state dict into self.laps_df + self.session_meta.
+        Unlike run(), this does NOT require a FastF1 session object — it builds state
+        from laps_df and lap_state directly.
+
+        RCM-based features (had_incident_msg, yellow_sectors_*) default to 0 when no
+        FastF1 session is available — the agent still produces valid SC probability
+        estimates using track status and lap-time variance signals.
+
+        The rival_ahead is derived from lap_state['rivals'] by looking for the car
+        with position = driver_position - 1.
+
+        Args:
+            lap_state: Dict from RaceStateManager.get_lap_state(). Expected keys:
+                lap_number, driver (telemetry), rivals (list), weather, session_meta.
+            laps_df: Full race laps DataFrame. Must include LapTime (Timedelta or
+                float seconds in LapTime_s), Driver, LapNumber, TyreLife, Compound,
+                TrackStatus. Time (session elapsed Timedelta) improves gap accuracy.
+
+        Returns:
+            RaceSituationOutput with all fields populated.
+        """
+        d      = lap_state['driver']
+        meta   = lap_state['session_meta']
+        wx     = lap_state.get('weather', {})
+        rivals = lap_state.get('rivals', [])
+
+        lap_number = lap_state['lap_number']
+        driver     = meta['driver']
+        gp_name    = meta.get('gp_name', '')
+        total_laps = meta.get('total_laps', 60)
+        year       = meta.get('year', 2025)
+
+        driver_pos  = d.get('position', 20)
+        rival_ahead = next(
+            (r['driver'] for r in rivals if r.get('position') == driver_pos - 1),
+            None,
+        )
+
+        self.laps_df = _ensure_timedelta_laps(laps_df)
+        event_name   = meta.get('event_name', gp_name)
+
+        self.session_meta = {
+            'session':          None,
+            'gp_name':          gp_name,
+            'event_name':       event_name,
+            'year':             year,
+            'circuit_cluster':  self.cfg.circuit_cluster_map.get(gp_name, 0),
+            'circuit_sc_rate':  self.cfg.circuit_sc_rate_map.get(event_name, 0.10),
+            'total_laps':       total_laps,
+            'fastest_lap_s':    float(self.laps_df['LapTime'].dt.total_seconds().min())
+                                if len(self.laps_df) > 0 else 90.0,
+            'AirTemp':          wx.get('air_temp',   28.0),
+            'TrackTemp':        wx.get('track_temp', 38.0),
+            'Humidity':         wx.get('humidity',   50.0),
+            'track_temp_start': wx.get('track_temp', 38.0),
+        }
+
+        return self._run_core(driver, rival_ahead, lap_number)
+
+    def _run_core(
+        self,
+        driver: str,
+        rival_ahead: Optional[str],
+        lap_number: int,
+    ) -> RaceSituationOutput:
+        """Invoke the ReAct agent with session state already set; parse and return output.
+
+        self.laps_df and self.session_meta must be populated before calling this method.
+
+        Args:
+            driver: FastF1 driver abbreviation.
+            rival_ahead: Abbreviation of the car directly ahead, or None.
+            lap_number: Current lap number.
+
+        Returns:
+            Fully populated RaceSituationOutput.
+        """
+        if not _LANGGRAPH_AVAILABLE:
+            raise ImportError('LangGraph / LangChain not installed.')
+
+        if rival_ahead:
+            message = (
+                f'Assess the race situation for driver {driver} at lap {lap_number}. '
+                f'The car ahead is {rival_ahead}. '
+                f'Determine the overtaking probability and Safety Car risk, then provide a threat level.'
+            )
+        else:
+            message = (
+                f'Assess the race situation for driver {driver} at lap {lap_number}. '
+                f'No car is within overtaking range (gap > 2.5s). '
+                f'Determine the Safety Car risk and provide a threat level.'
+            )
+
+        react_agent = self.get_react_agent()
+        response    = react_agent.invoke({'messages': [HumanMessage(content=message)]})
+        parsed      = _parse_tool_outputs(response['messages'])
+        reasoning   = response['messages'][-1].content
+
+        return RaceSituationOutput(
+            overtake_prob = round(parsed['overtake_prob'], 3),
+            sc_prob_3lap  = round(parsed['sc_prob_3lap'],  3),
+            gap_ahead_s   = round(parsed['gap_ahead_s'],   2),
+            pace_delta_s  = round(parsed['pace_delta_s'],  3),
+            reasoning     = reasoning,
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Lazy singleton
+# ─────────────────────────────────────────────────────────────────────────────
+
+_default_situation_agent: Optional[RaceSituationAgent] = None
+
+
+def _get_default_situation_agent() -> RaceSituationAgent:
+    """Return the process-level RaceSituationAgent singleton, creating it on first call.
+
+    Returns:
+        RaceSituationAgent with N12/N14 models loaded and tools built.
+    """
+    global _default_situation_agent
+    if _default_situation_agent is None:
+        _default_situation_agent = RaceSituationAgent()
+    return _default_situation_agent
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Public entry points — backward-compatible signatures (unchanged)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def run_race_situation_agent(lap_state: dict) -> RaceSituationOutput:
+    """Run the Race Situation Agent for one lap and return structured output.
+
+    Delegates to the process-level RaceSituationAgent singleton. Populates session
+    state from the FastF1 Session in lap_state, then invokes the LangGraph ReAct
+    agent. Probabilities are extracted from tool call results for deterministic output.
+
+    Args:
+        lap_state: Dict with keys: session, driver, rival_ahead, lap_number,
+            gp_name, event_name, year. See RaceSituationAgent.run for full spec.
+
+    Returns:
+        RaceSituationOutput with overtake_prob, sc_prob_3lap, threat_level,
+        gap_ahead_s, pace_delta_s, and reasoning.
+    """
+    return _get_default_situation_agent().run(lap_state)
+
+
+def run_race_situation_agent_from_state(
+    lap_state: dict,
+    laps_df: pd.DataFrame,
+) -> RaceSituationOutput:
+    """RSM adapter: run the Race Situation Agent from a RaceStateManager lap_state.
+
+    Delegates to the process-level RaceSituationAgent singleton. No FastF1 session
+    required — all context is derived from laps_df and the lap_state dict.
+
+    Args:
+        lap_state: Dict from RaceStateManager.get_lap_state(). Expected keys:
+            lap_number, driver, rivals, weather, session_meta.
+        laps_df: Full race laps DataFrame with required telemetry columns.
+
+    Returns:
+        RaceSituationOutput with all fields populated.
+    """
+    return _get_default_situation_agent().run_from_state(lap_state, laps_df)
+
+
+def get_race_situation_react_agent(
+    provider: str = 'lmstudio',
+    model_name: str = 'gpt-4.1-mini',
+    base_url: str = 'http://localhost:1234/v1',
+    api_key: str = 'lm-studio',
+):
+    """Return the LangGraph ReAct agent backed by the singleton RaceSituationAgent.
+
+    Avoids connecting to the LLM at import time — created only when N31 or tests
+    actually invoke the agent.
+
+    Args:
+        provider: 'lmstudio' or 'openai'.
+        model_name: Model identifier for ChatOpenAI.
+        base_url: Base URL for LM Studio (ignored when provider='openai').
+        api_key: API key; use 'lm-studio' for local server.
+
+    Returns:
+        LangGraph CompiledGraph — invoke with {"messages": [HumanMessage(...)]}.
+    """
+    return _get_default_situation_agent().get_react_agent(
+        provider=provider,
+        model_name=model_name,
+        base_url=base_url,
+        api_key=api_key,
+    )

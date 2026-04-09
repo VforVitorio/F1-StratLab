@@ -24,6 +24,7 @@ from sentence_transformers import SentenceTransformer
 # Configuration
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class RagConfig:
     """Centralised configuration for the RAG retriever.
@@ -47,8 +48,8 @@ class RagConfig:
     """
 
     collection_name: str = "fia_regulations"
-    embedding_model: str = "BAAI/bge-m3"   # 1024-dim, MTEB ~67, fits in 8 GB VRAM
-    top_k:           int = 5
+    embedding_model: str = "BAAI/bge-m3"  # 1024-dim, MTEB ~67, fits in 8 GB VRAM
+    top_k: int = 5
 
     def __post_init__(self) -> None:
         # Derived from this file's location so the module works regardless of
@@ -57,8 +58,20 @@ class RagConfig:
 
     @property
     def rag_dir(self) -> Path:
-        """Root directory for all RAG artefacts under ``data/rag/``."""
-        return self._repo_root / "data" / "rag"
+        """Root directory for all RAG artefacts under ``data/rag/``.
+
+        Routes through :func:`src.f1_strat_manager.data_cache.get_data_root`
+        when the helper is importable so the Qdrant collection is found under
+        ``~/.f1-strat/data/rag/`` in the ``uv tool install`` flow; otherwise
+        falls back to the repo-relative path for dev checkouts that do not
+        have the helper on ``sys.path`` yet.
+        """
+        try:
+            from src.f1_strat_manager.data_cache import get_data_root
+
+            return get_data_root() / "rag"
+        except Exception:
+            return self._repo_root / "data" / "rag"
 
     @property
     def qdrant_path(self) -> Path:
@@ -71,6 +84,7 @@ CFG = RagConfig()
 # ---------------------------------------------------------------------------
 # Data transfer object
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class RegulationChunk:
@@ -104,11 +118,11 @@ class RegulationChunk:
                        the chunk sits without needing to read the full article.
     """
 
-    text:          str
-    article:       str
-    doc_type:      str
-    year:          int
-    score:         float
+    text: str
+    article: str
+    doc_type: str
+    year: int
+    score: float
     section_title: str = field(default="")
 
     def __repr__(self) -> str:
@@ -119,9 +133,12 @@ class RegulationChunk:
             f"score={self.score:.3f}, "
             f"text={preview!r}...)"
         )
+
+
 # ---------------------------------------------------------------------------
 # Retriever
 # ---------------------------------------------------------------------------
+
 
 class RagRetriever:
     """Holds an initialised Qdrant client and sentence encoder, and answers
@@ -136,10 +153,10 @@ class RagRetriever:
 
     def __init__(
         self,
-        qdrant_path:     Path | str,
+        qdrant_path: Path | str,
         collection_name: str,
         embedding_model: str,
-        top_k:           int = 5,
+        top_k: int = 5,
     ) -> None:
         """Initialise the retriever and verify the Qdrant collection exists.
 
@@ -158,12 +175,12 @@ class RagRetriever:
                              overridden per call in ``query()`` when a broader or
                              narrower context window is needed.
         """
-        self._qdrant_path     = Path(qdrant_path)
+        self._qdrant_path = Path(qdrant_path)
         self._collection_name = collection_name
         self._embedding_model = embedding_model
-        self._top_k           = top_k
+        self._top_k = top_k
 
-        self._client  = QdrantClient(path=str(self._qdrant_path))
+        self._client = QdrantClient(path=str(self._qdrant_path))
         self._encoder = SentenceTransformer(embedding_model)
 
         existing = {c.name for c in self._client.get_collections().collections}
@@ -190,7 +207,7 @@ class RagRetriever:
     def query(
         self,
         question: str,
-        top_k:    int | None = None,
+        top_k: int | None = None,
     ) -> list[RegulationChunk]:
         """Retrieve the most relevant regulation chunks for a natural-language question.
 
@@ -214,7 +231,7 @@ class RagRetriever:
             List of ``RegulationChunk`` objects ordered by descending cosine similarity.
             Empty list if the collection exists but contains no matching vectors.
         """
-        k      = top_k if top_k is not None else self._top_k
+        k = top_k if top_k is not None else self._top_k
         vector = self._encode(question)
 
         response = self._client.query_points(
@@ -251,10 +268,10 @@ class RagRetriever:
         """
         info = self._client.get_collection(self._collection_name)
         return {
-            "collection":      self._collection_name,
-            "vector_count":    info.points_count,
+            "collection": self._collection_name,
+            "vector_count": info.points_count,
             "embedding_model": self._embedding_model,
-            "qdrant_path":     str(self._qdrant_path),
+            "qdrant_path": str(self._qdrant_path),
         }
 
 
@@ -266,10 +283,10 @@ _default_retriever: RagRetriever | None = None
 
 
 def get_retriever(
-    qdrant_path:     Path | str | None = None,
-    collection_name: str        | None = None,
-    embedding_model: str        | None = None,
-    top_k:           int        | None = None,
+    qdrant_path: Path | str | None = None,
+    collection_name: str | None = None,
+    embedding_model: str | None = None,
+    top_k: int | None = None,
 ) -> RagRetriever:
     """Return the module-level singleton ``RagRetriever``, creating it on first call.
 
@@ -291,10 +308,10 @@ def get_retriever(
     global _default_retriever
     if _default_retriever is None:
         _default_retriever = RagRetriever(
-            qdrant_path=qdrant_path     or CFG.qdrant_path,
+            qdrant_path=qdrant_path or CFG.qdrant_path,
             collection_name=collection_name or CFG.collection_name,
             embedding_model=embedding_model or CFG.embedding_model,
-            top_k=top_k                 or CFG.top_k,
+            top_k=top_k or CFG.top_k,
         )
     return _default_retriever
 
@@ -320,7 +337,7 @@ def query_rag_tool(question: str) -> str:
                   ("penalty for causing a collision").
     """
     retriever = get_retriever()
-    chunks    = retriever.query(question)
+    chunks = retriever.query(question)
 
     if not chunks:
         return "No relevant regulation passages found for this query."
@@ -328,7 +345,7 @@ def query_rag_tool(question: str) -> str:
     blocks = []
     for i, chunk in enumerate(chunks, start=1):
         article_ref = f" — {chunk.article}" if chunk.article else ""
-        header      = f"[{i}] {chunk.doc_type} {chunk.year}{article_ref}  (score: {chunk.score:.3f})"
+        header = f"[{i}] {chunk.doc_type} {chunk.year}{article_ref}  (score: {chunk.score:.3f})"
         blocks.append(f"{header}\n{chunk.text}")
 
     return "\n\n".join(blocks)

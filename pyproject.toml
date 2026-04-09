@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "f1-digital-twin"
+name = "f1-strat-manager"
 version = "0.1.0"
 description = "Sistema Multi-Agente para Analisis y Estrategia de Carreras F1"
 authors = [{name = "Victor"}]
@@ -22,12 +22,22 @@ dependencies = [
     # ===================
     "xgboost>=1.7.0",
     "scikit-learn>=1.3.0,<1.6.0",
-    # torch: install manually with CUDA (see README)
+    # torch / torchvision: declared here so `uv sync` resolves them; the
+    # CUDA-specific wheel is selected by [tool.uv.sources] below (cu128 on
+    # Windows/Linux, CPU wheel on macOS). pip users hit the default PyPI
+    # wheel and should install the CUDA build manually before `pip install -e .`.
+    "torch>=2.5.0",
+    "torchvision>=0.20.0",
     "pytorch-lightning>=2.0.0",
     # ===================
     # NLP
     # ===================
     "transformers>=4.30.0",
+    # Explicit dep even though transformers pulls it transitively — the
+    # first-run data cache (src/f1_strat_manager/data_cache.py) imports
+    # huggingface_hub.snapshot_download directly and needs a version with
+    # local_dir + allow_patterns support (>=0.20).
+    "huggingface_hub>=0.20",
     "sentencepiece>=0.1.99",
     "openai-whisper>=20230918",
     "sentence-transformers>=2.2.0",
@@ -89,7 +99,12 @@ dependencies = [
     "fitz>=0.0.1.dev2",
     "bs4>=0.0.2",
     "langchain-openai>=1.1.11",
+    "rich>=14.3.3",
 ]
+
+[project.scripts]
+f1-strat = "scripts.f1_cli:main"
+f1-sim   = "scripts.run_simulation_cli:main"
 
 [project.optional-dependencies]
 dev = [
@@ -114,7 +129,33 @@ voice = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*"]
+include = ["src*", "scripts*"]
+
+# ── uv: PyTorch CUDA wheel routing ────────────────────────────────────────
+# `uv sync` reads these blocks and pulls torch / torchvision from the right
+# index per platform: cu128 on Windows + Linux (NVIDIA RTX 40/50 series),
+# CPU on macOS (no CUDA). Plain pip ignores these tables, so pip users still
+# need to install torch manually with the matching wheel before `pip install -e .`.
+# Override CUDA version by editing the URL or adding a new [[tool.uv.index]] block.
+[[tool.uv.index]]
+name     = "pytorch-cu128"
+url      = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[[tool.uv.index]]
+name     = "pytorch-cpu"
+url      = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu",   marker = "sys_platform == 'darwin'" },
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchvision = [
+    { index = "pytorch-cpu",   marker = "sys_platform == 'darwin'" },
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
 
 [tool.setuptools.package-data]
 "*" = ["*.yaml", "*.yml", "*.json"]

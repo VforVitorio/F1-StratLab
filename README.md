@@ -187,6 +187,7 @@ docker-compose down
 ```
 
 **Access the application:**
+
 - Frontend (Streamlit): http://localhost:8501
 - Backend API: http://localhost:8000
 - API Documentation: http://localhost:8000/docs
@@ -204,15 +205,250 @@ uvicorn backend.main:app --reload
 streamlit run src/telemetry/frontend/app/main.py
 ```
 
+### Headless CLI (Multi-Agent Simulator)
+
+A Rich-powered command line interface is bundled for running the full
+multi-agent pipeline (N25–N31) lap by lap against a real race. It needs
+**no HTTP layer, no Streamlit, no Docker** — just Python and the race data.
+
+#### One-command install — recommended (uv)
+
+The project is configured for [`uv`](https://docs.astral.sh/uv/), Astral's
+Rust-based package manager that replaces `pip` + `venv` + `pipx` +
+`virtualenv` and is **10–100× faster**. With `uv`, the entire install
+collapses to a single command — `pyproject.toml` already routes torch /
+torchvision to the right CUDA wheel per platform via `[tool.uv.sources]`,
+so there is **no manual PyTorch step on Windows or Linux**:
+
+```bash
+# 0. Install uv once per machine — pick the line for your OS
+#    Windows (PowerShell):
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+#    Linux / macOS:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+#    Or via package manager:
+#       winget install astral-sh.uv     # Windows
+#       brew   install uv               # macOS
+#       pipx   install uv               # any OS that already has pipx
+
+# 1. Clone + install in one shot
+git clone --recursive https://github.com/VforVitorio/F1_Strat_Manager.git
+cd F1_Strat_Manager
+uv sync           # creates .venv, resolves cu128 torch on Win/Linux, CPU on macOS
+
+# 2. Run the interactive launcher — no venv activation needed
+uv run f1-strat
+```
+
+That's it. `uv sync` reads `pyproject.toml`, builds a fresh `.venv/`,
+pulls every runtime dependency (`fastf1`, `xgboost`, `lightgbm`,
+`langgraph`, `langchain-openai`, `rich`, `torch`, etc.) and exposes the
+two console scripts as `uv run f1-strat` / `uv run f1-sim`.
+
+> **GPU with a different CUDA?** Edit the `[[tool.uv.index]]` URL in
+> `pyproject.toml` (currently `https://download.pytorch.org/whl/cu128`)
+> to match your driver — e.g. `cu121`, `cu118`, `rocm6.2`. Then re-run
+> `uv sync`.
+
+#### Global install without cloning the repo (uv tool)
+
+If you only want to *use* the CLI and do not plan to touch the source,
+`uv tool install` pulls the project straight from GitHub and exposes
+`f1-strat` / `f1-sim` as global commands — no clone, no venv to activate,
+no editable-dev workflow. This is the closest thing the Python ecosystem
+has to `npx` or `pipx run`, and it resolves the full dependency graph
+(including the cu128 torch wheel on Windows / Linux) automatically from
+`pyproject.toml`:
+
+```bash
+# 0. Once per machine, if uv is not already installed
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"   # Windows
+curl -LsSf https://astral.sh/uv/install.sh | sh              # Linux / macOS
+
+# 1. Install the CLI globally as an isolated tool
+uv tool install git+https://github.com/VforVitorio/F1_Strat_Manager.git
+
+# 2. Run from anywhere — f1-strat and f1-sim are on your PATH
+f1-strat
+```
+
+`uv tool install` creates an isolated venv behind the scenes, reads
+`pyproject.toml`, resolves torch cu128 via `[tool.uv.sources]` on
+Win/Linux (CPU torch on macOS), and drops the two console scripts into
+the `uv` tool bin (`~/.local/bin` on Unix, `%USERPROFILE%\.local\bin` on
+Windows — add it to PATH if `uv tool install` prompts you to).
+
+> **Trade-off:** this flow installs the **code** but not the **race data
+> or model weights** (~15 GB). Those live on the HuggingFace Dataset
+> `VforVitorio/f1-strategy-dataset` and are fetched automatically on
+> first run — see "First-run data download" below.
+
+#### First-run data download (~15 GB)
+
+The race parquets, trained models, and NLP weights that the multi-agent
+pipeline needs do **not** ship inside the Python wheel — they live on the
+HuggingFace Dataset
+[`VforVitorio/f1-strategy-dataset`](https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset).
+The first time you run `f1-strat` or `f1-sim` on a machine without a
+populated cache, the CLI downloads everything it needs with a Rich
+progress bar and then boots straight into the normal flow:
+
+```
+$ f1-strat
+F1 Strategy Manager — first-run setup
+─────────────────────────────────────
+  Dataset  VforVitorio/f1-strategy-dataset
+  Cache    C:\Users\<you>\.f1-strat\data
+  Note     Downloads ~7-8 GB on first run — models, configs, one sentinel race
+  Override $F1_STRAT_DATA_ROOT / $F1_STRAT_OFFLINE=1 / $F1_STRAT_NO_FIRST_RUN=1
+
+Downloading model weights ████████████░░░░  78%  (6.4/8.1 GB)
+[OK] Setup complete. Cached under C:\Users\<you>\.f1-strat
+```
+
+After the first run the cache is warm and every subsequent launch is
+instant — the CLI checks for the critical artefacts and skips the
+download when they already exist on disk.
+
+**Where the cache lives:**
+
+| Scenario | Cache path |
+| --- | --- |
+| `uv tool install git+…` (global)        | `~/.f1-strat/data/` (Unix) / `%USERPROFILE%\.f1-strat\data\` (Windows) |
+| `uv sync` / `pip install -e .` (clone)  | `<repo>/data/` — reuses the existing tree, no download triggered |
+| Explicit override                       | Whatever `$F1_STRAT_DATA_ROOT` points to |
+
+**Environment variables**
+
+| Variable | Effect |
+| --- | --- |
+| `F1_STRAT_DATA_ROOT` | Absolute path to use as the cache root. Useful for putting the ~15 GB on a fast NVMe volume or a shared drive. |
+| `F1_STRAT_OFFLINE=1` | Disables every HuggingFace Hub call. The CLI assumes the cache is already populated and fails cleanly if it isn't. |
+| `F1_STRAT_NO_FIRST_RUN=1` | Skips the first-run bootstrap entirely. Intended for CI runs where the cache is mounted from a volume or reconstructed in a prior step. |
+
+**Manual pre-population (optional)**
+
+If you prefer to download the dataset with `git` instead of letting the
+CLI stream it, you can clone the HF dataset directly into the cache
+directory and the first-run check will find it:
+
+```bash
+# Windows PowerShell example
+git lfs install
+git clone https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset ^
+          "$env:USERPROFILE\.f1-strat"
+```
+
+The directory layout must match `data/raw/<year>/<gp>/`, `data/processed/`,
+and `models/<family>/` — exactly what the HF dataset publishes.
+
+#### Fallback install — pip + venv
+
+If you cannot install `uv` (corporate restrictions, etc.), the legacy
+pip flow still works but you must install PyTorch manually because
+`pip` ignores `[tool.uv.sources]`:
+
+```bash
+git clone --recursive https://github.com/VforVitorio/F1_Strat_Manager.git
+cd F1_Strat_Manager
+python -m venv .venv
+.venv\Scripts\activate                 # Windows
+# source .venv/bin/activate            # Linux / macOS
+
+# CUDA torch first (skip on macOS, or use cu118 / cu121 to match your driver)
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+
+# Then the project (pulls everything else from pyproject.toml)
+pip install -e .
+
+# Verify
+f1-strat
+```
+
+If `python -m venv .venv` produces a venv without `pip` (rare, happens
+on broken Python installs), recreate it with `python -m venv --upgrade-deps .venv`
+or just use the `uv` flow above — `uv` builds its own venv from scratch.
+
+#### Wheel-based release (v0.1.0)
+
+The `uv tool install git+...` flow above works but pulls the **entire git
+history** plus the current tree (notebooks with embedded outputs, Streamlit
+audio component, etc.), which makes the install slower than it should be.
+The faster alternative is a pre-built wheel hosted on GitHub Releases — it
+ships only the Python source (~360 KB) with no notebooks, data, or model
+weights:
+
+```bash
+uv tool install https://github.com/VforVitorio/F1_Strat_Manager/releases/download/v0.1.0/f1_strat_manager-0.1.0-py3-none-any.whl
+```
+
+The first-run HuggingFace data download is unaffected — it runs the same
+way regardless of whether the code came from a wheel or a git source.
+
+#### What you get
+
+Two console scripts become available on your PATH after installation:
+
+| Command   | What it launches                                                        |
+| --------- | ----------------------------------------------------------------------- |
+| `f1-strat`| Interactive menu — pick race / driver / lap range / provider visually   |
+| `f1-sim`  | Headless simulator — `f1-sim <gp_name> <driver> <team> [options]`       |
+
+**Interactive launcher**
+
+```bash
+f1-strat
+```
+
+Walks you through race → driver → lap range → provider with keyboard
+pickers, then runs `f1-sim` in a subprocess with a live lap-by-lap panel
+and a final "Run complete" summary (positions, actions mix, agent
+firings, stint, timing).
+
+**Direct headless mode**
+
+```bash
+# LLM orchestrator off — only MC scores (fastest, no provider required)
+f1-sim Melbourne NOR McLaren --laps 1-5 --no-llm
+
+# LLM mode with OpenAI (reads OPENAI_API_KEY from .env)
+f1-sim Bahrain NOR McLaren --laps 15-25 --provider openai
+
+# LLM mode with LM Studio (local, OpenAI-compatible API on :1234)
+f1-sim Monaco LEC Ferrari --laps 1-10 --provider lmstudio
+
+# Skip the real radio corpus (legacy mock radios only, fastest path)
+f1-sim Bahrain NOR McLaren --laps 1-10 --no-real-radios
+
+# Use a lighter Whisper model for slower machines (default: turbo)
+f1-sim Bahrain NOR McLaren --laps 1-10 --whisper-model small
+```
+
+By default every run feeds the N29 Radio Agent from the static OpenF1
+team-radio corpus built by `scripts/build_radio_dataset.py`. The first
+time you run a given GP on a fresh cache, `ensure_radio_corpus` lazily
+downloads the per-GP MP3 tree (~3 MB/race) from the HuggingFace Dataset
+and the CLI then transcribes only the radios that fall inside the lap
+range of the run. Transcripts are cached under
+`data/processed/radio_nlp/{year}/{slug}/transcripts.json` keyed by
+Whisper model name, so switching `--whisper-model` invalidates the cache
+for that run only. Pass `--no-real-radios` to fall back to the legacy
+`--radio-every` mock injection path for stress tests.
+
+Use `f1-sim --help` for the full option list (rival tracking, radio
+cadence, year, custom parquet paths, verbose traceback, etc.).
+
 ### Troubleshooting
 
 **Windows: DLL load failed (scikit-learn)**
+
 ```bash
 # Add .venv/ folder to Windows Defender exclusions, then:
 pip install --no-cache-dir --force-reinstall scikit-learn
 ```
 
 **Python 3.10+ AttributeError: collections.Mapping**
+
 ```bash
 # Ensure frozendict>=2.4.0 is installed
 pip install --upgrade frozendict>=2.4.0
