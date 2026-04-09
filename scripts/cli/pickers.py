@@ -89,7 +89,7 @@ def _arrow_pick(title: str, options: list[str], default: int = 0) -> int:
             else:
                 parts.append(f"     {idx_hint}\033[2m{opt}\033[0m")
         if _show_idx:
-            parts.append(f"  \033[2m[↑↓ arrows  or  type number to jump]\033[0m")
+            parts.append("  \033[2m[↑↓ arrows  or  type number to jump]\033[0m")
         return "\n".join(parts) + "\n"
 
     # ── Initial render ────────────────────────────────────────────────────────

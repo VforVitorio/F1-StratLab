@@ -19,9 +19,9 @@ All UI logic lives in scripts/cli/:
 
 from __future__ import annotations
 
+import logging as _logging
 import sys
 import warnings
-import logging as _logging
 from pathlib import Path
 
 # Ensure UTF-8 on Windows terminals
@@ -69,12 +69,10 @@ except ImportError:
     pass
 
 # ── CLI package imports ────────────────────────────────────────────────────────
-from cli.theme   import F1_GRAY, F1_RED, console, make_banner
-from cli.pickers import ask_again, discover_races, pick_mode
-from cli.runner  import run_h2h, run_single
-
-from rich.rule import Rule
-
+from cli.pickers import ask_again, discover_races, pick_mode  # noqa: E402
+from cli.runner import run_h2h, run_single  # noqa: E402
+from cli.theme import F1_GRAY, console, make_banner  # noqa: E402
+from rich.rule import Rule  # noqa: E402
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Main loop

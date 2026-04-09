@@ -27,7 +27,6 @@ from pathlib import Path
 from rich.panel import Panel
 from rich.rule import Rule
 
-from .theme import F1_AMBER, F1_GRAY, F1_GREEN, F1_RED, F1_WHITE, console
 from .pickers import (
     pick_driver,
     pick_laps,
@@ -36,7 +35,7 @@ from .pickers import (
     pick_radio_every,
     pick_rival_code,
 )
-
+from .theme import F1_AMBER, F1_GREEN, F1_RED, F1_WHITE, console
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Subprocess helpers
@@ -103,7 +102,7 @@ def run_single(races: list[str], repo_root: Path, script_dir: Path) -> None:
     console.print(Rule(style=F1_RED))
     console.print()
     console.print(
-        f"  [dim]Initializing engine — NLP models loading, this may take a few seconds…[/dim]"
+        "  [dim]Initializing engine — NLP models loading, this may take a few seconds…[/dim]"
     )
     console.print()
 
@@ -142,7 +141,7 @@ def run_h2h(races: list[str], repo_root: Path, script_dir: Path) -> None:
     ))
     console.print()
     console.print(
-        f"  [dim]Initializing engine — NLP models loading, this may take a few seconds…[/dim]"
+        "  [dim]Initializing engine — NLP models loading, this may take a few seconds…[/dim]"
     )
     console.print()
 

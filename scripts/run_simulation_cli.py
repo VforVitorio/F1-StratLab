@@ -37,7 +37,6 @@ import json
 import os
 import sys
 import time
-import traceback
 import warnings
 from pathlib import Path
 from typing import Any, Optional
@@ -48,22 +47,21 @@ warnings.filterwarnings("ignore", message=".*builtin type.*__module__.*")
 # Suppress verbose logging from transformers / setfit / sentence-transformers.
 # These libraries log LOAD REPORT tables via Python logging when loading
 # state-dicts with mismatched keys (expected behaviour for fine-tuned heads).
-import logging as _logging
+import logging as _logging  # noqa: E402
+
 _logging.getLogger("transformers").setLevel(_logging.ERROR)
 _logging.getLogger("setfit").setLevel(_logging.ERROR)
 _logging.getLogger("sentence_transformers").setLevel(_logging.ERROR)
 _logging.getLogger("torch").setLevel(_logging.ERROR)
 
-import pandas as pd
-from rich.box import ROUNDED
-from rich.columns import Columns
-from rich.console import Console, Group
-from rich.live import Live
-from rich.panel import Panel
-from rich.rule import Rule
-from rich.spinner import Spinner
-from rich.table import Table
-from rich.text import Text
+import pandas as pd  # noqa: E402
+from rich.console import Console, Group  # noqa: E402
+from rich.live import Live  # noqa: E402
+from rich.panel import Panel  # noqa: E402
+from rich.rule import Rule  # noqa: E402
+from rich.spinner import Spinner  # noqa: E402
+from rich.table import Table  # noqa: E402
+from rich.text import Text  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Repo-root sys.path injection — must happen before any src.* import
@@ -102,7 +100,7 @@ except ImportError as e:
 #     would otherwise be flushed to the terminal after fds are restored.
 _dn = os.open(os.devnull, os.O_WRONLY)
 _fd1_save, _fd2_save = os.dup(1), os.dup(2)
-os.dup2(_dn, 1); os.dup2(_dn, 2)
+os.dup2(_dn, 1); os.dup2(_dn, 2)  # noqa: E702
 _py_out_save, _py_err_save = sys.stdout, sys.stderr
 sys.stdout = sys.stderr = io.StringIO()
 os.environ["TQDM_DISABLE"] = "1"
@@ -113,8 +111,8 @@ except ImportError as _e:
     _import_err = str(_e)
 finally:
     sys.stdout, sys.stderr = _py_out_save, _py_err_save
-    os.dup2(_fd1_save, 1); os.dup2(_fd2_save, 2)
-    os.close(_fd1_save); os.close(_fd2_save); os.close(_dn)
+    os.dup2(_fd1_save, 1); os.dup2(_fd2_save, 2)  # noqa: E702
+    os.close(_fd1_save); os.close(_fd2_save); os.close(_dn)  # noqa: E702
     os.environ.pop("TQDM_DISABLE", None)
 if _import_err:
     sys.exit(f"[FATAL] Cannot import strategy orchestrator: {_import_err}")
@@ -176,7 +174,7 @@ def _drv_color(code: str) -> str:
     return _DRIVER_COLORS.get(code.upper(), _DEFAULT_DRIVER_COLOR)
 
 # ── Simulated radio message pool ──────────────────────────────────────────────
-import random as _random
+import random as _random  # noqa: E402
 
 _RADIO_POOL: dict[str, list[str]] = {
     "box": [
@@ -381,11 +379,11 @@ def _prewarm_agents(no_llm: bool) -> None:
     os.environ["TQDM_DISABLE"] = "1"
     try:
         with _devnull_fds():
-            from src.agents.radio_agent          import CFG as _r          # noqa: F401
-            from src.agents.pace_agent           import _get_default_pace_agent
+            from src.agents.pace_agent import _get_default_pace_agent
+            from src.agents.pit_strategy_agent import _get_default_pit_agent
             from src.agents.race_situation_agent import _get_default_situation_agent
-            from src.agents.pit_strategy_agent   import _get_default_pit_agent
-            from src.agents.tire_agent           import _get_default_tire_agent
+            from src.agents.radio_agent import CFG as _r  # noqa: F401
+            from src.agents.tire_agent import _get_default_tire_agent
             _get_default_pace_agent()
             _get_default_situation_agent()
             _get_default_pit_agent()
@@ -412,12 +410,13 @@ def _probe_core_agents(
     the LLM twice per lap). Returns a 4-tuple (pace, tire, sit, radio) —
     any element may be a stub on error.
     """
-    from src.agents.pace_agent           import run_pace_agent_from_state, PaceOutput
-    from src.agents.tire_agent           import run_tire_agent_from_state, TireOutput
+    from src.agents.pace_agent import PaceOutput, run_pace_agent_from_state
     from src.agents.race_situation_agent import (
-        run_race_situation_agent_from_state, RaceSituationOutput,
+        RaceSituationOutput,
+        run_race_situation_agent_from_state,
     )
-    from src.agents.radio_agent          import run_radio_agent_from_state, RadioOutput
+    from src.agents.radio_agent import RadioOutput, run_radio_agent_from_state
+    from src.agents.tire_agent import TireOutput, run_tire_agent_from_state
 
     def _safe(fn, *args, stub):
         try:
@@ -1312,17 +1311,18 @@ def _run_no_llm(
     point to forward both the static OpenF1 corpus radios for the current
     lap and any synthetic --radio-every fallback events in a single shot.
     """
-    from src.agents.pace_agent           import run_pace_agent_from_state, PaceOutput
-    from src.agents.tire_agent           import run_tire_agent_from_state, TireOutput
+    from src.agents.pace_agent import PaceOutput, run_pace_agent_from_state
     from src.agents.race_situation_agent import (
-        run_race_situation_agent_from_state, RaceSituationOutput,
+        RaceSituationOutput,
+        run_race_situation_agent_from_state,
     )
-    from src.agents.radio_agent          import run_radio_agent_from_state, RadioOutput
+    from src.agents.radio_agent import RadioOutput, run_radio_agent_from_state
     from src.agents.strategy_orchestrator import (
-        _run_mc_simulation,
         _decide_agents_to_call,
         _run_conditional_agents,
+        _run_mc_simulation,
     )
+    from src.agents.tire_agent import TireOutput, run_tire_agent_from_state
 
     def _safe_call(fn, *args, stub):
         try:
@@ -1502,11 +1502,11 @@ def run(args: argparse.Namespace) -> None:
     radio_runner = None
     if not args.no_real_radios:
         try:
-            from src.nlp.radio_runner import RadioPipelineRunner
             from src.f1_strat_manager.data_cache import (
                 ensure_radio_corpus,
                 get_data_root,
             )
+            from src.nlp.radio_runner import RadioPipelineRunner
             # Lazy on-demand pull: when running from a uv-tool install with
             # an empty cache the parquets land via the default first-run
             # snapshot, but the per-GP MP3 tree only arrives the first time
@@ -1973,8 +1973,10 @@ def run(args: argparse.Namespace) -> None:
                     _rag_text_local  = getattr(result, "regulation_context", "") or ""
                     _radio_out_local = probe_radio
 
-                if _pit_out_local  is not None: pit_agent_calls += 1
-                if _rag_text_local:             rag_agent_calls += 1
+                if _pit_out_local is not None:
+                    pit_agent_calls += 1
+                if _rag_text_local:
+                    rag_agent_calls += 1
                 if _radio_out_local is not None:
                     radio_alert_total += len(
                         getattr(_radio_out_local, "alerts", []) or []
@@ -2042,7 +2044,7 @@ def run(args: argparse.Namespace) -> None:
         f"[dim]radio src[/dim] [white]corpus[/white]"
         f"[dim]/{radio_runner.total_radios()}r·{radio_runner.total_rcms()}rcm[/dim]"
         if radio_runner is not None
-        else f"[dim]radio src[/dim] [white]synthetic[/white]"
+        else "[dim]radio src[/dim] [white]synthetic[/white]"
     )
     agents_line = (
         f"[dim]pit[/dim] [white]{pit_agent_calls}[/white]  "
@@ -2062,7 +2064,7 @@ def run(args: argparse.Namespace) -> None:
         elif delta < 0:
             delta_fmt = f"[red]{delta}[/red]"
         else:
-            delta_fmt = f"[dim]±0[/dim]"
+            delta_fmt = "[dim]±0[/dim]"
         position_line = (
             f"[{COL_HEADLINE}]P{start_position}[/{COL_HEADLINE}] "
             f"[dim]→[/dim] "

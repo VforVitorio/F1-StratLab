@@ -100,7 +100,7 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.data_extraction.openf1.radio_dataset_builder import (  # noqa: E402
+from src.data_extraction.openf1.radio_dataset_builder import (  # noqa: E402, I001
     OPENF1_BASE,
     RadioDatasetBuilder,
     build_retry_session,
