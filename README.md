@@ -369,7 +369,7 @@ If `python -m venv .venv` produces a venv without `pip` (rare, happens
 on broken Python installs), recreate it with `python -m venv --upgrade-deps .venv`
 or just use the `uv` flow above — `uv` builds its own venv from scratch.
 
-#### Wheel-based release (v0.1.0)
+#### Wheel-based release (v0.1.1)
 
 The `uv tool install git+...` flow above works but pulls the **entire git
 history** plus the current tree (notebooks with embedded outputs, Streamlit
@@ -379,7 +379,7 @@ ships only the Python source (~360 KB) with no notebooks, data, or model
 weights:
 
 ```bash
-uv tool install https://github.com/VforVitorio/F1_Strat_Manager/releases/download/v0.1.0/f1_strat_manager-0.1.0-py3-none-any.whl
+uv tool install https://github.com/VforVitorio/F1_Strat_Manager/releases/download/v0.1.1/f1_strat_manager-0.1.1-py3-none-any.whl
 ```
 
 The first-run HuggingFace data download is unaffected — it runs the same
