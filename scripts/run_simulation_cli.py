@@ -133,6 +133,14 @@ ACTION_STYLE: dict[str, str] = {
     "ALERT":    "bold cyan",
 }
 
+# Abbreviations for v2 tactical fields rendered in the Decision column
+_PM_SHORT: dict[str, str] = {
+    "PUSH": "PUSH", "NEUTRAL": "NTRL", "MANAGE": "MNGR", "LIFT_AND_COAST": "L&C",
+}
+_RP_SHORT: dict[str, str] = {
+    "AGGRESSIVE": "AGG", "BALANCED": "BAL", "DEFENSIVE": "DEF",
+}
+
 # Pirelli tyre-compound colours
 _COMPOUND_STYLE: dict[str, str] = {
     "SOFT":         "bold red",
@@ -492,7 +500,8 @@ def _make_table(has_rival: bool = False, show_header: bool = True) -> Table:
     table.add_column("Gap Fwd",   justify="right",  style="dim",    width=7)
     if has_rival:
         table.add_column("Rival",  justify="left",                  width=15)
-    table.add_column("Decision",  justify="left",                   width=10)
+    table.add_column("Decision",  justify="left",                   width=20)
+    table.add_column("Plan",      justify="left",  style="#60a5fa", width=18)
     table.add_column("Conf",      justify="right",                  width=5)
     table.add_column("Stay",      justify="right",  style="green",  width=6)
     table.add_column("Pit",       justify="right",  style="red",    width=6)
@@ -1550,8 +1559,8 @@ def run(args: argparse.Namespace) -> None:
     )
     legend_grid.add_row(
         "Columns",
-        "[dim]Stay/Pit/Ucut/Ocut = MC scenario scores  ·  "
-        "Conf = LLM confidence  ·  panel below = per-agent inference + plan[/dim]",
+        "[dim]Decision = action·pace·risk  ·  Plan = pit target → compound  ·  "
+        "Stay/Pit/Ucut/Ocut = MC scores  ·  Conf = LLM confidence[/dim]",
     )
 
     header_body = Group(info_grid, Text(""), legend_grid)
@@ -1642,7 +1651,7 @@ def run(args: argparse.Namespace) -> None:
                 dnf_row: list[Any] = [str(lap_num), "—", "—", "—", "—", "—"]
                 if has_rival:
                     dnf_row.append("—")
-                dnf_row.extend([Text("[DNF]", style="dim"), "", "", "", "", "", ""])
+                dnf_row.extend([Text("[DNF]", style="dim"), "", "", "", "", "", "", ""])
                 dnf_tbl = _make_table(has_rival, show_header=False)
                 dnf_tbl.add_row(*dnf_row)
                 live.console.print(dnf_tbl)
@@ -1664,7 +1673,7 @@ def run(args: argparse.Namespace) -> None:
                 inc_row: list[Any] = [str(lap_num), "—", "—", "—", "—", "—"]
                 if has_rival:
                     inc_row.append("—")
-                inc_row.extend([Text("[INCOMPLETE]", style="dim"), "", "", "", "", "", ""])
+                inc_row.extend([Text("[INCOMPLETE]", style="dim"), "", "", "", "", "", "", ""])
                 inc_tbl = _make_table(has_rival, show_header=False)
                 inc_tbl.add_row(*inc_row)
                 live.console.print(inc_tbl)
@@ -1813,7 +1822,42 @@ def run(args: argparse.Namespace) -> None:
                 else:
                     stay = pit = ucut = ocut = 0.0
 
-                action_text = Text(str(action), style=ACTION_STYLE.get(str(action).upper(), ""))
+                # Extract v2 tactical fields for Decision + Plan columns.
+                # LLM mode: result is StrategyRecommendation with all fields.
+                # No-LLM mode: result is a dict — infer plan from _pit_out.
+                if isinstance(result, dict):
+                    _pm, _rp = None, None
+                    _plt, _cnx, _uct = None, None, None
+                    _pit_local_v2 = result.get("_pit_out")
+                    if _pit_local_v2 is not None:
+                        _plt = getattr(_pit_local_v2, "recommended_lap", None)
+                        _cnx = getattr(_pit_local_v2, "compound_recommendation", None)
+                        _uct = getattr(_pit_local_v2, "undercut_target", None)
+                else:
+                    _pm  = getattr(result, "pace_mode", None)
+                    _rp  = getattr(result, "risk_posture", None)
+                    _plt = getattr(result, "pit_lap_target", None)
+                    _cnx = getattr(result, "compound_next", None)
+                    _uct = getattr(result, "undercut_target", None)
+
+                decision_text = Text()
+                decision_text.append(
+                    str(action),
+                    style=ACTION_STYLE.get(str(action).upper(), ""),
+                )
+                if _pm and _rp:
+                    _pm_s = _PM_SHORT.get(str(_pm), str(_pm)[:4])
+                    _rp_s = _RP_SHORT.get(str(_rp), str(_rp)[:3])
+                    decision_text.append(f"·{_pm_s}·{_rp_s}", style="dim")
+
+                if _plt is not None and _cnx is not None:
+                    plan_text = Text(f"→ L{_plt} {_cnx}", style="#60a5fa")
+                    if _uct:
+                        plan_text.append(f" vs {_uct}", style="#f59e0b")
+                elif _plt is not None:
+                    plan_text = Text(f"→ L{_plt}", style="#60a5fa")
+                else:
+                    plan_text = Text("—", style="dim")
 
                 # Rival cell (only when --rival is set)
                 if has_rival:
@@ -1842,7 +1886,8 @@ def run(args: argparse.Namespace) -> None:
                 if has_rival:
                     row.append(rival_cell)
                 row.extend([
-                    action_text,
+                    decision_text,
+                    plan_text,
                     f"{confidence:.2f}",
                     f"{stay:.3f}",
                     f"{pit:.3f}",
@@ -1912,7 +1957,7 @@ def run(args: argparse.Namespace) -> None:
                 if has_rival:
                     err_row.append("—")
                 err_row.extend([
-                    Text("[ERROR]", style="bold red"), "", "", "", "", "",
+                    Text("[ERROR]", style="bold red"), "", "", "", "", "", "",
                     str(exc)[:60],
                 ])
                 err_tbl = _make_table(has_rival, show_header=False)
