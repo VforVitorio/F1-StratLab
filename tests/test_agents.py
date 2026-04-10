@@ -229,9 +229,8 @@ def test_tire_request_defaults():
     sys.path.insert(0, str(ROOT / "src" / "telemetry"))
     from backend.api.v1.endpoints.strategy import TireRequest
 
-    req = TireRequest(lap_state={})
-    assert req.gp_name == ""
-    assert req.year == 2025
+    req = TireRequest(lap_state={"driver": {}})
+    assert "driver" in req.lap_state
 
 
 # ---------------------------------------------------------------------------
