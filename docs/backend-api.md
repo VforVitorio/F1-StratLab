@@ -49,6 +49,22 @@ Entry point: `backend/main.py` -- creates the FastAPI app and registers all rout
 
 Chat proxies to a local LM Studio instance. The `QueryRouter` classifies user intent and dispatches to specialized handlers.
 
+### Tool Results and Display Hints
+
+Handlers under `services/chatbot/handlers/` can invoke MCP-style tools (pace, tire, situation, pit, regulations, and the Phase 2 telemetry tools `get_lap_times`, `get_telemetry`, `compare_drivers`, `get_race_data`). Each tool entry in `TOOL_DISPLAY_MAP` (`models/tool_schemas.py`) carries a `DisplayType` hint the frontend uses for rendering:
+
+| DisplayType | Used by |
+|---|---|
+| `METRICS` | `predict_pace`, `predict_situation` |
+| `STRATEGY_CARD` | `predict_tire`, `predict_pit`, `recommend_strategy` |
+| `TABLE` | `analyze_radio` |
+| `TEXT` | `query_regulations`, `list_gps`, `list_drivers`, `get_lap_range` |
+| `CHART` | `get_lap_times`, `get_telemetry`, `compare_drivers`, `get_race_data` |
+
+The four telemetry tools are wired to `CHART` so the frontend renders them as inline Plotly figures (see [Frontend -- Chat Tool-Result Rendering](frontend.md#chat-tool-result-rendering)).
+
+`StrategyHandler._execute_telemetry_tool` returns the raw tool payload unchanged on `tool_result.data`. A separate static helper `_trim_for_llm(raw)` produces a 20-record-capped shallow copy that is only fed to the LLM summariser. This split keeps the LLM context small without starving the UI of the full series needed to draw the chart.
+
 ## Voice Endpoints
 
 | Method | Path | Description |
