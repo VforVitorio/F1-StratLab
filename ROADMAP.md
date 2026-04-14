@@ -404,22 +404,47 @@ Wire the multi-agent system into the FastAPI backend, expose strategy tools via 
 - [ ] Tag v0.1.1, attach wheel to GitHub Release
 - [ ] README install section: `uv tool install <release-url>/*.whl`
 
-**Step 9 — FastAPI wiring (`src/telemetry/backend/`):**
+**Step 9 — FastAPI wiring (`src/telemetry/backend/`):** ✅ DONE
 
-- [ ] 9a: New router `api/v1/endpoints/strategy.py` — HTTP endpoints for each agent + orchestrator
-  - POST /strategy/pace, /tire, /situation, /pit, /radio, /rag, /recommend
-- [ ] 9b: Upgrade `chat.py` — route strategy-intent queries to orchestrator via MCP tools
-- [ ] Fix sys.path so telemetry backend imports from `src/agents/`
+- [X] 9a: Router `api/v1/endpoints/strategy.py` exposes all agents + orchestrator ✅
+  - POST /strategy/pace, /tire, /situation, /pit, /radio, /rag, /recommend — all live
+- [X] 9b: `chat.py` upgraded — strategy-intent queries route to N31 orchestrator ✅
+- [X] `sys.path` fix so telemetry backend imports cleanly from `src/agents/` ✅
 
-**Step 10 — FastMCP + Streamlit pages:**
+**Step 10 — FastMCP + Streamlit chat:** ✅ DONE
 
-- [ ] FastMCP server mounted alongside FastAPI (`app.mount("/mcp", ...)`)
-  - Tools: `get_strategy_recommendation`, `get_tire_status`, `get_race_situation`, `query_regulations`
-  - LangGraph agent in `/chat/` connects to MCP server for tool calls
-- [ ] `pages/strategy.py` — Live strategy card (action badge, confidence bar, scenario scores, reasoning)
+- [X] FastMCP server mounted alongside FastAPI; `/chat/` is an MCP client ✅
+- [X] Phase 1 — agent MCP tools: `predict_pace`, `predict_tire`, `predict_situation`, `predict_pit`, `analyze_radio`, `query_regulations`, `recommend_strategy` ✅
+- [X] Phase 2 — telemetry MCP tools via `FastMCP.from_openapi()`: `get_lap_times`, `get_telemetry`, `compare_drivers`, `get_race_data` (HTTP fallback for chat) ✅
+- [X] **2026-04-14 — inline Plotly chart rendering** for the 4 Phase 2 tools in the chat: new `chart_builders.py`, `_render_chart` dispatcher, purple-outlined bubbles matching the agent cards. Backend trim split via `_trim_for_llm` so the UI receives the full payload. Qdrant singleton fix (`@lru_cache` on `get_retriever`) ✅
+- [X] `pages/strategy.py` — Live strategy card (action badge, confidence bar, scenario scores, reasoning) ✅
   - Sub-agent tabs: Pace (CI ribbon), Tyres (cliff gauge), Race Situation (overtake + SC gauges), Pit Analysis (undercut + duration)
-- [ ] `pages/race_analysis.py` — 5-tab race view (Overview, Competitive, Gap Analysis, Degradation, Predictions)
+- [X] `pages/race_analysis.py` — 5-tab race view (Overview, Competitive, Gap Analysis, Degradation, Predictions) ✅
   - Port legacy components from `legacy/app_streamlit_v1/` with N25-N31 API data sources
+
+**Step 11 — CLI simulation demo (`scripts/run_simulation_cli.py`):** ✅ DONE
+
+- [X] Rich Live lap-by-lap rendering with inference detail panel (2,387 lines) ✅
+- [X] Decision column `ACTION·PACE·RISK` + Plan column (`→ L8 HARD vs NOR`) ✅
+- [X] Lap-1 path hardening, strategic guard-rails applied in N26/N27/N28/N31 prompts ✅
+- [X] Kafka descoped and documented; historical-only data source acknowledged ✅
+
+**Step 11.5 — Simulation SSE backend (infra for Arcade):** ✅ DONE
+
+- [X] `src/telemetry/backend/services/simulation/` — `simulate_race` generator + `guard_rails` module duplicated from CLI L1504-L1535 (CLI untouched) ✅
+- [X] `POST /api/v1/strategy/simulate` — `StreamingResponse(media_type="text/event-stream")` emitting `start` → N×`lap` → `summary` events ✅
+- [X] Validated via smoke unit (6-lap assertions) + FastAPI `TestClient` stream (5 frames, 200 OK, correct content-type) + CLI regression (no drift) ✅
+
+**Step 12 — Arcade simulation UI:** ⬜ Not started (see R2 block below)
+
+- [ ] Consume `/api/v1/strategy/simulate` SSE stream in the Arcade game loop
+- [ ] Animate `cars` positions per lap event; pit stop animations on `action == "PIT_NOW"`
+- [ ] Post-run panel rendering the 11 fields of `RunSummary`
+
+**Step 13 — Legacy cleanup:** ⬜ Not started
+
+- [ ] Archive `src/agents/base_agent.py`, `src/agents/strategy_agent.py`, `src/agents/rules/`
+- [ ] Replace legacy jupytext `src/nlp/pipeline.py` with N24-aligned implementation
 
 **Driver + Team selection (single-driver perspective):**
 
@@ -581,5 +606,5 @@ Complete project delivery with thesis documentation, defense materials, and thre
 
 ---
 
-**Last Updated:** April 2026
-**Version:** 1.6
+**Last Updated:** April 14, 2026
+**Version:** 1.7
