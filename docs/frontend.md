@@ -29,7 +29,8 @@ frontend/
   pages/               -- One file per page
   components/
     auth/              -- Login form
-    chatbot/           -- Chat UI components
+    chatbot/           -- Chat UI components (history, input, message, sidebar,
+                          tool_result_renderer, chart_builders)
     common/            -- Shared: driver_colors, chart_styles, loading, data_selectors
     comparison/        -- Driver comparison charts (+ legacy/ subfolder)
     dashboard/         -- Dashboard-specific CSS and selectors
@@ -77,6 +78,37 @@ The Strategy page (`pages/strategy.py`) is the primary interface for the N25--N3
    - `render_strategy_card()` -- recommendation card with action, confidence, reasoning
    - `render_scenario_chart()` -- bar chart comparing MC scenario scores
    - `render_agent_tabs()` -- tabbed detail view for each sub-agent output
+
+## Chat Tool-Result Rendering
+
+The Chat page (`pages/chat.py`) consumes the MCP-style tool results returned by `/api/v1/chat/query`. Each tool result carries a `display_type` hint (see `TOOL_DISPLAY_MAP` in `src/telemetry/backend/models/tool_schemas.py`) that tells the frontend how to render the payload.
+
+Dispatch lives in `components/chatbot/tool_result_renderer.py`:
+
+```python
+_RENDERERS = {
+    "metrics":        _render_metrics,
+    "strategy_card":  _render_strategy_card,
+    "table":          _render_table,
+    "text":           _render_text,
+    "chart":          _render_chart,
+}
+```
+
+### Inline Plotly charts (Phase 2 MCP telemetry tools)
+
+The four telemetry tools (`get_lap_times`, `get_telemetry`, `compare_drivers`, `get_race_data`) are mapped to `DisplayType.CHART` and render as inline Plotly figures inside the chat bubble. `_render_chart(data, tool_name)` calls `build_figure(tool_name, data)` from `components/chatbot/chart_builders.py`, which dispatches to one of:
+
+| Tool | Builder | Figure |
+|---|---|---|
+| `get_lap_times` | `build_lap_times_figure` | Lap-time line per driver |
+| `get_telemetry` | `build_telemetry_figure` | Speed / throttle / brake traces for one lap |
+| `compare_drivers` | `build_compare_drivers_figure` | Fastest-lap side-by-side comparison |
+| `get_race_data` | `build_race_data_figure` | Full race overview (positions / gaps) |
+
+Builders are Streamlit-free: they take the raw tool payload, pull per-driver colors via `get_driver_color` from `components/common/driver_colors.py`, and apply the shared dark theme through `_apply_base_layout()`. The renderer wraps the figure with `apply_telemetry_chart_styles()` so the chart inherits the purple-outlined chat bubble look, and falls back to `_render_text` if the builder returns `None` (unknown tool or malformed payload).
+
+On the backend, `_execute_telemetry_tool` in `services/chatbot/handlers/strategy_handler.py` no longer mutates or trims the raw tool response; a separate `_trim_for_llm(raw)` static helper produces a 20-record-capped shallow copy that is passed only to the LLM summariser. The full payload is forwarded to the UI via `tool_result.data`, which is what enables the chart builders to plot complete series rather than a truncated LLM-view sample. As a side effect, the previous `compare_drivers` "N/A" rendering bug disappears because `_render_chart` reads `data.pilot1.lap_time` / `data.pilot2.lap_time` directly from the untrimmed payload.
 
 ## Services Layer
 
