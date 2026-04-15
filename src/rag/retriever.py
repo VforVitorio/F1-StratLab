@@ -280,6 +280,7 @@ class RagRetriever:
 # Module-level singleton + LangGraph tool wrapper
 # ---------------------------------------------------------------------------
 
+
 @lru_cache(maxsize=1)
 def get_retriever(
     qdrant_path: Path | str | None = None,

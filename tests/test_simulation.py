@@ -160,7 +160,7 @@ def test_simulate_endpoint_streams_sse_frames():
             data_frames: list[str] = []
             for line in response.iter_lines():
                 if line and line.startswith("data:"):
-                    data_frames.append(line[len("data:"):].strip())
+                    data_frames.append(line[len("data:") :].strip())
 
     assert len(data_frames) >= 4, (
         f"expected >=4 SSE data frames (start + laps + summary), got {len(data_frames)}"
