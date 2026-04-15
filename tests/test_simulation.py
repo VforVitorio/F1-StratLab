@@ -135,10 +135,9 @@ def test_simulate_endpoint_streams_sse_frames():
     import json
 
     _ensure_backend_on_path()
+    from backend.api.v1.endpoints import strategy
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
-
-    from backend.api.v1.endpoints import strategy
 
     app = FastAPI()
     app.include_router(strategy.router, prefix="/api/v1")
@@ -209,9 +208,8 @@ def test_simulate_request_rejects_invalid_provider():
     our first line of defence — this test pins the behaviour.
     """
     _ensure_backend_on_path()
-    from pydantic import ValidationError
-
     from backend.api.v1.endpoints.strategy import SimulateRequest
+    from pydantic import ValidationError
 
     with pytest.raises(ValidationError):
         SimulateRequest(
