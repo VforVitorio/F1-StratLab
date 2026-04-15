@@ -396,13 +396,13 @@ Retrieval-augmented generation over FIA Sporting Regulations (2023–2025). Prov
 
 Wire the multi-agent system into the FastAPI backend, expose strategy tools via FastMCP, build Streamlit dashboard pages, and integrate Arcade for race replay visualization. Three independent releases ship from this work (R1 CLI wheel, R2 Arcade, R3 Streamlit + Backend).
 
-**R1 — CLI Release (wheel):**
+**R1 — CLI Release (wheel):** ✅ DONE
 
 - [X] `pyproject.toml` entry points (`f1-strat`, `f1-sim`) ✅
 - [X] Lazy first-run HF data download (`ensure_setup()`) ✅
 - [X] Wheel build via `uv build` → `dist/f1_strat_manager-*.whl` ✅
-- [ ] Tag v0.1.1, attach wheel to GitHub Release
-- [ ] README install section: `uv tool install <release-url>/*.whl`
+- [X] Wheel `f1_strat_manager-0.1.1-py3-none-any.whl` attached to the v0.12.0 GitHub Release assets ✅
+- [X] README install section documents both `uv tool install git+` and offline wheel flows ✅
 
 **Step 9 — FastAPI wiring (`src/telemetry/backend/`):** ✅ DONE
 
