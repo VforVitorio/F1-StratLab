@@ -278,6 +278,21 @@ Win/Linux (CPU torch on macOS), and drops the two console scripts into
 the `uv` tool bin (`~/.local/bin` on Unix, `%USERPROFILE%\.local\bin` on
 Windows — add it to PATH if `uv tool install` prompts you to).
 
+##### Offline install from a release wheel
+
+If you would rather pin to a specific version than follow `main`, the
+pre-built wheel is attached to each GitHub Release under Assets. Download
+`f1_strat_manager-<version>-py3-none-any.whl` from
+[Releases](https://github.com/VforVitorio/F1_Strat_Manager/releases/latest)
+and install with:
+
+```bash
+uv tool install ./f1_strat_manager-0.1.1-py3-none-any.whl
+```
+
+Same isolated-tool behaviour as the `git+` flow, but you are guaranteed a
+frozen artefact instead of the tip of the branch.
+
 > **Trade-off:** this flow installs the **code** but not the **race data
 > or model weights** (~15 GB). Those live on the HuggingFace Dataset
 > `VforVitorio/f1-strategy-dataset` and are fetched automatically on
