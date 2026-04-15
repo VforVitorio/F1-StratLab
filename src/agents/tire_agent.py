@@ -195,7 +195,10 @@ class TireAgentConfig:
     def __post_init__(self) -> None:
         self._model_dir = _MODEL_DIR
         self.export_dir = _AGENTS_DIR
-        self.export_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.export_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass  # read-only mount in Docker
 
         self.routing_cfg                              = self._load_routing_cfg()
         self.mc_calibration, self.mc_sigma_fallback   = self._load_mc_calibration()

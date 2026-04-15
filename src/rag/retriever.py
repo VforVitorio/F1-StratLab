@@ -13,6 +13,7 @@ Public interface::
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -279,21 +280,21 @@ class RagRetriever:
 # Module-level singleton + LangGraph tool wrapper
 # ---------------------------------------------------------------------------
 
-_default_retriever: RagRetriever | None = None
 
-
+@lru_cache(maxsize=1)
 def get_retriever(
     qdrant_path: Path | str | None = None,
     collection_name: str | None = None,
     embedding_model: str | None = None,
     top_k: int | None = None,
 ) -> RagRetriever:
-    """Return the module-level singleton ``RagRetriever``, creating it on first call.
+    """Return the process-level singleton ``RagRetriever``, creating it on first call.
 
-    The singleton pattern avoids reloading the sentence-transformers model on every
-    agent invocation — loading ``BAAI/bge-m3`` takes ~1–2 s and should happen
-    exactly once per process. Subsequent calls return the cached instance regardless
-    of the arguments passed, so always configure via the first call or via ``CFG``.
+    Wrapped in ``functools.lru_cache`` so the embedded Qdrant client is
+    instantiated exactly once per process. A second ``QdrantClient(path=...)``
+    on the same storage directory raises ``AlreadyLocked`` (local mode holds a
+    file lock), which would break any caller — N31 orchestrator, the chat tool
+    ``query_rag_tool`` — that reaches into the retriever more than once.
 
     Args:
         qdrant_path:     Path to the on-disk Qdrant storage. Defaults to
@@ -305,15 +306,12 @@ def get_retriever(
         top_k:           Default number of chunks returned per query. Defaults to
                          ``CFG.top_k``.
     """
-    global _default_retriever
-    if _default_retriever is None:
-        _default_retriever = RagRetriever(
-            qdrant_path=qdrant_path or CFG.qdrant_path,
-            collection_name=collection_name or CFG.collection_name,
-            embedding_model=embedding_model or CFG.embedding_model,
-            top_k=top_k or CFG.top_k,
-        )
-    return _default_retriever
+    return RagRetriever(
+        qdrant_path=qdrant_path or CFG.qdrant_path,
+        collection_name=collection_name or CFG.collection_name,
+        embedding_model=embedding_model or CFG.embedding_model,
+        top_k=top_k or CFG.top_k,
+    )
 
 
 @tool

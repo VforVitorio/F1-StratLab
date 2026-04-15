@@ -899,12 +899,18 @@ def _save_nlp_json(lap: int, radio_results: list, rcm_results: list) -> Path:
     Returns the Path of the saved file.
     """
     out_dir   = _DATA_ROOT / "processed" / "radio_outputs"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        out_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return None  # read-only mount in Docker — skip persist
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     path      = out_dir / f"radio_nlp_lap{lap:03d}_{timestamp}.json"
     payload   = {"lap": lap, "radio_results": radio_results, "rcm_results": rcm_results}
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2, ensure_ascii=False, default=str)
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, ensure_ascii=False, default=str)
+    except OSError:
+        return None
     return path
 
 

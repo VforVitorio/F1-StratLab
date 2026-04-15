@@ -99,7 +99,10 @@ class PitAgentCFG:
 
     def __post_init__(self) -> None:
         self.export_dir = _AGENTS
-        self.export_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.export_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass  # read-only mount in Docker
 
         _pit = _MODELS / 'pit_prediction'
 

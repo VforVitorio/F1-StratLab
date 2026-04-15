@@ -98,7 +98,10 @@ class RaceSituationConfig:
 
     def __post_init__(self) -> None:
         self.export_dir = _AGENTS
-        self.export_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.export_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass  # read-only mount in Docker
 
         # Overtake model (N12)
         _ov = _MODELS / 'overtake_probability'
