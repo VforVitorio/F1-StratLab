@@ -80,6 +80,12 @@ dependencies = [
     "matplotlib>=3.7.0",
     "seaborn>=0.12.0",
     # ===================
+    # ARCADE / 2D REPLAY
+    # ===================
+    "arcade>=3.0.0",
+    "scipy>=1.10.0",
+    "pyside6>=6.5.0",
+    # ===================
     # UTILITIES
     # ===================
     "python-dotenv>=1.0.0",
@@ -103,8 +109,9 @@ dependencies = [
 ]
 
 [project.scripts]
-f1-strat = "scripts.f1_cli:main"
-f1-sim   = "scripts.run_simulation_cli:main"
+f1-strat  = "scripts.f1_cli:main"
+f1-sim    = "scripts.run_simulation_cli:main"
+f1-arcade = "src.arcade.main:main"
 
 [project.optional-dependencies]
 dev = [
