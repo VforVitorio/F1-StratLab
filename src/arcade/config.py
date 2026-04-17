@@ -8,6 +8,7 @@ ported from the Tom Shaw f1-race-replay reference (cached audits in
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Final
 
@@ -136,3 +137,63 @@ CACHE_VERSION: Final[str] = "v3"  # ref_lap_drs now sourced from quali fastest (
 # Serial by default — Windows spawn + pickling a loaded session across 8
 # workers has hung in cold-cache runs. Flip to >1 once FastF1 is warm.
 POOL_SIZE: Final[int] = 1
+
+# --- Backend (strategy SSE) ----------------------------------------------
+BACKEND_URL: Final[str] = os.environ.get("F1_BACKEND_URL", "http://localhost:8000")
+STRATEGY_ENDPOINT: Final[str] = "/api/v1/strategy/simulate"
+SSE_RECONNECT_DELAY_S: Final[float] = 2.0
+SSE_MAX_CONSECUTIVE_FAILURES: Final[int] = 3
+SSE_BACKOFF_AFTER_FAILURES_S: Final[float] = 10.0
+
+# --- Telemetry stream (arcade -> dashboard process) ----------------------
+STREAM_HOST: Final[str] = os.environ.get("F1_STREAM_HOST", "127.0.0.1")
+STREAM_PORT: Final[int] = int(os.environ.get("F1_STREAM_PORT", "9998"))
+# Broadcast every N arcade frames. At 60 FPS on_update, N=6 gives ~10 Hz,
+# smooth enough for the live charts without saturating localhost.
+STREAM_BROADCAST_EVERY_N_FRAMES: Final[int] = 6
+# Cap how many LapDecision entries we keep in the broadcast history tail.
+STREAM_HISTORY_TAIL: Final[int] = 30
+
+# --- Strategy panel geometry ---------------------------------------------
+STRATEGY_PANEL_WIDTH: Final[int] = 240
+STRATEGY_PANEL_HEIGHT: Final[int] = 300
+STRATEGY_PANEL_RIGHT_MARGIN: Final[int] = 260
+STRATEGY_PANEL_TOP_FRACTION: Final[float] = 0.48  # 1.0 = top, 0.0 = bottom
+
+# --- Menu view ------------------------------------------------------------
+MENU_TITLE: Final[str] = "F1 STRATEGY MANAGER"
+MENU_ROW_HEIGHT: Final[int] = 40
+MENU_ROW_WIDTH: Final[int] = 540
+MENU_LABEL_FONT: Final[int] = 13
+MENU_VALUE_FONT: Final[int] = 15
+MENU_HINT_FONT: Final[int] = 11
+STRATEGY_REQUIRED_YEAR: Final[int] = 2025
+
+# --- 2025 grid: driver code -> team --------------------------------------
+# Mirrors `data/processed/laps_featured_2025.parquet` (unique Driver/Team
+# pairs). Consumed by MenuView to auto-fill the team field when the user
+# types a driver code — same UX as the CLI where team is derived from the
+# driver argument. Mid-season moves (TSU Racing Bulls -> Red Bull, LAW the
+# opposite) resolved to each driver's end-of-season team.
+DRIVER_TO_TEAM_2025: Final[dict[str, str]] = {
+    "VER": "Red Bull Racing", "TSU": "Red Bull Racing",
+    "NOR": "McLaren", "PIA": "McLaren",
+    "LEC": "Ferrari", "HAM": "Ferrari",
+    "RUS": "Mercedes", "ANT": "Mercedes",
+    "ALO": "Aston Martin", "STR": "Aston Martin",
+    "ALB": "Williams", "SAI": "Williams",
+    "GAS": "Alpine", "DOO": "Alpine", "COL": "Alpine",
+    "HUL": "Kick Sauber", "BOR": "Kick Sauber",
+    "BEA": "Haas F1 Team", "OCO": "Haas F1 Team",
+    "LAW": "Racing Bulls", "HAD": "Racing Bulls",
+}
+
+# --- Grand Prix names (round -> short label) -----------------------------
+GP_NAMES: Final[dict[int, str]] = {
+    1: "Bahrain", 2: "SaudiArabia", 3: "Australia", 4: "Japan",
+    5: "China", 6: "Miami", 7: "Monaco", 8: "Canada", 9: "Spain",
+    10: "Austria", 11: "Britain", 12: "Hungary", 13: "Belgium",
+    14: "Netherlands", 15: "Italy", 16: "Singapore", 17: "Mexico",
+    18: "Brazil", 19: "LasVegas", 20: "AbuDhabi", 21: "Qatar",
+    22: "USA", 23: "Monza",
+}
