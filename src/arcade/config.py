@@ -32,17 +32,17 @@ TRACK_PADDING: Final[float] = 0.05
 
 # --- Weather panel --------------------------------------------------------
 WEATHER_LEFT: Final[int] = 20
-WEATHER_TOP_OFFSET: Final[int] = 60
+WEATHER_TOP_OFFSET: Final[int] = 90
 WEATHER_WIDTH: Final[int] = 280
 WEATHER_ROW_GAP: Final[int] = 22
 WEATHER_ICON_SIZE: Final[int] = 16
 
 # --- Driver info panel ----------------------------------------------------
 DRIVER_BOX_WIDTH: Final[int] = 300
-DRIVER_BOX_HEIGHT: Final[int] = 180
+DRIVER_BOX_HEIGHT: Final[int] = 145
 DRIVER_BOX_GAP: Final[int] = 10
-DRIVER_HEADER_HEIGHT: Final[int] = 30
-DRIVER_ROW_GAP: Final[int] = 22
+DRIVER_HEADER_HEIGHT: Final[int] = 28
+DRIVER_ROW_GAP: Final[int] = 19
 
 # --- Leaderboard ----------------------------------------------------------
 LEADERBOARD_WIDTH: Final[int] = 240
@@ -56,17 +56,29 @@ PROGRESS_BAR_HEIGHT: Final[int] = 24
 
 # --- Controls legend ------------------------------------------------------
 LEGEND_X: Final[int] = 20
-LEGEND_BOTTOM: Final[int] = 70
+LEGEND_BOTTOM: Final[int] = 60
 
 # --- Theme palette (RGB tuples) ------------------------------------------
-BG_COLOR: Final[tuple[int, int, int]] = (15, 15, 20)
-TEXT_PRIMARY: Final[tuple[int, int, int]] = (235, 235, 235)
-TEXT_SECONDARY: Final[tuple[int, int, int]] = (180, 180, 180)
-TEXT_TERTIARY: Final[tuple[int, int, int]] = (110, 110, 110)
-ACCENT: Final[tuple[int, int, int]] = (255, 165, 0)
-SUCCESS: Final[tuple[int, int, int]] = (0, 200, 80)
-WARNING: Final[tuple[int, int, int]] = (255, 210, 50)
-DANGER: Final[tuple[int, int, int]] = (220, 40, 40)
+# Mirrors src/telemetry/frontend/app/styles.py so the Arcade replay and the
+# Streamlit app read as the same product. The Streamlit file owns the
+# canonical hexes; duplicated here (not imported) to keep src/arcade/
+# dependency-free from the backend package.
+BG_COLOR: Final[tuple[int, int, int]] = (18, 17, 39)           # #121127 PRIMARY_BG
+CONTENT_BG: Final[tuple[int, int, int]] = (24, 22, 51)         # #181633 CONTENT_BG (panels)
+SECONDARY_BG: Final[tuple[int, int, int]] = (30, 27, 75)       # #1e1b4b SECONDARY_BG
+BORDER_COLOR: Final[tuple[int, int, int]] = (45, 45, 58)       # #2d2d3a BORDER
+TEXT_PRIMARY: Final[tuple[int, int, int]] = (255, 255, 255)    # #ffffff
+TEXT_SECONDARY: Final[tuple[int, int, int]] = (209, 213, 219)  # #d1d5db
+TEXT_TERTIARY: Final[tuple[int, int, int]] = (156, 163, 175)   # #9ca3af
+ACCENT: Final[tuple[int, int, int]] = (167, 139, 250)          # #a78bfa purple
+SUCCESS: Final[tuple[int, int, int]] = (16, 185, 129)          # #10b981 emerald
+WARNING: Final[tuple[int, int, int]] = (245, 158, 11)          # #f59e0b amber
+DANGER: Final[tuple[int, int, int]] = (239, 68, 68)            # #ef4444 red
+INFO: Final[tuple[int, int, int]] = (59, 130, 246)             # #3b82f6 blue
+
+# --- Typography (arcade.Text font_name accepts a fallback tuple) ---------
+FONT_BODY: Final[tuple[str, ...]] = ("Inter", "Segoe UI", "Arial")
+FONT_TITLE: Final[tuple[str, ...]] = ("Exo 2", "Inter", "Segoe UI", "Arial")
 
 # --- Track rendering ------------------------------------------------------
 TRACK_EDGE_COLOR: Final[tuple[int, int, int]] = (150, 150, 150)
@@ -103,15 +115,15 @@ CAR_LABEL_FONT_SIZE: Final[int] = 11
 
 # --- Progress bar flag colors --------------------------------------------
 FLAG_COLORS: Final[dict[str, tuple[int, int, int]]] = {
-    "yellow_flag": (255, 220, 0),
-    "red_flag": (220, 30, 30),
-    "safety_car": (255, 140, 0),
-    "vsc": (255, 165, 0),
-    "dnf": (220, 50, 50),
-    "progress_fill": (0, 180, 0),
-    "lap_marker": (80, 80, 80),
-    "background": (30, 30, 30),
-    "playhead": (255, 255, 255),
+    "yellow_flag": WARNING,
+    "red_flag": DANGER,
+    "safety_car": WARNING,
+    "vsc": (245, 158, 11),
+    "dnf": DANGER,
+    "progress_fill": ACCENT,
+    "lap_marker": BORDER_COLOR,
+    "background": CONTENT_BG,
+    "playhead": TEXT_PRIMARY,
 }
 
 # --- Paths ----------------------------------------------------------------
