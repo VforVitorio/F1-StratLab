@@ -16,14 +16,19 @@ from typing import Any, Final
 import arcade
 
 from src.arcade.config import (
+    ACCENT,
+    BORDER_COLOR,
     COMPOUND_COLORS,
     COMPOUND_LETTERS,
+    CONTENT_BG,
     DRIVER_BOX_GAP,
     DRIVER_BOX_HEIGHT,
     DRIVER_BOX_WIDTH,
     DRIVER_HEADER_HEIGHT,
     DRIVER_ROW_GAP,
     FLAG_COLORS,
+    FONT_BODY,
+    FONT_TITLE,
     LEADERBOARD_N_SLOTS,
     LEADERBOARD_ROW_HEIGHT,
     LEADERBOARD_WIDTH,
@@ -31,9 +36,11 @@ from src.arcade.config import (
     LEGEND_X,
     PROGRESS_BAR_BOTTOM,
     PROGRESS_BAR_HEIGHT,
+    SUCCESS,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
     TEXT_TERTIARY,
+    WARNING,
     WEATHER_LEFT,
     WEATHER_ROW_GAP,
     WEATHER_TOP_OFFSET,
@@ -55,7 +62,14 @@ def _wind_dir(deg: float | None) -> str:
 
 
 class WeatherPanel:
-    """Top-left weather readout: track/air temp, humidity, wind, rain."""
+    """Top-left weather readout: track/air temp, humidity, wind, rain.
+
+    Visual identity: translucent CONTENT_BG card with a 1 px BORDER outline and
+    a 3 px ACCENT top-strip. Readings are Inter body text, label in TERTIARY
+    and value in PRIMARY — same convention the Streamlit sidebar uses."""
+
+    PANEL_PADDING: int = 12
+    STRIP_H: int = 3
 
     def __init__(
         self,
@@ -68,44 +82,74 @@ class WeatherPanel:
         self.width = width
         self.bottom_y: int = 0
         self._title = arcade.Text(
-            "Weather", x, 0, TEXT_PRIMARY, 16, bold=True,
+            "WEATHER", x, 0, ACCENT, 13, bold=True,
+            font_name=FONT_TITLE, anchor_x="left", anchor_y="top",
+        )
+        self._label = arcade.Text(
+            "", 0, 0, TEXT_TERTIARY, 11, font_name=FONT_BODY,
             anchor_x="left", anchor_y="top",
         )
-        self._line = arcade.Text(
-            "", x + 12, 0, TEXT_SECONDARY, 12,
-            anchor_x="left", anchor_y="top",
+        self._value = arcade.Text(
+            "", 0, 0, TEXT_PRIMARY, 11, font_name=FONT_BODY, bold=True,
+            anchor_x="right", anchor_y="top",
         )
 
     def draw(self, frame: dict | None, window_height: int) -> None:
         weather = (frame or {}).get("weather") or {}
         top_y = window_height - self.top_offset
-        self._title.x = self.x
-        self._title.y = top_y
+        rows: list[tuple[str, str]] = [
+            ("Track", f"{weather.get('track_temp', 45.0):.1f} C"),
+            ("Air", f"{weather.get('air_temp', 18.0):.1f} C"),
+            ("Humidity", f"{weather.get('humidity', 55.0):.0f}%"),
+            ("Wind", f"{weather.get('wind_speed', 0.0):.1f} km/h "
+                     f"{_wind_dir(weather.get('wind_direction'))}"),
+            ("Rain", f"{weather.get('rain_state', 'DRY')}"),
+        ]
+        panel_h = 26 + len(rows) * WEATHER_ROW_GAP + self.PANEL_PADDING
+        self._draw_card(top_y, panel_h)
+
+        self._title.x = self.x + self.PANEL_PADDING
+        self._title.y = top_y - 10
         self._title.draw()
 
-        lines = [
-            f"Track: {weather.get('track_temp', 45.0):.1f} C",
-            f"Air: {weather.get('air_temp', 18.0):.1f} C",
-            f"Humidity: {weather.get('humidity', 55.0):.0f}%",
-            f"Wind: {weather.get('wind_speed', 0.0):.1f} km/h "
-            f"{_wind_dir(weather.get('wind_direction'))}",
-            f"Rain: {weather.get('rain_state', 'DRY')}",
-        ]
-        y = top_y - 24
-        for line in lines:
-            self._line.text = line
-            self._line.x = self.x + 12
-            self._line.y = y
-            self._line.draw()
+        y = top_y - 32
+        for label, value in rows:
+            self._label.text = label
+            self._label.x = self.x + self.PANEL_PADDING
+            self._label.y = y
+            self._label.draw()
+            self._value.text = value
+            self._value.x = self.x + self.width - self.PANEL_PADDING
+            self._value.y = y
+            self._value.draw()
             y -= WEATHER_ROW_GAP
         self.bottom_y = y + WEATHER_ROW_GAP - 10
 
+    def _draw_card(self, top_y: int, panel_h: int) -> None:
+        cx = self.x + self.width / 2
+        cy = top_y - panel_h / 2
+        arcade.draw_rect_filled(
+            arcade.XYWH(cx, cy, self.width, panel_h), (*CONTENT_BG, 230)
+        )
+        arcade.draw_rect_outline(
+            arcade.XYWH(cx, cy, self.width, panel_h), BORDER_COLOR, 1
+        )
+        strip_cy = top_y - self.STRIP_H / 2
+        arcade.draw_rect_filled(
+            arcade.XYWH(cx, strip_cy, self.width, self.STRIP_H), ACCENT
+        )
+
 
 class DriverInfoPanel:
-    """Telemetry box for one driver: speed, gear, DRS, ahead/behind gaps."""
+    """Telemetry box for one driver: speed, gear, DRS, compound, gaps.
 
-    BG_COLOR: tuple[int, int, int, int] = (0, 0, 0, 200)
-    HEADER_TEXT: tuple[int, int, int] = (15, 15, 20)
+    Redesigned vs f1_replay's filled team-colour header: we use a neutral
+    CONTENT_BG card with a 3 px team-colour strip on top and the driver
+    code rendered in team colour, which reads as the same product as the
+    Streamlit pages instead of a clone of the reference app."""
+
+    STRIP_H: int = 3
+    PAD_X: int = 12
 
     def __init__(
         self,
@@ -123,11 +167,20 @@ class DriverInfoPanel:
         self.code = driver_code
         self.color = color
         self._header = arcade.Text(
-            f"Driver: {driver_code}", 0, 0, self.HEADER_TEXT, 13, bold=True,
+            driver_code, 0, 0, color, 15, bold=True,
+            font_name=FONT_TITLE, anchor_x="left", anchor_y="center",
+        )
+        self._subheader = arcade.Text(
+            "DRIVER", 0, 0, TEXT_TERTIARY, 9, bold=True,
+            font_name=FONT_TITLE, anchor_x="right", anchor_y="center",
+        )
+        self._label = arcade.Text(
+            "", 0, 0, TEXT_TERTIARY, 10, font_name=FONT_BODY,
             anchor_x="left", anchor_y="center",
         )
-        self._line = arcade.Text(
-            "", 0, 0, TEXT_PRIMARY, 12, anchor_x="left", anchor_y="center"
+        self._value = arcade.Text(
+            "", 0, 0, TEXT_PRIMARY, 11, font_name=FONT_BODY, bold=True,
+            anchor_x="right", anchor_y="center",
         )
 
     def set_top(self, top_y: int) -> None:
@@ -144,35 +197,46 @@ class DriverInfoPanel:
         cx = self.x + self.width / 2
         cy = self.top_y - self.height / 2
 
-        arcade.draw_rect_filled(arcade.XYWH(cx, cy, self.width, self.height), self.BG_COLOR)
+        arcade.draw_rect_filled(
+            arcade.XYWH(cx, cy, self.width, self.height), (*CONTENT_BG, 230)
+        )
         arcade.draw_rect_outline(
-            arcade.XYWH(cx, cy, self.width, self.height), self.color, 2
+            arcade.XYWH(cx, cy, self.width, self.height), BORDER_COLOR, 1
+        )
+        strip_cy = self.top_y - self.STRIP_H / 2
+        arcade.draw_rect_filled(
+            arcade.XYWH(cx, strip_cy, self.width, self.STRIP_H), self.color
         )
         header_cy = self.top_y - DRIVER_HEADER_HEIGHT / 2
-        arcade.draw_rect_filled(
-            arcade.XYWH(cx, header_cy, self.width, DRIVER_HEADER_HEIGHT), self.color
-        )
-        self._header.x = self.x + 10
+        self._header.x = self.x + self.PAD_X
         self._header.y = header_cy
         self._header.draw()
+        self._subheader.x = self.x + self.width - self.PAD_X
+        self._subheader.y = header_cy
+        self._subheader.draw()
 
         ahead, behind = self._neighbor_gaps(all_drivers_sorted)
-        rows = [
-            (f"Speed: {data.get('speed', 0):.0f} km/h", TEXT_PRIMARY),
-            (f"Gear: {data.get('gear', 0)}", TEXT_PRIMARY),
-            (f"DRS: {self._drs_label(data.get('drs', 0))}", self._drs_color(data.get("drs", 0))),
-            (f"Compound: {COMPOUND_LETTERS.get(int(data.get('tyre', 1)), '?')}",
+        rows: list[tuple[str, str, tuple[int, int, int]]] = [
+            ("Speed", f"{data.get('speed', 0):.0f} km/h", TEXT_PRIMARY),
+            ("Gear", f"{data.get('gear', 0)}", TEXT_PRIMARY),
+            ("DRS", self._drs_label(data.get("drs", 0)), self._drs_color(data.get("drs", 0))),
+            ("Compound",
+             COMPOUND_LETTERS.get(int(data.get("tyre", 1)), "?"),
              COMPOUND_COLORS.get(int(data.get("tyre", 1)), TEXT_PRIMARY)),
-            (ahead, TEXT_SECONDARY),
-            (behind, TEXT_SECONDARY),
+            ("Ahead", ahead, TEXT_SECONDARY),
+            ("Behind", behind, TEXT_SECONDARY),
         ]
-        y = self.top_y - DRIVER_HEADER_HEIGHT - 16
-        for text, color in rows:
-            self._line.text = text
-            self._line.color = color
-            self._line.x = self.x + 12
-            self._line.y = y
-            self._line.draw()
+        y = self.top_y - DRIVER_HEADER_HEIGHT - 14
+        for label, value, color in rows:
+            self._label.text = label
+            self._label.x = self.x + self.PAD_X
+            self._label.y = y
+            self._label.draw()
+            self._value.text = value
+            self._value.color = color
+            self._value.x = self.x + self.width - self.PAD_X
+            self._value.y = y
+            self._value.draw()
             y -= DRIVER_ROW_GAP
 
     @staticmethod
@@ -197,22 +261,22 @@ class DriverInfoPanel:
         self, sorted_drivers: list[tuple[str, float]] | None
     ) -> tuple[str, str]:
         if not sorted_drivers:
-            return "Ahead: N/A", "Behind: N/A"
+            return "N/A", "N/A"
         codes = [c for c, _ in sorted_drivers]
         if self.code not in codes:
-            return "Ahead: N/A", "Behind: N/A"
+            return "N/A", "N/A"
         idx = codes.index(self.code)
-        ahead_txt = "Ahead: LEADER" if idx == 0 else self._gap_line(
-            "Ahead", sorted_drivers[idx - 1], sorted_drivers[idx]
+        ahead = "LEADER" if idx == 0 else self._gap_value(
+            "+", sorted_drivers[idx - 1], sorted_drivers[idx]
         )
-        behind_txt = "Behind: LAST" if idx == len(codes) - 1 else self._gap_line(
-            "Behind", sorted_drivers[idx + 1], sorted_drivers[idx]
+        behind = "LAST" if idx == len(codes) - 1 else self._gap_value(
+            "-", sorted_drivers[idx + 1], sorted_drivers[idx]
         )
-        return ahead_txt, behind_txt
+        return ahead, behind
 
     @staticmethod
-    def _gap_line(
-        label: str,
+    def _gap_value(
+        sign: str,
         other: tuple[str, float],
         self_entry: tuple[str, float],
     ) -> str:
@@ -220,12 +284,21 @@ class DriverInfoPanel:
         _, self_prog = self_entry
         dist = abs(other_prog - self_prog)
         time_s = dist / 55.56 if dist > 0 else 0.0
-        sign = "+" if label == "Ahead" else "-"
-        return f"{label} ({other_code}): {sign}{time_s:.2f}s ({dist:.0f}m)"
+        return f"{other_code} {sign}{time_s:.2f}s"
 
 
 class LeaderboardPanel:
-    """Right-edge list of all drivers ranked by race-cumulative progress."""
+    """Right-edge list of all drivers ranked by race-cumulative progress.
+
+    Visual identity: same card language as Weather/DriverInfo — translucent
+    CONTENT_BG, 1 px BORDER outline, 3 px ACCENT top-strip, rank numbers in
+    TERTIARY, codes in team colour, compound letter in compound colour on the
+    right edge. Selected row is filled with SECONDARY_BG instead of a bare
+    grey rect."""
+
+    STRIP_H: int = 3
+    PAD_X: int = 10
+    HEADER_H: int = 28
 
     def __init__(
         self,
@@ -239,17 +312,22 @@ class LeaderboardPanel:
         self.width = width
         self._row_rects: list[tuple[str, float, float, float, float]] = []
         self._title = arcade.Text(
-            "Leaderboard", x, top_y, TEXT_PRIMARY, 16, bold=True,
-            anchor_x="left", anchor_y="top",
+            "LEADERBOARD", x, top_y, ACCENT, 13, bold=True,
+            font_name=FONT_TITLE, anchor_x="left", anchor_y="top",
         )
         self._rank_texts = [
-            arcade.Text("", 0, 0, TEXT_PRIMARY, 13,
+            arcade.Text("", 0, 0, TEXT_TERTIARY, 11, font_name=FONT_BODY,
                         anchor_x="left", anchor_y="top")
             for _ in range(n_slots)
         ]
-        self._compound_texts = [
+        self._code_texts = [
             arcade.Text("", 0, 0, TEXT_PRIMARY, 12, bold=True,
-                        anchor_x="right", anchor_y="top")
+                        font_name=FONT_BODY, anchor_x="left", anchor_y="top")
+            for _ in range(n_slots)
+        ]
+        self._compound_texts = [
+            arcade.Text("", 0, 0, TEXT_PRIMARY, 11, bold=True,
+                        font_name=FONT_BODY, anchor_x="right", anchor_y="top")
             for _ in range(n_slots)
         ]
 
@@ -265,17 +343,22 @@ class LeaderboardPanel:
     ) -> None:
         selected_drivers = selected_drivers or set()
         ranked = self._rank_drivers(frame, track_len)
-        self._title.x = self.x
-        self._title.y = self.top_y
-        self._title.draw()
-        self._row_rects = []
+        n_rows = min(len(ranked), len(self._rank_texts))
+        panel_h = self.HEADER_H + n_rows * LEADERBOARD_ROW_HEIGHT + 8
+        self._draw_card(panel_h)
 
-        y = self.top_y - 26
-        for i, (code, data, _) in enumerate(ranked[: len(self._rank_texts)]):
+        self._title.x = self.x + self.PAD_X
+        self._title.y = self.top_y - 8
+        self._title.draw()
+
+        self._row_rects = []
+        y = self.top_y - self.HEADER_H
+
+        for i, (code, data, _) in enumerate(ranked[:n_rows]):
             color = driver_colors.get(code, TEXT_PRIMARY)
             is_highlighted = code in selected_drivers
             rect_cx = self.x + self.width / 2
-            rect_cy = y - LEADERBOARD_ROW_HEIGHT / 2 + 8
+            rect_cy = y - LEADERBOARD_ROW_HEIGHT / 2 + 6
             self._row_rects.append(
                 (code, self.x, rect_cy - LEADERBOARD_ROW_HEIGHT / 2,
                  self.x + self.width, rect_cy + LEADERBOARD_ROW_HEIGHT / 2)
@@ -283,26 +366,47 @@ class LeaderboardPanel:
             if is_highlighted:
                 arcade.draw_rect_filled(
                     arcade.XYWH(rect_cx, rect_cy, self.width, LEADERBOARD_ROW_HEIGHT),
-                    (70, 70, 80),
+                    (*ACCENT, 70),
                 )
 
-            out_flag = "  OUT" if not data.get("active", True) else ""
+            is_out = not data.get("active", True)
             rt = self._rank_texts[i]
-            rt.text = f"{i + 1}. {code}{out_flag}"
-            rt.color = color
-            rt.x = self.x + 8
+            rt.text = f"{i + 1:>2}"
+            rt.color = TEXT_TERTIARY
+            rt.x = self.x + self.PAD_X
             rt.y = y
             rt.draw()
 
-            compound = int(data.get("tyre", 1))
-            ct = self._compound_texts[i]
-            ct.text = COMPOUND_LETTERS.get(compound, "?")
-            ct.color = COMPOUND_COLORS.get(compound, TEXT_PRIMARY)
-            ct.x = self.x + self.width - 8
+            ct = self._code_texts[i]
+            ct.text = f"{code}{' OUT' if is_out else ''}"
+            ct.color = color
+            ct.x = self.x + self.PAD_X + 28
             ct.y = y
             ct.draw()
 
+            compound = int(data.get("tyre", 1))
+            pt = self._compound_texts[i]
+            pt.text = COMPOUND_LETTERS.get(compound, "?")
+            pt.color = COMPOUND_COLORS.get(compound, TEXT_PRIMARY)
+            pt.x = self.x + self.width - self.PAD_X
+            pt.y = y
+            pt.draw()
+
             y -= LEADERBOARD_ROW_HEIGHT
+
+    def _draw_card(self, panel_h: int) -> None:
+        cx = self.x + self.width / 2
+        cy = self.top_y - panel_h / 2
+        arcade.draw_rect_filled(
+            arcade.XYWH(cx, cy, self.width, panel_h), (*CONTENT_BG, 230)
+        )
+        arcade.draw_rect_outline(
+            arcade.XYWH(cx, cy, self.width, panel_h), BORDER_COLOR, 1
+        )
+        strip_cy = self.top_y - self.STRIP_H / 2
+        arcade.draw_rect_filled(
+            arcade.XYWH(cx, strip_cy, self.width, self.STRIP_H), ACCENT
+        )
 
     def sorted_progress(
         self, frame: dict, track_len: float
@@ -352,7 +456,8 @@ class ProgressBar:
         self._bar_left = left_margin
         self._bar_width = 1
         self._lap_label = arcade.Text(
-            "1", 0, 0, TEXT_SECONDARY, 10, anchor_x="center", anchor_y="top"
+            "1", 0, 0, TEXT_TERTIARY, 10, font_name=FONT_BODY,
+            anchor_x="center", anchor_y="top"
         )
 
     def on_resize(self, window_width: int) -> None:
@@ -431,38 +536,51 @@ class ProgressBar:
 
 
 class ControlsLegend:
-    """Static bottom-left cheat sheet for keyboard bindings."""
+    """Static bottom-left cheat sheet for keyboard bindings.
 
-    LINES: Final[tuple[str, ...]] = (
-        "[SPACE] Pause/Resume",
-        "[<- / ->] Rewind / Fast-Forward",
-        "[Up/Down] Speed +/- (0.25, 0.5, 1, 2, 4, 8x)",
-        "[1-4] 0.5 / 1 / 2 / 4x",
-        "[R] Restart",
-        "[D] Toggle DRS Zones",
-        "[B] Toggle Progress Bar",
-        "[ESC] Close",
+    Uses the same ACCENT title / TERTIARY body convention as the other
+    panels so the legend reads as part of the UI instead of a debug
+    overlay."""
+
+    LINES: Final[tuple[tuple[str, str], ...]] = (
+        ("SPACE", "Pause / Resume"),
+        ("<- / ->", "Rewind / Fast-Forward"),
+        ("Up / Down", "Speed +/-"),
+        ("1 - 4", "0.5 / 1 / 2 / 4 x"),
+        ("R", "Restart"),
+        ("D", "Toggle DRS zones"),
+        ("B", "Toggle progress bar"),
+        ("ESC", "Close"),
     )
 
     def __init__(self, x: int = LEGEND_X, bottom: int = LEGEND_BOTTOM) -> None:
         self.x = x
         self.bottom = bottom
         self._header = arcade.Text(
-            "Controls:", x, 0, TEXT_PRIMARY, 12, bold=True,
+            "CONTROLS", x, 0, ACCENT, 12, bold=True, font_name=FONT_TITLE,
             anchor_x="left", anchor_y="bottom",
         )
-        self._lines = [
-            arcade.Text(line, 0, 0, TEXT_SECONDARY, 10,
-                        anchor_x="left", anchor_y="bottom")
-            for line in self.LINES
+        self._key_texts = [
+            arcade.Text(key, 0, 0, TEXT_PRIMARY, 10, bold=True,
+                        font_name=FONT_BODY, anchor_x="left", anchor_y="bottom")
+            for key, _ in self.LINES
+        ]
+        self._desc_texts = [
+            arcade.Text(desc, 0, 0, TEXT_TERTIARY, 10,
+                        font_name=FONT_BODY, anchor_x="left", anchor_y="bottom")
+            for _, desc in self.LINES
         ]
 
     def draw(self) -> None:
         y = self.bottom
-        for i, txt in enumerate(reversed(self._lines)):
-            txt.x = self.x
-            txt.y = y + i * 14
-            txt.draw()
+        rows = list(zip(self._key_texts, self._desc_texts))
+        for i, (key, desc) in enumerate(reversed(rows)):
+            key.x = self.x
+            key.y = y + i * 14
+            key.draw()
+            desc.x = self.x + 70
+            desc.y = y + i * 14
+            desc.draw()
         self._header.x = self.x
-        self._header.y = self.bottom + len(self._lines) * 14 + 4
+        self._header.y = self.bottom + len(self.LINES) * 14 + 6
         self._header.draw()
