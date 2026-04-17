@@ -1,10 +1,11 @@
-"""The Arcade Window orchestrating playback, car rendering, and UI panels.
+"""The Arcade race replay view orchestrating playback, cars, and panels.
 
-Construction contract (enforced by `main.py`): `session_data` and `track` are
-already loaded and built in the main thread before `arcade.Window.__init__`
-runs. That way every `arcade.Text` allocated here and in child panels has an
-active GL context, avoiding the pyglet 0x1282 errors we hit when loading
-asynchronously.
+Refactored from a root `arcade.Window` into an `arcade.View` so the menu
+view can spawn a fresh replay whenever the user confirms a configuration.
+Construction contract: the caller creates the `arcade.Window` first, loads
+`SessionData` + `Track` in the main thread, and hands them plus the window
+reference to this view so every `arcade.Text` allocated here (and in child
+panels) has an active GL context from the start.
 """
 
 from __future__ import annotations
@@ -34,13 +35,14 @@ from src.arcade.config import (
     MARGIN_RIGHT,
     MARGIN_TOP,
     PLAYBACK_SPEEDS,
-    SCREEN_HEIGHT,
-    SCREEN_WIDTH,
     SEEK_RATE_MULTIPLIER,
+    STREAM_BROADCAST_EVERY_N_FRAMES,
+    STREAM_HISTORY_TAIL,
+    STREAM_HOST,
+    STREAM_PORT,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
     TEXT_TERTIARY,
-    WINDOW_TITLE,
 )
 from src.arcade.data import FrameData, SessionData
 from src.arcade.overlays import (
@@ -55,23 +57,26 @@ from src.arcade.track import Track
 logger = logging.getLogger(__name__)
 
 
-class F1ArcadeWindow(arcade.Window):
-    """Renders the race replay and owns the playback state machine."""
+class F1ArcadeView(arcade.View):
+    """Renders the race replay and owns the playback state machine.
+
+    Lives inside a `arcade.Window` provided by `main.py`. The window is
+    passed in so self.window is populated immediately — every arcade.Text
+    created in this __init__ or its child panels sees the active GL context
+    right away. Call via `window.show_view(F1ArcadeView(window, ...))`."""
 
     def __init__(
         self,
+        window: arcade.Window,
         session_data: SessionData,
         track: Track,
         driver_main: str,
         driver_rival: str | None = None,
         year: int = 2024,
+        strategy_enabled: bool = False,
+        team: str | None = None,
     ) -> None:
-        super().__init__(
-            width=SCREEN_WIDTH,
-            height=SCREEN_HEIGHT,
-            title=WINDOW_TITLE,
-            resizable=True,
-        )
+        super().__init__(window=window)
         arcade.set_background_color(BG_COLOR)
 
         self._session = session_data
@@ -79,6 +84,13 @@ class F1ArcadeWindow(arcade.Window):
         self._driver_main = driver_main
         self._driver_rival = driver_rival
         self._year = year
+        self._strategy_enabled = strategy_enabled
+        self._team = team
+        self._strategy_connector = None  # set by __init__ if strategy_enabled
+        self._strategy_state = None
+        self._strategy_panel = None
+        self._stream_server = None
+        self._broadcast_tick: int = 0
 
         self._frame_index: float = 0.0
         self._speed_idx: int = DEFAULT_SPEED_IDX
@@ -92,41 +104,42 @@ class F1ArcadeWindow(arcade.Window):
         if driver_rival:
             self._selected_drivers.add(driver_rival)
 
+        w, h = window.width, window.height
         self._track.update_scaling(
-            SCREEN_WIDTH, SCREEN_HEIGHT,
+            w, h,
             margin_left=MARGIN_LEFT, margin_right=MARGIN_RIGHT,
             margin_bottom=MARGIN_BOTTOM, margin_top=MARGIN_TOP,
         )
 
         self._lap_label = arcade.Text(
-            "LAP", 20, SCREEN_HEIGHT - 20, ACCENT, 11, bold=True,
+            "LAP", 20, h - 20, ACCENT, 11, bold=True,
             font_name=FONT_TITLE, anchor_x="left", anchor_y="top",
         )
         self._lap_text = arcade.Text(
-            "1/58", 20, SCREEN_HEIGHT - 36, TEXT_PRIMARY, 22, bold=True,
+            "1/58", 20, h - 36, TEXT_PRIMARY, 22, bold=True,
             font_name=FONT_TITLE, anchor_x="left", anchor_y="top",
         )
         self._time_text = arcade.Text(
-            "00:00:00  x1.0", 20, SCREEN_HEIGHT - 66,
+            "00:00:00  x1.0", 20, h - 66,
             TEXT_TERTIARY, 12, font_name=FONT_BODY,
             anchor_x="left", anchor_y="top",
         )
 
         self._weather = WeatherPanel()
         self._leaderboard = LeaderboardPanel(
-            x=SCREEN_WIDTH - LEADERBOARD_RIGHT_MARGIN,
-            top_y=SCREEN_HEIGHT - 20,
+            x=w - LEADERBOARD_RIGHT_MARGIN,
+            top_y=h - 20,
             width=LEADERBOARD_WIDTH,
         )
         self._driver_info_main = DriverInfoPanel(
-            x=20, top_y=SCREEN_HEIGHT - 200, width=DRIVER_BOX_WIDTH,
+            x=20, top_y=h - 200, width=DRIVER_BOX_WIDTH,
             height=DRIVER_BOX_HEIGHT, driver_code=driver_main,
             color=self._color_for(driver_main),
         )
         self._driver_info_rival: DriverInfoPanel | None = None
         if driver_rival:
             self._driver_info_rival = DriverInfoPanel(
-                x=20, top_y=SCREEN_HEIGHT - 200 - DRIVER_BOX_HEIGHT - DRIVER_BOX_GAP,
+                x=20, top_y=h - 200 - DRIVER_BOX_HEIGHT - DRIVER_BOX_GAP,
                 width=DRIVER_BOX_WIDTH, height=DRIVER_BOX_HEIGHT,
                 driver_code=driver_rival, color=self._color_for(driver_rival),
             )
@@ -137,7 +150,7 @@ class F1ArcadeWindow(arcade.Window):
             events=session_data.events,
             left_margin=MARGIN_LEFT, right_margin=MARGIN_RIGHT,
         )
-        self._progress_bar.on_resize(SCREEN_WIDTH)
+        self._progress_bar.on_resize(w)
         self._controls_legend = ControlsLegend()
 
         self._car_label_main = arcade.Text(
@@ -152,11 +165,69 @@ class F1ArcadeWindow(arcade.Window):
             anchor_x="center", anchor_y="top",
         )
 
+        if self._strategy_enabled:
+            self._init_strategy_layer()
+
         logger.info(
-            "F1ArcadeWindow ready: %s vs %s, %d drivers, %d frames",
+            "F1ArcadeView ready: %s vs %s, %d drivers, %d frames, strategy=%s",
             driver_main, driver_rival, len(session_data.frames_by_driver),
-            session_data.total_frames,
+            session_data.total_frames, self._strategy_enabled,
         )
+
+    def _init_strategy_layer(self) -> None:
+        """Instantiate the strategy panel, SSE connector, and broadcast server.
+
+        The TCP stream server is bound here (and torn down in `on_hide_view`)
+        so a separate PySide6 dashboard process can subscribe to merged
+        arcade+strategy state updates — deferred to a follow-up session."""
+        from src.arcade.overlays import StrategyPanel
+        from src.arcade.strategy import SimConnector, SimulateRequestDTO, StrategyState
+        from src.arcade.stream import TelemetryStreamServer
+
+        gp_name = self._resolve_gp_name()
+        request = SimulateRequestDTO(
+            year=self._year,
+            gp=gp_name,
+            driver=self._driver_main,
+            team=self._team or "",
+            driver2=self._driver_rival,
+            risk_tolerance=0.5,
+            no_llm=False,
+            provider="lmstudio",
+            interval_s=0.0,
+        )
+        self._strategy_state = StrategyState()
+        self._strategy_connector = SimConnector(
+            request=request, state=self._strategy_state
+        )
+        self._strategy_panel = StrategyPanel(
+            x=self.window.width - 260,
+            top_y=int(self.window.height * 0.52),
+        )
+        self._strategy_connector.start()
+
+        try:
+            self._stream_server = TelemetryStreamServer(
+                host=STREAM_HOST, port=STREAM_PORT
+            )
+            self._stream_server.start()
+        except OSError as exc:
+            logger.warning("Stream server failed to bind %s:%d (%s)",
+                           STREAM_HOST, STREAM_PORT, exc)
+            self._stream_server = None
+
+    def _resolve_gp_name(self) -> str:
+        from src.arcade.config import GP_NAMES
+        # Best-effort: match SessionData.gp_name if it's a known GP label
+        return self._session.gp_name or GP_NAMES.get(1, "Bahrain")
+
+    def on_hide_view(self) -> None:
+        """Tear down the SSE connector and stream server on view swap/close."""
+        if self._strategy_connector is not None:
+            self._strategy_connector.stop()
+        if self._stream_server is not None:
+            self._stream_server.stop()
+            self._stream_server = None
 
     # --- Arcade event loop -----------------------------------------------
 
@@ -169,10 +240,66 @@ class F1ArcadeWindow(arcade.Window):
         elif self._is_forwarding:
             self._frame_index = min(max_f, self._frame_index + delta_time * FPS * seek_rate)
 
-        if self._is_paused:
+        if not self._is_paused:
+            self._frame_index += delta_time * FPS * self.playback_speed
+            self._frame_index = max(0.0, min(max_f, self._frame_index))
+
+        self._broadcast_if_due()
+
+    def _broadcast_if_due(self) -> None:
+        """Throttle the TCP broadcast to ~10 Hz regardless of arcade FPS."""
+        if self._stream_server is None or self._strategy_state is None:
             return
-        self._frame_index += delta_time * FPS * self.playback_speed
-        self._frame_index = max(0.0, min(max_f, self._frame_index))
+        self._broadcast_tick = (self._broadcast_tick + 1) % STREAM_BROADCAST_EVERY_N_FRAMES
+        if self._broadcast_tick != 0:
+            return
+        if self._stream_server.client_count() == 0:
+            return  # no subscriber, skip the serialisation cost
+        frame_idx = int(self._frame_index)
+        payload = {
+            "arcade": self._build_arcade_snapshot(frame_idx),
+            "strategy": self._strategy_state.snapshot_dict(STREAM_HISTORY_TAIL),
+            "playback": {
+                "speed": self.playback_speed,
+                "paused": self._is_paused,
+                "frame_index": frame_idx,
+                "total_frames": self._session.total_frames,
+            },
+        }
+        self._stream_server.broadcast(payload)
+
+    def _build_arcade_snapshot(self, frame_idx: int) -> dict:
+        """Compact version of the per-frame dict the dashboard needs.
+
+        Lighter than the internal `_build_frame_dict` consumed by the
+        panels: we drop fields the dashboard does not use (rel_dist,
+        throttle, brake, active flag) to keep the broadcast JSON small."""
+        drivers: dict[str, dict] = {}
+        for code, frames in self._session.frames_by_driver.items():
+            if not frames or frame_idx >= len(frames):
+                continue
+            f = frames[frame_idx]
+            drivers[code] = {
+                "lap": f.lap,
+                "dist": round(f.dist, 1),
+                "speed": round(f.speed, 1),
+                "compound": f.tyre,
+                "tyre_life": round(f.tyre_life, 1),
+            }
+        main_frame = None
+        main_frames = self._session.frames_by_driver.get(self._driver_main)
+        if main_frames and frame_idx < len(main_frames):
+            main_frame = main_frames[frame_idx]
+        return {
+            "gp_name": self._session.gp_name,
+            "year": self._year,
+            "lap": main_frame.lap if main_frame else 1,
+            "t": main_frame.t if main_frame else 0.0,
+            "total_laps": self._session.max_lap_number,
+            "driver_main": self._driver_main,
+            "driver_rival": self._driver_rival,
+            "drivers": drivers,
+        }
 
     def on_draw(self) -> None:
         self.clear()
@@ -188,7 +315,7 @@ class F1ArcadeWindow(arcade.Window):
         self._leaderboard.draw(
             frame, self._session.driver_colors, track_len, self._selected_drivers
         )
-        self._weather.draw(frame, self.height)
+        self._weather.draw(frame, self.window.height)
         sorted_progress = self._leaderboard.sorted_progress(frame, track_len)
         self._driver_info_main.set_top(self._weather.bottom_y - 10)
         self._driver_info_main.draw(frame, sorted_progress)
@@ -198,14 +325,17 @@ class F1ArcadeWindow(arcade.Window):
             )
             self._driver_info_rival.draw(frame, sorted_progress)
 
+        if self._strategy_panel is not None and self._strategy_state is not None:
+            self._strategy_panel.draw(self._strategy_state)
+
         if self._show_progress_bar:
-            self._progress_bar.draw(self.width, frame_idx)
+            self._progress_bar.draw(self.window.width, frame_idx)
         self._controls_legend.draw()
         self._update_hud(frame)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         if symbol == arcade.key.ESCAPE:
-            self.close()
+            self.window.close()
         elif symbol == arcade.key.SPACE:
             self._is_paused = not self._is_paused
         elif symbol == arcade.key.LEFT:
@@ -259,7 +389,6 @@ class F1ArcadeWindow(arcade.Window):
             self._selected_drivers = {code}
 
     def on_resize(self, width: float, height: float) -> None:
-        super().on_resize(width, height)
         self._track.update_scaling(
             int(width), int(height),
             margin_left=MARGIN_LEFT, margin_right=MARGIN_RIGHT,
@@ -271,6 +400,9 @@ class F1ArcadeWindow(arcade.Window):
         self._lap_text.y = int(height) - 36
         self._time_text.y = int(height) - 66
         self._progress_bar.on_resize(int(width))
+        if self._strategy_panel is not None:
+            self._strategy_panel.x = int(width) - 260
+            self._strategy_panel.top_y = int(height * 0.52)
 
     # --- Helpers ---------------------------------------------------------
 
