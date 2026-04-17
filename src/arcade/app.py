@@ -14,6 +14,7 @@ import logging
 import arcade
 
 from src.arcade.config import (
+    ACCENT,
     BG_COLOR,
     CAR_BORDER_COLOR,
     CAR_BORDER_WIDTH,
@@ -23,6 +24,8 @@ from src.arcade.config import (
     DRIVER_BOX_GAP,
     DRIVER_BOX_HEIGHT,
     DRIVER_BOX_WIDTH,
+    FONT_BODY,
+    FONT_TITLE,
     FPS,
     LEADERBOARD_RIGHT_MARGIN,
     LEADERBOARD_WIDTH,
@@ -36,6 +39,7 @@ from src.arcade.config import (
     SEEK_RATE_MULTIPLIER,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
+    TEXT_TERTIARY,
     WINDOW_TITLE,
 )
 from src.arcade.data import FrameData, SessionData
@@ -94,13 +98,18 @@ class F1ArcadeWindow(arcade.Window):
             margin_bottom=MARGIN_BOTTOM, margin_top=MARGIN_TOP,
         )
 
+        self._lap_label = arcade.Text(
+            "LAP", 20, SCREEN_HEIGHT - 20, ACCENT, 11, bold=True,
+            font_name=FONT_TITLE, anchor_x="left", anchor_y="top",
+        )
         self._lap_text = arcade.Text(
-            "Lap: 1", 20, SCREEN_HEIGHT - 20, TEXT_PRIMARY, 20, bold=True,
-            anchor_x="left", anchor_y="top",
+            "1/58", 20, SCREEN_HEIGHT - 36, TEXT_PRIMARY, 22, bold=True,
+            font_name=FONT_TITLE, anchor_x="left", anchor_y="top",
         )
         self._time_text = arcade.Text(
-            "Race Time: 00:00:00 (x1.0)", 20, SCREEN_HEIGHT - 44,
-            TEXT_SECONDARY, 13, anchor_x="left", anchor_y="top",
+            "00:00:00  x1.0", 20, SCREEN_HEIGHT - 66,
+            TEXT_TERTIARY, 12, font_name=FONT_BODY,
+            anchor_x="left", anchor_y="top",
         )
 
         self._weather = WeatherPanel()
@@ -133,12 +142,14 @@ class F1ArcadeWindow(arcade.Window):
 
         self._car_label_main = arcade.Text(
             driver_main, 0, 0, self._color_for(driver_main),
-            CAR_LABEL_FONT_SIZE, bold=True,
+            CAR_LABEL_FONT_SIZE, bold=True, font_name=FONT_BODY,
+            anchor_x="center", anchor_y="bottom",
         )
         self._car_label_rival = arcade.Text(
             driver_rival or "", 0, 0,
             self._color_for(driver_rival) if driver_rival else TEXT_SECONDARY,
-            CAR_LABEL_FONT_SIZE, bold=True,
+            CAR_LABEL_FONT_SIZE, bold=True, font_name=FONT_BODY,
+            anchor_x="center", anchor_y="top",
         )
 
         logger.info(
@@ -169,9 +180,9 @@ class F1ArcadeWindow(arcade.Window):
         frame_idx = int(self._frame_index)
         frame = self._build_frame_dict(frame_idx)
 
-        self._draw_car(self._driver_main, self._car_label_main)
+        self._draw_car(self._driver_main, self._car_label_main, above=True)
         if self._driver_rival:
-            self._draw_car(self._driver_rival, self._car_label_rival)
+            self._draw_car(self._driver_rival, self._car_label_rival, above=False)
 
         track_len = self._session.circuit_length_m or 5300.0
         self._leaderboard.draw(
@@ -256,8 +267,9 @@ class F1ArcadeWindow(arcade.Window):
         )
         self._leaderboard.x = int(width) - LEADERBOARD_RIGHT_MARGIN
         self._leaderboard.set_top(int(height) - 20)
-        self._lap_text.y = int(height) - 20
-        self._time_text.y = int(height) - 44
+        self._lap_label.y = int(height) - 20
+        self._lap_text.y = int(height) - 36
+        self._time_text.y = int(height) - 66
         self._progress_bar.on_resize(int(width))
 
     # --- Helpers ---------------------------------------------------------
@@ -297,7 +309,7 @@ class F1ArcadeWindow(arcade.Window):
             },
         }
 
-    def _draw_car(self, code: str, label: arcade.Text) -> None:
+    def _draw_car(self, code: str, label: arcade.Text, above: bool) -> None:
         frames = self._session.frames_by_driver.get(code)
         if not frames:
             return
@@ -311,20 +323,24 @@ class F1ArcadeWindow(arcade.Window):
         color = self._color_for(code)
         arcade.draw_circle_filled(sx, sy, CAR_RADIUS, color)
         arcade.draw_circle_outline(sx, sy, CAR_RADIUS, CAR_BORDER_COLOR, CAR_BORDER_WIDTH)
-        label.x = sx + CAR_RADIUS + 6
-        label.y = sy
+        # Main driver label sits above the dot, rival below, so they never
+        # overlap when the two cars are side by side.
+        label.x = sx
+        label.y = sy + CAR_RADIUS + 4 if above else sy - CAR_RADIUS - 4
         label.draw()
 
     def _update_hud(self, frame: dict) -> None:
         lap = frame.get("lap", 1)
         total = self._session.max_lap_number
-        self._lap_text.text = f"Lap: {lap}/{total}"
+        self._lap_text.text = f"{lap}/{total}"
         t = frame.get("t", 0.0)
         hh = int(t // 3600)
         mm = int((t % 3600) // 60)
         ss = int(t % 60)
+        paused = "  PAUSED" if self._is_paused else ""
         self._time_text.text = (
-            f"Race Time: {hh:02d}:{mm:02d}:{ss:02d} (x{self.playback_speed})"
+            f"{hh:02d}:{mm:02d}:{ss:02d}  x{self.playback_speed}{paused}"
         )
+        self._lap_label.draw()
         self._lap_text.draw()
         self._time_text.draw()
