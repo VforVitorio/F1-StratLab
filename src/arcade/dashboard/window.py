@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from src.arcade.dashboard.orchestrator_card import OrchestratorCard
 from src.arcade.dashboard.stream_client import TelemetryStreamClient
 from src.arcade.dashboard.theme import (
     DANGER,
@@ -134,7 +135,10 @@ class MainWindow(QMainWindow):
             lay.setContentsMargins(10, 10, 10, 10)
             lay.setSpacing(8)
 
-        self._left_placeholder  = QLabel("Orchestrator · scenarios · reasoning · alerts")
+        self._orchestrator_card = OrchestratorCard()
+        self._left_layout.addWidget(self._orchestrator_card)
+
+        self._left_placeholder = QLabel("Scenarios · alerts · reasoning")
         self._right_placeholder = QLabel("Agent cards · charts")
         for lbl in (self._left_placeholder, self._right_placeholder):
             lbl.setAlignment(Qt.AlignCenter)
@@ -142,7 +146,7 @@ class MainWindow(QMainWindow):
                 f"color: {hex_str(TEXT_SECONDARY)}; font-style: italic;"
             )
             lbl.setWordWrap(True)
-        self._left_layout.addWidget(self._left_placeholder)
+        self._left_layout.addWidget(self._left_placeholder, 1)
         self._right_layout.addWidget(self._right_placeholder)
 
         splitter = QSplitter(Qt.Horizontal)
@@ -172,11 +176,11 @@ class MainWindow(QMainWindow):
     def _on_data(self, data: dict[str, Any]) -> None:
         """Router for incoming broadcasts — fans out to widgets."""
         self._header.update_from(data)
-        # Later commits: call orchestrator_card.update(...), agent_cards...
         strategy = data.get("strategy") or {}
+        self._orchestrator_card.update_from(strategy.get("latest"))
         err = strategy.get("error")
         if err:
-            self.statusBar().showMessage(f"backend: {err}")
+            self.statusBar().showMessage(f"pipeline: {err}")
         else:
             lap = (data.get("arcade") or {}).get("lap", "?")
             self.statusBar().showMessage(f"lap {lap} · streaming", 1500)
