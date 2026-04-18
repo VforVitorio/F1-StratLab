@@ -427,11 +427,16 @@ class F1ArcadeView(arcade.View):
         )
         self._weather.draw(frame, self.window.height)
         sorted_progress = self._leaderboard.sorted_progress(frame, track_len)
-        self._driver_info_main.set_top(self._weather.bottom_y - 10)
+        # DRIVER_BOX_GAP also controls the weather → main-driver gap for
+        # a consistent rhythm between the three stacked cards.
+        self._driver_info_main.set_top(self._weather.bottom_y - DRIVER_BOX_GAP)
         self._driver_info_main.draw(frame, sorted_progress)
         if self._driver_info_rival:
             self._driver_info_rival.set_top(
-                self._weather.bottom_y - 10 - DRIVER_BOX_HEIGHT - DRIVER_BOX_GAP
+                self._weather.bottom_y
+                - DRIVER_BOX_GAP
+                - DRIVER_BOX_HEIGHT
+                - DRIVER_BOX_GAP
             )
             self._driver_info_rival.draw(frame, sorted_progress)
 

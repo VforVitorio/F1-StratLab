@@ -115,20 +115,33 @@ class TelemetryPanel(QFrame):
         # --- 2×2 grid of charts ---------------------------------------
         grid = QGridLayout()
         grid.setSpacing(10)
+        # Delta chart: F1-broadcast convention — main driver is the flat
+        # y=0 reference line (rendered in main colour), rival is the
+        # wavy trace showing how the gap to main evolves along the lap.
+        # Positive y means rival is SLOWER (behind main's pace at that
+        # distance point); negative means rival is faster (ahead).
         (
             delta_wrapper,
             self._delta_plot,
-            self._delta_main,
-            self._delta_rival,
+            self._delta_main,      # unused — main is represented by zero line
+            self._delta_rival,     # the wavy trace (rival − main)
             self._delta_main_legend,
             self._delta_rival_legend,
         ) = self._make_chart(
-            "Δ Time (s)", "(main − rival)", ACCENT, WARNING, _DELTA_Y_RANGE,
+            "Δ Time (s)", "(rival − main)", INFO, WARNING, _DELTA_Y_RANGE,
         )
-        # Delta chart has a single trace (main − rival) — hide the rival line.
-        self._delta_plot.removeItem(self._delta_rival)
-        self._delta_rival = None
-        self._delta_rival_legend.hide()
+        # Main is the zero reference; drop the separate "main" line and
+        # replace it with a solid horizontal line at y=0 coloured as the
+        # main driver. Rival is visible by default on this chart.
+        self._delta_plot.removeItem(self._delta_main)
+        self._delta_main = None
+        self._delta_main_reference = pg.InfiniteLine(
+            pos=0, angle=0,
+            pen=pg.mkPen(QColor(*INFO), width=2),
+        )
+        self._delta_plot.addItem(self._delta_main_reference)
+        self._delta_rival.setVisible(True)
+        self._delta_rival_legend.show()
         self._delta_placeholder = QLabel("single-driver mode")
         self._delta_placeholder.setAlignment(Qt.AlignCenter)
         self._delta_placeholder.setStyleSheet(
@@ -298,18 +311,22 @@ class TelemetryPanel(QFrame):
         main_xs, main_rows = self._sorted(self._main_buffer)
         rival_xs, rival_rows = self._sorted(self._rival_buffer)
         if len(main_xs) < 2 or len(rival_xs) < 2:
-            self._delta_main.setData([], [])
+            self._delta_rival.setData([], [])
             return
         rival_t_series = [r[_BUCKET_T] for r in rival_rows]
         deltas: list[float] = []
         xs_out: list[float] = []
+        # Main is the reference line at y=0 — plot ``t_rival − t_main``
+        # so a positive trace means rival is slower at that distance
+        # (behind main's pace) and a negative trace means rival is
+        # faster (ahead of main). Matches the F1-broadcast convention.
         for i, x in enumerate(main_xs):
             interp = _lerp_sorted(rival_xs, rival_t_series, x)
             if interp is None:
                 continue
-            deltas.append(main_rows[i][_BUCKET_T] - interp)
+            deltas.append(interp - main_rows[i][_BUCKET_T])
             xs_out.append(x)
-        self._delta_main.setData(xs_out, deltas)
+        self._delta_rival.setData(xs_out, deltas)
 
     # --- Axis control -----------------------------------------------
 
@@ -380,17 +397,9 @@ class TelemetryPanel(QFrame):
         plot.setYRange(y_range[0], y_range[1], padding=0)
         plot.setMouseEnabled(x=False, y=False)   # no accidental pan/zoom
         plot.hideButtons()
-        # Reference y=0 line for the delta chart so the user can see at a
-        # glance whether main is faster (negative delta) or slower. For
-        # speed/brake/throttle y=0 is already the chart floor and drawing
-        # another line there would be redundant — only add when y=0 sits
-        # inside the visible range with headroom both sides.
-        if y_range[0] < 0 < y_range[1]:
-            zero_line = pg.InfiniteLine(
-                pos=0, angle=0,
-                pen=pg.mkPen(QColor(*TEXT_TERTIARY), width=1, style=Qt.DashLine),
-            )
-            plot.addItem(zero_line)
+        # The delta chart adds its own y=0 reference line in the main
+        # driver's colour after this factory returns — no auto zero line
+        # here to avoid stacking two lines on top of each other.
         wlay.addWidget(plot, 1)
 
         main_line = pg.PlotDataItem(pen=pg.mkPen(QColor(*main_color), width=2))
@@ -413,7 +422,7 @@ class TelemetryPanel(QFrame):
         if rival:
             for lbl in (
                 self._speed_rival_legend, self._brake_rival_legend,
-                self._throttle_rival_legend,
+                self._throttle_rival_legend, self._delta_rival_legend,
             ):
                 lbl.set_code(rival)
 
@@ -426,7 +435,7 @@ class TelemetryPanel(QFrame):
         self._reset_buffers()
         for line in (
             self._speed_main, self._brake_main, self._throttle_main,
-            self._delta_main,
+            self._delta_rival,
         ):
             line.setData([], [])
         for line, legend in (
