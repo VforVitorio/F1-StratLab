@@ -224,7 +224,14 @@ class TelemetryPanel(QFrame):
             self._rival_buffer.clear()
 
         self._append(self._main_buffer, main)
-        if rival:
+        # Only accumulate rival samples that match the main driver's
+        # current lap. When the two drivers are on different laps (one
+        # pitted, one lapped, one half a track ahead) the buffer would
+        # otherwise mix samples whose ``t`` values come from different
+        # laps, and the delta interpolation produces ~4-6 s spikes at
+        # the point where the older-lap samples sort next to the newer
+        # ones.
+        if rival and int(rival.get("lap") or 0) == lap_n:
             self._append(self._rival_buffer, rival)
 
         self._refresh_speed_brake_throttle()
