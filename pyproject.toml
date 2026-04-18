@@ -85,6 +85,7 @@ dependencies = [
     "arcade>=3.0.0",
     "scipy>=1.10.0",
     "pyside6>=6.5.0",
+    "pyqtgraph>=0.13.0",
     # ===================
     # UTILITIES
     # ===================
