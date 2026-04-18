@@ -11,6 +11,7 @@ panels) has an active GL context from the start.
 from __future__ import annotations
 
 import logging
+import os
 
 import arcade
 
@@ -88,7 +89,6 @@ class F1ArcadeView(arcade.View):
         self._team = team
         self._strategy_connector = None  # set by __init__ if strategy_enabled
         self._strategy_state = None
-        self._strategy_panel = None
         self._stream_server = None
         self._broadcast_tick: int = 0
 
@@ -175,16 +175,23 @@ class F1ArcadeView(arcade.View):
         )
 
     def _init_strategy_layer(self) -> None:
-        """Instantiate the strategy panel, SSE connector, and broadcast server.
+        """Start the local strategy driver and the TCP broadcast server.
 
-        The TCP stream server is bound here (and torn down in `on_hide_view`)
-        so a separate PySide6 dashboard process can subscribe to merged
-        arcade+strategy state updates — deferred to a follow-up session."""
-        from src.arcade.overlays import StrategyPanel
+        The strategy UI lives entirely in the dashboard subprocess — the
+        arcade replay keeps the track, leaderboard and car animations
+        (the replay-first concerns) and broadcasts merged
+        arcade+strategy state over TCP so the dashboard can render the
+        orchestrator card, the six sub-agent cards and the charts."""
         from src.arcade.strategy import SimConnector, SimulateRequestDTO, StrategyState
         from src.arcade.stream import TelemetryStreamServer
 
         gp_name = self._resolve_gp_name()
+        # Provider defaults to OpenAI (what the agents load with
+        # ``F1_LLM_PROVIDER=openai`` — ChatOpenAI model=gpt-4.1-mini for
+        # N25-N30 and the orchestrator model for N31). ``F1_LLM_PROVIDER``
+        # env wins so a user running LM Studio locally (set it to
+        # "lmstudio") keeps working without a code edit.
+        provider = os.environ.get("F1_LLM_PROVIDER") or "openai"
         request = SimulateRequestDTO(
             year=self._year,
             gp=gp_name,
@@ -193,16 +200,12 @@ class F1ArcadeView(arcade.View):
             driver2=self._driver_rival,
             risk_tolerance=0.5,
             no_llm=False,
-            provider="lmstudio",
+            provider=provider,
             interval_s=0.0,
         )
         self._strategy_state = StrategyState()
         self._strategy_connector = SimConnector(
             request=request, state=self._strategy_state
-        )
-        self._strategy_panel = StrategyPanel(
-            x=self.window.width - 260,
-            top_y=int(self.window.height * 0.52),
         )
         self._strategy_connector.start()
 
@@ -217,9 +220,20 @@ class F1ArcadeView(arcade.View):
             self._stream_server = None
 
     def _resolve_gp_name(self) -> str:
-        from src.arcade.config import GP_NAMES
-        # Best-effort: match SessionData.gp_name if it's a known GP label
-        return self._session.gp_name or GP_NAMES.get(1, "Bahrain")
+        """Return the GP label fed to the strategy pipeline.
+
+        Prefers the FastF1 Location (``Suzuka``, ``Melbourne``, …) because
+        that is what the ``data/raw/<year>/`` folders use. The arcade's
+        hardcoded ``GP_NAMES`` table does not stay in sync with the active
+        season calendar (``GP_NAMES[3] == "Australia"`` but 2025 round 3 is
+        Suzuka), so relying on the label alone silently loads the wrong
+        race for the strategy layer. ``GP_TO_LOCATION`` is the translation
+        table for menu inputs that still pass a country-style string."""
+        from src.arcade.config import GP_NAMES, GP_TO_LOCATION
+        if self._session.location:
+            return self._session.location
+        gp_name = self._session.gp_name or GP_NAMES.get(1, "Bahrain")
+        return GP_TO_LOCATION.get(gp_name, gp_name)
 
     def on_hide_view(self) -> None:
         """Tear down the SSE connector and stream server on view swap/close."""
@@ -325,9 +339,6 @@ class F1ArcadeView(arcade.View):
             )
             self._driver_info_rival.draw(frame, sorted_progress)
 
-        if self._strategy_panel is not None and self._strategy_state is not None:
-            self._strategy_panel.draw(self._strategy_state)
-
         if self._show_progress_bar:
             self._progress_bar.draw(self.window.width, frame_idx)
         self._controls_legend.draw()
@@ -400,9 +411,6 @@ class F1ArcadeView(arcade.View):
         self._lap_text.y = int(height) - 36
         self._time_text.y = int(height) - 66
         self._progress_bar.on_resize(int(width))
-        if self._strategy_panel is not None:
-            self._strategy_panel.x = int(width) - 260
-            self._strategy_panel.top_y = int(height * 0.52)
 
     # --- Helpers ---------------------------------------------------------
 

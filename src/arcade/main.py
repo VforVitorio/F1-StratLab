@@ -44,7 +44,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--team", type=str, default="McLaren")
     parser.add_argument("--strategy", action="store_true",
                         help="Enable strategy overlay (requires year 2025).")
-    parser.add_argument("--provider", choices=("lmstudio", "openai"), default="lmstudio")
+    parser.add_argument("--provider", choices=("lmstudio", "openai"), default="openai")
     return parser.parse_args()
 
 

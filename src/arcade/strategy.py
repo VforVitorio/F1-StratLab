@@ -26,6 +26,7 @@ import pandas as pd
 from src.arcade.config import (
     ACCENT,
     DANGER,
+    GP_TO_LOCATION,
     INFO,
     REPO_ROOT,
     SUCCESS,
@@ -52,7 +53,11 @@ class SimulateRequestDTO:
     lap_range: tuple[int, int] | None = None
     risk_tolerance: float = 0.5
     no_llm: bool = False
-    provider: str = "lmstudio"
+    # Matches the agents' own preference: ChatOpenAI with the canonical
+    # gpt-4.1-mini / orchestrator model names when ``F1_LLM_PROVIDER=openai``
+    # (the documented TFG setup). Override to "lmstudio" for local dev
+    # against an LM Studio server at ``http://localhost:1234/v1``.
+    provider: str = "openai"
     interval_s: float = 0.0
 
 
@@ -313,7 +318,16 @@ class SimConnector(threading.Thread):
 
     @staticmethod
     def _resolve_race_dir(year: int, gp: str):
-        return REPO_ROOT / "data" / "raw" / str(year) / gp
+        """Map a friendly GP name (``Australia``) to the on-disk folder
+        (``Melbourne``).
+
+        The arcade menu / CLI propagate the country-style labels in
+        ``GP_NAMES``, but the race data folders under ``data/raw/<year>/``
+        follow the FastF1 Location convention. ``GP_TO_LOCATION`` is the
+        single translation table; falls back to the raw name when already
+        a Location so ``--gp Melbourne`` shortcuts keep working."""
+        folder = GP_TO_LOCATION.get(gp, gp)
+        return REPO_ROOT / "data" / "raw" / str(year) / folder
 
     def _build_race_state(self, lap_state: dict[str, Any], prev_lap_time: float):
         """Duplicate of ``_local_build_race_state`` from simulator.py — small

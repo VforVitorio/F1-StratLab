@@ -43,7 +43,9 @@ from src.arcade.dashboard.agent_formatters import (
     format_tire,
 )
 from src.arcade.dashboard.orchestrator_card import OrchestratorCard
+from src.arcade.dashboard.pace_chart import PaceChart
 from src.arcade.dashboard.stream_client import TelemetryStreamClient
+from src.arcade.dashboard.tire_chart import TireChart
 from src.arcade.dashboard.theme import (
     DANGER,
     SUCCESS,
@@ -163,6 +165,17 @@ class MainWindow(QMainWindow):
         self._card_pit       = AgentCard("Pit · N28")
         self._card_radio     = AgentCard("Radio · N29")
         self._card_rag       = AgentCard("RAG · N30")
+
+        # Embed the two pyqtgraph charts in their respective cards. Chart
+        # data is accumulated in ``_pace_history`` / ``_tire_history``
+        # because ``history_tail`` in the broadcast strips ``per_agent``
+        # (wire-size trade-off) — the window owns the time series.
+        self._pace_chart = PaceChart()
+        self._tire_chart = TireChart()
+        self._card_pace.attach_chart(self._pace_chart)
+        self._card_tire.attach_chart(self._tire_chart)
+        self._pace_history: dict[int, dict[str, Any]] = {}
+        self._tire_history: dict[int, dict[str, Any]] = {}
         grid = QGridLayout()
         grid.setSpacing(8)
         grid.addWidget(self._card_pace,      0, 0)
@@ -203,13 +216,77 @@ class MainWindow(QMainWindow):
         strategy = data.get("strategy") or {}
         latest = strategy.get("latest") or {}
         self._orchestrator_card.update_from(latest or None)
+        self._seed_history_from_tail(strategy.get("history_tail") or [])
+        self._ingest_latest_history(latest)
         self._update_agent_cards(latest)
+        self._pace_chart.update_from(self._pace_history)
+        self._tire_chart.update_from(
+            self._tire_history_list(),
+            current_lap=latest.get("lap_number") if latest else None,
+            tire_out=(latest.get("per_agent") or {}).get("tire") if latest else None,
+        )
         err = strategy.get("error")
         if err:
             self.statusBar().showMessage(f"pipeline: {err}")
         else:
             lap = (data.get("arcade") or {}).get("lap", "?")
             self.statusBar().showMessage(f"lap {lap} · streaming", 1500)
+
+    def _seed_history_from_tail(self, tail: list[dict[str, Any]]) -> None:
+        """Backfill chart dicts with lap_time_s / tyre_life actuals from the
+        broadcast history_tail. ``per_agent`` is stripped there (wire-size
+        trade-off) so predicted / CI values stay empty for past laps until
+        we observe them via ``latest`` — that's an accepted limitation of
+        the mid-stream reconnect path."""
+        for row in tail:
+            lap = row.get("lap_number")
+            if not isinstance(lap, int):
+                continue
+            pace_row = self._pace_history.setdefault(lap, {})
+            pace_row.setdefault("actual", row.get("lap_time_s"))
+            tire_row = self._tire_history.setdefault(lap, {})
+            tire_row.setdefault("tyre_life", row.get("tyre_life"))
+            tire_row.setdefault("compound", row.get("compound"))
+        self._trim_history()
+
+    def _ingest_latest_history(self, latest: dict[str, Any]) -> None:
+        if not latest:
+            return
+        lap = latest.get("lap_number")
+        if not isinstance(lap, int):
+            return
+        per = latest.get("per_agent") or {}
+        pace = per.get("pace") or {}
+        row = self._pace_history.setdefault(lap, {})
+        if latest.get("lap_time_s") is not None:
+            row["actual"] = latest.get("lap_time_s")
+        if pace.get("lap_time_pred") is not None:
+            row["pred"] = pace.get("lap_time_pred")
+            row["ci_p10"] = pace.get("ci_p10")
+            row["ci_p90"] = pace.get("ci_p90")
+        trow = self._tire_history.setdefault(lap, {})
+        if latest.get("tyre_life") is not None:
+            trow["tyre_life"] = latest.get("tyre_life")
+        if latest.get("compound"):
+            trow["compound"] = latest.get("compound")
+        self._trim_history()
+
+    def _tire_history_list(self) -> list[dict[str, Any]]:
+        return [
+            {"lap": lap, **row}
+            for lap, row in sorted(self._tire_history.items())
+        ]
+
+    def _trim_history(self, keep: int = 40) -> None:
+        """Keep only the most recent ``keep`` laps so memory stays bounded
+        (the charts only need a rolling window and this prevents an hour
+        of replay from growing a 200-entry dict)."""
+        for store in (self._pace_history, self._tire_history):
+            if len(store) <= keep:
+                continue
+            to_drop = sorted(store.keys())[: len(store) - keep]
+            for lap in to_drop:
+                store.pop(lap, None)
 
     def _update_agent_cards(self, latest: dict[str, Any]) -> None:
         """Push the per-agent block of ``latest`` into the six cards.
