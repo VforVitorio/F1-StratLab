@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 from src.arcade.dashboard.theme import (
     ACCENT,
     BORDER_COLOR,
+    MONO_FONT_STACK,
     SECONDARY_BG,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
@@ -83,7 +84,7 @@ class ScenarioBars(QFrame):
             pct.setFixedWidth(46)
             pct.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
             pct.setStyleSheet(
-                f"color: {hex_str(TEXT_SECONDARY)}; font-size: 11px; font-family: monospace;"
+                f"color: {hex_str(TEXT_SECONDARY)}; font-size: 11px; font-family: {MONO_FONT_STACK};"
             )
 
             row.addWidget(label)
@@ -131,7 +132,7 @@ class ScenarioBars(QFrame):
             pct.setText(f"{v:+.2f}" if key in raw else "  --")
             pct.setStyleSheet(
                 f"color: {hex_str(TEXT_PRIMARY if is_winner else TEXT_SECONDARY)}; "
-                "font-size: 11px; font-family: monospace;"
+                f"font-size: 11px; font-family: {MONO_FONT_STACK};"
             )
             label.setStyleSheet(
                 f"color: {hex_str(ACCENT if is_winner else TEXT_SECONDARY)}; "

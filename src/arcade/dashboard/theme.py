@@ -100,6 +100,104 @@ def hex_str(rgb: tuple[int, int, int]) -> str:
     return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
 
 
+# --- Monospace font chain ------------------------------------------------
+# Fira Code (+ its Nerd Font variant) ships with programming ligatures and
+# a lot of monospace glyphs that align neatly for metric tables. Users
+# who have it installed get the richer look; the Consolas / Courier New
+# fallbacks keep the rendering legible when not.
+MONO_FONT_STACK: Final[str] = (
+    "'FiraCode Nerd Font Mono', 'Fira Code', 'JetBrains Mono', "
+    "'Consolas', 'Courier New', monospace"
+)
+
+
+# --- Compound pill HTML (Pirelli-style badge) ---------------------------
+# Compound labels come through the pipeline in several shapes: the
+# friendly agent form ("SOFT", "MEDIUM", "HARD", "INTER", "WET") and the
+# raw Pirelli id ("C1"…"C6"). Both should paint the same pill colour —
+# red for soft, yellow for medium, white for hard, green for inter,
+# blue for wet. The function returns an HTML snippet that QLabel can
+# render in rich-text mode next to plain text.
+
+_COMPOUND_COLOUR_BY_LABEL: Final[dict[str, tuple[int, int, int]]] = {
+    "SOFT":         (230,  50,  50),
+    "MEDIUM":       (230, 200,  50),
+    "HARD":         (230, 230, 230),
+    "INTER":        ( 60, 200,  60),
+    "INTERMEDIATE": ( 60, 200,  60),
+    "WET":          ( 60, 130, 230),
+    "S": (230,  50,  50), "M": (230, 200,  50), "H": (230, 230, 230),
+    "I": ( 60, 200,  60), "W": ( 60, 130, 230),
+    # Pirelli Cx mapping per the dry-race convention — hardest compounds
+    # white, medium yellow, softest red.
+    "C1": (230, 230, 230), "C2": (230, 230, 230),
+    "C3": (230, 200,  50),
+    "C4": (230,  50,  50), "C5": (230,  50,  50), "C6": (230,  50,  50),
+}
+
+
+def compound_color(compound: str) -> tuple[int, int, int]:
+    """Map any compound label to a Pirelli-style colour tuple."""
+    key = (compound or "").upper().strip()
+    return _COMPOUND_COLOUR_BY_LABEL.get(key, TEXT_SECONDARY)
+
+
+def compound_pill_html(compound: str | None) -> str:
+    """Return a colored rounded pill as a Qt rich-text span.
+
+    Used inline in ``QLabel.setText`` so the compound always reads as a
+    Pirelli-style badge without having to embed a child widget.
+    Unknown labels collapse to a neutral dash pill to keep the layout
+    aligned."""
+    label = (compound or "—").strip() or "—"
+    colour = compound_color(label)
+    # Dark text on light/saturated backgrounds, white on dim ones.
+    lum = 0.299 * colour[0] + 0.587 * colour[1] + 0.114 * colour[2]
+    fg = BG_COLOR if lum > 180 else TEXT_PRIMARY
+    # Qt rich-text: single quotes in the font stack are fine since we use
+    # double quotes for the style attribute.
+    font_stack = MONO_FONT_STACK
+    return (
+        '<span style="'
+        f"background-color: {hex_str(colour)}; "
+        f"color: {hex_str(fg)}; "
+        "padding: 1px 7px; border-radius: 7px; "
+        "font-weight: 800; font-size: 10px; "
+        f"font-family: {font_stack};"
+        f'">{label}</span>'
+    )
+
+
+# --- Alert flag chips ---------------------------------------------------
+# Radio / RCM intents collapse to a colored chip matching the broadcast
+# flag semantics — red for red-flag / safety-car, amber for VSC / yellow,
+# blue for ops "PROBLEM" / "WARNING" radios. Anything unknown stays
+# neutral grey so the reader is never misled by an unstyled label.
+
+_FLAG_BG_BY_INTENT: Final[dict[str, tuple[int, int, int]]] = {
+    "SAFETY_CAR": DANGER,   "RED_FLAG":           DANGER,
+    "VSC":        WARNING,  "VIRTUAL_SAFETY_CAR": WARNING,
+    "YELLOW_FLAG": WARNING,
+    "PROBLEM":    INFO,     "WARNING":            INFO,
+    "PENALTY":    DANGER,
+}
+
+
+def flag_chip_html(intent: str | None) -> str:
+    """Coloured pill for a single alert intent or RCM event type."""
+    key = (intent or "—").upper().strip() or "—"
+    bg = _FLAG_BG_BY_INTENT.get(key, TEXT_TERTIARY)
+    label = key.replace("_", " ")
+    return (
+        '<span style="'
+        f"background-color: {hex_str(bg)}; "
+        f"color: {hex_str(TEXT_PRIMARY)}; "
+        "padding: 1px 6px; border-radius: 6px; "
+        "font-weight: 700; font-size: 10px; letter-spacing: 0.3px;"
+        f'">{label}</span>'
+    )
+
+
 def apply_dark_palette(app) -> None:
     """Apply the dashboard dark palette to ``QApplication`` and install a
     global stylesheet that widgets inherit without having to set colours

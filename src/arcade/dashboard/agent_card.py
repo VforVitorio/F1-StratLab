@@ -93,7 +93,10 @@ class AgentCard(QFrame):
         outer.addLayout(header_row)
 
         # --- Headline --------------------------------------------------
+        # Rich text so formatters can embed compound pills / flag chips
+        # via ``theme.compound_pill_html`` / ``theme.flag_chip_html``.
         self._headline = QLabel("--")
+        self._headline.setTextFormat(Qt.RichText)
         self._headline.setStyleSheet(
             f"color: {hex_str(TEXT_PRIMARY)}; font-size: 15px; font-weight: 700;"
         )
@@ -104,6 +107,9 @@ class AgentCard(QFrame):
         self._body_lines: list[QLabel] = []
         for _ in range(3):
             lbl = QLabel("")
+            # Rich text so the tire compound pill and the radio flag chips
+            # embedded by ``agent_formatters`` render as coloured badges.
+            lbl.setTextFormat(Qt.RichText)
             lbl.setStyleSheet(
                 f"color: {hex_str(TEXT_SECONDARY)}; font-size: 11px;"
             )

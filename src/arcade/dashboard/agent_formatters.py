@@ -27,6 +27,8 @@ from src.arcade.dashboard.theme import (
     TEXT_SECONDARY,
     TEXT_TERTIARY,
     WARNING,
+    compound_pill_html,
+    flag_chip_html,
 )
 
 # Status tokens consumed by AgentCard.set_status
@@ -121,16 +123,18 @@ def format_tire(t: dict[str, Any] | None) -> Formatted:
     cliff_unreliable = p50 > _TIRE_CLIFF_MAX_SANE or p50 <= 0
     if cliff_unreliable:
         headline = "cliff stabilising…"
+        pill = compound_pill_html(compound_label)
         body: list[Line] = [
-            (f"deg {deg_text} · {compound_label}", TEXT_SECONDARY),
+            (f"deg {deg_text} · {pill}", TEXT_SECONDARY),
             (warning, _status_colour(status)),
         ]
         return headline, TEXT_TERTIARY, body, STATUS_WATCH if status == STATUS_OK else status
 
     headline = f"Cliff ~{int(p50)} laps"
+    pill = compound_pill_html(compound_label)
     body = [
         (f"range {int(p10)}–{int(p90)} laps", TEXT_SECONDARY),
-        (f"deg {deg_text} · {compound_label}", TEXT_SECONDARY),
+        (f"deg {deg_text} · {pill}", TEXT_SECONDARY),
         (warning, _status_colour(status)),
     ]
     return headline, TEXT_PRIMARY, body, status
@@ -185,13 +189,14 @@ def format_radio(r: dict[str, Any] | None) -> Formatted:
     n_rcms = len(rcm_events)
 
     if alerts:
-        intents = []
+        chips: list[str] = []
         for a in alerts[:3]:
             if isinstance(a, dict):
-                intents.append(str(a.get("intent") or a.get("event_type") or "alert"))
+                intent = a.get("intent") or a.get("event_type") or "ALERT"
             else:
-                intents.append(str(a))
-        headline = " · ".join(intents)
+                intent = str(a)
+            chips.append(flag_chip_html(intent))
+        headline = " ".join(chips)
         headline_color = WARNING
         status = STATUS_ALERT
     elif n_radios or n_rcms:

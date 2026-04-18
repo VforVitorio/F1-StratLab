@@ -37,6 +37,7 @@ from src.arcade.dashboard.theme import (
     TEXT_TERTIARY,
     WARNING,
     classify_action,
+    compound_pill_html,
     hex_str,
 )
 
@@ -119,7 +120,10 @@ class OrchestratorCard(QFrame):
         outer.addLayout(chip_row)
 
         # --- Row 3: plan line ---------------------------------------------
-        self._plan = QLabel("Pit: -- · Next: -- · UCUT: --")
+        # Rich text so the ``Next: <compound>`` chunk can render a Pirelli
+        # compound pill inline next to the rest of the plan.
+        self._plan = QLabel("Pit: — · Next: — · UCUT: —")
+        self._plan.setTextFormat(Qt.RichText)
         self._plan.setStyleSheet(
             f"color: {hex_str(TEXT_SECONDARY)}; font-size: 12px;"
         )
@@ -185,7 +189,8 @@ class OrchestratorCard(QFrame):
             plan_bits = []
             plan_bits.append(f"Pit: L{pit_target}" if pit_target else "Pit: —")
             plan_bits.append(
-                f"Next: {compound_next}" if compound_next else "Next: —"
+                f"Next: {compound_pill_html(compound_next)}"
+                if compound_next else "Next: —"
             )
             plan_bits.append(
                 f"UCUT: {undercut_target}" if undercut_target else "UCUT: —"

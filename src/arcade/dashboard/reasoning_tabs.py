@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 from src.arcade.dashboard.theme import (
     ACCENT,
     BORDER_COLOR,
+    MONO_FONT_STACK,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
     hex_str,
@@ -86,7 +87,7 @@ def _make_editor() -> QTextEdit:
     editor.setStyleSheet(
         "QTextEdit { background-color: transparent; border: none; "
         f"color: {hex_str(TEXT_PRIMARY)}; padding: 8px; "
-        "font-family: 'Consolas', 'Courier New', monospace; "
+        f"font-family: {MONO_FONT_STACK}; "
         "font-size: 11px; line-height: 140%; }"
     )
     return editor
