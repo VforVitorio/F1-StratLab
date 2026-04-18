@@ -47,7 +47,6 @@ from src.arcade.dashboard.pace_chart import PaceChart
 from src.arcade.dashboard.reasoning_tabs import ReasoningTabs
 from src.arcade.dashboard.scenario_bars import ScenarioBars
 from src.arcade.dashboard.stream_client import TelemetryStreamClient
-from src.arcade.dashboard.telemetry_panel import TelemetryPanel
 from src.arcade.dashboard.tire_chart import TireChart
 from src.arcade.dashboard.theme import (
     DANGER,
@@ -193,15 +192,12 @@ class MainWindow(QMainWindow):
         splitter.setSizes([540, 740])
         splitter.setHandleWidth(2)
 
-        self._telemetry_panel = TelemetryPanel()
-
         root = QWidget()
         root_layout = QVBoxLayout(root)
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.setSpacing(0)
         root_layout.addWidget(self._header)
         root_layout.addWidget(splitter, 1)
-        root_layout.addWidget(self._telemetry_panel)
         self.setCentralWidget(root)
 
         self.statusBar().showMessage("Waiting for arcade stream…")
@@ -220,8 +216,6 @@ class MainWindow(QMainWindow):
         self._orchestrator_card.update_from(latest or None)
         self._scenario_bars.update_from(latest.get("scenario_scores") if latest else None)
         self._reasoning_tabs.update_from(latest or None)
-        arcade_block = data.get("arcade") or {}
-        self._telemetry_panel.update_from(arcade_block.get("telemetry"))
         self._seed_history_from_tail(strategy.get("history_tail") or [])
         self._ingest_latest_history(latest)
         self._update_agent_cards(latest)

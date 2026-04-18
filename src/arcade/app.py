@@ -60,6 +60,34 @@ from src.arcade.track import Track
 logger = logging.getLogger(__name__)
 
 
+def _frame_to_telemetry(frame) -> dict | None:
+    """Pack a ``FrameData`` into the dict the telemetry window consumes.
+
+    Normalises throttle/brake to the 0-100 percent range regardless of
+    how FastF1 delivered them (some sessions carry throttle as 0-1, some
+    as 0-100). ``t`` is included so the telemetry window can compute
+    time deltas between the main and rival drivers without needing to
+    integrate speed over distance itself."""
+    if frame is None:
+        return None
+    throttle = float(frame.throttle)
+    if throttle <= 1.0:
+        throttle *= 100.0
+    brake = float(frame.brake)
+    if brake <= 1.0:
+        brake *= 100.0
+    return {
+        "lap":      int(frame.lap),
+        "t":        round(float(frame.t), 3),
+        "dist":     round(float(frame.dist), 1),
+        "speed":    round(float(frame.speed), 1),
+        "throttle": round(throttle, 1),
+        "brake":    round(brake, 1),
+        "gear":     int(frame.gear),
+        "drs":      int(frame.drs),
+    }
+
+
 class F1ArcadeView(arcade.View):
     """Renders the race replay and owns the playback state machine.
 
@@ -345,21 +373,19 @@ class F1ArcadeView(arcade.View):
         main_frames = self._session.frames_by_driver.get(self._driver_main)
         if main_frames and frame_idx < len(main_frames):
             main_frame = main_frames[frame_idx]
-        # Live telemetry for the main driver — the dashboard renders a
-        # real-time speed/throttle/brake trace per lap from this stream.
-        # Kept as a nested dict so non-telemetry consumers ignore it and
-        # the per-driver ``drivers`` block stays lean.
-        telemetry: dict | None = None
-        if main_frame is not None:
-            telemetry = {
-                "lap":      main_frame.lap,
-                "dist":     round(main_frame.dist, 1),
-                "speed":    round(main_frame.speed, 1),
-                "throttle": round(main_frame.throttle, 3),
-                "brake":    round(main_frame.brake, 3),
-                "gear":     int(main_frame.gear),
-                "drs":      int(main_frame.drs),
-            }
+        # Live telemetry for the main driver (always) + rival driver when
+        # two-driver mode is active. Published as {main: {...}, rival: {...}}
+        # so the telemetry window can render delta / speed / brake /
+        # throttle charts with both traces overlaid. In single-driver
+        # mode ``rival`` is null and the delta chart collapses to a
+        # "single driver" placeholder.
+        main_tel = _frame_to_telemetry(main_frame)
+        rival_tel: dict | None = None
+        if self._driver_rival:
+            rival_frames = self._session.frames_by_driver.get(self._driver_rival)
+            if rival_frames and frame_idx < len(rival_frames):
+                rival_tel = _frame_to_telemetry(rival_frames[frame_idx])
+        telemetry = {"main": main_tel, "rival": rival_tel}
         return {
             "gp_name": self._session.gp_name,
             "year": self._year,
