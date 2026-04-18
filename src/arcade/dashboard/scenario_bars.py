@@ -95,9 +95,13 @@ class ScenarioBars(QFrame):
     def update_from(self, scores: dict[str, Any] | None) -> None:
         """Paint the four bars from a ``scenario_scores`` dict.
 
-        Keys come in uppercase (normalised upstream). Missing keys stay
-        at 0. Winner = argmax across the present values, highlighted in
-        ACCENT + the score label rendered in TEXT_PRIMARY."""
+        MC scores are computed as ``mean - α·std`` and can go negative.
+        We shift the four values so the worst one lands at 0 then scale
+        by the (positive) range — so the winner always reaches full
+        width and the loser draws an empty bar, regardless of whether
+        all four are negative. The raw score is printed with two
+        decimals on the right so the sign and magnitude stay readable.
+        """
         raw: dict[str, float] = {}
         if scores:
             for k, v in scores.items():
@@ -109,14 +113,22 @@ class ScenarioBars(QFrame):
         if raw:
             winner = max(raw, key=raw.get)
 
-        max_val = max(raw.values(), default=0.0) or 1.0
+        present = raw.values()
+        if present:
+            lo = min(present)
+            hi = max(present)
+            span = (hi - lo) or 1.0
+        else:
+            lo, span = 0.0, 1.0
+
         for key, (label, bar, pct) in self._rows.items():
-            v = raw.get(key, 0.0)
-            fill = min(1.0, max(0.0, v / max_val)) if max_val > 0 else 0.0
-            is_winner = key == winner and v > 0
+            v = raw.get(key, lo)
+            fill = (v - lo) / span if key in raw else 0.0
+            fill = min(1.0, max(0.0, fill))
+            is_winner = key == winner and key in raw
             colour = ACCENT if is_winner else TEXT_SECONDARY
             bar.setStyleSheet(self._bar_style(fill, colour))
-            pct.setText(f"{v * 100:4.0f}%")
+            pct.setText(f"{v:+.2f}" if key in raw else "  --")
             pct.setStyleSheet(
                 f"color: {hex_str(TEXT_PRIMARY if is_winner else TEXT_SECONDARY)}; "
                 "font-size: 11px; font-family: monospace;"

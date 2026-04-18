@@ -42,10 +42,9 @@ from src.arcade.dashboard.agent_formatters import (
     format_situation,
     format_tire,
 )
-from src.arcade.dashboard.alerts_feed import AlertsFeed
 from src.arcade.dashboard.orchestrator_card import OrchestratorCard
 from src.arcade.dashboard.pace_chart import PaceChart
-from src.arcade.dashboard.reasoning_view import ReasoningView
+from src.arcade.dashboard.reasoning_tabs import ReasoningTabs
 from src.arcade.dashboard.scenario_bars import ScenarioBars
 from src.arcade.dashboard.stream_client import TelemetryStreamClient
 from src.arcade.dashboard.tire_chart import TireChart
@@ -152,12 +151,10 @@ class MainWindow(QMainWindow):
 
         self._orchestrator_card = OrchestratorCard()
         self._scenario_bars     = ScenarioBars()
-        self._alerts_feed       = AlertsFeed()
-        self._reasoning_view    = ReasoningView()
+        self._reasoning_tabs    = ReasoningTabs()
         self._left_layout.addWidget(self._orchestrator_card)
         self._left_layout.addWidget(self._scenario_bars)
-        self._left_layout.addWidget(self._alerts_feed, 1)
-        self._left_layout.addWidget(self._reasoning_view)
+        self._left_layout.addWidget(self._reasoning_tabs, 1)
 
         # --- Agent cards grid 3×2 in the right panel --------------------
         self._card_pace      = AgentCard("Pace")
@@ -218,8 +215,7 @@ class MainWindow(QMainWindow):
         latest = strategy.get("latest") or {}
         self._orchestrator_card.update_from(latest or None)
         self._scenario_bars.update_from(latest.get("scenario_scores") if latest else None)
-        self._alerts_feed.update_from(latest or None)
-        self._reasoning_view.update_from(latest or None)
+        self._reasoning_tabs.update_from(latest or None)
         self._seed_history_from_tail(strategy.get("history_tail") or [])
         self._ingest_latest_history(latest)
         self._update_agent_cards(latest)
