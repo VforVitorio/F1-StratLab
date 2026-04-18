@@ -57,11 +57,13 @@ class TelemetryWindow(QMainWindow):
         self._client.start()
 
     def _on_data(self, data: dict[str, Any]) -> None:
+        # Panel reads ``arcade.circuit_length_m`` + driver codes + the
+        # ``telemetry`` block — hand it the full broadcast dict so it
+        # can anchor axes and header on its own.
+        self._panel.update_from(data)
         arcade = data.get("arcade") or {}
-        telemetry = arcade.get("telemetry")
-        self._panel.update_from(telemetry)
-        if telemetry:
-            lap = telemetry.get("lap", "?")
+        lap = arcade.get("lap")
+        if lap is not None:
             self.statusBar().showMessage(f"lap {lap} · live", 1500)
 
     def _on_conn_status(self, status: str) -> None:

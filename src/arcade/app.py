@@ -392,6 +392,10 @@ class F1ArcadeView(arcade.View):
             "lap": main_frame.lap if main_frame else 1,
             "t": main_frame.t if main_frame else 0.0,
             "total_laps": self._session.max_lap_number,
+            # Circuit length lets the telemetry window anchor the X axis
+            # once and forget — without it the charts would autorange to
+            # the current sample's max and shift every broadcast.
+            "circuit_length_m": round(self._session.circuit_length_m or 0.0, 1),
             "driver_main": self._driver_main,
             "driver_rival": self._driver_rival,
             "drivers": drivers,
