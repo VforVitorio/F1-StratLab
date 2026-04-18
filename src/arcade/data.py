@@ -79,6 +79,13 @@ class SessionData:
 
     version: str = CACHE_VERSION
     gp_name: str = ""
+    # FastF1 ``session.event['Location']`` — matches the per-race folder name
+    # under ``data/raw/<year>/`` (``Suzuka``, ``Melbourne``, …). Kept
+    # separate from ``gp_name`` which is the arcade-facing display label so
+    # the header can still read "Australia" while the strategy pipeline
+    # loads from ``data/raw/2025/Suzuka/`` — the two diverge whenever the
+    # hardcoded ``GP_NAMES`` table drifts from the active season calendar.
+    location: str = ""
     year: int = 0
     frames_by_driver: dict[str, list[FrameData]] = field(default_factory=dict)
     driver_colors: dict[str, tuple[int, int, int]] = field(default_factory=dict)
@@ -231,6 +238,15 @@ class SessionLoader:
         session = fastf1.get_session(year, round_, "R")
         session.load(telemetry=True, weather=True, laps=True)
 
+        # Read FastF1's authoritative Location (``Suzuka``, ``Melbourne``, …)
+        # so the strategy pipeline can find the right per-race folder
+        # regardless of how the arcade's hardcoded GP_NAMES table maps the
+        # round number.
+        try:
+            location = str(session.event.get("Location", "") or "")
+        except Exception:
+            location = ""
+
         driver_nums = list(session.drivers)
         driver_codes = {n: session.get_driver(n)["Abbreviation"] for n in driver_nums}
         driver_colors = self._resolve_driver_colors(session, driver_codes)
@@ -246,11 +262,12 @@ class SessionLoader:
         max_lap = max(r["max_lap"] for r in results)
         ref_x, ref_y, ref_drs = self._extract_reference_lap(session, year, round_)
         rotation_deg = self._safe_rotation(session)
-        circuit_length = self._estimate_circuit_length(ref_x, ref_y)
+        circuit_length = self._session_circuit_length(session, ref_x, ref_y)
 
         sd = SessionData(
             version=CACHE_VERSION,
             gp_name=gp_name,
+            location=location,
             year=year,
             frames_by_driver=frames_by_driver,
             driver_colors=driver_colors,
@@ -419,6 +436,29 @@ class SessionLoader:
             return float(info.rotation)
         except Exception:
             return 0.0
+
+    def _session_circuit_length(
+        self, session, ref_x: np.ndarray, ref_y: np.ndarray
+    ) -> float:
+        """Pick the most trustworthy circuit length we can derive.
+
+        Preferred path: the fastest lap's FastF1 ``add_distance()``
+        telemetry — that column is cumulative metres within the lap, so
+        its last value IS the track length (Suzuka ≈ 5807 m, Monaco ≈
+        3337 m, Las Vegas ≈ 6201 m). Falls back to the reference-lap
+        polyline estimator when the fastest-lap query fails (qualifying
+        accidents, sessions without a clean flying lap). The ±range
+        sanity check rejects absurd values so a single bad estimate
+        cannot blow up the downstream X axes to 50 km."""
+        try:
+            fastest = session.laps.pick_fastest()
+            tel = fastest.get_car_data().add_distance()
+            length = float(tel["Distance"].iloc[-1])
+            if 1500.0 < length < 12000.0:
+                return length
+        except Exception:
+            pass
+        return self._estimate_circuit_length(ref_x, ref_y)
 
     def _estimate_circuit_length(
         self, ref_x: np.ndarray, ref_y: np.ndarray

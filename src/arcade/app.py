@@ -60,14 +60,18 @@ from src.arcade.track import Track
 logger = logging.getLogger(__name__)
 
 
-def _frame_to_telemetry(frame) -> dict | None:
+def _frame_to_telemetry(frame, circuit_length_m: float) -> dict | None:
     """Pack a ``FrameData`` into the dict the telemetry window consumes.
 
-    Normalises throttle/brake to the 0-100 percent range regardless of
-    how FastF1 delivered them (some sessions carry throttle as 0-1, some
-    as 0-100). ``t`` is included so the telemetry window can compute
-    time deltas between the main and rival drivers without needing to
-    integrate speed over distance itself."""
+    Uses ``frame.rel_dist * circuit_length`` as the broadcast ``dist``
+    because ``frame.dist`` is the race-cumulative accumulator and would
+    push the X axis to tens of kilometres as the race progresses. The
+    telemetry chart wants per-lap distance (resets to 0 each lap) so
+    the traces always occupy the full circuit-length range.
+
+    Throttle / brake normalised to 0-100 % regardless of the FastF1
+    delivery format (some sessions carry them as 0-1). ``t`` is included
+    so the delta-time chart can interpolate rival vs main."""
     if frame is None:
         return None
     throttle = float(frame.throttle)
@@ -76,10 +80,12 @@ def _frame_to_telemetry(frame) -> dict | None:
     brake = float(frame.brake)
     if brake <= 1.0:
         brake *= 100.0
+    rel_dist = max(0.0, min(1.0, float(frame.rel_dist)))
+    lap_dist = rel_dist * float(circuit_length_m or 0.0)
     return {
         "lap":      int(frame.lap),
         "t":        round(float(frame.t), 3),
-        "dist":     round(float(frame.dist), 1),
+        "dist":     round(lap_dist, 1),
         "speed":    round(float(frame.speed), 1),
         "throttle": round(throttle, 1),
         "brake":    round(brake, 1),
@@ -379,12 +385,15 @@ class F1ArcadeView(arcade.View):
         # throttle charts with both traces overlaid. In single-driver
         # mode ``rival`` is null and the delta chart collapses to a
         # "single driver" placeholder.
-        main_tel = _frame_to_telemetry(main_frame)
+        circuit_length = float(self._session.circuit_length_m or 0.0)
+        main_tel = _frame_to_telemetry(main_frame, circuit_length)
         rival_tel: dict | None = None
         if self._driver_rival:
             rival_frames = self._session.frames_by_driver.get(self._driver_rival)
             if rival_frames and frame_idx < len(rival_frames):
-                rival_tel = _frame_to_telemetry(rival_frames[frame_idx])
+                rival_tel = _frame_to_telemetry(
+                    rival_frames[frame_idx], circuit_length
+                )
         telemetry = {"main": main_tel, "rival": rival_tel}
         return {
             "gp_name": self._session.gp_name,
