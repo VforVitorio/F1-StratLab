@@ -12,8 +12,16 @@ import argparse
 import logging
 
 import arcade
+from dotenv import load_dotenv
 
 from src.arcade.config import SCREEN_HEIGHT, SCREEN_WIDTH, WINDOW_TITLE
+
+# Load repo-root ``.env`` so OPENAI_API_KEY / F1_LLM_PROVIDER / HF_TOKEN are
+# available to the agents spawned by the local strategy pipeline — the CLI
+# and backend do the same (``scripts/run_simulation_cli.py`` header) but
+# the arcade used to skip this step and silently fell back to whatever was
+# already exported in the shell.
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
