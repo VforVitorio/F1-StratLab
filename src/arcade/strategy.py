@@ -1,42 +1,33 @@
-"""SSE connector for the multi-agent strategy simulator.
+"""Arcade-local strategy driver.
 
-Runs `/api/v1/strategy/simulate` in a background thread, parses the
-Server-Sent-Events stream, and mutates a shared `StrategyState` so
-`F1ArcadeView.on_draw` can pick up the latest `LapDecision` without
-blocking. Kept free of backend-package imports so the Arcade tool can be
-installed as a standalone surface.
+Runs the full N31 multi-agent pipeline in a background thread against the
+same ``RaceReplayEngine`` + featured-laps parquet the backend SSE endpoint
+uses, and mutates a shared ``StrategyState`` so ``F1ArcadeView.on_draw``
+and the dashboard subprocess can pick up the latest ``LapDecision`` plus
+every raw sub-agent output without blocking. The arcade no longer depends
+on the FastAPI backend at runtime — it owns its own simulation loop, which
+keeps the TFG's CLI/Streamlit path isolated from any arcade change.
 
-Event wire format (what `src/telemetry/.../simulator.py` emits):
-    event: start
-    data: {"gp": "Australia", ...}
-
-    event: decision
-    data: {"lap_number": 1, ...}
-
-    event: error | summary
-    data: {...}
+Lap loop order matches ``backend/services/simulation/simulator.py::simulate_race``
+(the SSE producer). Kept separate so edits to the arcade path cannot
+regress the CLI/Streamlit consumers that still depend on the backend.
 """
 
 from __future__ import annotations
 
-import json
 import logging
+import os
 import threading
-import time
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-import httpx
+import pandas as pd
 
 from src.arcade.config import (
     ACCENT,
-    BACKEND_URL,
     DANGER,
     INFO,
-    SSE_BACKOFF_AFTER_FAILURES_S,
-    SSE_MAX_CONSECUTIVE_FAILURES,
-    SSE_RECONNECT_DELAY_S,
-    STRATEGY_ENDPOINT,
+    REPO_ROOT,
     SUCCESS,
     TEXT_SECONDARY,
     WARNING,
@@ -80,6 +71,29 @@ class StartEventDTO:
 
 
 @dataclass(frozen=True)
+class PerAgentOutputsDTO:
+    """Raw per-agent outputs for one lap, ready to be rendered by the
+    dashboard. Each field is the dict form of the corresponding agent
+    dataclass (``PaceOutput``, ``TireOutput``, ``RaceSituationOutput``,
+    ``RadioOutput``, ``PitStrategyOutput``) — obtained via
+    ``dataclasses.asdict`` so the DTO stays pure-Python and
+    JSON-serialisable without pulling ``src/agents/`` types into the
+    dashboard process.
+
+    ``regulation_context`` is the string from N30 RAG (empty when the
+    agent did not fire). ``active`` lists the conditional agents routed
+    this lap so the dashboard can dim the cards that are idle.
+    """
+    pace: dict[str, Any] | None = None
+    tire: dict[str, Any] | None = None
+    situation: dict[str, Any] | None = None
+    radio: dict[str, Any] | None = None
+    pit: dict[str, Any] | None = None
+    regulation_context: str = ""
+    active: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
 class LapDecisionDTO:
     lap_number: int = 0
     compound: str = ""
@@ -99,6 +113,10 @@ class LapDecisionDTO:
     undercut_target: str | None = None
     agent_alerts: list[str] = field(default_factory=list)
     guardrail_reason: str | None = None
+    # Raw per-agent outputs (populated by the arcade-local pipeline so the
+    # dashboard can render predicted vs actual, CI bounds, cliff percentiles
+    # and every other model detail that used to live only in the CLI panel).
+    per_agent: PerAgentOutputsDTO | None = None
 
 
 # --- Shared state ---------------------------------------------------------
@@ -124,14 +142,22 @@ class StrategyState:
     def snapshot_dict(self, history_tail: int = 30) -> dict:
         """JSON-serialisable view consumed by the dashboard over the TCP stream.
 
-        Returns the StartEvent + latest LapDecision + the last `history_tail`
-        decisions (so the dashboard's charts can redraw on reconnect without
-        replaying from lap 1) + the current error + finished flag."""
+        ``latest`` carries the full ``LapDecisionDTO`` including the raw
+        per-agent outputs so the dashboard can render predicted-vs-actual,
+        cliff percentiles, overtake/SC probabilities, etc. ``history_tail``
+        strips ``per_agent`` from each past decision to keep the wire
+        payload small (charts accumulate their own per-agent history from
+        successive ``latest`` updates — the backend does not need to
+        replay 30 copies of the dataclass on every broadcast).
+        """
         with self._lock:
             return {
                 "start": asdict(self.start) if self.start is not None else None,
                 "latest": asdict(self.latest) if self.latest is not None else None,
-                "history_tail": [asdict(d) for d in self.history[-history_tail:]],
+                "history_tail": [
+                    {k: v for k, v in asdict(d).items() if k != "per_agent"}
+                    for d in self.history[-history_tail:]
+                ],
                 "error": self.error,
                 "finished": self.finished,
             }
@@ -141,12 +167,21 @@ class StrategyState:
 
 
 class SimConnector(threading.Thread):
-    """Consumes the strategy SSE stream into a StrategyState.
+    """Arcade-local strategy driver.
 
-    Reconnects up to `SSE_MAX_CONSECUTIVE_FAILURES` times on transport
-    errors; on prolonged failure sets `state.error = "Backend offline"` and
-    sleeps `SSE_BACKOFF_AFTER_FAILURES_S` before retrying, keeping the UI
-    alive without spamming the backend."""
+    Owns a background thread that iterates the same ``RaceReplayEngine``
+    the backend uses, builds a ``RaceState`` per lap, invokes
+    ``run_strategy_pipeline`` (verbose wrapper that returns both the
+    synthesised ``StrategyRecommendation`` and every raw sub-agent
+    output), and pushes the merged decision into ``StrategyState`` — so
+    the arcade replay panel and the dashboard subprocess both get the
+    full model telemetry without the arcade depending on the FastAPI
+    backend at runtime.
+
+    Class name kept for backwards-compatibility with ``F1ArcadeView``'s
+    wiring (``self._strategy_connector = SimConnector(...)``) — that call
+    site does not need to know the driver is now local.
+    """
 
     daemon = True
 
@@ -154,145 +189,170 @@ class SimConnector(threading.Thread):
         self,
         request: SimulateRequestDTO,
         state: StrategyState,
-        backend_url: str = BACKEND_URL,
+        backend_url: str = "",  # kept for backwards compat, unused
     ) -> None:
         super().__init__(name="SimConnector")
         self._request = request
         self._state = state
-        self._backend_url = backend_url.rstrip("/")
         self._stop_event = threading.Event()
 
     def stop(self) -> None:
         self._stop_event.set()
 
     def run(self) -> None:
-        """Consume the SSE stream; give up after N failed connects.
+        """Drive the local strategy loop and capture fatal errors.
 
-        The stream is a one-shot: once the backend emits RunSummary the
-        loop exits. On transport errors we retry `SSE_MAX_CONSECUTIVE_FAILURES`
-        times with `SSE_RECONNECT_DELAY_S` between attempts, then stop the
-        thread and let the panel show "Backend offline" until the user
-        restarts the replay. Silent retry-forever loops produced noisy
-        logs when the backend wasn't running."""
-        failures = 0
-        while not self._stop_event.is_set():
-            try:
-                self._consume_once()
-                return  # clean end-of-stream
-            except (httpx.ConnectError, httpx.ReadError, httpx.TimeoutException) as exc:
-                failures += 1
-                logger.warning("SSE transport error (%d/%d): %s",
-                               failures, SSE_MAX_CONSECUTIVE_FAILURES, exc)
-                if failures >= SSE_MAX_CONSECUTIVE_FAILURES:
-                    with self._state._lock:
-                        self._state.error = "Backend offline"
-                    logger.info("SSE giving up after %d failed connects", failures)
-                    return
-                self._stop_event.wait(SSE_RECONNECT_DELAY_S)
-            except Exception as exc:
-                logger.exception("SSE stream crashed: %s", exc)
-                with self._state._lock:
-                    self._state.error = f"stream error: {exc}"
-                return
+        Top-level ``try`` turns any exception escaping ``_drive_pipeline``
+        into a ``state.error`` message instead of killing the thread
+        silently (the replay panel / dashboard need to surface the
+        failure to the user)."""
+        try:
+            self._drive_pipeline()
+        except Exception as exc:
+            logger.exception("Arcade strategy driver crashed: %s", exc)
+            with self._state._lock:
+                self._state.error = f"driver error: {exc}"
 
-    def _consume_once(self) -> None:
-        url = f"{self._backend_url}{STRATEGY_ENDPOINT}"
-        payload = {k: v for k, v in asdict(self._request).items() if v is not None}
-        timeout = httpx.Timeout(None, connect=5.0)
-        headers = {"Accept": "text/event-stream"}
-        logger.info("SSE connecting to %s", url)
-        with httpx.Client(timeout=timeout) as client:
-            with client.stream("POST", url, json=payload, headers=headers) as resp:
-                resp.raise_for_status()
-                self._dispatch_stream(resp)
+    def _drive_pipeline(self) -> None:
+        """One-shot replay loop: load data, emit start, iterate laps."""
+        os.environ["F1_LLM_PROVIDER"] = self._request.provider
 
-    def _dispatch_stream(self, resp: httpx.Response) -> None:
-        event_name: str | None = None
-        data_chunks: list[str] = []
-        for line in resp.iter_lines():
+        laps_df = self._load_laps_df(self._request.year)
+        if laps_df is None:
+            with self._state._lock:
+                self._state.error = (
+                    f"laps_featured_{self._request.year}.parquet missing"
+                )
+            return
+
+        race_dir = self._resolve_race_dir(self._request.year, self._request.gp)
+        if not race_dir.exists():
+            with self._state._lock:
+                self._state.error = f"race dir missing: {race_dir.name}"
+            return
+
+        from src.simulation.replay_engine import RaceReplayEngine
+
+        engine = RaceReplayEngine(
+            race_dir,
+            driver_code=self._request.driver,
+            team=self._request.team,
+            interval_seconds=self._request.interval_s,
+        )
+
+        lap_start = self._request.lap_range[0] if self._request.lap_range else 1
+        lap_end = (
+            self._request.lap_range[1] if self._request.lap_range else engine.total_laps
+        )
+        self._emit_start(lap_start, lap_end, engine.total_laps)
+
+        prev_lap_time = 0.0
+        for lap_state in engine.replay():
             if self._stop_event.is_set():
                 return
-            if line == "":
-                if event_name is not None and data_chunks:
-                    self._handle_event(event_name, "\n".join(data_chunks))
-                event_name = None
-                data_chunks = []
+            lap_num = int(lap_state.get("lap_number") or 0)
+            if lap_num < lap_start or lap_num > lap_end:
                 continue
-            if line.startswith("event:"):
-                event_name = line[len("event:"):].strip()
-            elif line.startswith("data:"):
-                data_chunks.append(line[len("data:"):].strip())
+            try:
+                prev_lap_time = self._step_once(laps_df, lap_state, prev_lap_time)
+            except Exception as exc:
+                logger.exception("Lap %d pipeline failed: %s", lap_num, exc)
+                with self._state._lock:
+                    self._state.error = f"lap {lap_num}: {exc}"
 
-    def _handle_event(self, event: str, raw: str) -> None:
-        try:
-            payload = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            logger.warning("SSE bad JSON on event=%s: %s", event, exc)
-            return
-        if event == "start":
-            self._on_start(payload)
-        elif event == "decision":
-            self._on_decision(payload)
-        elif event == "error":
-            self._on_error(payload)
-        elif event == "summary":
-            self._on_summary(payload)
-        else:
-            logger.debug("SSE unknown event: %s", event)
-
-    def _on_start(self, payload: dict[str, Any]) -> None:
         with self._state._lock:
-            self._state.start = StartEventDTO(
-                gp=payload.get("gp", ""),
-                year=int(payload.get("year", 0)),
-                driver=payload.get("driver", ""),
-                driver2=payload.get("driver2"),
-                team=payload.get("team", ""),
-                lap_start=int(payload.get("lap_start", 1)),
-                lap_end=int(payload.get("lap_end", 0)),
-                total_laps=int(payload.get("total_laps", 0)),
-                no_llm=bool(payload.get("no_llm", False)),
-                provider=payload.get("provider", ""),
-            )
-            self._state.error = None
-        logger.info("SSE start: %s %d %s",
-                    payload.get("gp"), payload.get("year"),
-                    payload.get("driver"))
+            self._state.finished = True
+        logger.info("Arcade strategy driver finished (lap_end=%d)", lap_end)
 
-    def _on_decision(self, payload: dict[str, Any]) -> None:
-        decision = LapDecisionDTO(
-            lap_number=int(payload.get("lap_number", 0)),
-            compound=str(payload.get("compound", "")),
-            tyre_life=int(payload.get("tyre_life", 0) or 0),
-            position=int(payload.get("position", 0) or 0),
-            lap_time_s=_as_opt_float(payload.get("lap_time_s")),
-            gap_ahead_s=float(payload.get("gap_ahead_s") or 0.0),
-            action=str(payload.get("action", "STAY_OUT")),
-            confidence=float(payload.get("confidence") or 0.0),
-            reasoning=str(payload.get("reasoning", "")),
-            scenario_scores=_normalize_scores(payload.get("scenario_scores", {})),
-            pace_mode=payload.get("pace_mode"),
-            risk_posture=payload.get("risk_posture"),
-            pit_lap_target=_as_opt_int(payload.get("pit_lap_target")),
-            compound_next=payload.get("compound_next"),
-            undercut_target=payload.get("undercut_target"),
-            agent_alerts=list(payload.get("agent_alerts") or []),
-            guardrail_reason=payload.get("guardrail_reason"),
-        )
+    def _step_once(
+        self,
+        laps_df: pd.DataFrame,
+        lap_state: dict[str, Any],
+        prev_lap_time: float,
+    ) -> float:
+        """Process one lap end-to-end and return the lap_time to carry forward."""
+        from src.arcade.strategy_pipeline import run_strategy_pipeline
+
+        race_state = self._build_race_state(lap_state, prev_lap_time)
+        rec, agent_outputs = run_strategy_pipeline(race_state, laps_df, lap_state)
+        lap_time_s = lap_state.get("driver", {}).get("lap_time_s")
+        decision = _build_decision(rec, race_state, lap_time_s, agent_outputs)
         with self._state._lock:
             self._state.latest = decision
             self._state.history.append(decision)
             self._state.error = None
+        return float(lap_time_s) if lap_time_s else prev_lap_time
 
-    def _on_error(self, payload: dict[str, Any]) -> None:
-        lap = payload.get("lap")
-        msg = payload.get("message", "unknown error")
+    def _emit_start(self, lap_start: int, lap_end: int, total_laps: int) -> None:
         with self._state._lock:
-            self._state.error = f"lap {lap}: {msg}" if lap else msg
+            self._state.start = StartEventDTO(
+                gp=self._request.gp,
+                year=self._request.year,
+                driver=self._request.driver,
+                driver2=self._request.driver2,
+                team=self._request.team,
+                lap_start=lap_start,
+                lap_end=lap_end,
+                total_laps=total_laps,
+                no_llm=self._request.no_llm,
+                provider=self._request.provider,
+            )
+            self._state.error = None
+        logger.info(
+            "Arcade strategy driver started: %s %d %s (laps %d-%d)",
+            self._request.gp, self._request.year, self._request.driver,
+            lap_start, lap_end,
+        )
 
-    def _on_summary(self, payload: dict[str, Any]) -> None:
-        with self._state._lock:
-            self._state.finished = True
+    def _load_laps_df(self, year: int) -> pd.DataFrame | None:
+        path = REPO_ROOT / "data" / "processed" / f"laps_featured_{year}.parquet"
+        if not path.exists():
+            logger.error("Featured laps parquet missing: %s", path)
+            return None
+        return pd.read_parquet(path)
+
+    @staticmethod
+    def _resolve_race_dir(year: int, gp: str):
+        return REPO_ROOT / "data" / "raw" / str(year) / gp
+
+    def _build_race_state(self, lap_state: dict[str, Any], prev_lap_time: float):
+        """Duplicate of ``_local_build_race_state`` from simulator.py — small
+        enough to inline so the arcade stays independent of
+        ``backend.utils.race_state_builder`` (which requires a sys.path
+        shim that only the FastAPI startup provides)."""
+        from src.agents.strategy_orchestrator import RaceState
+
+        driver_st = lap_state.get("driver", {})
+        weather = lap_state.get("weather", {})
+        meta = lap_state.get("session_meta", {})
+        cur_lap_time = driver_st.get("lap_time_s") or 0.0
+        pace_delta = cur_lap_time - prev_lap_time if prev_lap_time else 0.0
+
+        rivals = lap_state.get("rivals", [])
+        our_pos = driver_st.get("position", 99)
+        car_ahead = next(
+            (r for r in rivals if r.get("position") == our_pos - 1), None
+        )
+        gap_ahead_s = (
+            abs(car_ahead.get("interval_to_driver_s") or 0.0) if car_ahead else 0.0
+        )
+
+        return RaceState(
+            driver=driver_st.get("driver", "UNK"),
+            lap=lap_state.get("lap_number", 1),
+            total_laps=meta.get("total_laps", 57),
+            position=driver_st.get("position", 10),
+            compound=driver_st.get("compound", "MEDIUM"),
+            tyre_life=driver_st.get("tyre_life", 1),
+            gap_ahead_s=float(gap_ahead_s),
+            pace_delta_s=float(pace_delta),
+            air_temp=float(weather.get("air_temp", 25.0)),
+            track_temp=float(weather.get("track_temp", 35.0)),
+            rainfall=bool(weather.get("rainfall", False)),
+            radio_msgs=[],
+            rcm_events=[],
+            risk_tolerance=float(self._request.risk_tolerance),
+        )
 
 
 # --- Helpers exposed to the panel ----------------------------------------
@@ -336,29 +396,12 @@ def classify_alerts(
 # --- Private helpers -----------------------------------------------------
 
 
-def _as_opt_float(value: Any) -> float | None:
-    if value is None:
-        return None
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
-
-
-def _as_opt_int(value: Any) -> int | None:
-    if value is None:
-        return None
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return None
-
-
 def _normalize_scores(raw: Any) -> dict[str, float]:
-    """Flatten `{"stay_out": {"score": 0.7}, ...}` or `{"STAY_OUT": 0.7}`.
+    """Flatten ``{"stay_out": {"score": 0.7}, ...}`` or ``{"STAY_OUT": 0.7}``.
 
-    Simulator emits both shapes depending on LLM mode; we render the same
-    four keys in the panel regardless."""
+    MC simulation returns the nested form; the orchestrator re-attaches it
+    to ``StrategyRecommendation.scenario_scores`` without flattening. The
+    dashboard wants a simple ``{UPPER: float}`` dict, so normalise here."""
     if not isinstance(raw, dict):
         return {}
     out: dict[str, float] = {}
@@ -371,3 +414,79 @@ def _normalize_scores(raw: Any) -> dict[str, float]:
         except (TypeError, ValueError):
             out[key] = 0.0
     return out
+
+
+def _dump_dataclass(obj: Any) -> dict[str, Any] | None:
+    """Convert an agent-output dataclass to a plain dict, tolerating ``None``.
+
+    ``dataclasses.asdict`` recurses into nested dataclasses, which is what
+    we want for the per-agent serialisation — ``PaceOutput``, ``TireOutput``,
+    etc. turn into JSON-ready dicts without hand-written field mappings."""
+    if obj is None:
+        return None
+    from dataclasses import asdict as _asdict, is_dataclass
+
+    if is_dataclass(obj):
+        return _asdict(obj)
+    return obj if isinstance(obj, dict) else None
+
+
+def _build_per_agent(agent_outputs: dict[str, Any]) -> PerAgentOutputsDTO:
+    """Package the pipeline's intermediate outputs into a DTO the
+    ``StrategyState`` can broadcast to the dashboard."""
+    return PerAgentOutputsDTO(
+        pace=_dump_dataclass(agent_outputs.get("pace_out")),
+        tire=_dump_dataclass(agent_outputs.get("tire_out")),
+        situation=_dump_dataclass(agent_outputs.get("situation_out")),
+        radio=_dump_dataclass(agent_outputs.get("radio_out")),
+        pit=_dump_dataclass(agent_outputs.get("pit_out")),
+        regulation_context=str(agent_outputs.get("regulation_context") or ""),
+        active=list(agent_outputs.get("active") or []),
+    )
+
+
+def _build_decision(
+    rec: Any,
+    race_state: Any,
+    lap_time_s: float | None,
+    agent_outputs: dict[str, Any],
+) -> LapDecisionDTO:
+    """Merge the synthesised ``StrategyRecommendation`` + raw agent outputs
+    into the DTO consumed by ``StrategyState.history`` / the dashboard.
+
+    ``agent_alerts`` is rebuilt from ``radio_out.alerts`` the same way
+    ``simulator._parse_lap_decision`` does it (string-or-dict tolerant)
+    so the dashboard's alerts feed stays schema-stable across paths.
+    """
+    radio_out = agent_outputs.get("radio_out")
+    agent_alerts: list[str] = []
+    if radio_out is not None:
+        raw_alerts = getattr(radio_out, "alerts", []) or []
+        for a in raw_alerts:
+            if isinstance(a, dict):
+                agent_alerts.append(
+                    str(a.get("intent") or a.get("event_type") or "alert")
+                )
+            else:
+                agent_alerts.append(str(a))
+
+    return LapDecisionDTO(
+        lap_number=race_state.lap,
+        compound=str(race_state.compound),
+        tyre_life=int(race_state.tyre_life),
+        position=int(race_state.position),
+        lap_time_s=float(lap_time_s) if lap_time_s else None,
+        gap_ahead_s=float(race_state.gap_ahead_s),
+        action=str(getattr(rec, "action", "ERROR")),
+        confidence=float(getattr(rec, "confidence", 0.0) or 0.0),
+        reasoning=str(getattr(rec, "reasoning", "")),
+        scenario_scores=_normalize_scores(getattr(rec, "scenario_scores", {})),
+        pace_mode=getattr(rec, "pace_mode", None),
+        risk_posture=getattr(rec, "risk_posture", None),
+        pit_lap_target=getattr(rec, "pit_lap_target", None),
+        compound_next=getattr(rec, "compound_next", None),
+        undercut_target=getattr(rec, "undercut_target", None),
+        agent_alerts=agent_alerts,
+        guardrail_reason=None,
+        per_agent=_build_per_agent(agent_outputs),
+    )
