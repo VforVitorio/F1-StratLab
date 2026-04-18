@@ -78,7 +78,12 @@ class PaceChart(pg.PlotWidget):
         self.addItem(self._actual)
 
     def update_from(self, history: dict[int, dict[str, Any]]) -> None:
-        """Rebuild the three items from the window's pace history dict."""
+        """Rebuild the three items from the window's pace history dict.
+
+        Lap times outside the plausible F1 range (30-200 s) are dropped
+        so an occasional stub value cannot blow the Y-axis autoscale and
+        flatten the real series to a hairline. The whole 30-lap window
+        is rebuilt per update — cheap at these sizes (<1 ms)."""
         if not history:
             self._clear()
             return
@@ -92,20 +97,20 @@ class PaceChart(pg.PlotWidget):
         p90_y:    list[float] = []
         for lap in laps:
             row = history[lap]
-            a = row.get("actual")
-            p = row.get("pred")
-            lo = row.get("ci_p10")
-            hi = row.get("ci_p90")
+            a = _sane_lap_time(row.get("actual"))
+            p = _sane_lap_time(row.get("pred"))
+            lo = _sane_lap_time(row.get("ci_p10"))
+            hi = _sane_lap_time(row.get("ci_p90"))
             if a is not None:
                 actual_x.append(float(lap))
-                actual_y.append(float(a))
+                actual_y.append(a)
             if p is not None:
                 pred_x.append(float(lap))
-                pred_y.append(float(p))
+                pred_y.append(p)
             if lo is not None and hi is not None:
                 band_x.append(float(lap))
-                p10_y.append(float(lo))
-                p90_y.append(float(hi))
+                p10_y.append(lo)
+                p90_y.append(hi)
 
         self._actual.setData(actual_x, actual_y)
         self._pred.setData(pred_x, pred_y)
@@ -117,3 +122,21 @@ class PaceChart(pg.PlotWidget):
         self._pred.setData([], [])
         self._p10.setData([], [])
         self._p90.setData([], [])
+
+
+def _sane_lap_time(value: Any) -> float | None:
+    """Accept only lap-time values plausible for an F1 race (30-200 s).
+
+    Filters out ``None`` and the occasional TCN stub that can return a
+    value orders of magnitude off on the first two laps. The lower bound
+    30 s is well under the fastest modern F1 lap; 200 s (over 3 minutes)
+    is loose enough to accommodate wet Monaco and VSC laps."""
+    if value is None:
+        return None
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return None
+    if 30.0 <= v <= 200.0:
+        return v
+    return None

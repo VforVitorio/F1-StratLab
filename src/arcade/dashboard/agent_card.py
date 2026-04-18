@@ -62,8 +62,14 @@ class AgentCard(QFrame):
     def __init__(self, title: str) -> None:
         super().__init__()
         self.setProperty("card", True)
-        self.setMinimumHeight(150)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        # ``Expanding`` vertically stretches the card to fill the row
+        # regardless of content, leaving huge dead space for Situation /
+        # Radio / RAG. ``Preferred`` lets the layout size to the widget's
+        # natural height; a chart attached later will grow the card as
+        # needed via ``setMinimumHeight`` on the chart itself.
+        self.setMinimumHeight(140)
+        self.setMaximumHeight(260)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(12, 10, 12, 10)
@@ -154,8 +160,11 @@ class AgentCard(QFrame):
         )
 
     def attach_chart(self, widget: QWidget) -> None:
-        """Drop a pyqtgraph ``PlotWidget`` (or similar) inside the body."""
-        # Clear previous content if any (defensive, keeps swap idempotent).
+        """Drop a pyqtgraph ``PlotWidget`` (or similar) inside the body.
+
+        Bumps the card height caps so the chart + body text both fit —
+        the tighter max set in ``__init__`` is for text-only cards
+        (Situation, Radio, RAG) where charts would dominate."""
         while self._chart_layout.count():
             item = self._chart_layout.takeAt(0)
             w = item.widget() if item else None
@@ -163,3 +172,5 @@ class AgentCard(QFrame):
                 w.deleteLater()
         self._chart_layout.addWidget(widget)
         self._chart_host.setVisible(True)
+        self.setMinimumHeight(260)
+        self.setMaximumHeight(420)

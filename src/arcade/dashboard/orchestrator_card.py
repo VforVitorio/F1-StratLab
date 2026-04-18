@@ -50,9 +50,11 @@ _PACE_COLOURS: dict[str, tuple[int, int, int]] = {
 }
 
 _RISK_COLOURS: dict[str, tuple[int, int, int]] = {
-    "AGGRESSIVE": DANGER,
-    "NEUTRAL":    TEXT_SECONDARY,
-    "DEFENSIVE":  WARNING,
+    "AGGRESSIVE":   DANGER,
+    "BALANCED":     TEXT_SECONDARY,
+    "NEUTRAL":      TEXT_SECONDARY,
+    "CONSERVATIVE": WARNING,
+    "DEFENSIVE":    WARNING,
 }
 
 
@@ -170,13 +172,25 @@ class OrchestratorCard(QFrame):
             )
         )
 
-        plan_bits = []
-        plan_bits.append(f"Pit: L{pit_target}" if pit_target else "Pit: --")
-        plan_bits.append(f"Next: {compound_next}" if compound_next else "Next: --")
-        plan_bits.append(
-            f"UCUT: {undercut_target}" if undercut_target else "UCUT: --"
-        )
-        self._plan.setText(" · ".join(plan_bits))
+        # Graceful empty state: on STAY_OUT with no tactical plan, render a
+        # single "stint continues" line instead of three "--" chips — the
+        # orchestrator intentionally leaves pit/next/UCUT blank when there
+        # is no committed pit plan, so "--" on every field reads noisy.
+        if not any((pit_target, compound_next, undercut_target)):
+            if action.upper() == "STAY_OUT":
+                self._plan.setText("stint continues · no pit window yet")
+            else:
+                self._plan.setText("Pit plan pending")
+        else:
+            plan_bits = []
+            plan_bits.append(f"Pit: L{pit_target}" if pit_target else "Pit: —")
+            plan_bits.append(
+                f"Next: {compound_next}" if compound_next else "Next: —"
+            )
+            plan_bits.append(
+                f"UCUT: {undercut_target}" if undercut_target else "UCUT: —"
+            )
+            self._plan.setText(" · ".join(plan_bits))
 
         if guardrail:
             self._guardrail.setText(f"⚠ Guardrail: {guardrail}")

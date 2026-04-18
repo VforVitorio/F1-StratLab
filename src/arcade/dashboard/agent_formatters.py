@@ -84,8 +84,18 @@ def format_pace(p: dict[str, Any] | None) -> Formatted:
 # --- N26 Tire -----------------------------------------------------------
 
 
+_TIRE_CLIFF_MAX_SANE: float = 100.0  # laps — anything above this is early-stint TCN noise
+
+
 def format_tire(t: dict[str, Any] | None) -> Formatted:
-    """CLI §1.2 — cliff p50, range p10-p90, deg rate, warning_level."""
+    """CLI §1.2 — cliff p50, range p10-p90, deg rate, warning_level.
+
+    Early-stint outputs (lap 1-3) can produce absurd cliff projections
+    (tens of thousands of laps) because the TCN's MC Dropout samples
+    lack enough history to converge. We clamp the display to a plausible
+    range: values above ``_TIRE_CLIFF_MAX_SANE`` collapse to a "stabilising"
+    message and drop the range line rather than render useless numbers.
+    """
     if not t:
         return (
             "no prediction — stub",
@@ -103,10 +113,24 @@ def format_tire(t: dict[str, Any] | None) -> Formatted:
     status_map = {"PIT_SOON": STATUS_ALERT, "MONITOR": STATUS_WATCH, "OK": STATUS_OK}
     status = status_map.get(warning, STATUS_OK)
 
+    # Degradation rate may arrive as 0 while the agent is still warming up;
+    # render an em-dash so the user sees "no reading yet" not "0 s/lap".
+    deg_text = f"{deg:.3f}s/lap" if deg > 0.0 else "— s/lap"
+    compound_label = compound if compound != "0" else "—"
+
+    cliff_unreliable = p50 > _TIRE_CLIFF_MAX_SANE or p50 <= 0
+    if cliff_unreliable:
+        headline = "cliff stabilising…"
+        body: list[Line] = [
+            (f"deg {deg_text} · {compound_label}", TEXT_SECONDARY),
+            (warning, _status_colour(status)),
+        ]
+        return headline, TEXT_TERTIARY, body, STATUS_WATCH if status == STATUS_OK else status
+
     headline = f"Cliff ~{int(p50)} laps"
-    body: list[Line] = [
+    body = [
         (f"range {int(p10)}–{int(p90)} laps", TEXT_SECONDARY),
-        (f"deg {deg:.3f}s/lap · {compound}", TEXT_SECONDARY),
+        (f"deg {deg_text} · {compound_label}", TEXT_SECONDARY),
         (warning, _status_colour(status)),
     ]
     return headline, TEXT_PRIMARY, body, status

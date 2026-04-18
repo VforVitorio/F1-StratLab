@@ -73,6 +73,10 @@ class TireChart(pg.PlotWidget):
             ln.setVisible(False)
             self.addItem(ln)
 
+    # Cliff projections above this horizon are TCN early-stint noise —
+    # hide the lines rather than stretch the X-axis to 50k laps.
+    _CLIFF_MAX_SANE: float = 100.0
+
     def update_from(
         self,
         history: list[dict[str, Any]],
@@ -84,8 +88,9 @@ class TireChart(pg.PlotWidget):
         ``history`` is a chronological list of per-lap tyre snapshots.
         ``current_lap`` anchors the cliff-projection lines; ``tire_out``
         carries ``laps_to_cliff_p10/p50/p90`` from the current TireOutput.
-        Missing data hides the cliff lines without clearing the series.
-        """
+        Missing or implausibly large cliff values hide the lines without
+        clearing the series so the tyre curve stays readable while the
+        TCN warms up."""
         self._clear_stint_lines()
 
         if not history:
@@ -115,20 +120,49 @@ class TireChart(pg.PlotWidget):
         if current_lap is None or not tire_out:
             for ln in (self._cliff_p10, self._cliff_p50, self._cliff_p90):
                 ln.setVisible(False)
+            self._anchor_x_range(history, current_lap)
             return
 
         cur = float(current_lap)
+        any_visible = False
         for attr, ln in (
             ("laps_to_cliff_p10", self._cliff_p10),
             ("laps_to_cliff_p50", self._cliff_p50),
             ("laps_to_cliff_p90", self._cliff_p90),
         ):
             val = tire_out.get(attr)
-            if val is None:
+            if val is None or not 0 < float(val) <= self._CLIFF_MAX_SANE:
                 ln.setVisible(False)
                 continue
             ln.setValue(cur + float(val))
             ln.setVisible(True)
+            any_visible = True
+
+        self._anchor_x_range(history, current_lap, include_cliff=any_visible)
+
+    def _anchor_x_range(
+        self,
+        history: list[dict[str, Any]],
+        current_lap: int | None,
+        include_cliff: bool = False,
+    ) -> None:
+        """Clamp the X axis to the actual lap window so a bad cliff value
+        cannot stretch the view to 50k. When cliff lines are hidden (or
+        clearly implausible) the range tracks only the history + a few
+        laps ahead for visual headroom."""
+        xs: list[float] = [float(row.get("lap", 0)) for row in history]
+        if current_lap is not None:
+            xs.append(float(current_lap))
+        if not xs:
+            self.setXRange(0, 1, padding=0.05)
+            return
+        x_min = min(xs) - 0.5
+        x_max = max(xs)
+        if include_cliff:
+            x_max += self._CLIFF_MAX_SANE
+        else:
+            x_max += 3
+        self.setXRange(x_min, x_max, padding=0.02)
 
     @staticmethod
     def _make_cliff_line(rgb: tuple[int, int, int]) -> pg.InfiniteLine:
