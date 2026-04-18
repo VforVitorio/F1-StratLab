@@ -223,16 +223,14 @@ class F1ArcadeView(arcade.View):
         """Return the GP label fed to the strategy pipeline.
 
         Prefers the FastF1 Location (``Suzuka``, ``Melbourne``, …) because
-        that is what the ``data/raw/<year>/`` folders use. The arcade's
-        hardcoded ``GP_NAMES`` table does not stay in sync with the active
-        season calendar (``GP_NAMES[3] == "Australia"`` but 2025 round 3 is
-        Suzuka), so relying on the label alone silently loads the wrong
-        race for the strategy layer. ``GP_TO_LOCATION`` is the translation
-        table for menu inputs that still pass a country-style string."""
-        from src.arcade.config import GP_NAMES, GP_TO_LOCATION
+        that is what the ``data/raw/<year>/`` folders use. Falls back to
+        ``get_gp_names(year)`` (sourced from the canonical per-year
+        calendar JSON) and finally to ``GP_TO_LOCATION`` for menu inputs
+        that still carry a country-style label from the legacy table."""
+        from src.arcade.config import GP_TO_LOCATION, get_gp_names
         if self._session.location:
             return self._session.location
-        gp_name = self._session.gp_name or GP_NAMES.get(1, "Bahrain")
+        gp_name = self._session.gp_name or get_gp_names(self._year).get(1, "Sakhir")
         return GP_TO_LOCATION.get(gp_name, gp_name)
 
     def on_hide_view(self) -> None:

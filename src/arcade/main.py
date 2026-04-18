@@ -56,18 +56,24 @@ def _show_menu(window: arcade.Window) -> None:
 def _show_viewer_directly(window: arcade.Window, args: argparse.Namespace) -> None:
     """Legacy path: bypass the menu and build a F1ArcadeView from CLI args."""
     from src.arcade.app import F1ArcadeView
-    from src.arcade.config import GP_NAMES
+    from src.arcade.config import get_gp_names
     from src.arcade.data import SessionLoader
     from src.arcade.track import Track
 
     year = args.year
     round_num = args.round
-    gp = GP_NAMES.get(round_num, f"Round{round_num}")
+    gp = get_gp_names(year).get(round_num, f"Round{round_num}")
 
-    logger.info("Loading session: %d round %d (%s)", year, round_num, gp)
+    # gp is the arcade's display label from the GP_NAMES table, which does
+    # not stay in sync with the active season calendar (``GP_NAMES[3]`` is
+    # "Australia" but 2025 round 3 is Suzuka). The real race is resolved by
+    # FastF1 inside SessionLoader; re-log after the load with the
+    # authoritative Location so the startup trace does not mislead.
+    logger.info("Requesting session: year=%d round=%d (label=%s)", year, round_num, gp)
     session_data = SessionLoader().load(year, round_num, gp)
     logger.info(
-        "Loaded: %d drivers, laps %d-%d, %d frames",
+        "Loaded session: %s %d (label=%s) — %d drivers, laps %d-%d, %d frames",
+        session_data.location or "?", year, gp,
         len(session_data.frames_by_driver), session_data.min_lap_number,
         session_data.max_lap_number, session_data.total_frames,
     )

@@ -8,9 +8,13 @@ ported from the Tom Shaw f1-race-replay reference (cached audits in
 
 from __future__ import annotations
 
+import json
+import logging
 import os
 from pathlib import Path
 from typing import Final
+
+logger = logging.getLogger(__name__)
 
 # --- Playback & timing ----------------------------------------------------
 FPS: Final[int] = 25
@@ -131,7 +135,7 @@ FLAG_COLORS: Final[dict[str, tuple[int, int, int]]] = {
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 FASTF1_CACHE_DIR: Final[Path] = REPO_ROOT / "data" / "cache" / "fastf1"
 ARCADE_CACHE_DIR: Final[Path] = REPO_ROOT / "data" / "cache" / "arcade"
-CACHE_VERSION: Final[str] = "v3"  # ref_lap_drs now sourced from quali fastest (f1_replay pattern)
+CACHE_VERSION: Final[str] = "v4"  # SessionData.location added for strategy pipeline race_dir resolution
 
 # --- Multiprocessing pool -------------------------------------------------
 # Serial by default — Windows spawn + pickling a loaded session across 8
@@ -196,4 +200,85 @@ GP_NAMES: Final[dict[int, str]] = {
     14: "Netherlands", 15: "Italy", 16: "Singapore", 17: "Mexico",
     18: "Brazil", 19: "LasVegas", 20: "AbuDhabi", 21: "Qatar",
     22: "USA", 23: "Monza",
+}
+
+# --- GP name → on-disk folder (FastF1 Location) --------------------------
+# The CLI / backend store per-race FastF1 data under ``data/raw/<year>/<loc>/``
+# where ``<loc>`` is the circuit Location FastF1 emits (``Sakhir`` for Bahrain,
+# ``Melbourne`` for Australia, ...). The menu / CLI in arcade currently uses
+# the country-ish labels in ``GP_NAMES`` for display; this mapping translates
+# them to the disk name for the local strategy pipeline so it can find the
+# race directory. Pass-through entries are included so a user who already
+# types a Location (e.g. ``--gp Melbourne`` from the CLI shortcut) does not
+# trip the lookup.
+# --- Canonical per-year calendar --- data/tire_compounds_by_race.json ---
+# Memory rule: ``data/tire_compounds_by_race.json`` is THE canonical source
+# for per-year GP metadata (see MEMORY.md → feedback_check_data_folder). The
+# arcade used to carry a hand-maintained ``GP_NAMES`` mapping that drifted
+# from the active season (``GP_NAMES[3] == "Australia"`` but 2025 round 3 is
+# Suzuka); ``get_gp_names(year)`` below reads the JSON and returns an
+# ``{round: Location}`` dict for the requested year, so menu/viewer/strategy
+# paths always resolve the right race without another hardcoded table.
+
+_GP_NAMES_JSON_PATH: Final[Path] = Path(__file__).resolve().parents[2] / "data" / "tire_compounds_by_race.json"
+_gp_names_cache: dict[int, dict[int, str]] = {}
+
+
+def get_gp_names(year: int) -> dict[int, str]:
+    """Return ``{round_number: Location}`` for ``year`` (1-indexed rounds).
+
+    Reads the canonical ``data/tire_compounds_by_race.json`` and assumes
+    the insertion order of the keys matches the calendar order (the
+    builder writes them in round order — verified for 2023/2024/2025).
+    Falls back to the hardcoded ``GP_NAMES`` table (2024 layout) when the
+    JSON is missing or the year is absent, so the arcade still boots
+    without the data artifact.
+    """
+    if year in _gp_names_cache:
+        return _gp_names_cache[year]
+    try:
+        with open(_GP_NAMES_JSON_PATH, encoding="utf-8") as fh:
+            raw = json.load(fh)
+    except (FileNotFoundError, json.JSONDecodeError) as exc:
+        logger.warning("GP calendar JSON unreadable (%s) — using hardcoded fallback", exc)
+        return GP_NAMES
+    year_block = raw.get(str(year))
+    if not isinstance(year_block, dict):
+        logger.warning("No calendar for %d in %s — using hardcoded fallback",
+                       year, _GP_NAMES_JSON_PATH.name)
+        return GP_NAMES
+    mapping = {
+        i + 1: name
+        for i, name in enumerate(year_block.keys())
+        if not name.startswith("_")
+    }
+    _gp_names_cache[year] = mapping
+    return mapping
+
+
+GP_TO_LOCATION: Final[dict[str, str]] = {
+    "Bahrain":       "Sakhir",
+    "SaudiArabia":   "Jeddah",
+    "Australia":     "Melbourne",
+    "Japan":         "Suzuka",
+    "China":         "Shanghai",
+    "Miami":         "Miami_Gardens",
+    "Monaco":        "Monaco",
+    "Canada":        "Montréal",
+    "Spain":         "Barcelona",
+    "Austria":       "Spielberg",
+    "Britain":       "Silverstone",
+    "Hungary":       "Budapest",
+    "Belgium":       "Spa-Francorchamps",
+    "Netherlands":   "Zandvoort",
+    "Italy":         "Monza",
+    "Singapore":     "Marina_Bay",
+    "Mexico":        "Mexico_City",
+    "Brazil":        "São_Paulo",
+    "LasVegas":      "Las_Vegas",
+    "AbuDhabi":      "Yas_Island",
+    "Qatar":         "Lusail",
+    "USA":           "Austin",
+    "Monza":         "Monza",
+    "Imola":         "Imola",
 }

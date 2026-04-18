@@ -25,7 +25,7 @@ from src.arcade.config import (
     DRIVER_TO_TEAM_2025,
     FONT_BODY,
     FONT_TITLE,
-    GP_NAMES,
+    get_gp_names,
     MENU_HINT_FONT,
     MENU_LABEL_FONT,
     MENU_ROW_HEIGHT,
@@ -129,7 +129,7 @@ class MenuView(arcade.View):
             ),
             _FormField(
                 key="round", label="Round", kind="round",
-                get_value=lambda c: f"{c.round_:2d}  {GP_NAMES.get(c.round_, '?')}",
+                get_value=lambda c: f"{c.round_:2d}  {get_gp_names(c.year).get(c.round_, '?')}",
                 step_left=lambda c: setattr(c, "round_", max(1, c.round_ - 1)),
                 step_right=lambda c: setattr(c, "round_", min(23, c.round_ + 1)),
             ),
@@ -356,7 +356,7 @@ class MenuView(arcade.View):
         from src.arcade.data import SessionLoader
         from src.arcade.track import Track
 
-        gp = GP_NAMES.get(self._cfg.round_, f"Round{self._cfg.round_}")
+        gp = get_gp_names(self._cfg.year).get(self._cfg.round_, f"Round{self._cfg.round_}")
         logger.info("Menu: loading %d round %d (%s)", self._cfg.year,
                     self._cfg.round_, gp)
 
