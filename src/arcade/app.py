@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import logging
 import os
+import subprocess
+import sys
 
 import arcade
 
@@ -90,6 +92,7 @@ class F1ArcadeView(arcade.View):
         self._strategy_connector = None  # set by __init__ if strategy_enabled
         self._strategy_state = None
         self._stream_server = None
+        self._dashboard_proc: subprocess.Popen | None = None
         self._broadcast_tick: int = 0
 
         self._frame_index: float = 0.0
@@ -175,13 +178,16 @@ class F1ArcadeView(arcade.View):
         )
 
     def _init_strategy_layer(self) -> None:
-        """Start the local strategy driver and the TCP broadcast server.
+        """Start the local strategy driver, the TCP broadcast server and
+        the PySide6 dashboard subprocess.
 
         The strategy UI lives entirely in the dashboard subprocess — the
         arcade replay keeps the track, leaderboard and car animations
         (the replay-first concerns) and broadcasts merged
         arcade+strategy state over TCP so the dashboard can render the
-        orchestrator card, the six sub-agent cards and the charts."""
+        orchestrator card, the six sub-agent cards and the charts. The
+        dashboard is spawned last so a slow Qt boot never delays the
+        replay window."""
         from src.arcade.strategy import SimConnector, SimulateRequestDTO, StrategyState
         from src.arcade.stream import TelemetryStreamServer
 
@@ -219,6 +225,33 @@ class F1ArcadeView(arcade.View):
                            STREAM_HOST, STREAM_PORT, exc)
             self._stream_server = None
 
+        self._spawn_dashboard()
+
+    def _spawn_dashboard(self) -> None:
+        """Launch the PySide6 strategy dashboard as a child process.
+
+        Spawned lazily so pyglet (arcade) and Qt (dashboard) never share
+        an event loop. ``CREATE_NEW_CONSOLE`` on Windows gives the
+        subprocess its own log stream so the arcade's stdout stays clean.
+        A failed spawn is logged at WARNING and swallowed: the arcade
+        replay keeps playing, just without the companion window."""
+        try:
+            creationflags = (
+                subprocess.CREATE_NEW_CONSOLE if os.name == "nt" else 0
+            )
+            self._dashboard_proc = subprocess.Popen(
+                [sys.executable, "-m", "src.arcade.dashboard"],
+                creationflags=creationflags,
+            )
+            logger.info("Dashboard subprocess spawned (pid=%s)",
+                        self._dashboard_proc.pid)
+        except Exception as exc:
+            logger.warning(
+                "Dashboard spawn failed (%s) — arcade continues without it",
+                exc,
+            )
+            self._dashboard_proc = None
+
     def _resolve_gp_name(self) -> str:
         """Return the GP label fed to the strategy pipeline.
 
@@ -234,12 +267,22 @@ class F1ArcadeView(arcade.View):
         return GP_TO_LOCATION.get(gp_name, gp_name)
 
     def on_hide_view(self) -> None:
-        """Tear down the SSE connector and stream server on view swap/close."""
+        """Tear down the strategy driver, stream server, and dashboard subprocess."""
         if self._strategy_connector is not None:
             self._strategy_connector.stop()
         if self._stream_server is not None:
             self._stream_server.stop()
             self._stream_server = None
+        if self._dashboard_proc is not None:
+            try:
+                self._dashboard_proc.terminate()
+                self._dashboard_proc.wait(timeout=3.0)
+            except subprocess.TimeoutExpired:
+                logger.warning("Dashboard did not exit in 3s — killing")
+                self._dashboard_proc.kill()
+            except Exception as exc:
+                logger.warning("Dashboard teardown error: %s", exc)
+            self._dashboard_proc = None
 
     # --- Arcade event loop -----------------------------------------------
 

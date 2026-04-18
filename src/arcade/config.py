@@ -158,12 +158,6 @@ STREAM_BROADCAST_EVERY_N_FRAMES: Final[int] = 6
 # Cap how many LapDecision entries we keep in the broadcast history tail.
 STREAM_HISTORY_TAIL: Final[int] = 30
 
-# --- Strategy panel geometry ---------------------------------------------
-STRATEGY_PANEL_WIDTH: Final[int] = 240
-STRATEGY_PANEL_HEIGHT: Final[int] = 300
-STRATEGY_PANEL_RIGHT_MARGIN: Final[int] = 260
-STRATEGY_PANEL_TOP_FRACTION: Final[float] = 0.48  # 1.0 = top, 0.0 = bottom
-
 # --- Menu view ------------------------------------------------------------
 MENU_TITLE: Final[str] = "F1 STRATEGY MANAGER"
 MENU_ROW_HEIGHT: Final[int] = 40
