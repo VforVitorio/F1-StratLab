@@ -396,6 +396,10 @@ Retrieval-augmented generation over FIA Sporting Regulations (2023–2025). Prov
 
 Wire the multi-agent system into the FastAPI backend, expose strategy tools via FastMCP, build Streamlit dashboard pages, and integrate Arcade for race replay visualization. Three independent releases ship from this work (R1 CLI wheel, R2 Arcade, R3 Streamlit + Backend).
 
+**Completed:**
+
+- Phase 3.5 Proceso B ✅ 2026-04-18 — PySide6 dashboard subprocess + live telemetry window
+
 **R1 — CLI Release (wheel):** ✅ DONE
 
 - [X] `pyproject.toml` entry points (`f1-strat`, `f1-sim`) ✅
@@ -435,11 +439,26 @@ Wire the multi-agent system into the FastAPI backend, expose strategy tools via 
 - [X] `POST /api/v1/strategy/simulate` — `StreamingResponse(media_type="text/event-stream")` emitting `start` → N×`lap` → `summary` events ✅
 - [X] Validated via smoke unit (6-lap assertions) + FastAPI `TestClient` stream (5 frames, 200 OK, correct content-type) + CLI regression (no drift) ✅
 
-**Step 12 — Arcade simulation UI:** ⬜ Not started (see R2 block below)
+**Step 12 — Arcade simulation UI:** ✅ COMPLETE (Phase 3.5 Proceso B, 2026-04-18)
 
-- [ ] Consume `/api/v1/strategy/simulate` SSE stream in the Arcade game loop
-- [ ] Animate `cars` positions per lap event; pit stop animations on `action == "PIT_NOW"`
-- [ ] Post-run panel rendering the 11 fields of `RunSummary`
+- [X] Three windows from one command: pyglet race replay, PySide6 strategy dashboard,
+      PySide6 live telemetry (2x2 pyqtgraph grid). Single launcher:
+      `python -m src.arcade.main --viewer --strategy ...`
+- [X] Local strategy pipeline — `src/arcade/strategy_pipeline.py` duplicates the N31
+      orchestrator body with verbose outputs. The arcade no longer calls the FastAPI
+      SSE endpoint at runtime
+- [X] `src/arcade/stream.py::TelemetryStreamServer` broadcasts merged arcade + strategy
+      state over TCP 127.0.0.1:9998 at ~10 Hz; arcade spawns ONE dashboard subprocess
+      that hosts both Qt windows in a shared `QApplication` event loop
+- [X] Dashboard cards: orchestrator action + confidence + plan strip, 6 sub-agent cards
+      (N25-N30) rendering raw per-model outputs, pace CI band, tire stint chart,
+      reasoning tabs
+- [X] `src/arcade/data.py::SessionData.location` from FastF1 `session.event['Location']`;
+      `get_gp_names(year)` derives per-year calendars from
+      `data/tire_compounds_by_race.json`; `pyqtgraph>=0.13.0` added to pyproject
+- [X] `src/arcade/main.py` loads `.env` via `dotenv` so `OPENAI_API_KEY` reaches agents;
+      default LLM provider flipped from `lmstudio` to `openai` (override with
+      `F1_LLM_PROVIDER`)
 
 **Step 13 — Legacy cleanup:** ⬜ Not started
 
@@ -606,5 +625,5 @@ Complete project delivery with thesis documentation, defense materials, and thre
 
 ---
 
-**Last Updated:** April 14, 2026
-**Version:** 1.7
+**Last Updated:** April 18, 2026
+**Version:** 1.8

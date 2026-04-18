@@ -48,13 +48,18 @@ Develop an **intelligent strategy recommender** that, based on processed race da
 ```
 F1_Strat_Manager/
 ├── src/                        # Production code
-│   ├── telemetry/              # Main app (FastAPI + Streamlit submodule)
+│   ├── arcade/                 # PRIMARY UI — 3-window race replay & strategy dashboard (PySide6 + pyglet)
+│   │   ├── dashboard/          # Strategy dashboard + live telemetry windows (Qt subprocess)
+│   │   ├── strategy_pipeline.py# Local N31 orchestrator (no FastAPI dependency at runtime)
+│   │   ├── stream.py           # TelemetryStreamServer broadcasting over TCP 127.0.0.1:9998
+│   │   └── main.py             # Entry point — launches arcade + spawns dashboard subprocess
+│   ├── telemetry/              # Secondary — FastAPI + Streamlit post-race analysis
+│   ├── agents/                 # Multi-agent orchestrator (N25-N31)
+│   ├── simulation/             # RaceReplayEngine + RaceStateManager (shared by CLI & arcade)
 │   ├── strategy/               # ML models (lap time, tire degradation)
 │   │   ├── models/
 │   │   ├── training/
 │   │   └── inference/
-│   ├── agents/                 # Expert system + rules
-│   │   └── rules/
 │   ├── nlp/                    # Radio processing (sentiment, NER)
 │   ├── vision/                 # Computer vision
 │   └── shared/                 # Common utilities
@@ -116,13 +121,35 @@ F1_Strat_Manager/
 - Originally developed using the **Experta** framework (see `src/agents/` legacy code).
 - Being replaced by the LangGraph multi-agent architecture described above.
 
-### App Interface
+### App Interfaces
 
-- Built using **Streamlit**.
-- Allows:
-  - Model interaction per section (Vision, NLP, ML)
-  - Visual exploration and graphing
-  - Chatbot Q&A via LLM for post-race reports and image analysis using Llama3.2-vision
+Three user-facing surfaces ship with the project, each suited to a different workflow:
+
+- **CLI** — `scripts/run_simulation_cli.py` (`f1-sim` / `f1-strat` entry points). Headless
+  lap-by-lap simulator with Rich Live rendering. No HTTP layer, no GPU required for the
+  inference detail panel.
+- **Arcade (primary live UI)** — `python -m src.arcade.main --viewer --strategy ...`. Three
+  windows from one command: the pyglet race replay, the PySide6 strategy dashboard
+  (orchestrator card + 6 agent cards + charts + reasoning tabs) and the live telemetry
+  window (2x2 pyqtgraph grid). The arcade owns its own strategy pipeline and does not
+  depend on the FastAPI backend at runtime.
+- **Streamlit (secondary, post-race)** — `streamlit run src/telemetry/frontend/app/main.py`
+  with `uvicorn backend.main:app` behind it. Post-race analysis, chatbot Q&A via LLM,
+  model exploration per section (Vision, NLP, ML), and image analysis via Llama3.2-vision.
+
+### Quick start — Arcade dashboard
+
+Launches the race replay, the strategy dashboard and the telemetry window together:
+
+```bash
+python -m src.arcade.main \
+  --viewer --year 2025 --round 3 \
+  --driver VER --team "Red Bull Racing" \
+  --driver2 LEC --strategy
+```
+
+See [docs/arcade-quick-start.md](docs/arcade-quick-start.md) for CLI flags, window layout,
+and TCP broadcast details.
 
 ---
 
