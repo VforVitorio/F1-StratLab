@@ -66,7 +66,7 @@ Bucket = dict[int, tuple[float, float, float, float]]
 _BUCKET_T, _BUCKET_S, _BUCKET_TH, _BUCKET_BR = 0, 1, 2, 3
 
 # --- Fixed Y ranges per chart ------------------------------------------
-_SPEED_Y_RANGE:    tuple[float, float] = (0.0, 340.0)
+_SPEED_Y_RANGE:    tuple[float, float] = (0.0, 360.0)  # Monza peak ~357 km/h
 _BRAKE_Y_RANGE:    tuple[float, float] = (-5.0, 105.0)
 _THROTTLE_Y_RANGE: tuple[float, float] = (-5.0, 105.0)
 _DELTA_Y_RANGE:    tuple[float, float] = (-3.0, 3.0)
@@ -365,12 +365,25 @@ class TelemetryPanel(QFrame):
             axis.setPen(axis_pen)
             axis.setTextPen(QColor(*TEXT_SECONDARY))
         plot.setLabel("bottom", "Distance (m)", color="#d1d5db")
-        plot.getPlotItem().showGrid(x=True, y=True, alpha=0.18)
+        # Subtler grid than the default (alpha 0.5 → 0.12) so the traces
+        # dominate the read without losing orientation against the ticks.
+        plot.getPlotItem().showGrid(x=True, y=True, alpha=0.12)
         # Lock both axes — X gets set once from broadcast, Y is fixed per metric.
         plot.getPlotItem().enableAutoRange(False)
         plot.setYRange(y_range[0], y_range[1], padding=0)
         plot.setMouseEnabled(x=False, y=False)   # no accidental pan/zoom
         plot.hideButtons()
+        # Reference y=0 line for the delta chart so the user can see at a
+        # glance whether main is faster (negative delta) or slower. For
+        # speed/brake/throttle y=0 is already the chart floor and drawing
+        # another line there would be redundant — only add when y=0 sits
+        # inside the visible range with headroom both sides.
+        if y_range[0] < 0 < y_range[1]:
+            zero_line = pg.InfiniteLine(
+                pos=0, angle=0,
+                pen=pg.mkPen(QColor(*TEXT_TERTIARY), width=1, style=Qt.DashLine),
+            )
+            plot.addItem(zero_line)
         wlay.addWidget(plot, 1)
 
         main_line = pg.PlotDataItem(pen=pg.mkPen(QColor(*main_color), width=2))
