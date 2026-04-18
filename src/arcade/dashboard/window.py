@@ -24,6 +24,7 @@ from typing import Any
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QMainWindow,
@@ -32,6 +33,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from src.arcade.dashboard.agent_card import AgentCard
+from src.arcade.dashboard.agent_formatters import (
+    format_pace,
+    format_pit,
+    format_rag,
+    format_radio,
+    format_situation,
+    format_tire,
+)
 from src.arcade.dashboard.orchestrator_card import OrchestratorCard
 from src.arcade.dashboard.stream_client import TelemetryStreamClient
 from src.arcade.dashboard.theme import (
@@ -139,15 +149,29 @@ class MainWindow(QMainWindow):
         self._left_layout.addWidget(self._orchestrator_card)
 
         self._left_placeholder = QLabel("Scenarios · alerts · reasoning")
-        self._right_placeholder = QLabel("Agent cards · charts")
-        for lbl in (self._left_placeholder, self._right_placeholder):
-            lbl.setAlignment(Qt.AlignCenter)
-            lbl.setStyleSheet(
-                f"color: {hex_str(TEXT_SECONDARY)}; font-style: italic;"
-            )
-            lbl.setWordWrap(True)
+        self._left_placeholder.setAlignment(Qt.AlignCenter)
+        self._left_placeholder.setStyleSheet(
+            f"color: {hex_str(TEXT_SECONDARY)}; font-style: italic;"
+        )
+        self._left_placeholder.setWordWrap(True)
         self._left_layout.addWidget(self._left_placeholder, 1)
-        self._right_layout.addWidget(self._right_placeholder)
+
+        # --- Agent cards grid 3×2 in the right panel --------------------
+        self._card_pace      = AgentCard("Pace · N25")
+        self._card_tire      = AgentCard("Tire · N26")
+        self._card_situation = AgentCard("Situation · N27")
+        self._card_pit       = AgentCard("Pit · N28")
+        self._card_radio     = AgentCard("Radio · N29")
+        self._card_rag       = AgentCard("RAG · N30")
+        grid = QGridLayout()
+        grid.setSpacing(8)
+        grid.addWidget(self._card_pace,      0, 0)
+        grid.addWidget(self._card_tire,      0, 1)
+        grid.addWidget(self._card_situation, 1, 0)
+        grid.addWidget(self._card_pit,       1, 1)
+        grid.addWidget(self._card_radio,     2, 0)
+        grid.addWidget(self._card_rag,       2, 1)
+        self._right_layout.addLayout(grid, 1)
 
         splitter = QSplitter(Qt.Horizontal)
         splitter.addWidget(self._left_host)
@@ -177,13 +201,43 @@ class MainWindow(QMainWindow):
         """Router for incoming broadcasts — fans out to widgets."""
         self._header.update_from(data)
         strategy = data.get("strategy") or {}
-        self._orchestrator_card.update_from(strategy.get("latest"))
+        latest = strategy.get("latest") or {}
+        self._orchestrator_card.update_from(latest or None)
+        self._update_agent_cards(latest)
         err = strategy.get("error")
         if err:
             self.statusBar().showMessage(f"pipeline: {err}")
         else:
             lap = (data.get("arcade") or {}).get("lap", "?")
             self.statusBar().showMessage(f"lap {lap} · streaming", 1500)
+
+    def _update_agent_cards(self, latest: dict[str, Any]) -> None:
+        """Push the per-agent block of ``latest`` into the six cards.
+
+        Conditional agents (N28 pit, N30 rag) read the ``active`` list to
+        decide whether to render content or the idle placeholder."""
+        per = latest.get("per_agent") if latest else None
+        if not per:
+            for card, fmt in (
+                (self._card_pace,      format_pace),
+                (self._card_tire,      format_tire),
+                (self._card_situation, format_situation),
+                (self._card_radio,     format_radio),
+            ):
+                card.render(*fmt(None))
+            self._card_pit.render(*format_pit(None, active=False))
+            self._card_rag.render(*format_rag(None, active=False))
+            return
+
+        active = set(per.get("active") or [])
+        self._card_pace.render(*format_pace(per.get("pace")))
+        self._card_tire.render(*format_tire(per.get("tire")))
+        self._card_situation.render(*format_situation(per.get("situation")))
+        self._card_radio.render(*format_radio(per.get("radio")))
+        self._card_pit.render(*format_pit(per.get("pit"), active="N28" in active))
+        self._card_rag.render(
+            *format_rag(per.get("regulation_context"), active="N30" in active)
+        )
 
     def _on_conn_status(self, status: str) -> None:
         self._header.set_connection(status)
