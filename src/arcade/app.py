@@ -345,6 +345,21 @@ class F1ArcadeView(arcade.View):
         main_frames = self._session.frames_by_driver.get(self._driver_main)
         if main_frames and frame_idx < len(main_frames):
             main_frame = main_frames[frame_idx]
+        # Live telemetry for the main driver — the dashboard renders a
+        # real-time speed/throttle/brake trace per lap from this stream.
+        # Kept as a nested dict so non-telemetry consumers ignore it and
+        # the per-driver ``drivers`` block stays lean.
+        telemetry: dict | None = None
+        if main_frame is not None:
+            telemetry = {
+                "lap":      main_frame.lap,
+                "dist":     round(main_frame.dist, 1),
+                "speed":    round(main_frame.speed, 1),
+                "throttle": round(main_frame.throttle, 3),
+                "brake":    round(main_frame.brake, 3),
+                "gear":     int(main_frame.gear),
+                "drs":      int(main_frame.drs),
+            }
         return {
             "gp_name": self._session.gp_name,
             "year": self._year,
@@ -354,6 +369,7 @@ class F1ArcadeView(arcade.View):
             "driver_main": self._driver_main,
             "driver_rival": self._driver_rival,
             "drivers": drivers,
+            "telemetry": telemetry,
         }
 
     def on_draw(self) -> None:
