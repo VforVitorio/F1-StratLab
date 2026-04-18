@@ -250,6 +250,7 @@ class SimConnector(threading.Thread):
             self._request.lap_range[1] if self._request.lap_range else engine.total_laps
         )
         self._emit_start(lap_start, lap_end, engine.total_laps)
+        self._warmup_models()
 
         prev_lap_time = 0.0
         for lap_state in engine.replay():
@@ -287,6 +288,39 @@ class SimConnector(threading.Thread):
             self._state.history.append(decision)
             self._state.error = None
         return float(lap_time_s) if lap_time_s else prev_lap_time
+
+    def _warmup_models(self) -> None:
+        """Force-load the strategy pipeline and every sub-agent singleton
+        before the first lap so the user sees a clear "warming up" banner
+        in the dashboard instead of an empty card grid for 20 seconds.
+
+        - Importing ``src.arcade.strategy_pipeline`` triggers the chain of
+          ``src.agents.*`` imports (xgboost, torch, transformers, etc.).
+        - Calling ``_get_default_*_agent()`` on the four agents that expose
+          a singleton accessor materialises their model weights on GPU.
+        - Radio / RAG have no simple accessor and warm up naturally on the
+          first lap; still relatively cheap.
+        - The warmup runs after ``_emit_start`` so the dashboard already
+          has the StartEventDTO and can render the header immediately."""
+        with self._state._lock:
+            self._state.error = "Warming up strategy models…"
+        try:
+            import src.arcade.strategy_pipeline  # noqa: F401 — import-for-side-effects
+            from src.agents.pace_agent import _get_default_pace_agent
+            from src.agents.pit_strategy_agent import _get_default_pit_agent
+            from src.agents.race_situation_agent import _get_default_situation_agent
+            from src.agents.tire_agent import _get_default_tire_agent
+
+            _get_default_pace_agent()
+            _get_default_tire_agent()
+            _get_default_situation_agent()
+            _get_default_pit_agent()
+            logger.info("Strategy models warmed up")
+        except Exception as exc:
+            logger.warning("Warmup failed: %s — first lap will bear the cost", exc)
+        finally:
+            with self._state._lock:
+                self._state.error = None
 
     def _emit_start(self, lap_start: int, lap_end: int, total_laps: int) -> None:
         with self._state._lock:

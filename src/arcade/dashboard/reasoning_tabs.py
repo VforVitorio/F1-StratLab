@@ -1,18 +1,17 @@
 """Tabbed reasoning panel.
 
-Replaces the single N31-only reasoning box with a tabbed widget:
+Six tabs (Orchestrator · Pace · Tire · Situation · Radio · Pit) each
+hosting a read-only ``QTextEdit`` with the same regex syntax
+highlighter (lap refs pink, quantiles magenta, percentages yellow,
+time deltas cyan, action keywords bold yellow).
 
-    Orchestrator (N31) · Pace · Tire · Situation · Radio · Pit
-
-Each tab is a read-only ``QTextEdit`` with the same regex syntax
-highlighter as before (lap refs pink, quantiles magenta, percentages
-yellow, time deltas cyan, action keywords bold yellow). ``update_from``
-routes ``latest.reasoning`` to the Orchestrator tab and
-``per_agent.<agent>.reasoning`` to the others, so users can click a tab
-to read any sub-agent's narrative without hovering or opening a new
-view. The RAG agent has no LLM reasoning (it retrieves regulation text
-instead) so it is not surfaced here — the RAG card already shows the
-retrieved snippet inline.
+Each sub-agent tab renders TWO sections: the agent's ``reasoning``
+string at the top (the LLM-authored explanation the CLI shows), then
+an auto-formatted block of the agent's key metrics below it, so even
+when the agent did not emit a reasoning (stub path, conditional agent
+not fired, older checkpoint) the tab still surfaces the raw numbers.
+The RAG agent has no LLM reasoning — its retrieved text lives in the
+RAG card already — so it is not tabbed here.
 """
 
 from __future__ import annotations
@@ -42,7 +41,7 @@ from src.arcade.dashboard.theme import (
     hex_str,
 )
 
-# --- Highlight colours (mirror the CLI Rich palette) ------------------
+# --- Highlight colours (mirror CLI §6) -------------------------------
 _LAP_COLOR:    QColor = QColor(244, 114, 182)
 _QUANT_COLOR:  QColor = QColor(217, 70, 239)
 _PCT_COLOR:    QColor = QColor(250, 204, 21)
@@ -87,15 +86,94 @@ def _make_editor() -> QTextEdit:
     editor.setStyleSheet(
         "QTextEdit { background-color: transparent; border: none; "
         f"color: {hex_str(TEXT_PRIMARY)}; padding: 8px; "
-        "font-family: 'Consolas', 'Courier New', monospace; font-size: 11px; }"
+        "font-family: 'Consolas', 'Courier New', monospace; "
+        "font-size: 11px; line-height: 140%; }"
     )
     return editor
 
 
-class ReasoningTabs(QTabWidget):
-    """QTabWidget with one tab per reasoning source."""
+# --- Per-agent metric formatters -------------------------------------
+# Each takes the agent output dict and returns a list of "key: value" lines
+# sorted by importance. Used as the fallback body when reasoning is empty.
 
-    # (tab label, per_agent key or "orchestrator") — order controls tab order.
+
+def _pace_lines(p: dict[str, Any]) -> list[str]:
+    return [
+        f"lap_time_pred   = {_fnum(p.get('lap_time_pred'), 3)}s",
+        f"delta_vs_prev   = {_fnum(p.get('delta_vs_prev'), 3, signed=True)}s",
+        f"delta_vs_median = {_fnum(p.get('delta_vs_median'), 3, signed=True)}s",
+        f"ci_p10          = {_fnum(p.get('ci_p10'), 2)}s",
+        f"ci_p90          = {_fnum(p.get('ci_p90'), 2)}s",
+    ]
+
+
+def _tire_lines(t: dict[str, Any]) -> list[str]:
+    return [
+        f"compound          = {t.get('compound', '—')}",
+        f"current_tyre_life = {t.get('current_tyre_life', '—')} laps",
+        f"deg_rate          = {_fnum(t.get('deg_rate'), 3)}s/lap",
+        f"laps_to_cliff_p10 = {_fnum(t.get('laps_to_cliff_p10'), 1)}",
+        f"laps_to_cliff_p50 = {_fnum(t.get('laps_to_cliff_p50'), 1)}",
+        f"laps_to_cliff_p90 = {_fnum(t.get('laps_to_cliff_p90'), 1)}",
+        f"warning_level     = {t.get('warning_level', '—')}",
+    ]
+
+
+def _situation_lines(s: dict[str, Any]) -> list[str]:
+    return [
+        f"overtake_prob = {_pct(s.get('overtake_prob'))}",
+        f"sc_prob_3lap  = {_pct(s.get('sc_prob_3lap'))}",
+        f"threat_level  = {s.get('threat_level', '—')}",
+        f"gap_ahead_s   = {_fnum(s.get('gap_ahead_s'), 2)}s",
+        f"pace_delta_s  = {_fnum(s.get('pace_delta_s'), 3, signed=True)}s",
+    ]
+
+
+def _radio_lines(r: dict[str, Any]) -> list[str]:
+    radios = len(r.get("radio_events") or [])
+    rcms = len(r.get("rcm_events") or [])
+    alerts = r.get("alerts") or []
+    lines = [
+        f"radio_events = {radios}",
+        f"rcm_events   = {rcms}",
+        f"alerts       = {len(alerts)}",
+    ]
+    for i, a in enumerate(alerts[:5]):
+        intent = (
+            a.get("intent") or a.get("event_type") or "?"
+            if isinstance(a, dict) else str(a)
+        )
+        lines.append(f"  [{i}] {intent}")
+    return lines
+
+
+def _pit_lines(p: dict[str, Any]) -> list[str]:
+    return [
+        f"action                  = {p.get('action', '—')}",
+        f"recommended_lap         = {p.get('recommended_lap', '—')}",
+        f"compound_recommendation = {p.get('compound_recommendation', '—')}",
+        f"stop_duration_p05       = {_fnum(p.get('stop_duration_p05'), 2)}s",
+        f"stop_duration_p50       = {_fnum(p.get('stop_duration_p50'), 2)}s",
+        f"stop_duration_p95       = {_fnum(p.get('stop_duration_p95'), 2)}s",
+        f"undercut_prob           = {_pct(p.get('undercut_prob'))}",
+        f"undercut_target         = {p.get('undercut_target') or '—'}",
+        f"sc_reactive             = {p.get('sc_reactive', False)}",
+    ]
+
+
+_LINE_BUILDERS: dict[str, Any] = {
+    "pace":      _pace_lines,
+    "tire":      _tire_lines,
+    "situation": _situation_lines,
+    "radio":     _radio_lines,
+    "pit":       _pit_lines,
+}
+
+
+class ReasoningTabs(QTabWidget):
+    """Tabs: Orchestrator + 5 sub-agents. Each sub-agent tab shows
+    reasoning on top and metrics below."""
+
     _TABS: tuple[tuple[str, str], ...] = (
         ("Orchestrator", "orchestrator"),
         ("Pace",         "pace"),
@@ -108,7 +186,7 @@ class ReasoningTabs(QTabWidget):
     def __init__(self) -> None:
         super().__init__()
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.setMinimumHeight(180)
+        self.setMinimumHeight(200)
         self.setDocumentMode(True)
         border = hex_str(BORDER_COLOR)
         secondary = hex_str(TEXT_SECONDARY)
@@ -130,40 +208,68 @@ class ReasoningTabs(QTabWidget):
             self._editors[key] = editor
 
     def update_from(self, latest: dict[str, Any] | None) -> None:
-        """Push the N31 reasoning into the Orchestrator tab and each
-        sub-agent's reasoning into its own tab.
-
-        Sub-agents that did not produce a reasoning (conditional agent
-        not fired, or missing field) get the ``"— no reasoning —"`` idle
-        marker so the tab never looks broken."""
+        """Push per-agent reasoning + metrics into the tabs."""
         if not latest:
             for ed in self._editors.values():
                 ed.setPlainText("")
             return
 
-        self._set_editor("orchestrator", _clean(latest.get("reasoning")))
+        # Orchestrator: just the reasoning string.
+        self._editors["orchestrator"].setPlainText(
+            _clean(latest.get("reasoning")) or "— no reasoning —"
+        )
+
         per = latest.get("per_agent") or {}
         for _, key in self._TABS:
             if key == "orchestrator":
                 continue
             agent_out = per.get(key) or {}
-            self._set_editor(key, _clean(agent_out.get("reasoning")))
+            reasoning = _clean(agent_out.get("reasoning"))
+            metric_lines = _LINE_BUILDERS[key](agent_out) if agent_out else []
+            self._editors[key].setPlainText(_compose(reasoning, metric_lines))
 
-    def _set_editor(self, key: str, text: str) -> None:
-        editor = self._editors.get(key)
-        if editor is None:
-            return
-        editor.setPlainText(text or "— no reasoning —")
+
+def _compose(reasoning: str, metrics: list[str]) -> str:
+    """Assemble the final tab body: reasoning on top, metrics below.
+
+    Either section may be empty. If both are empty the tab shows the
+    idle marker so the user knows the agent did not produce output
+    this lap (common for conditional N28 / N30 when they are not
+    routed)."""
+    blocks: list[str] = []
+    if reasoning:
+        blocks.append(reasoning)
+    if metrics:
+        blocks.append("\n".join(metrics))
+    if not blocks:
+        return "— agent idle —"
+    return "\n\n".join(blocks)
 
 
 def _clean(raw: Any) -> str:
-    """Collapse newlines and truncate to 600 chars so the tab body never
-    grows an internal scrollbar. 600 chars is enough for the
-    structured-output LLMs we target (gpt-4.1-mini reasoning averages
-    ~180 chars)."""
     if not raw:
         return ""
     text = " ".join(str(raw).split())
     if len(text) > 600:
         text = text[:597] + "…"
     return text
+
+
+def _fnum(value: Any, decimals: int = 2, signed: bool = False) -> str:
+    if value is None:
+        return "—"
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return "—"
+    fmt = f"{{v:+.{decimals}f}}" if signed else f"{{v:.{decimals}f}}"
+    return fmt.format(v=v)
+
+
+def _pct(value: Any) -> str:
+    if value is None:
+        return "—"
+    try:
+        return f"{float(value) * 100:5.1f}%"
+    except (TypeError, ValueError):
+        return "—"
