@@ -8,19 +8,31 @@ For each DRS activation zone the script reports:
 
 - Start / end distance in metres from the start-finish line
 - Zone length in metres
-- Start / end (X, Y) coordinates in FastF1 position units (1/10 mm)
-- Approximate speed at the detection point (km/h)
+- Nearest corner number at start and end (``after T3 → before T5``) via
+  ``session.get_circuit_info()`` so the zone reads the same way the FIA
+  Race Director's Event Notes describe them
+- Start / end (X, Y) coordinates and boundary speeds
 
-The FIA publishes a per-GP "Event Notes / DRS activation zones" PDF
-that lists zones as "from Turn X to Turn Y" plus the exact detection
-and activation distances. Cross-reference the ``zone_start_m`` values
-below with those figures — they should match within ~30 m (sampling
-resolution of FastF1 telemetry).
+The FIA publishes a per-GP PDF with zones as "detection at X m before
+Turn Y, activation from Z m after Turn W". Cross-reference the corner
+tags and the metre offsets below with that PDF — they should match
+within ~30 m (sampling resolution of FastF1 telemetry).
+
+Anomalies to expect:
+
+- Short telemetry blips under ``--min-length`` are skipped (default 80
+  m) because FastF1 sometimes registers a ~20 m DRS test flick near
+  pit-out that is not a real activation zone.
+- A circuit reported as ``BROKEN`` usually means FastF1 could not
+  produce a clean flying lap for Q (red flag / no valid time on the
+  day the session was cached). Re-run with the race session by
+  swapping ``get_session(..., "Q")`` → ``"R"`` for that round.
 
 Usage:
     python scripts/verify_drs_zones.py --year 2025
     python scripts/verify_drs_zones.py --year 2025 --round 3
     python scripts/verify_drs_zones.py --year 2025 --json drs_audit.json
+    python scripts/verify_drs_zones.py --year 2025 --summary --min-length 100
 """
 
 from __future__ import annotations
@@ -39,14 +51,18 @@ if str(_REPO_ROOT) not in sys.path:
 import fastf1  # noqa: E402
 
 
-def extract_zones(tel) -> list[dict]:
+def extract_zones(tel, corners_df=None, min_length_m: float = 80.0) -> list[dict]:
     """Walk the telemetry row-by-row, emit one dict per DRS-ON run.
 
     FastF1 publishes ``DRS`` as a status byte; values ``>= 10`` mean the
-    flap is open. A "zone" is any maximal run of open samples. The
-    emitter collects boundary coordinates (X, Y) and boundary speeds
-    so a human verifier can line the numbers up against the FIA
-    document or the arcade replay overlay."""
+    flap is open. A "zone" is any maximal run of open samples. Zones
+    shorter than ``min_length_m`` are dropped as telemetry blips — real
+    F1 DRS activation zones are always several hundred metres long.
+
+    When ``corners_df`` is provided (from ``session.get_circuit_info()``)
+    each zone is tagged with the nearest corner at its start and end
+    coordinates so the output reads like the FIA Event Notes.
+    """
     drs = tel["DRS"].to_numpy().astype(float)
     dist = tel["Distance"].to_numpy().astype(float)
     x = tel["X"].to_numpy().astype(float)
@@ -64,25 +80,49 @@ def extract_zones(tel) -> list[dict]:
         j = i
         while j < n and active[j]:
             j += 1
-        # [i, j) is the run
+        length = float(dist[j - 1] - dist[i])
+        # Reject sub-zone blips (pit-out test flicks and similar noise).
+        if length < min_length_m:
+            i = j
+            continue
+        start_corner = _nearest_corner(x[i],     y[i],     corners_df)
+        end_corner   = _nearest_corner(x[j - 1], y[j - 1], corners_df)
         zones.append({
-            "zone_start_m":  round(float(dist[i]), 1),
-            "zone_end_m":    round(float(dist[j - 1]), 1),
-            "length_m":      round(float(dist[j - 1] - dist[i]), 1),
-            "start_xy":      (int(x[i]),     int(y[i])),
-            "end_xy":        (int(x[j - 1]), int(y[j - 1])),
+            "zone_start_m":    round(float(dist[i]), 1),
+            "zone_end_m":      round(float(dist[j - 1]), 1),
+            "length_m":        round(length, 1),
+            "start_corner":    start_corner,
+            "end_corner":      end_corner,
+            "start_xy":        (int(x[i]),     int(y[i])),
+            "end_xy":          (int(x[j - 1]), int(y[j - 1])),
             "start_speed_kph": round(float(speed[i]), 1),
             "end_speed_kph":   round(float(speed[j - 1]), 1),
-            "samples":       int(j - i),
+            "samples":         int(j - i),
         })
         i = j
     return zones
 
 
-def audit_one(year: int, round_: int) -> dict:
+def _nearest_corner(x: float, y: float, corners_df) -> str:
+    """Return ``"T3"`` (closest corner number) for a given point, or ``"—"``
+    when circuit info is unavailable. Uses Euclidean distance in the
+    FastF1 position coordinate space (units do not matter for argmin)."""
+    if corners_df is None or corners_df.empty:
+        return "—"
+    try:
+        dx = corners_df["X"].to_numpy() - float(x)
+        dy = corners_df["Y"].to_numpy() - float(y)
+        idx = int(np.argmin(dx * dx + dy * dy))
+        num = int(corners_df.iloc[idx]["Number"])
+        return f"T{num}"
+    except Exception:
+        return "—"
+
+
+def audit_one(year: int, round_: int, min_length_m: float) -> dict:
     """Load quali, fastest lap, telemetry + add_distance — then
-    extract zones. Exceptions become error dicts so a single bad
-    session does not halt the batch."""
+    extract zones with corner tags. Exceptions become error dicts so a
+    single bad session does not halt the batch."""
     try:
         session = fastf1.get_session(year, round_, "Q")
         session.load(telemetry=True, laps=True, weather=False, messages=False)
@@ -96,7 +136,16 @@ def audit_one(year: int, round_: int) -> dict:
                 "gp":    session.event.get("Location", "?"),
                 "error": "DRS column missing",
             }
-        zones = extract_zones(tel)
+        corners_df = None
+        try:
+            ci = session.get_circuit_info()
+            corners_df = ci.corners
+        except Exception as exc:
+            # Circuit info is only available on recent FastF1 versions /
+            # for circuits FastF1 has the corner database for — graceful
+            # degrade, the zone tags will read "—".
+            pass
+        zones = extract_zones(tel, corners_df=corners_df, min_length_m=min_length_m)
         lap_length_m = round(float(tel["Distance"].iloc[-1]), 1)
         return {
             "round":        round_,
@@ -133,9 +182,8 @@ def _format_row(row: dict) -> str:
     for i, z in enumerate(row["zones"], 1):
         lines.append(
             f"    Zone {i}: {z['zone_start_m']:>6.1f}m → {z['zone_end_m']:>6.1f}m  "
-            f"({z['length_m']:>5.1f}m)  "
-            f"xy[{z['start_xy'][0]:>7d}, {z['start_xy'][1]:>7d}] → "
-            f"[{z['end_xy'][0]:>7d}, {z['end_xy'][1]:>7d}]  "
+            f"({z['length_m']:>5.1f}m) · "
+            f"{z['start_corner']} → {z['end_corner']} · "
             f"spd {z['start_speed_kph']:>5.1f} → {z['end_speed_kph']:>5.1f} kph"
         )
     return "\n".join(lines)
@@ -156,6 +204,11 @@ def main() -> int:
         "--summary", action="store_true",
         help="Skip the per-GP detail block and print only the summary table.",
     )
+    parser.add_argument(
+        "--min-length", type=float, default=80.0,
+        help="Drop DRS runs shorter than this (metres). Default 80m filters "
+             "FastF1 pit-out flicks / noise without rejecting real zones.",
+    )
     args = parser.parse_args()
 
     fastf1.Cache.enable_cache(_REPO_ROOT / "data" / "cache" / "fastf1")
@@ -163,7 +216,7 @@ def main() -> int:
     rounds = [args.round] if args.round else list(range(1, 25))
     rows: list[dict] = []
     for r in rounds:
-        row = audit_one(args.year, r)
+        row = audit_one(args.year, r, args.min_length)
         rows.append(row)
         if not args.summary:
             print(_format_row(row))
@@ -176,9 +229,12 @@ def main() -> int:
         if "error" in row:
             print(f"  R{row['round']:02d} {tag} — {row['error']}")
         else:
+            corners = " · ".join(
+                f"{z['start_corner']}→{z['end_corner']}" for z in row["zones"]
+            ) or "no zones"
             print(
                 f"  R{row['round']:02d} {tag}  "
-                f"{row['gp']:<22s} zones={row['n_zones']}"
+                f"{row['gp']:<22s} zones={row['n_zones']}  [{corners}]"
             )
     broken = [r for r in rows if _classify(r) in ("BROKEN", "ERROR")]
     sus = [r for r in rows if _classify(r) == "SUSPICIOUS"]
