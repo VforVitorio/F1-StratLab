@@ -44,8 +44,22 @@ from src.arcade.config import (
 logger = logging.getLogger(__name__)
 
 _COMPASS: Final[tuple[str, ...]] = (
-    "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-    "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
+    "N",
+    "NNE",
+    "NE",
+    "ENE",
+    "E",
+    "ESE",
+    "SE",
+    "SSE",
+    "S",
+    "SSW",
+    "SW",
+    "WSW",
+    "W",
+    "WNW",
+    "NW",
+    "NNW",
 )
 
 
@@ -76,16 +90,36 @@ class WeatherPanel:
         self.width = width
         self.bottom_y: int = 0
         self._title = arcade.Text(
-            "WEATHER", x, 0, ACCENT, 13, bold=True,
-            font_name=FONT_TITLE, anchor_x="left", anchor_y="top",
+            "WEATHER",
+            x,
+            0,
+            ACCENT,
+            13,
+            bold=True,
+            font_name=FONT_TITLE,
+            anchor_x="left",
+            anchor_y="top",
         )
         self._label = arcade.Text(
-            "", 0, 0, TEXT_TERTIARY, 11, font_name=FONT_BODY,
-            anchor_x="left", anchor_y="top",
+            "",
+            0,
+            0,
+            TEXT_TERTIARY,
+            11,
+            font_name=FONT_BODY,
+            anchor_x="left",
+            anchor_y="top",
         )
         self._value = arcade.Text(
-            "", 0, 0, TEXT_PRIMARY, 11, font_name=FONT_BODY, bold=True,
-            anchor_x="right", anchor_y="top",
+            "",
+            0,
+            0,
+            TEXT_PRIMARY,
+            11,
+            font_name=FONT_BODY,
+            bold=True,
+            anchor_x="right",
+            anchor_y="top",
         )
 
     def draw(self, frame: dict | None, window_height: int) -> None:
@@ -95,8 +129,11 @@ class WeatherPanel:
             ("Track", f"{weather.get('track_temp', 45.0):.1f} C"),
             ("Air", f"{weather.get('air_temp', 18.0):.1f} C"),
             ("Humidity", f"{weather.get('humidity', 55.0):.0f}%"),
-            ("Wind", f"{weather.get('wind_speed', 0.0):.1f} km/h "
-                     f"{_wind_dir(weather.get('wind_direction'))}"),
+            (
+                "Wind",
+                f"{weather.get('wind_speed', 0.0):.1f} km/h "
+                f"{_wind_dir(weather.get('wind_direction'))}",
+            ),
             ("Rain", f"{weather.get('rain_state', 'DRY')}"),
         ]
         panel_h = 26 + len(rows) * WEATHER_ROW_GAP + self.PANEL_PADDING
@@ -122,16 +159,10 @@ class WeatherPanel:
     def _draw_card(self, top_y: int, panel_h: int) -> None:
         cx = self.x + self.width / 2
         cy = top_y - panel_h / 2
-        arcade.draw_rect_filled(
-            arcade.XYWH(cx, cy, self.width, panel_h), (*CONTENT_BG, 230)
-        )
-        arcade.draw_rect_outline(
-            arcade.XYWH(cx, cy, self.width, panel_h), BORDER_COLOR, 1
-        )
+        arcade.draw_rect_filled(arcade.XYWH(cx, cy, self.width, panel_h), (*CONTENT_BG, 230))
+        arcade.draw_rect_outline(arcade.XYWH(cx, cy, self.width, panel_h), BORDER_COLOR, 1)
         strip_cy = top_y - self.STRIP_H / 2
-        arcade.draw_rect_filled(
-            arcade.XYWH(cx, strip_cy, self.width, self.STRIP_H), ACCENT
-        )
+        arcade.draw_rect_filled(arcade.XYWH(cx, strip_cy, self.width, self.STRIP_H), ACCENT)
 
 
 class DriverInfoPanel:
@@ -161,20 +192,47 @@ class DriverInfoPanel:
         self.code = driver_code
         self.color = color
         self._header = arcade.Text(
-            driver_code, 0, 0, color, 15, bold=True,
-            font_name=FONT_TITLE, anchor_x="left", anchor_y="center",
+            driver_code,
+            0,
+            0,
+            color,
+            15,
+            bold=True,
+            font_name=FONT_TITLE,
+            anchor_x="left",
+            anchor_y="center",
         )
         self._subheader = arcade.Text(
-            "DRIVER", 0, 0, TEXT_TERTIARY, 9, bold=True,
-            font_name=FONT_TITLE, anchor_x="right", anchor_y="center",
+            "DRIVER",
+            0,
+            0,
+            TEXT_TERTIARY,
+            9,
+            bold=True,
+            font_name=FONT_TITLE,
+            anchor_x="right",
+            anchor_y="center",
         )
         self._label = arcade.Text(
-            "", 0, 0, TEXT_TERTIARY, 10, font_name=FONT_BODY,
-            anchor_x="left", anchor_y="center",
+            "",
+            0,
+            0,
+            TEXT_TERTIARY,
+            10,
+            font_name=FONT_BODY,
+            anchor_x="left",
+            anchor_y="center",
         )
         self._value = arcade.Text(
-            "", 0, 0, TEXT_PRIMARY, 11, font_name=FONT_BODY, bold=True,
-            anchor_x="right", anchor_y="center",
+            "",
+            0,
+            0,
+            TEXT_PRIMARY,
+            11,
+            font_name=FONT_BODY,
+            bold=True,
+            anchor_x="right",
+            anchor_y="center",
         )
 
     def set_top(self, top_y: int) -> None:
@@ -191,16 +249,10 @@ class DriverInfoPanel:
         cx = self.x + self.width / 2
         cy = self.top_y - self.height / 2
 
-        arcade.draw_rect_filled(
-            arcade.XYWH(cx, cy, self.width, self.height), (*CONTENT_BG, 230)
-        )
-        arcade.draw_rect_outline(
-            arcade.XYWH(cx, cy, self.width, self.height), BORDER_COLOR, 1
-        )
+        arcade.draw_rect_filled(arcade.XYWH(cx, cy, self.width, self.height), (*CONTENT_BG, 230))
+        arcade.draw_rect_outline(arcade.XYWH(cx, cy, self.width, self.height), BORDER_COLOR, 1)
         strip_cy = self.top_y - self.STRIP_H / 2
-        arcade.draw_rect_filled(
-            arcade.XYWH(cx, strip_cy, self.width, self.STRIP_H), self.color
-        )
+        arcade.draw_rect_filled(arcade.XYWH(cx, strip_cy, self.width, self.STRIP_H), self.color)
         header_cy = self.top_y - DRIVER_HEADER_HEIGHT / 2
         self._header.x = self.x + self.PAD_X
         self._header.y = header_cy
@@ -214,9 +266,11 @@ class DriverInfoPanel:
             ("Speed", f"{data.get('speed', 0):.0f} km/h", TEXT_PRIMARY),
             ("Gear", f"{data.get('gear', 0)}", TEXT_PRIMARY),
             ("DRS", self._drs_label(data.get("drs", 0)), self._drs_color(data.get("drs", 0))),
-            ("Compound",
-             COMPOUND_LETTERS.get(int(data.get("tyre", 1)), "?"),
-             COMPOUND_COLORS.get(int(data.get("tyre", 1)), TEXT_PRIMARY)),
+            (
+                "Compound",
+                COMPOUND_LETTERS.get(int(data.get("tyre", 1)), "?"),
+                COMPOUND_COLORS.get(int(data.get("tyre", 1)), TEXT_PRIMARY),
+            ),
             ("Ahead", ahead, TEXT_SECONDARY),
             ("Behind", behind, TEXT_SECONDARY),
         ]
@@ -251,20 +305,22 @@ class DriverInfoPanel:
             return (255, 210, 50)
         return TEXT_TERTIARY
 
-    def _neighbor_gaps(
-        self, sorted_drivers: list[tuple[str, float]] | None
-    ) -> tuple[str, str]:
+    def _neighbor_gaps(self, sorted_drivers: list[tuple[str, float]] | None) -> tuple[str, str]:
         if not sorted_drivers:
             return "N/A", "N/A"
         codes = [c for c, _ in sorted_drivers]
         if self.code not in codes:
             return "N/A", "N/A"
         idx = codes.index(self.code)
-        ahead = "LEADER" if idx == 0 else self._gap_value(
-            "+", sorted_drivers[idx - 1], sorted_drivers[idx]
+        ahead = (
+            "LEADER"
+            if idx == 0
+            else self._gap_value("+", sorted_drivers[idx - 1], sorted_drivers[idx])
         )
-        behind = "LAST" if idx == len(codes) - 1 else self._gap_value(
-            "-", sorted_drivers[idx + 1], sorted_drivers[idx]
+        behind = (
+            "LAST"
+            if idx == len(codes) - 1
+            else self._gap_value("-", sorted_drivers[idx + 1], sorted_drivers[idx])
         )
         return ahead, behind
 
@@ -306,22 +362,48 @@ class LeaderboardPanel:
         self.width = width
         self._row_rects: list[tuple[str, float, float, float, float]] = []
         self._title = arcade.Text(
-            "LEADERBOARD", x, top_y, ACCENT, 13, bold=True,
-            font_name=FONT_TITLE, anchor_x="left", anchor_y="top",
+            "LEADERBOARD",
+            x,
+            top_y,
+            ACCENT,
+            13,
+            bold=True,
+            font_name=FONT_TITLE,
+            anchor_x="left",
+            anchor_y="top",
         )
         self._rank_texts = [
-            arcade.Text("", 0, 0, TEXT_TERTIARY, 11, font_name=FONT_BODY,
-                        anchor_x="left", anchor_y="top")
+            arcade.Text(
+                "", 0, 0, TEXT_TERTIARY, 11, font_name=FONT_BODY, anchor_x="left", anchor_y="top"
+            )
             for _ in range(n_slots)
         ]
         self._code_texts = [
-            arcade.Text("", 0, 0, TEXT_PRIMARY, 12, bold=True,
-                        font_name=FONT_BODY, anchor_x="left", anchor_y="top")
+            arcade.Text(
+                "",
+                0,
+                0,
+                TEXT_PRIMARY,
+                12,
+                bold=True,
+                font_name=FONT_BODY,
+                anchor_x="left",
+                anchor_y="top",
+            )
             for _ in range(n_slots)
         ]
         self._compound_texts = [
-            arcade.Text("", 0, 0, TEXT_PRIMARY, 11, bold=True,
-                        font_name=FONT_BODY, anchor_x="right", anchor_y="top")
+            arcade.Text(
+                "",
+                0,
+                0,
+                TEXT_PRIMARY,
+                11,
+                bold=True,
+                font_name=FONT_BODY,
+                anchor_x="right",
+                anchor_y="top",
+            )
             for _ in range(n_slots)
         ]
 
@@ -354,8 +436,13 @@ class LeaderboardPanel:
             rect_cx = self.x + self.width / 2
             rect_cy = y - LEADERBOARD_ROW_HEIGHT / 2 + 6
             self._row_rects.append(
-                (code, self.x, rect_cy - LEADERBOARD_ROW_HEIGHT / 2,
-                 self.x + self.width, rect_cy + LEADERBOARD_ROW_HEIGHT / 2)
+                (
+                    code,
+                    self.x,
+                    rect_cy - LEADERBOARD_ROW_HEIGHT / 2,
+                    self.x + self.width,
+                    rect_cy + LEADERBOARD_ROW_HEIGHT / 2,
+                )
             )
             if is_highlighted:
                 arcade.draw_rect_filled(
@@ -391,20 +478,12 @@ class LeaderboardPanel:
     def _draw_card(self, panel_h: int) -> None:
         cx = self.x + self.width / 2
         cy = self.top_y - panel_h / 2
-        arcade.draw_rect_filled(
-            arcade.XYWH(cx, cy, self.width, panel_h), (*CONTENT_BG, 230)
-        )
-        arcade.draw_rect_outline(
-            arcade.XYWH(cx, cy, self.width, panel_h), BORDER_COLOR, 1
-        )
+        arcade.draw_rect_filled(arcade.XYWH(cx, cy, self.width, panel_h), (*CONTENT_BG, 230))
+        arcade.draw_rect_outline(arcade.XYWH(cx, cy, self.width, panel_h), BORDER_COLOR, 1)
         strip_cy = self.top_y - self.STRIP_H / 2
-        arcade.draw_rect_filled(
-            arcade.XYWH(cx, strip_cy, self.width, self.STRIP_H), ACCENT
-        )
+        arcade.draw_rect_filled(arcade.XYWH(cx, strip_cy, self.width, self.STRIP_H), ACCENT)
 
-    def sorted_progress(
-        self, frame: dict, track_len: float
-    ) -> list[tuple[str, float]]:
+    def sorted_progress(self, frame: dict, track_len: float) -> list[tuple[str, float]]:
         ranked = self._rank_drivers(frame, track_len)
         return [(code, progress) for code, _, progress in ranked]
 
@@ -450,8 +529,7 @@ class ProgressBar:
         self._bar_left = left_margin
         self._bar_width = 1
         self._lap_label = arcade.Text(
-            "1", 0, 0, TEXT_TERTIARY, 10, font_name=FONT_BODY,
-            anchor_x="center", anchor_y="top"
+            "1", 0, 0, TEXT_TERTIARY, 10, font_name=FONT_BODY, anchor_x="center", anchor_y="top"
         )
 
     def on_resize(self, window_width: int) -> None:
@@ -470,17 +548,19 @@ class ProgressBar:
         fill_w = prog * self._bar_width
         if fill_w > 0:
             arcade.draw_rect_filled(
-                arcade.XYWH(
-                    self._bar_left + fill_w / 2, cy, fill_w, self.height - 4
-                ),
+                arcade.XYWH(self._bar_left + fill_w / 2, cy, fill_w, self.height - 4),
                 FLAG_COLORS["progress_fill"],
             )
 
         for lap in range(1, self.total_laps + 1):
             lx = self._frame_to_x(int(lap / self.total_laps * self.total_frames))
             arcade.draw_line(
-                lx, self.bottom + 2, lx, self.bottom + self.height - 2,
-                FLAG_COLORS["lap_marker"], 1,
+                lx,
+                self.bottom + 2,
+                lx,
+                self.bottom + self.height - 2,
+                FLAG_COLORS["lap_marker"],
+                1,
             )
             if lap == 1 or lap == self.total_laps or lap % 10 == 0:
                 self._lap_label.text = str(lap)
@@ -493,8 +573,12 @@ class ProgressBar:
 
         px = self._frame_to_x(int(current_frame))
         arcade.draw_line(
-            px, self.bottom - 2, px, self.bottom + self.height + 2,
-            FLAG_COLORS["playhead"], 3,
+            px,
+            self.bottom - 2,
+            px,
+            self.bottom + self.height + 2,
+            FLAG_COLORS["playhead"],
+            3,
         )
 
     def on_mouse_press(self, x: float, y: float) -> int | None:
@@ -509,10 +593,15 @@ class ProgressBar:
         return self._bar_left + (f / self.total_frames) * self._bar_width
 
     def _x_to_frame(self, x: float) -> int:
-        return int(max(0, min(
-            self.total_frames - 1,
-            ((x - self._bar_left) / max(1, self._bar_width)) * self.total_frames,
-        )))
+        return int(
+            max(
+                0,
+                min(
+                    self.total_frames - 1,
+                    ((x - self._bar_left) / max(1, self._bar_width)) * self.total_frames,
+                ),
+            )
+        )
 
     def _draw_event(self, event: dict[str, Any]) -> None:
         event_type = event.get("type", "")
@@ -524,9 +613,7 @@ class ProgressBar:
         sx = self._frame_to_x(sf)
         ex = self._frame_to_x(ef)
         w = max(4.0, ex - sx)
-        arcade.draw_rect_filled(
-            arcade.XYWH(sx + w / 2, self.bottom + self.height + 5, w, 5), color
-        )
+        arcade.draw_rect_filled(arcade.XYWH(sx + w / 2, self.bottom + self.height + 5, w, 5), color)
 
 
 class ControlsLegend:
@@ -552,17 +639,41 @@ class ControlsLegend:
         self.x = x
         self.bottom = bottom
         self._header = arcade.Text(
-            "CONTROLS", x, 0, ACCENT, 12, bold=True, font_name=FONT_TITLE,
-            anchor_x="left", anchor_y="bottom",
+            "CONTROLS",
+            x,
+            0,
+            ACCENT,
+            12,
+            bold=True,
+            font_name=FONT_TITLE,
+            anchor_x="left",
+            anchor_y="bottom",
         )
         self._key_texts = [
-            arcade.Text(key, 0, 0, TEXT_PRIMARY, 10, bold=True,
-                        font_name=FONT_BODY, anchor_x="left", anchor_y="bottom")
+            arcade.Text(
+                key,
+                0,
+                0,
+                TEXT_PRIMARY,
+                10,
+                bold=True,
+                font_name=FONT_BODY,
+                anchor_x="left",
+                anchor_y="bottom",
+            )
             for key, _ in self.LINES
         ]
         self._desc_texts = [
-            arcade.Text(desc, 0, 0, TEXT_TERTIARY, 10,
-                        font_name=FONT_BODY, anchor_x="left", anchor_y="bottom")
+            arcade.Text(
+                desc,
+                0,
+                0,
+                TEXT_TERTIARY,
+                10,
+                font_name=FONT_BODY,
+                anchor_x="left",
+                anchor_y="bottom",
+            )
             for _, desc in self.LINES
         ]
 
@@ -579,4 +690,3 @@ class ControlsLegend:
         self._header.x = self.x
         self._header.y = self.bottom + len(self.LINES) * 14 + 6
         self._header.draw()
-

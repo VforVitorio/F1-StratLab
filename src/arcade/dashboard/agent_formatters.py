@@ -32,10 +32,10 @@ from src.arcade.dashboard.theme import (
 )
 
 # Status tokens consumed by AgentCard.set_status
-STATUS_OK:    str = "OK"
+STATUS_OK: str = "OK"
 STATUS_WATCH: str = "WATCH"
 STATUS_ALERT: str = "ALERT"
-STATUS_IDLE:  str = "IDLE"
+STATUS_IDLE: str = "IDLE"
 
 # Type alias for readability only.
 Line = tuple[str, tuple[int, int, int]]
@@ -236,9 +236,7 @@ def format_pit(p: dict[str, Any] | None, active: bool) -> Formatted:
     headline = f"pit {p50:.2f}s → {compound}"
     lines: list[Line] = [(f"range {p05:.2f}–{p95:.2f}s", TEXT_SECONDARY)]
     if up is not None and target:
-        lines.append(
-            (f"UCUT {float(up) * 100:.0f}% → {target}", WARNING)
-        )
+        lines.append((f"UCUT {float(up) * 100:.0f}% → {target}", WARNING))
     else:
         lines.append(("no undercut target", TEXT_TERTIARY))
     return headline, WARNING, lines, STATUS_WATCH
@@ -274,8 +272,8 @@ def format_rag(regulation_context: str | None, active: bool) -> Formatted:
 
 def _status_colour(status: str) -> tuple[int, int, int]:
     return {
-        STATUS_OK:    SUCCESS,
+        STATUS_OK: SUCCESS,
         STATUS_WATCH: WARNING,
         STATUS_ALERT: DANGER,
-        STATUS_IDLE:  TEXT_TERTIARY,
+        STATUS_IDLE: TEXT_TERTIARY,
     }.get(status, TEXT_TERTIARY)

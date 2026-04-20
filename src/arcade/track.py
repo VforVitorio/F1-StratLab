@@ -150,9 +150,7 @@ class Track:
 
         self._screen_inner = self._project_poly(self._world_inner)
         self._screen_outer = self._project_poly(self._world_outer)
-        self._screen_drs_segments = [
-            self._project_poly(seg) for seg in self._drs_segments_world
-        ]
+        self._screen_drs_segments = [self._project_poly(seg) for seg in self._drs_segments_world]
         if len(self._screen_inner) > 0 and len(self._screen_outer) > 0:
             self._screen_finish = (
                 tuple(self._screen_inner[0]),
@@ -183,19 +181,13 @@ class Track:
         if not self._has_geometry:
             return
         if len(self._screen_inner) >= 2:
-            arcade.draw_line_strip(
-                [tuple(p) for p in self._screen_inner], edge_color, edge_width
-            )
+            arcade.draw_line_strip([tuple(p) for p in self._screen_inner], edge_color, edge_width)
         if len(self._screen_outer) >= 2:
-            arcade.draw_line_strip(
-                [tuple(p) for p in self._screen_outer], edge_color, edge_width
-            )
+            arcade.draw_line_strip([tuple(p) for p in self._screen_outer], edge_color, edge_width)
         if show_drs:
             for seg in self._screen_drs_segments:
                 if len(seg) >= 2:
-                    arcade.draw_line_strip(
-                        [tuple(p) for p in seg], drs_color, drs_width
-                    )
+                    arcade.draw_line_strip([tuple(p) for p in seg], drs_color, drs_width)
         if show_finish_line and self._screen_finish is not None:
             self._draw_finish_line(self._screen_finish, edge_width)
 
@@ -220,9 +212,7 @@ class Track:
         nx = -dy / mag
         ny = dx / mag
         # Shoelace signed area — flip sign so normals consistently point outward.
-        signed_area = 0.5 * float(
-            np.sum(xs * np.roll(ys, -1) - np.roll(xs, -1) * ys)
-        )
+        signed_area = 0.5 * float(np.sum(xs * np.roll(ys, -1) - np.roll(xs, -1) * ys))
         if signed_area > 0:
             nx = -nx
             ny = -ny
@@ -239,9 +229,7 @@ class Track:
         produced."""
         if drs_flags.size < 2 or edge_len < 2:
             return []
-        active_raw = np.isin(
-            np.round(drs_flags).astype(int), tuple(_DRS_ACTIVE)
-        )
+        active_raw = np.isin(np.round(drs_flags).astype(int), tuple(_DRS_ACTIVE))
         if not active_raw.any():
             return []
         raw_len = len(drs_flags)
@@ -288,8 +276,10 @@ class Track:
 
     @staticmethod
     def _centre(pts: np.ndarray) -> tuple[float, float]:
-        return (float((pts[:, 0].min() + pts[:, 0].max()) / 2.0),
-                float((pts[:, 1].min() + pts[:, 1].max()) / 2.0))
+        return (
+            float((pts[:, 0].min() + pts[:, 0].max()) / 2.0),
+            float((pts[:, 1].min() + pts[:, 1].max()) / 2.0),
+        )
 
     @staticmethod
     def _rotate(pts: np.ndarray, pivot: tuple[float, float], rad: float) -> np.ndarray:
@@ -297,10 +287,12 @@ class Track:
         sin_a = np.sin(rad)
         px, py = pivot
         shifted = pts - np.array([px, py])
-        rotated = np.column_stack([
-            shifted[:, 0] * cos_a - shifted[:, 1] * sin_a,
-            shifted[:, 0] * sin_a + shifted[:, 1] * cos_a,
-        ])
+        rotated = np.column_stack(
+            [
+                shifted[:, 0] * cos_a - shifted[:, 1] * sin_a,
+                shifted[:, 0] * sin_a + shifted[:, 1] * cos_a,
+            ]
+        )
         return rotated + np.array([px, py])
 
     @staticmethod

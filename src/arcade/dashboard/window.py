@@ -72,9 +72,7 @@ class HeaderBar(QWidget):
         self._session = QLabel("--")
         self._session.setStyleSheet("font-size: 14px; font-weight: 600;")
         self._driver = QLabel("--")
-        self._driver.setStyleSheet(
-            f"color: {hex_str(TEXT_SECONDARY)}; font-size: 13px;"
-        )
+        self._driver.setStyleSheet(f"color: {hex_str(TEXT_SECONDARY)}; font-size: 13px;")
         self._conn = QLabel("Disconnected")
         self._conn.setObjectName("chip")
         self._playback = QLabel("-- × · --")
@@ -115,7 +113,7 @@ class HeaderBar(QWidget):
     def set_connection(self, status: str) -> None:
         self._conn.setText(status)
         color = {
-            "Connected":    hex_str(SUCCESS),
+            "Connected": hex_str(SUCCESS),
             "Connecting...": hex_str(WARNING),
             "Disconnected": hex_str(DANGER),
         }.get(status, hex_str(TEXT_SECONDARY))
@@ -141,28 +139,28 @@ class MainWindow(QMainWindow):
 
         self._header = HeaderBar()
 
-        self._left_host  = QWidget()
+        self._left_host = QWidget()
         self._right_host = QWidget()
-        self._left_layout  = QVBoxLayout(self._left_host)
+        self._left_layout = QVBoxLayout(self._left_host)
         self._right_layout = QVBoxLayout(self._right_host)
         for lay in (self._left_layout, self._right_layout):
             lay.setContentsMargins(10, 10, 10, 10)
             lay.setSpacing(8)
 
         self._orchestrator_card = OrchestratorCard()
-        self._scenario_bars     = ScenarioBars()
-        self._reasoning_tabs    = ReasoningTabs()
+        self._scenario_bars = ScenarioBars()
+        self._reasoning_tabs = ReasoningTabs()
         self._left_layout.addWidget(self._orchestrator_card)
         self._left_layout.addWidget(self._scenario_bars)
         self._left_layout.addWidget(self._reasoning_tabs, 1)
 
         # --- Agent cards grid 3×2 in the right panel --------------------
-        self._card_pace      = AgentCard("Pace")
-        self._card_tire      = AgentCard("Tire")
+        self._card_pace = AgentCard("Pace")
+        self._card_tire = AgentCard("Tire")
         self._card_situation = AgentCard("Situation")
-        self._card_pit       = AgentCard("Pit")
-        self._card_radio     = AgentCard("Radio")
-        self._card_rag       = AgentCard("RAG")
+        self._card_pit = AgentCard("Pit")
+        self._card_radio = AgentCard("Radio")
+        self._card_rag = AgentCard("RAG")
 
         # Embed the two pyqtgraph charts in their respective cards. Chart
         # data is accumulated in ``_pace_history`` / ``_tire_history``
@@ -176,12 +174,12 @@ class MainWindow(QMainWindow):
         self._tire_history: dict[int, dict[str, Any]] = {}
         grid = QGridLayout()
         grid.setSpacing(8)
-        grid.addWidget(self._card_pace,      0, 0)
-        grid.addWidget(self._card_tire,      0, 1)
+        grid.addWidget(self._card_pace, 0, 0)
+        grid.addWidget(self._card_tire, 0, 1)
         grid.addWidget(self._card_situation, 1, 0)
-        grid.addWidget(self._card_pit,       1, 1)
-        grid.addWidget(self._card_radio,     2, 0)
-        grid.addWidget(self._card_rag,       2, 1)
+        grid.addWidget(self._card_pit, 1, 1)
+        grid.addWidget(self._card_radio, 2, 0)
+        grid.addWidget(self._card_rag, 2, 1)
         self._right_layout.addLayout(grid, 1)
 
         splitter = QSplitter(Qt.Horizontal)
@@ -272,10 +270,7 @@ class MainWindow(QMainWindow):
         self._trim_history()
 
     def _tire_history_list(self) -> list[dict[str, Any]]:
-        return [
-            {"lap": lap, **row}
-            for lap, row in sorted(self._tire_history.items())
-        ]
+        return [{"lap": lap, **row} for lap, row in sorted(self._tire_history.items())]
 
     def _trim_history(self, keep: int = 40) -> None:
         """Keep only the most recent ``keep`` laps so memory stays bounded
@@ -296,10 +291,10 @@ class MainWindow(QMainWindow):
         per = latest.get("per_agent") if latest else None
         if not per:
             for card, fmt in (
-                (self._card_pace,      format_pace),
-                (self._card_tire,      format_tire),
+                (self._card_pace, format_pace),
+                (self._card_tire, format_tire),
                 (self._card_situation, format_situation),
-                (self._card_radio,     format_radio),
+                (self._card_radio, format_radio),
             ):
                 card.render(*fmt(None))
             self._card_pit.render(*format_pit(None, active=False))
@@ -312,9 +307,7 @@ class MainWindow(QMainWindow):
         self._card_situation.render(*format_situation(per.get("situation")))
         self._card_radio.render(*format_radio(per.get("radio")))
         self._card_pit.render(*format_pit(per.get("pit"), active="N28" in active))
-        self._card_rag.render(
-            *format_rag(per.get("regulation_context"), active="N30" in active)
-        )
+        self._card_rag.render(*format_rag(per.get("regulation_context"), active="N30" in active))
 
     def _on_conn_status(self, status: str) -> None:
         self._header.set_connection(status)

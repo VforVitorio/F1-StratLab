@@ -90,11 +90,11 @@ class PaceChart(pg.PlotWidget):
         laps = sorted(history.keys())
         actual_x: list[float] = []
         actual_y: list[float] = []
-        pred_x:   list[float] = []
-        pred_y:   list[float] = []
-        band_x:   list[float] = []
-        p10_y:    list[float] = []
-        p90_y:    list[float] = []
+        pred_x: list[float] = []
+        pred_y: list[float] = []
+        band_x: list[float] = []
+        p10_y: list[float] = []
+        p90_y: list[float] = []
         for lap in laps:
             row = history[lap]
             a = _sane_lap_time(row.get("actual"))

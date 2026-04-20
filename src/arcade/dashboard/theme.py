@@ -20,34 +20,34 @@ from typing import Final
 from PySide6.QtGui import QColor, QPalette
 
 # --- Palette (RGB tuples) ------------------------------------------------
-BG_COLOR:        Final[tuple[int, int, int]] = (18, 17, 39)       # #121127 PRIMARY_BG
-CONTENT_BG:      Final[tuple[int, int, int]] = (24, 22, 51)       # #181633 panel bg
-SECONDARY_BG:    Final[tuple[int, int, int]] = (30, 27, 75)       # #1e1b4b elevated
-BORDER_COLOR:    Final[tuple[int, int, int]] = (45, 45, 58)       # #2d2d3a
-TEXT_PRIMARY:    Final[tuple[int, int, int]] = (255, 255, 255)
-TEXT_SECONDARY:  Final[tuple[int, int, int]] = (209, 213, 219)    # #d1d5db
-TEXT_TERTIARY:   Final[tuple[int, int, int]] = (156, 163, 175)    # #9ca3af
-ACCENT:          Final[tuple[int, int, int]] = (167, 139, 250)    # #a78bfa purple
-SUCCESS:         Final[tuple[int, int, int]] = (16, 185, 129)     # #10b981 emerald
-WARNING:         Final[tuple[int, int, int]] = (245, 158, 11)     # #f59e0b amber
-DANGER:          Final[tuple[int, int, int]] = (239, 68, 68)      # #ef4444 red
-INFO:            Final[tuple[int, int, int]] = (59, 130, 246)     # #3b82f6 blue
+BG_COLOR: Final[tuple[int, int, int]] = (18, 17, 39)  # #121127 PRIMARY_BG
+CONTENT_BG: Final[tuple[int, int, int]] = (24, 22, 51)  # #181633 panel bg
+SECONDARY_BG: Final[tuple[int, int, int]] = (30, 27, 75)  # #1e1b4b elevated
+BORDER_COLOR: Final[tuple[int, int, int]] = (45, 45, 58)  # #2d2d3a
+TEXT_PRIMARY: Final[tuple[int, int, int]] = (255, 255, 255)
+TEXT_SECONDARY: Final[tuple[int, int, int]] = (209, 213, 219)  # #d1d5db
+TEXT_TERTIARY: Final[tuple[int, int, int]] = (156, 163, 175)  # #9ca3af
+ACCENT: Final[tuple[int, int, int]] = (167, 139, 250)  # #a78bfa purple
+SUCCESS: Final[tuple[int, int, int]] = (16, 185, 129)  # #10b981 emerald
+WARNING: Final[tuple[int, int, int]] = (245, 158, 11)  # #f59e0b amber
+DANGER: Final[tuple[int, int, int]] = (239, 68, 68)  # #ef4444 red
+INFO: Final[tuple[int, int, int]] = (59, 130, 246)  # #3b82f6 blue
 
 # --- Compound colours (Pirelli IDs 0-4) ----------------------------------
 COMPOUND_COLORS: Final[dict[int, tuple[int, int, int]]] = {
-    0: (230, 50, 50),     # SOFT
-    1: (230, 200, 50),    # MEDIUM
-    2: (230, 230, 230),   # HARD
-    3: (60, 200, 60),     # INTERMEDIATE
-    4: (60, 130, 230),    # WET
+    0: (230, 50, 50),  # SOFT
+    1: (230, 200, 50),  # MEDIUM
+    2: (230, 230, 230),  # HARD
+    3: (60, 200, 60),  # INTERMEDIATE
+    4: (60, 130, 230),  # WET
 }
-COMPOUND_NAMES:  Final[dict[str, tuple[int, int, int]]] = {
-    "SOFT":    COMPOUND_COLORS[0],
-    "MEDIUM":  COMPOUND_COLORS[1],
-    "HARD":    COMPOUND_COLORS[2],
-    "INTER":   COMPOUND_COLORS[3],
+COMPOUND_NAMES: Final[dict[str, tuple[int, int, int]]] = {
+    "SOFT": COMPOUND_COLORS[0],
+    "MEDIUM": COMPOUND_COLORS[1],
+    "HARD": COMPOUND_COLORS[2],
+    "INTER": COMPOUND_COLORS[3],
     "INTERMEDIATE": COMPOUND_COLORS[3],
-    "WET":     COMPOUND_COLORS[4],
+    "WET": COMPOUND_COLORS[4],
 }
 
 # --- Stream config (must match src/arcade/config.py) ---------------------
@@ -56,24 +56,24 @@ STREAM_PORT: Final[int] = int(os.environ.get("F1_STREAM_PORT", "9998"))
 
 # --- Action classification (mirrors src/arcade/strategy.py::classify_action)
 _ACTION_STYLE: Final[dict[str, tuple[tuple[int, int, int], str]]] = {
-    "STAY_OUT": (SUCCESS,        "STAY OUT"),
-    "PIT_NOW":  (DANGER,         "PIT NOW"),
-    "UNDERCUT": (WARNING,        "UNDERCUT"),
-    "OVERCUT":  (WARNING,        "OVERCUT"),
-    "ALERT":    (INFO,           "ALERT"),
-    "DNF":      (TEXT_SECONDARY, "DNF"),
-    "ERROR":    (DANGER,         "ERROR"),
+    "STAY_OUT": (SUCCESS, "STAY OUT"),
+    "PIT_NOW": (DANGER, "PIT NOW"),
+    "UNDERCUT": (WARNING, "UNDERCUT"),
+    "OVERCUT": (WARNING, "OVERCUT"),
+    "ALERT": (INFO, "ALERT"),
+    "DNF": (TEXT_SECONDARY, "DNF"),
+    "ERROR": (DANGER, "ERROR"),
 }
 
 # --- Severity (mirrors src/arcade/strategy.py::_ALERT_SEVERITY) ---------
 _ALERT_SEVERITY: Final[dict[str, int]] = {
-    "SAFETY_CAR":         3,
-    "RED_FLAG":           3,
+    "SAFETY_CAR": 3,
+    "RED_FLAG": 3,
     "VIRTUAL_SAFETY_CAR": 2,
-    "VSC":                2,
-    "YELLOW_FLAG":        2,
-    "PROBLEM":            1,
-    "WARNING":            1,
+    "VSC": 2,
+    "YELLOW_FLAG": 2,
+    "PROBLEM": 1,
+    "WARNING": 1,
 }
 
 
@@ -106,8 +106,7 @@ def hex_str(rgb: tuple[int, int, int]) -> str:
 # who have it installed get the richer look; the Consolas / Courier New
 # fallbacks keep the rendering legible when not.
 MONO_FONT_STACK: Final[str] = (
-    "'FiraCode Nerd Font Mono', 'Fira Code', 'JetBrains Mono', "
-    "'Consolas', 'Courier New', monospace"
+    "'FiraCode Nerd Font Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', 'Courier New', monospace"
 )
 
 
@@ -120,19 +119,25 @@ MONO_FONT_STACK: Final[str] = (
 # render in rich-text mode next to plain text.
 
 _COMPOUND_COLOUR_BY_LABEL: Final[dict[str, tuple[int, int, int]]] = {
-    "SOFT":         (230,  50,  50),
-    "MEDIUM":       (230, 200,  50),
-    "HARD":         (230, 230, 230),
-    "INTER":        ( 60, 200,  60),
-    "INTERMEDIATE": ( 60, 200,  60),
-    "WET":          ( 60, 130, 230),
-    "S": (230,  50,  50), "M": (230, 200,  50), "H": (230, 230, 230),
-    "I": ( 60, 200,  60), "W": ( 60, 130, 230),
+    "SOFT": (230, 50, 50),
+    "MEDIUM": (230, 200, 50),
+    "HARD": (230, 230, 230),
+    "INTER": (60, 200, 60),
+    "INTERMEDIATE": (60, 200, 60),
+    "WET": (60, 130, 230),
+    "S": (230, 50, 50),
+    "M": (230, 200, 50),
+    "H": (230, 230, 230),
+    "I": (60, 200, 60),
+    "W": (60, 130, 230),
     # Pirelli Cx mapping per the dry-race convention — hardest compounds
     # white, medium yellow, softest red.
-    "C1": (230, 230, 230), "C2": (230, 230, 230),
-    "C3": (230, 200,  50),
-    "C4": (230,  50,  50), "C5": (230,  50,  50), "C6": (230,  50,  50),
+    "C1": (230, 230, 230),
+    "C2": (230, 230, 230),
+    "C3": (230, 200, 50),
+    "C4": (230, 50, 50),
+    "C5": (230, 50, 50),
+    "C6": (230, 50, 50),
 }
 
 
@@ -175,11 +180,14 @@ def compound_pill_html(compound: str | None) -> str:
 # neutral grey so the reader is never misled by an unstyled label.
 
 _FLAG_BG_BY_INTENT: Final[dict[str, tuple[int, int, int]]] = {
-    "SAFETY_CAR": DANGER,   "RED_FLAG":           DANGER,
-    "VSC":        WARNING,  "VIRTUAL_SAFETY_CAR": WARNING,
+    "SAFETY_CAR": DANGER,
+    "RED_FLAG": DANGER,
+    "VSC": WARNING,
+    "VIRTUAL_SAFETY_CAR": WARNING,
     "YELLOW_FLAG": WARNING,
-    "PROBLEM":    INFO,     "WARNING":            INFO,
-    "PENALTY":    DANGER,
+    "PROBLEM": INFO,
+    "WARNING": INFO,
+    "PENALTY": DANGER,
 }
 
 
@@ -205,22 +213,22 @@ def apply_dark_palette(app) -> None:
     override specific roles (action badges, cliff lines, etc.).
     """
     palette = QPalette()
-    palette.setColor(QPalette.Window,          qcolor(BG_COLOR))
-    palette.setColor(QPalette.WindowText,      qcolor(TEXT_PRIMARY))
-    palette.setColor(QPalette.Base,            qcolor(CONTENT_BG))
-    palette.setColor(QPalette.AlternateBase,   qcolor(SECONDARY_BG))
-    palette.setColor(QPalette.Text,            qcolor(TEXT_PRIMARY))
-    palette.setColor(QPalette.Button,          qcolor(SECONDARY_BG))
-    palette.setColor(QPalette.ButtonText,      qcolor(TEXT_PRIMARY))
-    palette.setColor(QPalette.ToolTipBase,     qcolor(CONTENT_BG))
-    palette.setColor(QPalette.ToolTipText,     qcolor(TEXT_PRIMARY))
-    palette.setColor(QPalette.Highlight,       qcolor(ACCENT))
+    palette.setColor(QPalette.Window, qcolor(BG_COLOR))
+    palette.setColor(QPalette.WindowText, qcolor(TEXT_PRIMARY))
+    palette.setColor(QPalette.Base, qcolor(CONTENT_BG))
+    palette.setColor(QPalette.AlternateBase, qcolor(SECONDARY_BG))
+    palette.setColor(QPalette.Text, qcolor(TEXT_PRIMARY))
+    palette.setColor(QPalette.Button, qcolor(SECONDARY_BG))
+    palette.setColor(QPalette.ButtonText, qcolor(TEXT_PRIMARY))
+    palette.setColor(QPalette.ToolTipBase, qcolor(CONTENT_BG))
+    palette.setColor(QPalette.ToolTipText, qcolor(TEXT_PRIMARY))
+    palette.setColor(QPalette.Highlight, qcolor(ACCENT))
     palette.setColor(QPalette.HighlightedText, qcolor(BG_COLOR))
     app.setPalette(palette)
     app.setStyleSheet(
         f"QMainWindow, QWidget {{ background-color: {hex_str(BG_COLOR)}; "
         f"color: {hex_str(TEXT_PRIMARY)}; }} "
-        f"QFrame[card=\"true\"] {{ background-color: {hex_str(CONTENT_BG)}; "
+        f'QFrame[card="true"] {{ background-color: {hex_str(CONTENT_BG)}; '
         f"border: 1px solid {hex_str(BORDER_COLOR)}; border-radius: 6px; }} "
         f"QLabel#chip {{ color: {hex_str(TEXT_SECONDARY)}; padding: 2px 8px; "
         f"background-color: {hex_str(SECONDARY_BG)}; border-radius: 10px; "

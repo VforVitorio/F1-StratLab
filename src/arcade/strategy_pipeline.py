@@ -129,11 +129,7 @@ def _build_default_lap_state(race_state: "RaceState", laps_df: pd.DataFrame) -> 
     year = int(laps_df["Year"].iloc[0]) if "Year" in laps_df.columns else 2025
     gp_name = str(laps_df["GP_Name"].iloc[0]) if "GP_Name" in laps_df.columns else ""
     stint = int(lap_row["Stint"].iloc[0]) if not lap_row.empty else 1
-    team = (
-        str(lap_row["Team"].iloc[0])
-        if not lap_row.empty and "Team" in lap_row
-        else "Unknown"
-    )
+    team = str(lap_row["Team"].iloc[0]) if not lap_row.empty and "Team" in lap_row else "Unknown"
     return {
         "lap_number": race_state.lap,
         "driver": {

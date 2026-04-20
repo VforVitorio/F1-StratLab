@@ -52,8 +52,9 @@ class TelemetryStreamServer:
         sock.listen(5)
         self._server_socket = sock
         self._running = True
-        threading.Thread(target=self._accept_loop, daemon=True,
-                         name="TelemetryStreamAccept").start()
+        threading.Thread(
+            target=self._accept_loop, daemon=True, name="TelemetryStreamAccept"
+        ).start()
         logger.info("TelemetryStreamServer listening on %s:%d", self.host, self.port)
 
     def stop(self) -> None:
@@ -120,8 +121,12 @@ class TelemetryStreamServer:
             logger.info("Stream client connected from %s", addr)
             with self._clients_lock:
                 self._clients.append(client_socket)
-            threading.Thread(target=self._keepalive_loop, args=(client_socket,),
-                             daemon=True, name="TelemetryStreamClient").start()
+            threading.Thread(
+                target=self._keepalive_loop,
+                args=(client_socket,),
+                daemon=True,
+                name="TelemetryStreamClient",
+            ).start()
 
     def _keepalive_loop(self, client_socket: socket.socket) -> None:
         """Hold the socket open until it dies. We do not expect reads from

@@ -43,10 +43,10 @@ from src.arcade.dashboard.theme import (
 )
 
 # --- Highlight colours (mirror CLI §6) -------------------------------
-_LAP_COLOR:    QColor = QColor(244, 114, 182)
-_QUANT_COLOR:  QColor = QColor(217, 70, 239)
-_PCT_COLOR:    QColor = QColor(250, 204, 21)
-_DELTA_COLOR:  QColor = QColor(34, 211, 238)
+_LAP_COLOR: QColor = QColor(244, 114, 182)
+_QUANT_COLOR: QColor = QColor(217, 70, 239)
+_PCT_COLOR: QColor = QColor(250, 204, 21)
+_DELTA_COLOR: QColor = QColor(34, 211, 238)
 _ACTION_COLOR: QColor = QColor(250, 204, 21)
 
 
@@ -68,10 +68,12 @@ class _ReasoningHighlighter(QSyntaxHighlighter):
         self._rules.append((re.compile(r"\b[Pp]\d{2}\b"), _fmt(_QUANT_COLOR)))
         self._rules.append((re.compile(r"\b\d+(?:\.\d+)?%"), _fmt(_PCT_COLOR)))
         self._rules.append((re.compile(r"[+\-]\d+\.\d+\s*s\b"), _fmt(_DELTA_COLOR)))
-        self._rules.append((
-            re.compile(r"\b(PIT_NOW|STAY_OUT|UNDERCUT|OVERCUT)\b"),
-            _fmt(_ACTION_COLOR, bold=True),
-        ))
+        self._rules.append(
+            (
+                re.compile(r"\b(PIT_NOW|STAY_OUT|UNDERCUT|OVERCUT)\b"),
+                _fmt(_ACTION_COLOR, bold=True),
+            )
+        )
 
     def highlightBlock(self, text: str) -> None:
         for pattern, fmt in self._rules:
@@ -140,10 +142,7 @@ def _radio_lines(r: dict[str, Any]) -> list[str]:
         f"alerts       = {len(alerts)}",
     ]
     for i, a in enumerate(alerts[:5]):
-        intent = (
-            a.get("intent") or a.get("event_type") or "?"
-            if isinstance(a, dict) else str(a)
-        )
+        intent = a.get("intent") or a.get("event_type") or "?" if isinstance(a, dict) else str(a)
         lines.append(f"  [{i}] {intent}")
     return lines
 
@@ -163,11 +162,11 @@ def _pit_lines(p: dict[str, Any]) -> list[str]:
 
 
 _LINE_BUILDERS: dict[str, Any] = {
-    "pace":      _pace_lines,
-    "tire":      _tire_lines,
+    "pace": _pace_lines,
+    "tire": _tire_lines,
     "situation": _situation_lines,
-    "radio":     _radio_lines,
-    "pit":       _pit_lines,
+    "radio": _radio_lines,
+    "pit": _pit_lines,
 }
 
 
@@ -177,11 +176,11 @@ class ReasoningTabs(QTabWidget):
 
     _TABS: tuple[tuple[str, str], ...] = (
         ("Orchestrator", "orchestrator"),
-        ("Pace",         "pace"),
-        ("Tire",         "tire"),
-        ("Situation",    "situation"),
-        ("Radio",        "radio"),
-        ("Pit",          "pit"),
+        ("Pace", "pace"),
+        ("Tire", "tire"),
+        ("Situation", "situation"),
+        ("Radio", "radio"),
+        ("Pit", "pit"),
     )
 
     def __init__(self) -> None:

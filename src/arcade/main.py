@@ -43,21 +43,24 @@ def _parse_args() -> argparse.Namespace:
         prog="f1-arcade",
         description="F1 Strategy Manager - visual race replay.",
     )
-    parser.add_argument("--viewer", action="store_true",
-                        help="Skip the menu and boot straight into the replay.")
+    parser.add_argument(
+        "--viewer", action="store_true", help="Skip the menu and boot straight into the replay."
+    )
     parser.add_argument("--year", type=int, default=2024)
     parser.add_argument("--round", type=int, default=3)
     parser.add_argument("--driver", type=str, default=None)
     parser.add_argument("--driver2", type=str, default=None)
     parser.add_argument("--team", type=str, default="McLaren")
-    parser.add_argument("--strategy", action="store_true",
-                        help="Enable strategy overlay (requires year 2025).")
+    parser.add_argument(
+        "--strategy", action="store_true", help="Enable strategy overlay (requires year 2025)."
+    )
     parser.add_argument("--provider", choices=("lmstudio", "openai"), default="openai")
     return parser.parse_args()
 
 
 def _show_menu(window: arcade.Window) -> None:
     from src.arcade.views import MenuView
+
     window.show_view(MenuView(window))
 
 
@@ -81,9 +84,13 @@ def _show_viewer_directly(window: arcade.Window, args: argparse.Namespace) -> No
     session_data = SessionLoader().load(year, round_num, gp)
     logger.info(
         "Loaded session: %s %d (label=%s) — %d drivers, laps %d-%d, %d frames",
-        session_data.location or "?", year, gp,
-        len(session_data.frames_by_driver), session_data.min_lap_number,
-        session_data.max_lap_number, session_data.total_frames,
+        session_data.location or "?",
+        year,
+        gp,
+        len(session_data.frames_by_driver),
+        session_data.min_lap_number,
+        session_data.max_lap_number,
+        session_data.total_frames,
     )
 
     ref_x, ref_y = session_data.ref_lap_xy

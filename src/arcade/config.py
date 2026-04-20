@@ -68,18 +68,18 @@ LEGEND_BOTTOM: Final[int] = 60
 # Streamlit app read as the same product. The Streamlit file owns the
 # canonical hexes; duplicated here (not imported) to keep src/arcade/
 # dependency-free from the backend package.
-BG_COLOR: Final[tuple[int, int, int]] = (18, 17, 39)           # #121127 PRIMARY_BG
-CONTENT_BG: Final[tuple[int, int, int]] = (24, 22, 51)         # #181633 CONTENT_BG (panels)
-SECONDARY_BG: Final[tuple[int, int, int]] = (30, 27, 75)       # #1e1b4b SECONDARY_BG
-BORDER_COLOR: Final[tuple[int, int, int]] = (45, 45, 58)       # #2d2d3a BORDER
-TEXT_PRIMARY: Final[tuple[int, int, int]] = (255, 255, 255)    # #ffffff
+BG_COLOR: Final[tuple[int, int, int]] = (18, 17, 39)  # #121127 PRIMARY_BG
+CONTENT_BG: Final[tuple[int, int, int]] = (24, 22, 51)  # #181633 CONTENT_BG (panels)
+SECONDARY_BG: Final[tuple[int, int, int]] = (30, 27, 75)  # #1e1b4b SECONDARY_BG
+BORDER_COLOR: Final[tuple[int, int, int]] = (45, 45, 58)  # #2d2d3a BORDER
+TEXT_PRIMARY: Final[tuple[int, int, int]] = (255, 255, 255)  # #ffffff
 TEXT_SECONDARY: Final[tuple[int, int, int]] = (209, 213, 219)  # #d1d5db
-TEXT_TERTIARY: Final[tuple[int, int, int]] = (156, 163, 175)   # #9ca3af
-ACCENT: Final[tuple[int, int, int]] = (167, 139, 250)          # #a78bfa purple
-SUCCESS: Final[tuple[int, int, int]] = (16, 185, 129)          # #10b981 emerald
-WARNING: Final[tuple[int, int, int]] = (245, 158, 11)          # #f59e0b amber
-DANGER: Final[tuple[int, int, int]] = (239, 68, 68)            # #ef4444 red
-INFO: Final[tuple[int, int, int]] = (59, 130, 246)             # #3b82f6 blue
+TEXT_TERTIARY: Final[tuple[int, int, int]] = (156, 163, 175)  # #9ca3af
+ACCENT: Final[tuple[int, int, int]] = (167, 139, 250)  # #a78bfa purple
+SUCCESS: Final[tuple[int, int, int]] = (16, 185, 129)  # #10b981 emerald
+WARNING: Final[tuple[int, int, int]] = (245, 158, 11)  # #f59e0b amber
+DANGER: Final[tuple[int, int, int]] = (239, 68, 68)  # #ef4444 red
+INFO: Final[tuple[int, int, int]] = (59, 130, 246)  # #3b82f6 blue
 
 # --- Typography (arcade.Text font_name accepts a fallback tuple) ---------
 FONT_BODY: Final[tuple[str, ...]] = ("Inter", "Segoe UI", "Arial")
@@ -99,17 +99,25 @@ TRACK_INTERP_EDGE: Final[int] = 2000
 
 # --- Tyre compounds (FastF1 int codes) -----------------------------------
 COMPOUND_COLORS: Final[dict[int, tuple[int, int, int]]] = {
-    0: (230, 50, 50),     # SOFT
-    1: (230, 200, 50),    # MEDIUM
-    2: (230, 230, 230),   # HARD
-    3: (60, 200, 60),     # INTERMEDIATE
-    4: (60, 130, 230),    # WET
+    0: (230, 50, 50),  # SOFT
+    1: (230, 200, 50),  # MEDIUM
+    2: (230, 230, 230),  # HARD
+    3: (60, 200, 60),  # INTERMEDIATE
+    4: (60, 130, 230),  # WET
 }
 COMPOUND_LETTERS: Final[dict[int, str]] = {
-    0: "S", 1: "M", 2: "H", 3: "I", 4: "W",
+    0: "S",
+    1: "M",
+    2: "H",
+    3: "I",
+    4: "W",
 }
 COMPOUND_NAMES: Final[dict[int, str]] = {
-    0: "SOFT", 1: "MEDIUM", 2: "HARD", 3: "INTER", 4: "WET",
+    0: "SOFT",
+    1: "MEDIUM",
+    2: "HARD",
+    3: "INTER",
+    4: "WET",
 }
 
 # --- Car rendering --------------------------------------------------------
@@ -181,26 +189,54 @@ STRATEGY_REQUIRED_YEAR: Final[int] = 2025
 # driver argument. Mid-season moves (TSU Racing Bulls -> Red Bull, LAW the
 # opposite) resolved to each driver's end-of-season team.
 DRIVER_TO_TEAM_2025: Final[dict[str, str]] = {
-    "VER": "Red Bull Racing", "TSU": "Red Bull Racing",
-    "NOR": "McLaren", "PIA": "McLaren",
-    "LEC": "Ferrari", "HAM": "Ferrari",
-    "RUS": "Mercedes", "ANT": "Mercedes",
-    "ALO": "Aston Martin", "STR": "Aston Martin",
-    "ALB": "Williams", "SAI": "Williams",
-    "GAS": "Alpine", "DOO": "Alpine", "COL": "Alpine",
-    "HUL": "Kick Sauber", "BOR": "Kick Sauber",
-    "BEA": "Haas F1 Team", "OCO": "Haas F1 Team",
-    "LAW": "Racing Bulls", "HAD": "Racing Bulls",
+    "VER": "Red Bull Racing",
+    "TSU": "Red Bull Racing",
+    "NOR": "McLaren",
+    "PIA": "McLaren",
+    "LEC": "Ferrari",
+    "HAM": "Ferrari",
+    "RUS": "Mercedes",
+    "ANT": "Mercedes",
+    "ALO": "Aston Martin",
+    "STR": "Aston Martin",
+    "ALB": "Williams",
+    "SAI": "Williams",
+    "GAS": "Alpine",
+    "DOO": "Alpine",
+    "COL": "Alpine",
+    "HUL": "Kick Sauber",
+    "BOR": "Kick Sauber",
+    "BEA": "Haas F1 Team",
+    "OCO": "Haas F1 Team",
+    "LAW": "Racing Bulls",
+    "HAD": "Racing Bulls",
 }
 
 # --- Grand Prix names (round -> short label) -----------------------------
 GP_NAMES: Final[dict[int, str]] = {
-    1: "Bahrain", 2: "SaudiArabia", 3: "Australia", 4: "Japan",
-    5: "China", 6: "Miami", 7: "Monaco", 8: "Canada", 9: "Spain",
-    10: "Austria", 11: "Britain", 12: "Hungary", 13: "Belgium",
-    14: "Netherlands", 15: "Italy", 16: "Singapore", 17: "Mexico",
-    18: "Brazil", 19: "LasVegas", 20: "AbuDhabi", 21: "Qatar",
-    22: "USA", 23: "Monza",
+    1: "Bahrain",
+    2: "SaudiArabia",
+    3: "Australia",
+    4: "Japan",
+    5: "China",
+    6: "Miami",
+    7: "Monaco",
+    8: "Canada",
+    9: "Spain",
+    10: "Austria",
+    11: "Britain",
+    12: "Hungary",
+    13: "Belgium",
+    14: "Netherlands",
+    15: "Italy",
+    16: "Singapore",
+    17: "Mexico",
+    18: "Brazil",
+    19: "LasVegas",
+    20: "AbuDhabi",
+    21: "Qatar",
+    22: "USA",
+    23: "Monza",
 }
 
 # --- GP name → on-disk folder (FastF1 Location) --------------------------
@@ -221,7 +257,9 @@ GP_NAMES: Final[dict[int, str]] = {
 # ``{round: Location}`` dict for the requested year, so menu/viewer/strategy
 # paths always resolve the right race without another hardcoded table.
 
-_GP_NAMES_JSON_PATH: Final[Path] = Path(__file__).resolve().parents[2] / "data" / "tire_compounds_by_race.json"
+_GP_NAMES_JSON_PATH: Final[Path] = (
+    Path(__file__).resolve().parents[2] / "data" / "tire_compounds_by_race.json"
+)
 _gp_names_cache: dict[int, dict[int, str]] = {}
 
 
@@ -245,41 +283,38 @@ def get_gp_names(year: int) -> dict[int, str]:
         return GP_NAMES
     year_block = raw.get(str(year))
     if not isinstance(year_block, dict):
-        logger.warning("No calendar for %d in %s — using hardcoded fallback",
-                       year, _GP_NAMES_JSON_PATH.name)
+        logger.warning(
+            "No calendar for %d in %s — using hardcoded fallback", year, _GP_NAMES_JSON_PATH.name
+        )
         return GP_NAMES
-    mapping = {
-        i + 1: name
-        for i, name in enumerate(year_block.keys())
-        if not name.startswith("_")
-    }
+    mapping = {i + 1: name for i, name in enumerate(year_block.keys()) if not name.startswith("_")}
     _gp_names_cache[year] = mapping
     return mapping
 
 
 GP_TO_LOCATION: Final[dict[str, str]] = {
-    "Bahrain":       "Sakhir",
-    "SaudiArabia":   "Jeddah",
-    "Australia":     "Melbourne",
-    "Japan":         "Suzuka",
-    "China":         "Shanghai",
-    "Miami":         "Miami_Gardens",
-    "Monaco":        "Monaco",
-    "Canada":        "Montréal",
-    "Spain":         "Barcelona",
-    "Austria":       "Spielberg",
-    "Britain":       "Silverstone",
-    "Hungary":       "Budapest",
-    "Belgium":       "Spa-Francorchamps",
-    "Netherlands":   "Zandvoort",
-    "Italy":         "Monza",
-    "Singapore":     "Marina_Bay",
-    "Mexico":        "Mexico_City",
-    "Brazil":        "São_Paulo",
-    "LasVegas":      "Las_Vegas",
-    "AbuDhabi":      "Yas_Island",
-    "Qatar":         "Lusail",
-    "USA":           "Austin",
-    "Monza":         "Monza",
-    "Imola":         "Imola",
+    "Bahrain": "Sakhir",
+    "SaudiArabia": "Jeddah",
+    "Australia": "Melbourne",
+    "Japan": "Suzuka",
+    "China": "Shanghai",
+    "Miami": "Miami_Gardens",
+    "Monaco": "Monaco",
+    "Canada": "Montréal",
+    "Spain": "Barcelona",
+    "Austria": "Spielberg",
+    "Britain": "Silverstone",
+    "Hungary": "Budapest",
+    "Belgium": "Spa-Francorchamps",
+    "Netherlands": "Zandvoort",
+    "Italy": "Monza",
+    "Singapore": "Marina_Bay",
+    "Mexico": "Mexico_City",
+    "Brazil": "São_Paulo",
+    "LasVegas": "Las_Vegas",
+    "AbuDhabi": "Yas_Island",
+    "Qatar": "Lusail",
+    "USA": "Austin",
+    "Monza": "Monza",
+    "Imola": "Imola",
 }

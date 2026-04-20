@@ -28,7 +28,11 @@ def main() -> int:
     checkout. Propagates the child process's exit code."""
     app_path = (
         Path(__file__).resolve().parent.parent
-        / "src" / "telemetry" / "frontend" / "app" / "main.py"
+        / "src"
+        / "telemetry"
+        / "frontend"
+        / "app"
+        / "main.py"
     )
     if not app_path.exists():
         print(

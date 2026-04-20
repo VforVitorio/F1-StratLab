@@ -44,18 +44,18 @@ from src.arcade.dashboard.theme import (
 # --- Regime colour maps (mirrors CLI §3 convention) ----------------------
 
 _PACE_COLOURS: dict[str, tuple[int, int, int]] = {
-    "PUSH":            DANGER,
-    "NEUTRAL":         TEXT_SECONDARY,
-    "MANAGE":          WARNING,
-    "LIFT_AND_COAST":  WARNING,
+    "PUSH": DANGER,
+    "NEUTRAL": TEXT_SECONDARY,
+    "MANAGE": WARNING,
+    "LIFT_AND_COAST": WARNING,
 }
 
 _RISK_COLOURS: dict[str, tuple[int, int, int]] = {
-    "AGGRESSIVE":   DANGER,
-    "BALANCED":     TEXT_SECONDARY,
-    "NEUTRAL":      TEXT_SECONDARY,
+    "AGGRESSIVE": DANGER,
+    "BALANCED": TEXT_SECONDARY,
+    "NEUTRAL": TEXT_SECONDARY,
     "CONSERVATIVE": WARNING,
-    "DEFENSIVE":    WARNING,
+    "DEFENSIVE": WARNING,
 }
 
 
@@ -94,9 +94,7 @@ class OrchestratorCard(QFrame):
         conf_col = QVBoxLayout()
         conf_col.setSpacing(4)
         self._conf_label = QLabel("Confidence: --")
-        self._conf_label.setStyleSheet(
-            f"color: {hex_str(TEXT_SECONDARY)}; font-size: 11px;"
-        )
+        self._conf_label.setStyleSheet(f"color: {hex_str(TEXT_SECONDARY)}; font-size: 11px;")
         self._conf_bar = QLabel()
         self._conf_bar.setFixedHeight(14)
         self._conf_bar.setStyleSheet(self._bar_style(0.0, TEXT_TERTIARY))
@@ -124,9 +122,7 @@ class OrchestratorCard(QFrame):
         # compound pill inline next to the rest of the plan.
         self._plan = QLabel("Pit: — · Next: — · UCUT: —")
         self._plan.setTextFormat(Qt.RichText)
-        self._plan.setStyleSheet(
-            f"color: {hex_str(TEXT_SECONDARY)}; font-size: 12px;"
-        )
+        self._plan.setStyleSheet(f"color: {hex_str(TEXT_SECONDARY)}; font-size: 12px;")
         self._plan.setWordWrap(True)
         outer.addWidget(self._plan)
 
@@ -171,9 +167,7 @@ class OrchestratorCard(QFrame):
         )
         self._risk_chip.setText(f"Risk: {risk_posture or '--'}")
         self._risk_chip.setStyleSheet(
-            self._chip_style(
-                _RISK_COLOURS.get(str(risk_posture or "").upper(), TEXT_TERTIARY)
-            )
+            self._chip_style(_RISK_COLOURS.get(str(risk_posture or "").upper(), TEXT_TERTIARY))
         )
 
         # Graceful empty state: on STAY_OUT with no tactical plan, render a
@@ -189,12 +183,9 @@ class OrchestratorCard(QFrame):
             plan_bits = []
             plan_bits.append(f"Pit: L{pit_target}" if pit_target else "Pit: —")
             plan_bits.append(
-                f"Next: {compound_pill_html(compound_next)}"
-                if compound_next else "Next: —"
+                f"Next: {compound_pill_html(compound_next)}" if compound_next else "Next: —"
             )
-            plan_bits.append(
-                f"UCUT: {undercut_target}" if undercut_target else "UCUT: —"
-            )
+            plan_bits.append(f"UCUT: {undercut_target}" if undercut_target else "UCUT: —")
             self._plan.setText(" · ".join(plan_bits))
 
         if guardrail:

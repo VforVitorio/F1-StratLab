@@ -34,10 +34,10 @@ from src.arcade.dashboard.theme import (
 
 _SCENARIO_KEYS: tuple[str, ...] = ("STAY_OUT", "PIT_NOW", "UNDERCUT", "OVERCUT")
 _SCENARIO_LABELS: dict[str, str] = {
-    "STAY_OUT":  "STAY",
-    "PIT_NOW":   "PIT",
-    "UNDERCUT":  "UCUT",
-    "OVERCUT":   "OCUT",
+    "STAY_OUT": "STAY",
+    "PIT_NOW": "PIT",
+    "UNDERCUT": "UCUT",
+    "OVERCUT": "OCUT",
 }
 
 

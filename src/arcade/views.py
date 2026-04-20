@@ -43,6 +43,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LaunchConfig:
     """Validated parameters the menu hands to the race replay view."""
+
     year: int = 2024
     round_: int = 3
     mode_two_drivers: bool = True
@@ -55,15 +56,14 @@ class LaunchConfig:
 @dataclass
 class _FormField:
     """One menu row. Either discrete (picker) or text (editable string)."""
+
     key: str
     label: str
     kind: str  # "int", "round", "mode", "text", "bool"
     get_value: Callable[[LaunchConfig], str]
     step_left: Callable[[LaunchConfig], None] | None = None
     step_right: Callable[[LaunchConfig], None] | None = None
-    visible: Callable[[LaunchConfig], bool] = field(
-        default_factory=lambda: lambda _cfg: True
-    )
+    visible: Callable[[LaunchConfig], bool] = field(default_factory=lambda: lambda _cfg: True)
     editable: bool = False  # text fields accept on_text
 
 
@@ -82,34 +82,84 @@ class MenuView(arcade.View):
         self._fields: list[_FormField] = self._build_fields()
 
         self._title = arcade.Text(
-            MENU_TITLE, 0, 0, ACCENT, 32, bold=True,
-            font_name=FONT_TITLE, anchor_x="center", anchor_y="center",
+            MENU_TITLE,
+            0,
+            0,
+            ACCENT,
+            32,
+            bold=True,
+            font_name=FONT_TITLE,
+            anchor_x="center",
+            anchor_y="center",
         )
         self._subtitle = arcade.Text(
-            "Race replay + multi-agent strategy", 0, 0, TEXT_TERTIARY, 13,
-            font_name=FONT_BODY, anchor_x="center", anchor_y="center",
+            "Race replay + multi-agent strategy",
+            0,
+            0,
+            TEXT_TERTIARY,
+            13,
+            font_name=FONT_BODY,
+            anchor_x="center",
+            anchor_y="center",
         )
         self._hint = arcade.Text(
             "UP/DOWN focus   LEFT/RIGHT change   Type to edit   ENTER launch   ESC quit",
-            0, 0, TEXT_TERTIARY, MENU_HINT_FONT, font_name=FONT_BODY,
-            anchor_x="center", anchor_y="center",
+            0,
+            0,
+            TEXT_TERTIARY,
+            MENU_HINT_FONT,
+            font_name=FONT_BODY,
+            anchor_x="center",
+            anchor_y="center",
         )
         self._error_text = arcade.Text(
-            "", 0, 0, DANGER, 12, bold=True, font_name=FONT_BODY,
-            anchor_x="center", anchor_y="center",
+            "",
+            0,
+            0,
+            DANGER,
+            12,
+            bold=True,
+            font_name=FONT_BODY,
+            anchor_x="center",
+            anchor_y="center",
         )
         self._loading_text = arcade.Text(
-            "", 0, 0, ACCENT, 14, bold=True, font_name=FONT_BODY,
-            anchor_x="center", anchor_y="center",
+            "",
+            0,
+            0,
+            ACCENT,
+            14,
+            bold=True,
+            font_name=FONT_BODY,
+            anchor_x="center",
+            anchor_y="center",
         )
         self._label_texts = [
-            arcade.Text("", 0, 0, TEXT_TERTIARY, MENU_LABEL_FONT, bold=True,
-                        font_name=FONT_BODY, anchor_x="right", anchor_y="center")
+            arcade.Text(
+                "",
+                0,
+                0,
+                TEXT_TERTIARY,
+                MENU_LABEL_FONT,
+                bold=True,
+                font_name=FONT_BODY,
+                anchor_x="right",
+                anchor_y="center",
+            )
             for _ in self._fields
         ]
         self._value_texts = [
-            arcade.Text("", 0, 0, TEXT_PRIMARY, MENU_VALUE_FONT, bold=True,
-                        font_name=FONT_BODY, anchor_x="left", anchor_y="center")
+            arcade.Text(
+                "",
+                0,
+                0,
+                TEXT_PRIMARY,
+                MENU_VALUE_FONT,
+                bold=True,
+                font_name=FONT_BODY,
+                anchor_x="left",
+                anchor_y="center",
+            )
             for _ in self._fields
         ]
 
@@ -118,47 +168,59 @@ class MenuView(arcade.View):
     def _build_fields(self) -> list[_FormField]:
         return [
             _FormField(
-                key="year", label="Year", kind="int",
+                key="year",
+                label="Year",
+                kind="int",
                 get_value=lambda c: str(c.year),
-                step_left=lambda c: setattr(c, "year", max(2023, c.year - 1))
-                if not c.strategy_mode else None,
-                step_right=lambda c: setattr(c, "year", min(2025, c.year + 1))
-                if not c.strategy_mode else None,
+                step_left=lambda c: (
+                    setattr(c, "year", max(2023, c.year - 1)) if not c.strategy_mode else None
+                ),
+                step_right=lambda c: (
+                    setattr(c, "year", min(2025, c.year + 1)) if not c.strategy_mode else None
+                ),
             ),
             _FormField(
-                key="round", label="Round", kind="round",
+                key="round",
+                label="Round",
+                kind="round",
                 get_value=lambda c: f"{c.round_:2d}  {get_gp_names(c.year).get(c.round_, '?')}",
                 step_left=lambda c: setattr(c, "round_", max(1, c.round_ - 1)),
                 step_right=lambda c: setattr(c, "round_", min(23, c.round_ + 1)),
             ),
             _FormField(
-                key="mode", label="Mode", kind="mode",
+                key="mode",
+                label="Mode",
+                kind="mode",
                 get_value=lambda c: "2 DRIVERS" if c.mode_two_drivers else "1 DRIVER",
-                step_left=lambda c: setattr(
-                    c, "mode_two_drivers", not c.mode_two_drivers
-                ),
-                step_right=lambda c: setattr(
-                    c, "mode_two_drivers", not c.mode_two_drivers
-                ),
+                step_left=lambda c: setattr(c, "mode_two_drivers", not c.mode_two_drivers),
+                step_right=lambda c: setattr(c, "mode_two_drivers", not c.mode_two_drivers),
             ),
             _FormField(
-                key="driver_main", label="Driver", kind="text",
+                key="driver_main",
+                label="Driver",
+                kind="text",
                 get_value=lambda c: c.driver_main or "---",
                 editable=True,
             ),
             _FormField(
-                key="driver_rival", label="Rival", kind="text",
+                key="driver_rival",
+                label="Rival",
+                kind="text",
                 get_value=lambda c: c.driver_rival or "---",
                 editable=True,
                 visible=lambda c: c.mode_two_drivers,
             ),
             _FormField(
-                key="team", label="Team", kind="text",
+                key="team",
+                label="Team",
+                kind="text",
                 get_value=lambda c: c.team or "---",
                 editable=True,
             ),
             _FormField(
-                key="strategy", label="Strategy", kind="bool",
+                key="strategy",
+                label="Strategy",
+                kind="bool",
                 get_value=lambda c: "ON" if c.strategy_mode else "OFF",
                 step_left=lambda c: self._toggle_strategy(),
                 step_right=lambda c: self._toggle_strategy(),
@@ -202,16 +264,14 @@ class MenuView(arcade.View):
 
     def _draw_fields(self, w: int, h: int) -> None:
         cx = w // 2
-        visible_rows: list[int] = [
-            i for i, f in enumerate(self._fields) if f.visible(self._cfg)
-        ]
+        visible_rows: list[int] = [i for i, f in enumerate(self._fields) if f.visible(self._cfg)]
         total_h = len(visible_rows) * MENU_ROW_HEIGHT
         start_y = (h + total_h) // 2 - 40
 
         for draw_idx, field_idx in enumerate(visible_rows):
             f = self._fields[field_idx]
             row_y = start_y - draw_idx * MENU_ROW_HEIGHT
-            focused = (field_idx == self._focus_idx)
+            focused = field_idx == self._focus_idx
 
             if focused:
                 arcade.draw_rect_filled(
@@ -219,9 +279,12 @@ class MenuView(arcade.View):
                     (*CONTENT_BG, 220),
                 )
                 arcade.draw_line(
-                    cx - MENU_ROW_WIDTH / 2 + 40, row_y - 16,
-                    cx + MENU_ROW_WIDTH / 2 - 40, row_y - 16,
-                    ACCENT, 2,
+                    cx - MENU_ROW_WIDTH / 2 + 40,
+                    row_y - 16,
+                    cx + MENU_ROW_WIDTH / 2 - 40,
+                    row_y - 16,
+                    ACCENT,
+                    2,
                 )
 
             label = self._label_texts[field_idx]
@@ -355,13 +418,10 @@ class MenuView(arcade.View):
         from src.arcade.track import Track
 
         gp = get_gp_names(self._cfg.year).get(self._cfg.round_, f"Round{self._cfg.round_}")
-        logger.info("Menu: loading %d round %d (%s)", self._cfg.year,
-                    self._cfg.round_, gp)
+        logger.info("Menu: loading %d round %d (%s)", self._cfg.year, self._cfg.round_, gp)
 
         try:
-            session_data = SessionLoader().load(
-                self._cfg.year, self._cfg.round_, gp
-            )
+            session_data = SessionLoader().load(self._cfg.year, self._cfg.round_, gp)
         except Exception as exc:
             logger.exception("SessionLoader failed")
             self._error = f"session load failed: {exc}"
@@ -370,7 +430,8 @@ class MenuView(arcade.View):
 
         ref_x, ref_y = session_data.ref_lap_xy
         track = Track(
-            ref_x=ref_x, ref_y=ref_y,
+            ref_x=ref_x,
+            ref_y=ref_y,
             drs_flags=session_data.ref_lap_drs,
             rotation_deg=session_data.circuit_rotation_deg,
         )

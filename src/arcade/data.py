@@ -37,9 +37,13 @@ from src.arcade.config import (
 logger = logging.getLogger(__name__)
 
 _COMPOUND_TO_INT: dict[str, int] = {
-    "SOFT": 0, "MEDIUM": 1, "HARD": 2,
-    "INTERMEDIATE": 3, "WET": 4,
-    "UNKNOWN": 1, "TEST_UNKNOWN": 1,
+    "SOFT": 0,
+    "MEDIUM": 1,
+    "HARD": 2,
+    "INTERMEDIATE": 3,
+    "WET": 4,
+    "UNKNOWN": 1,
+    "TEST_UNKNOWN": 1,
 }
 
 
@@ -135,9 +139,22 @@ def _process_driver_data(args: tuple) -> dict | None:
         return None
 
     arrays: dict[str, list[np.ndarray]] = {
-        k: [] for k in ("t", "x", "y", "speed", "gear", "drs",
-                        "throttle", "brake", "lap", "dist", "rel_dist",
-                        "tyre", "tyre_life")
+        k: []
+        for k in (
+            "t",
+            "x",
+            "y",
+            "speed",
+            "gear",
+            "drs",
+            "throttle",
+            "brake",
+            "lap",
+            "dist",
+            "rel_dist",
+            "tyre",
+            "tyre_life",
+        )
     }
     total_dist_so_far = 0.0
     max_lap = 0
@@ -161,12 +178,16 @@ def _process_driver_data(args: tuple) -> dict | None:
         gear = tel["nGear"].to_numpy().astype(float) if "nGear" in tel.columns else np.zeros(n)
         drs = tel["DRS"].to_numpy().astype(float) if "DRS" in tel.columns else np.zeros(n)
         thr = tel["Throttle"].to_numpy().astype(float) if "Throttle" in tel.columns else np.zeros(n)
-        brk = (tel["Brake"].to_numpy().astype(float)
-               if "Brake" in tel.columns else np.zeros(n))
+        brk = tel["Brake"].to_numpy().astype(float) if "Brake" in tel.columns else np.zeros(n)
 
-        d_lap = tel["Distance"].to_numpy().astype(float) if "Distance" in tel.columns else np.zeros(n)
-        rel_dist = (tel["RelativeDistance"].to_numpy().astype(float)
-                    if "RelativeDistance" in tel.columns else np.zeros(n))
+        d_lap = (
+            tel["Distance"].to_numpy().astype(float) if "Distance" in tel.columns else np.zeros(n)
+        )
+        rel_dist = (
+            tel["RelativeDistance"].to_numpy().astype(float)
+            if "RelativeDistance" in tel.columns
+            else np.zeros(n)
+        )
 
         race_dist = total_dist_so_far + d_lap
         total_dist_so_far += float(d_lap[-1]) if n else 0.0
@@ -210,9 +231,7 @@ def _process_driver_data(args: tuple) -> dict | None:
 class SessionLoader:
     """Cache-first FastF1 loader. Warm path <5 s, cold path <3 min."""
 
-    def __init__(
-        self, cache_dir: Path = ARCADE_CACHE_DIR, pool_size: int = POOL_SIZE
-    ) -> None:
+    def __init__(self, cache_dir: Path = ARCADE_CACHE_DIR, pool_size: int = POOL_SIZE) -> None:
         self.cache_dir = cache_dir
         self.pool_size = pool_size
 
@@ -228,8 +247,11 @@ class SessionLoader:
                 if sd.version == CACHE_VERSION:
                     logger.info("Loaded session from cache: %s", cache_path)
                     return sd
-                logger.info("Cache version mismatch (got %s, want %s) — refetching",
-                            sd.version, CACHE_VERSION)
+                logger.info(
+                    "Cache version mismatch (got %s, want %s) — refetching",
+                    sd.version,
+                    CACHE_VERSION,
+                )
             except (pickle.PickleError, EOFError, AttributeError) as exc:
                 logger.warning("Cache unreadable (%s) — refetching", exc)
 
@@ -284,8 +306,13 @@ class SessionLoader:
 
         with cache_path.open("wb") as f:
             pickle.dump(sd, f, protocol=pickle.HIGHEST_PROTOCOL)
-        logger.info("Cached session: %s (%d drivers, %d frames, %d laps)",
-                    cache_path, len(frames_by_driver), len(timeline), max_lap)
+        logger.info(
+            "Cached session: %s (%d drivers, %d frames, %d laps)",
+            cache_path,
+            len(frames_by_driver),
+            len(timeline),
+            max_lap,
+        )
         return sd
 
     def _cache_path(self, gp_name: str, year: int) -> Path:
@@ -339,29 +366,32 @@ class SessionLoader:
         timeline: np.ndarray,
         t_max_local: float,
     ) -> list[FrameData]:
-        cont = {k: np.interp(timeline, t, data[k]) for k in
-                ("x", "y", "speed", "throttle", "brake", "dist", "rel_dist", "tyre_life")}
-        disc = {k: np.interp(timeline, t, data[k]) for k in
-                ("gear", "drs", "lap", "tyre")}
+        cont = {
+            k: np.interp(timeline, t, data[k])
+            for k in ("x", "y", "speed", "throttle", "brake", "dist", "rel_dist", "tyre_life")
+        }
+        disc = {k: np.interp(timeline, t, data[k]) for k in ("gear", "drs", "lap", "tyre")}
         frames: list[FrameData] = []
         for i, ti in enumerate(timeline):
             active = ti <= t_max_local
-            frames.append(FrameData(
-                t=float(ti),
-                x=float(cont["x"][i]),
-                y=float(cont["y"][i]),
-                speed=float(cont["speed"][i]),
-                gear=int(round(disc["gear"][i])),
-                drs=int(round(disc["drs"][i])),
-                throttle=float(cont["throttle"][i]),
-                brake=float(cont["brake"][i]),
-                lap=max(1, int(round(disc["lap"][i]))),
-                dist=float(cont["dist"][i]),
-                rel_dist=float(cont["rel_dist"][i]),
-                tyre=int(round(disc["tyre"][i])),
-                tyre_life=float(cont["tyre_life"][i]),
-                active=active,
-            ))
+            frames.append(
+                FrameData(
+                    t=float(ti),
+                    x=float(cont["x"][i]),
+                    y=float(cont["y"][i]),
+                    speed=float(cont["speed"][i]),
+                    gear=int(round(disc["gear"][i])),
+                    drs=int(round(disc["drs"][i])),
+                    throttle=float(cont["throttle"][i]),
+                    brake=float(cont["brake"][i]),
+                    lap=max(1, int(round(disc["lap"][i]))),
+                    dist=float(cont["dist"][i]),
+                    rel_dist=float(cont["rel_dist"][i]),
+                    tyre=int(round(disc["tyre"][i])),
+                    tyre_life=float(cont["tyre_life"][i]),
+                    active=active,
+                )
+            )
         return frames
 
     def _resolve_driver_colors(
@@ -399,8 +429,7 @@ class SessionLoader:
             tel = ref_lap.get_telemetry()
             x = tel["X"].to_numpy().astype(float)
             y = tel["Y"].to_numpy().astype(float)
-            drs = (tel["DRS"].to_numpy().astype(float)
-                   if "DRS" in tel.columns else np.zeros(len(x)))
+            drs = tel["DRS"].to_numpy().astype(float) if "DRS" in tel.columns else np.zeros(len(x))
             return x, y, drs
         except Exception as exc:
             logger.warning("Reference lap extraction failed (%s) - using empty geometry", exc)
@@ -437,9 +466,7 @@ class SessionLoader:
         except Exception:
             return 0.0
 
-    def _session_circuit_length(
-        self, session, ref_x: np.ndarray, ref_y: np.ndarray
-    ) -> float:
+    def _session_circuit_length(self, session, ref_x: np.ndarray, ref_y: np.ndarray) -> float:
         """Pick the most trustworthy circuit length we can derive.
 
         Preferred path: the fastest lap's FastF1 ``add_distance()``
@@ -460,9 +487,7 @@ class SessionLoader:
             pass
         return self._estimate_circuit_length(ref_x, ref_y)
 
-    def _estimate_circuit_length(
-        self, ref_x: np.ndarray, ref_y: np.ndarray
-    ) -> float:
+    def _estimate_circuit_length(self, ref_x: np.ndarray, ref_y: np.ndarray) -> float:
         if ref_x.size < 2:
             return 5300.0
         dx = np.diff(ref_x)

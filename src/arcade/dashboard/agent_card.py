@@ -49,10 +49,10 @@ from src.arcade.dashboard.theme import (
 # --- Status glyph / colour mapping (mirrors CLI §5) --------------------
 
 _GLYPH_FOR: dict[str, tuple[str, tuple[int, int, int]]] = {
-    STATUS_OK:    ("●", SUCCESS),
+    STATUS_OK: ("●", SUCCESS),
     STATUS_WATCH: ("◐", WARNING),
     STATUS_ALERT: ("●", DANGER),
-    STATUS_IDLE:  ("○", TEXT_TERTIARY),
+    STATUS_IDLE: ("○", TEXT_TERTIARY),
 }
 
 
@@ -79,9 +79,7 @@ class AgentCard(QFrame):
         header_row = QHBoxLayout()
         header_row.setSpacing(8)
         self._glyph = QLabel("○")
-        self._glyph.setStyleSheet(
-            f"color: {hex_str(TEXT_TERTIARY)}; font-size: 14px;"
-        )
+        self._glyph.setStyleSheet(f"color: {hex_str(TEXT_TERTIARY)}; font-size: 14px;")
         self._title = QLabel(title)
         self._title.setStyleSheet(
             f"color: {hex_str(TEXT_SECONDARY)}; font-size: 11px; "
@@ -110,9 +108,7 @@ class AgentCard(QFrame):
             # Rich text so the tire compound pill and the radio flag chips
             # embedded by ``agent_formatters`` render as coloured badges.
             lbl.setTextFormat(Qt.RichText)
-            lbl.setStyleSheet(
-                f"color: {hex_str(TEXT_SECONDARY)}; font-size: 11px;"
-            )
+            lbl.setStyleSheet(f"color: {hex_str(TEXT_SECONDARY)}; font-size: 11px;")
             lbl.setWordWrap(True)
             lbl.setVisible(False)
             outer.addWidget(lbl)
@@ -150,9 +146,7 @@ class AgentCard(QFrame):
             if i < len(body):
                 text, colour = body[i]
                 lbl.setText(text)
-                lbl.setStyleSheet(
-                    f"color: {hex_str(colour)}; font-size: 11px;"
-                )
+                lbl.setStyleSheet(f"color: {hex_str(colour)}; font-size: 11px;")
                 lbl.setVisible(True)
             else:
                 lbl.setText("")
@@ -160,9 +154,7 @@ class AgentCard(QFrame):
 
         # Dim the whole card when the agent is idle (N28 / N30 OFF).
         self.setStyleSheet(
-            "QFrame[card=\"true\"] { opacity: 0.45; }"
-            if status == STATUS_IDLE
-            else ""
+            'QFrame[card="true"] { opacity: 0.45; }' if status == STATUS_IDLE else ""
         )
 
     def attach_chart(self, widget: QWidget) -> None:

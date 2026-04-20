@@ -44,9 +44,9 @@ class TelemetryStreamClient(QThread):
           Keeps the UI alive across arcade restarts without extra UX.
     """
 
-    data_received     = Signal(dict)
+    data_received = Signal(dict)
     connection_status = Signal(str)
-    error_occurred    = Signal(str)
+    error_occurred = Signal(str)
 
     def __init__(self, host: str = STREAM_HOST, port: int = STREAM_PORT) -> None:
         super().__init__()
@@ -84,14 +84,11 @@ class TelemetryStreamClient(QThread):
             sock.connect((self._host, self._port))
         except socket.timeout:
             self.error_occurred.emit(
-                f"Connection timeout — is the arcade replay running on "
-                f"{self._host}:{self._port}?"
+                f"Connection timeout — is the arcade replay running on {self._host}:{self._port}?"
             )
             raise
         except ConnectionRefusedError:
-            self.error_occurred.emit(
-                f"Connection refused on {self._host}:{self._port}"
-            )
+            self.error_occurred.emit(f"Connection refused on {self._host}:{self._port}")
             raise
         self._socket = sock
         self._connected = True

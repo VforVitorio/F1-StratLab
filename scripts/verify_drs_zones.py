@@ -85,20 +85,22 @@ def extract_zones(tel, corners_df=None, min_length_m: float = 80.0) -> list[dict
         if length < min_length_m:
             i = j
             continue
-        start_corner = _nearest_corner(x[i],     y[i],     corners_df)
-        end_corner   = _nearest_corner(x[j - 1], y[j - 1], corners_df)
-        zones.append({
-            "zone_start_m":    round(float(dist[i]), 1),
-            "zone_end_m":      round(float(dist[j - 1]), 1),
-            "length_m":        round(length, 1),
-            "start_corner":    start_corner,
-            "end_corner":      end_corner,
-            "start_xy":        (int(x[i]),     int(y[i])),
-            "end_xy":          (int(x[j - 1]), int(y[j - 1])),
-            "start_speed_kph": round(float(speed[i]), 1),
-            "end_speed_kph":   round(float(speed[j - 1]), 1),
-            "samples":         int(j - i),
-        })
+        start_corner = _nearest_corner(x[i], y[i], corners_df)
+        end_corner = _nearest_corner(x[j - 1], y[j - 1], corners_df)
+        zones.append(
+            {
+                "zone_start_m": round(float(dist[i]), 1),
+                "zone_end_m": round(float(dist[j - 1]), 1),
+                "length_m": round(length, 1),
+                "start_corner": start_corner,
+                "end_corner": end_corner,
+                "start_xy": (int(x[i]), int(y[i])),
+                "end_xy": (int(x[j - 1]), int(y[j - 1])),
+                "start_speed_kph": round(float(speed[i]), 1),
+                "end_speed_kph": round(float(speed[j - 1]), 1),
+                "samples": int(j - i),
+            }
+        )
         i = j
     return zones
 
@@ -133,7 +135,7 @@ def audit_one(year: int, round_: int, min_length_m: float) -> dict:
         if "DRS" not in tel.columns:
             return {
                 "round": round_,
-                "gp":    session.event.get("Location", "?"),
+                "gp": session.event.get("Location", "?"),
                 "error": "DRS column missing",
             }
         corners_df = None
@@ -148,11 +150,11 @@ def audit_one(year: int, round_: int, min_length_m: float) -> dict:
         zones = extract_zones(tel, corners_df=corners_df, min_length_m=min_length_m)
         lap_length_m = round(float(tel["Distance"].iloc[-1]), 1)
         return {
-            "round":        round_,
-            "gp":           session.event.get("Location", "?"),
+            "round": round_,
+            "gp": session.event.get("Location", "?"),
             "lap_length_m": lap_length_m,
-            "n_zones":      len(zones),
-            "zones":        zones,
+            "n_zones": len(zones),
+            "zones": zones,
         }
     except Exception as exc:
         return {"round": round_, "error": f"{type(exc).__name__}: {exc}"}
@@ -174,10 +176,7 @@ def _format_row(row: dict) -> str:
     header = f"R{row['round']:02d}  "
     if "error" in row:
         return header + f"ERROR: {row['error']}"
-    body = (
-        f"{row['gp']:<22s}  lap={row['lap_length_m']}m  "
-        f"zones={row['n_zones']}"
-    )
+    body = f"{row['gp']:<22s}  lap={row['lap_length_m']}m  zones={row['n_zones']}"
     lines = [header + body]
     for i, z in enumerate(row["zones"], 1):
         lines.append(
@@ -193,21 +192,28 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Audit DRS zones per GP.")
     parser.add_argument("--year", type=int, default=2025)
     parser.add_argument(
-        "--round", type=int, default=0,
+        "--round",
+        type=int,
+        default=0,
         help="Single round to audit (default: all rounds in the year).",
     )
     parser.add_argument(
-        "--json", type=str, default="",
+        "--json",
+        type=str,
+        default="",
         help="If set, dump the full audit as JSON to this path.",
     )
     parser.add_argument(
-        "--summary", action="store_true",
+        "--summary",
+        action="store_true",
         help="Skip the per-GP detail block and print only the summary table.",
     )
     parser.add_argument(
-        "--min-length", type=float, default=80.0,
+        "--min-length",
+        type=float,
+        default=80.0,
         help="Drop DRS runs shorter than this (metres). Default 80m filters "
-             "FastF1 pit-out flicks / noise without rejecting real zones.",
+        "FastF1 pit-out flicks / noise without rejecting real zones.",
     )
     args = parser.parse_args()
 
@@ -229,19 +235,16 @@ def main() -> int:
         if "error" in row:
             print(f"  R{row['round']:02d} {tag} — {row['error']}")
         else:
-            corners = " · ".join(
-                f"{z['start_corner']}→{z['end_corner']}" for z in row["zones"]
-            ) or "no zones"
+            corners = (
+                " · ".join(f"{z['start_corner']}→{z['end_corner']}" for z in row["zones"])
+                or "no zones"
+            )
             print(
-                f"  R{row['round']:02d} {tag}  "
-                f"{row['gp']:<22s} zones={row['n_zones']}  [{corners}]"
+                f"  R{row['round']:02d} {tag}  {row['gp']:<22s} zones={row['n_zones']}  [{corners}]"
             )
     broken = [r for r in rows if _classify(r) in ("BROKEN", "ERROR")]
     sus = [r for r in rows if _classify(r) == "SUSPICIOUS"]
-    print(
-        f"\n{len(rows)} rounds audited · "
-        f"{len(broken)} broken/error · {len(sus)} suspicious"
-    )
+    print(f"\n{len(rows)} rounds audited · {len(broken)} broken/error · {len(sus)} suspicious")
 
     if args.json:
         out_path = Path(args.json)

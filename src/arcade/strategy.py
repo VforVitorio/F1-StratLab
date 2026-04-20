@@ -45,6 +45,7 @@ class SimulateRequestDTO:
     """Payload for the simulate endpoint. Mirrors `SimulateRequest` Pydantic
     in `src/telemetry/backend/api/v1/endpoints/strategy.py` without importing
     from the backend package."""
+
     year: int
     gp: str
     driver: str
@@ -89,6 +90,7 @@ class PerAgentOutputsDTO:
     agent did not fire). ``active`` lists the conditional agents routed
     this lap so the dashboard can dim the cards that are idle.
     """
+
     pace: dict[str, Any] | None = None
     tire: dict[str, Any] | None = None
     situation: dict[str, Any] | None = None
@@ -133,6 +135,7 @@ class StrategyState:
 
     Access is guarded by `_lock`; the render side takes the lock only for a
     fraction of a frame to snapshot `latest` + `error`."""
+
     start: StartEventDTO | None = None
     latest: LapDecisionDTO | None = None
     history: list[LapDecisionDTO] = field(default_factory=list)
@@ -230,9 +233,7 @@ class SimConnector(threading.Thread):
         laps_df = self._load_laps_df(self._request.year)
         if laps_df is None:
             with self._state._lock:
-                self._state.error = (
-                    f"laps_featured_{self._request.year}.parquet missing"
-                )
+                self._state.error = f"laps_featured_{self._request.year}.parquet missing"
             return
 
         race_dir = self._resolve_race_dir(self._request.year, self._request.gp)
@@ -251,9 +252,7 @@ class SimConnector(threading.Thread):
         )
 
         lap_start = self._request.lap_range[0] if self._request.lap_range else 1
-        lap_end = (
-            self._request.lap_range[1] if self._request.lap_range else engine.total_laps
-        )
+        lap_end = self._request.lap_range[1] if self._request.lap_range else engine.total_laps
         self._emit_start(lap_start, lap_end, engine.total_laps)
         self._warmup_models()
         self._load_radio_corpus(laps_df)
@@ -352,7 +351,9 @@ class SimConnector(threading.Thread):
             )
             from src.nlp.radio_runner import RadioPipelineRunner
         except Exception as exc:
-            logger.warning("Radio corpus deps unavailable (%s) — radio agent will see no events", exc)
+            logger.warning(
+                "Radio corpus deps unavailable (%s) — radio agent will see no events", exc
+            )
             return
 
         with self._state._lock:
@@ -376,7 +377,8 @@ class SimConnector(threading.Thread):
         except Exception as exc:
             logger.warning(
                 "Radio corpus load failed (%s: %s) — falling back to empty radios",
-                exc.__class__.__name__, exc,
+                exc.__class__.__name__,
+                exc,
             )
             self._radio_runner = None
         finally:
@@ -400,8 +402,11 @@ class SimConnector(threading.Thread):
             self._state.error = None
         logger.info(
             "Arcade strategy driver started: %s %d %s (laps %d-%d)",
-            self._request.gp, self._request.year, self._request.driver,
-            lap_start, lap_end,
+            self._request.gp,
+            self._request.year,
+            self._request.driver,
+            lap_start,
+            lap_end,
         )
 
     def _load_laps_df(self, year: int) -> pd.DataFrame | None:
@@ -451,12 +456,8 @@ class SimConnector(threading.Thread):
 
         rivals = lap_state.get("rivals", [])
         our_pos = driver_st.get("position", 99)
-        car_ahead = next(
-            (r for r in rivals if r.get("position") == our_pos - 1), None
-        )
-        gap_ahead_s = (
-            abs(car_ahead.get("interval_to_driver_s") or 0.0) if car_ahead else 0.0
-        )
+        car_ahead = next((r for r in rivals if r.get("position") == our_pos - 1), None)
+        gap_ahead_s = abs(car_ahead.get("interval_to_driver_s") or 0.0) if car_ahead else 0.0
 
         lap_num = int(lap_state.get("lap_number", 1) or 1)
         radio_msgs: list[dict] = []
@@ -489,13 +490,13 @@ class SimConnector(threading.Thread):
 
 
 _ACTION_STYLE: dict[str, tuple[tuple[int, int, int], str]] = {
-    "STAY_OUT":  (SUCCESS, "STAY OUT"),
-    "PIT_NOW":   (DANGER,  "PIT NOW"),
-    "UNDERCUT":  (WARNING, "UNDERCUT"),
-    "OVERCUT":   (WARNING, "OVERCUT"),
-    "ALERT":     (INFO,    "ALERT"),
-    "DNF":       (TEXT_SECONDARY, "DNF"),
-    "ERROR":     (DANGER,  "ERROR"),
+    "STAY_OUT": (SUCCESS, "STAY OUT"),
+    "PIT_NOW": (DANGER, "PIT NOW"),
+    "UNDERCUT": (WARNING, "UNDERCUT"),
+    "OVERCUT": (WARNING, "OVERCUT"),
+    "ALERT": (INFO, "ALERT"),
+    "DNF": (TEXT_SECONDARY, "DNF"),
+    "ERROR": (DANGER, "ERROR"),
 }
 
 
@@ -505,9 +506,13 @@ def classify_action(action: str) -> tuple[tuple[int, int, int], str]:
 
 
 _ALERT_SEVERITY: dict[str, int] = {
-    "SAFETY_CAR": 3, "RED_FLAG": 3,
-    "VIRTUAL_SAFETY_CAR": 2, "VSC": 2, "YELLOW_FLAG": 2,
-    "PROBLEM": 1, "WARNING": 1,
+    "SAFETY_CAR": 3,
+    "RED_FLAG": 3,
+    "VIRTUAL_SAFETY_CAR": 2,
+    "VSC": 2,
+    "YELLOW_FLAG": 2,
+    "PROBLEM": 1,
+    "WARNING": 1,
 }
 
 
@@ -595,9 +600,7 @@ def _build_decision(
         raw_alerts = getattr(radio_out, "alerts", []) or []
         for a in raw_alerts:
             if isinstance(a, dict):
-                agent_alerts.append(
-                    str(a.get("intent") or a.get("event_type") or "alert")
-                )
+                agent_alerts.append(str(a.get("intent") or a.get("event_type") or "alert"))
             else:
                 agent_alerts.append(str(a))
 

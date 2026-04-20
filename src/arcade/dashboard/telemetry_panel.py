@@ -65,12 +65,12 @@ Bucket = dict[int, tuple[float, float, float, float]]
 _BUCKET_T, _BUCKET_S, _BUCKET_TH, _BUCKET_BR = 0, 1, 2, 3
 
 # --- Fixed Y ranges per chart ------------------------------------------
-_SPEED_Y_RANGE:    tuple[float, float] = (0.0, 360.0)  # Monza peak ~357 km/h
-_BRAKE_Y_RANGE:    tuple[float, float] = (-5.0, 105.0)
+_SPEED_Y_RANGE: tuple[float, float] = (0.0, 360.0)  # Monza peak ~357 km/h
+_BRAKE_Y_RANGE: tuple[float, float] = (-5.0, 105.0)
 _THROTTLE_Y_RANGE: tuple[float, float] = (-5.0, 105.0)
-_DELTA_Y_RANGE:    tuple[float, float] = (-3.0, 3.0)
+_DELTA_Y_RANGE: tuple[float, float] = (-3.0, 3.0)
 
-_DEFAULT_X_RANGE:  tuple[float, float] = (0.0, 5500.0)  # fallback until broadcast
+_DEFAULT_X_RANGE: tuple[float, float] = (0.0, 5500.0)  # fallback until broadcast
 
 
 class TelemetryPanel(QFrame):
@@ -97,9 +97,7 @@ class TelemetryPanel(QFrame):
         )
         self._main_chip = _driver_chip("—", INFO)
         self._vs_label = QLabel("vs")
-        self._vs_label.setStyleSheet(
-            f"color: {hex_str(TEXT_TERTIARY)}; font-size: 11px;"
-        )
+        self._vs_label.setStyleSheet(f"color: {hex_str(TEXT_TERTIARY)}; font-size: 11px;")
         self._rival_chip = _driver_chip("—", WARNING)
         self._vs_label.hide()
         self._rival_chip.hide()
@@ -122,12 +120,16 @@ class TelemetryPanel(QFrame):
         (
             delta_wrapper,
             self._delta_plot,
-            self._delta_main,      # unused — main is represented by zero line
-            self._delta_rival,     # the wavy trace (rival − main)
+            self._delta_main,  # unused — main is represented by zero line
+            self._delta_rival,  # the wavy trace (rival − main)
             self._delta_main_legend,
             self._delta_rival_legend,
         ) = self._make_chart(
-            "Δ Time (s)", "(rival − main)", INFO, WARNING, _DELTA_Y_RANGE,
+            "Δ Time (s)",
+            "(rival − main)",
+            INFO,
+            WARNING,
+            _DELTA_Y_RANGE,
         )
         # Main is the zero reference; drop the separate "main" line and
         # replace it with a solid horizontal line at y=0 coloured as the
@@ -135,7 +137,8 @@ class TelemetryPanel(QFrame):
         self._delta_plot.removeItem(self._delta_main)
         self._delta_main = None
         self._delta_main_reference = pg.InfiniteLine(
-            pos=0, angle=0,
+            pos=0,
+            angle=0,
             pen=pg.mkPen(QColor(*INFO), width=2),
         )
         self._delta_plot.addItem(self._delta_main_reference)
@@ -152,29 +155,50 @@ class TelemetryPanel(QFrame):
 
         (
             speed_wrapper,
-            self._speed_plot, self._speed_main, self._speed_rival,
-            self._speed_main_legend, self._speed_rival_legend,
+            self._speed_plot,
+            self._speed_main,
+            self._speed_rival,
+            self._speed_main_legend,
+            self._speed_rival_legend,
         ) = self._make_chart(
-            "Speed", "km/h", INFO, WARNING, _SPEED_Y_RANGE,
+            "Speed",
+            "km/h",
+            INFO,
+            WARNING,
+            _SPEED_Y_RANGE,
         )
         (
             brake_wrapper,
-            self._brake_plot, self._brake_main, self._brake_rival,
-            self._brake_main_legend, self._brake_rival_legend,
+            self._brake_plot,
+            self._brake_main,
+            self._brake_rival,
+            self._brake_main_legend,
+            self._brake_rival_legend,
         ) = self._make_chart(
-            "Brake Pressure", "%", DANGER, WARNING, _BRAKE_Y_RANGE,
+            "Brake Pressure",
+            "%",
+            DANGER,
+            WARNING,
+            _BRAKE_Y_RANGE,
         )
         (
             throttle_wrapper,
-            self._throttle_plot, self._throttle_main, self._throttle_rival,
-            self._throttle_main_legend, self._throttle_rival_legend,
+            self._throttle_plot,
+            self._throttle_main,
+            self._throttle_rival,
+            self._throttle_main_legend,
+            self._throttle_rival_legend,
         ) = self._make_chart(
-            "Throttle", "%", SUCCESS, WARNING, _THROTTLE_Y_RANGE,
+            "Throttle",
+            "%",
+            SUCCESS,
+            WARNING,
+            _THROTTLE_Y_RANGE,
         )
 
-        grid.addWidget(delta_wrapper,    0, 0)
-        grid.addWidget(speed_wrapper,    0, 1)
-        grid.addWidget(brake_wrapper,    1, 0)
+        grid.addWidget(delta_wrapper, 0, 0)
+        grid.addWidget(speed_wrapper, 0, 1)
+        grid.addWidget(brake_wrapper, 1, 0)
         grid.addWidget(throttle_wrapper, 1, 1)
         grid.setColumnStretch(0, 1)
         grid.setColumnStretch(1, 1)
@@ -280,20 +304,18 @@ class TelemetryPanel(QFrame):
         if rival_xs:
             self._speed_rival.setData(rival_xs, [r[_BUCKET_S] for r in rival_rows])
             self._brake_rival.setData(rival_xs, [r[_BUCKET_BR] for r in rival_rows])
-            self._throttle_rival.setData(
-                rival_xs, [r[_BUCKET_TH] for r in rival_rows]
-            )
+            self._throttle_rival.setData(rival_xs, [r[_BUCKET_TH] for r in rival_rows])
             for line, legend in (
-                (self._speed_rival,    self._speed_rival_legend),
-                (self._brake_rival,    self._brake_rival_legend),
+                (self._speed_rival, self._speed_rival_legend),
+                (self._brake_rival, self._brake_rival_legend),
                 (self._throttle_rival, self._throttle_rival_legend),
             ):
                 line.setVisible(True)
                 legend.show()
         else:
             for line, legend in (
-                (self._speed_rival,    self._speed_rival_legend),
-                (self._brake_rival,    self._brake_rival_legend),
+                (self._speed_rival, self._speed_rival_legend),
+                (self._brake_rival, self._brake_rival_legend),
                 (self._throttle_rival, self._throttle_rival_legend),
             ):
                 line.setVisible(False)
@@ -331,8 +353,10 @@ class TelemetryPanel(QFrame):
 
     def _apply_x_range(self, lo: float, hi: float) -> None:
         for plot in (
-            self._delta_plot, self._speed_plot,
-            self._brake_plot, self._throttle_plot,
+            self._delta_plot,
+            self._speed_plot,
+            self._brake_plot,
+            self._throttle_plot,
         ):
             plot.setXRange(lo, hi, padding=0)
 
@@ -346,8 +370,12 @@ class TelemetryPanel(QFrame):
         rival_color: tuple[int, int, int],
         y_range: tuple[float, float],
     ) -> tuple[
-        QWidget, pg.PlotWidget, pg.PlotDataItem, pg.PlotDataItem,
-        QLabel, QLabel,
+        QWidget,
+        pg.PlotWidget,
+        pg.PlotDataItem,
+        pg.PlotDataItem,
+        QLabel,
+        QLabel,
     ]:
         """Build a chart wrapper: title + legend row on top, plot below.
 
@@ -367,9 +395,7 @@ class TelemetryPanel(QFrame):
             f"color: {hex_str(TEXT_PRIMARY)}; font-size: 12px; font-weight: 700;"
         )
         subtitle_lbl = QLabel(subtitle)
-        subtitle_lbl.setStyleSheet(
-            f"color: {hex_str(TEXT_TERTIARY)}; font-size: 10px;"
-        )
+        subtitle_lbl.setStyleSheet(f"color: {hex_str(TEXT_TERTIARY)}; font-size: 10px;")
         main_legend = _legend_chip("MAIN", "—", main_color)
         rival_legend = _legend_chip("RIVAL", "—", rival_color)
         rival_legend.hide()
@@ -394,7 +420,7 @@ class TelemetryPanel(QFrame):
         # Lock both axes — X gets set once from broadcast, Y is fixed per metric.
         plot.getPlotItem().enableAutoRange(False)
         plot.setYRange(y_range[0], y_range[1], padding=0)
-        plot.setMouseEnabled(x=False, y=False)   # no accidental pan/zoom
+        plot.setMouseEnabled(x=False, y=False)  # no accidental pan/zoom
         plot.hideButtons()
         # The delta chart adds its own y=0 reference line in the main
         # driver's colour after this factory returns — no auto zero line
@@ -402,9 +428,7 @@ class TelemetryPanel(QFrame):
         wlay.addWidget(plot, 1)
 
         main_line = pg.PlotDataItem(pen=pg.mkPen(QColor(*main_color), width=2))
-        rival_line = pg.PlotDataItem(
-            pen=pg.mkPen(QColor(*rival_color), width=2, style=Qt.DashLine)
-        )
+        rival_line = pg.PlotDataItem(pen=pg.mkPen(QColor(*rival_color), width=2, style=Qt.DashLine))
         plot.addItem(main_line)
         plot.addItem(rival_line)
         rival_line.setVisible(False)
@@ -414,14 +438,18 @@ class TelemetryPanel(QFrame):
 
     def _update_legend_codes(self, main: str, rival: str | None) -> None:
         for lbl in (
-            self._speed_main_legend, self._brake_main_legend,
-            self._throttle_main_legend, self._delta_main_legend,
+            self._speed_main_legend,
+            self._brake_main_legend,
+            self._throttle_main_legend,
+            self._delta_main_legend,
         ):
             lbl.set_code(main)
         if rival:
             for lbl in (
-                self._speed_rival_legend, self._brake_rival_legend,
-                self._throttle_rival_legend, self._delta_rival_legend,
+                self._speed_rival_legend,
+                self._brake_rival_legend,
+                self._throttle_rival_legend,
+                self._delta_rival_legend,
             ):
                 lbl.set_code(rival)
 
@@ -433,13 +461,15 @@ class TelemetryPanel(QFrame):
     def _reset(self) -> None:
         self._reset_buffers()
         for line in (
-            self._speed_main, self._brake_main, self._throttle_main,
+            self._speed_main,
+            self._brake_main,
+            self._throttle_main,
             self._delta_rival,
         ):
             line.setData([], [])
         for line, legend in (
-            (self._speed_rival,    self._speed_rival_legend),
-            (self._brake_rival,    self._brake_rival_legend),
+            (self._speed_rival, self._speed_rival_legend),
+            (self._brake_rival, self._brake_rival_legend),
             (self._throttle_rival, self._throttle_rival_legend),
         ):
             line.setVisible(False)

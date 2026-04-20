@@ -84,14 +84,14 @@ def _frame_to_telemetry(frame, circuit_length_m: float) -> dict | None:
     rel_dist = max(0.0, min(1.0, float(frame.rel_dist)))
     lap_dist = rel_dist * float(circuit_length_m or 0.0)
     return {
-        "lap":      int(frame.lap),
-        "t":        round(float(frame.t), 3),
-        "dist":     round(lap_dist, 1),
-        "speed":    round(float(frame.speed), 1),
+        "lap": int(frame.lap),
+        "t": round(float(frame.t), 3),
+        "dist": round(lap_dist, 1),
+        "speed": round(float(frame.speed), 1),
         "throttle": round(throttle, 1),
-        "brake":    round(brake, 1),
-        "gear":     int(frame.gear),
-        "drs":      int(frame.drs),
+        "brake": round(brake, 1),
+        "gear": int(frame.gear),
+        "drs": int(frame.drs),
     }
 
 
@@ -145,23 +145,45 @@ class F1ArcadeView(arcade.View):
 
         w, h = window.width, window.height
         self._track.update_scaling(
-            w, h,
-            margin_left=MARGIN_LEFT, margin_right=MARGIN_RIGHT,
-            margin_bottom=MARGIN_BOTTOM, margin_top=MARGIN_TOP,
+            w,
+            h,
+            margin_left=MARGIN_LEFT,
+            margin_right=MARGIN_RIGHT,
+            margin_bottom=MARGIN_BOTTOM,
+            margin_top=MARGIN_TOP,
         )
 
         self._lap_label = arcade.Text(
-            "LAP", 20, h - 20, ACCENT, 11, bold=True,
-            font_name=FONT_TITLE, anchor_x="left", anchor_y="top",
+            "LAP",
+            20,
+            h - 20,
+            ACCENT,
+            11,
+            bold=True,
+            font_name=FONT_TITLE,
+            anchor_x="left",
+            anchor_y="top",
         )
         self._lap_text = arcade.Text(
-            "1/58", 20, h - 36, TEXT_PRIMARY, 22, bold=True,
-            font_name=FONT_TITLE, anchor_x="left", anchor_y="top",
+            "1/58",
+            20,
+            h - 36,
+            TEXT_PRIMARY,
+            22,
+            bold=True,
+            font_name=FONT_TITLE,
+            anchor_x="left",
+            anchor_y="top",
         )
         self._time_text = arcade.Text(
-            "00:00:00  x1.0", 20, h - 66,
-            TEXT_TERTIARY, 12, font_name=FONT_BODY,
-            anchor_x="left", anchor_y="top",
+            "00:00:00  x1.0",
+            20,
+            h - 66,
+            TEXT_TERTIARY,
+            12,
+            font_name=FONT_BODY,
+            anchor_x="left",
+            anchor_y="top",
         )
 
         self._weather = WeatherPanel()
@@ -171,37 +193,55 @@ class F1ArcadeView(arcade.View):
             width=LEADERBOARD_WIDTH,
         )
         self._driver_info_main = DriverInfoPanel(
-            x=20, top_y=h - 200, width=DRIVER_BOX_WIDTH,
-            height=DRIVER_BOX_HEIGHT, driver_code=driver_main,
+            x=20,
+            top_y=h - 200,
+            width=DRIVER_BOX_WIDTH,
+            height=DRIVER_BOX_HEIGHT,
+            driver_code=driver_main,
             color=self._color_for(driver_main),
         )
         self._driver_info_rival: DriverInfoPanel | None = None
         if driver_rival:
             self._driver_info_rival = DriverInfoPanel(
-                x=20, top_y=h - 200 - DRIVER_BOX_HEIGHT - DRIVER_BOX_GAP,
-                width=DRIVER_BOX_WIDTH, height=DRIVER_BOX_HEIGHT,
-                driver_code=driver_rival, color=self._color_for(driver_rival),
+                x=20,
+                top_y=h - 200 - DRIVER_BOX_HEIGHT - DRIVER_BOX_GAP,
+                width=DRIVER_BOX_WIDTH,
+                height=DRIVER_BOX_HEIGHT,
+                driver_code=driver_rival,
+                color=self._color_for(driver_rival),
             )
 
         self._progress_bar = ProgressBar(
             total_frames=session_data.total_frames,
             total_laps=session_data.max_lap_number,
             events=session_data.events,
-            left_margin=MARGIN_LEFT, right_margin=MARGIN_RIGHT,
+            left_margin=MARGIN_LEFT,
+            right_margin=MARGIN_RIGHT,
         )
         self._progress_bar.on_resize(w)
         self._controls_legend = ControlsLegend()
 
         self._car_label_main = arcade.Text(
-            driver_main, 0, 0, self._color_for(driver_main),
-            CAR_LABEL_FONT_SIZE, bold=True, font_name=FONT_BODY,
-            anchor_x="center", anchor_y="bottom",
+            driver_main,
+            0,
+            0,
+            self._color_for(driver_main),
+            CAR_LABEL_FONT_SIZE,
+            bold=True,
+            font_name=FONT_BODY,
+            anchor_x="center",
+            anchor_y="bottom",
         )
         self._car_label_rival = arcade.Text(
-            driver_rival or "", 0, 0,
+            driver_rival or "",
+            0,
+            0,
             self._color_for(driver_rival) if driver_rival else TEXT_SECONDARY,
-            CAR_LABEL_FONT_SIZE, bold=True, font_name=FONT_BODY,
-            anchor_x="center", anchor_y="top",
+            CAR_LABEL_FONT_SIZE,
+            bold=True,
+            font_name=FONT_BODY,
+            anchor_x="center",
+            anchor_y="top",
         )
 
         if self._strategy_enabled:
@@ -209,8 +249,11 @@ class F1ArcadeView(arcade.View):
 
         logger.info(
             "F1ArcadeView ready: %s vs %s, %d drivers, %d frames, strategy=%s",
-            driver_main, driver_rival, len(session_data.frames_by_driver),
-            session_data.total_frames, self._strategy_enabled,
+            driver_main,
+            driver_rival,
+            len(session_data.frames_by_driver),
+            session_data.total_frames,
+            self._strategy_enabled,
         )
 
     def _init_strategy_layer(self) -> None:
@@ -246,19 +289,14 @@ class F1ArcadeView(arcade.View):
             interval_s=0.0,
         )
         self._strategy_state = StrategyState()
-        self._strategy_connector = SimConnector(
-            request=request, state=self._strategy_state
-        )
+        self._strategy_connector = SimConnector(request=request, state=self._strategy_state)
         self._strategy_connector.start()
 
         try:
-            self._stream_server = TelemetryStreamServer(
-                host=STREAM_HOST, port=STREAM_PORT
-            )
+            self._stream_server = TelemetryStreamServer(host=STREAM_HOST, port=STREAM_PORT)
             self._stream_server.start()
         except OSError as exc:
-            logger.warning("Stream server failed to bind %s:%d (%s)",
-                           STREAM_HOST, STREAM_PORT, exc)
+            logger.warning("Stream server failed to bind %s:%d (%s)", STREAM_HOST, STREAM_PORT, exc)
             self._stream_server = None
 
         self._spawn_dashboard()
@@ -272,15 +310,12 @@ class F1ArcadeView(arcade.View):
         A failed spawn is logged at WARNING and swallowed: the arcade
         replay keeps playing, just without the companion window."""
         try:
-            creationflags = (
-                subprocess.CREATE_NEW_CONSOLE if os.name == "nt" else 0
-            )
+            creationflags = subprocess.CREATE_NEW_CONSOLE if os.name == "nt" else 0
             self._dashboard_proc = subprocess.Popen(
                 [sys.executable, "-m", "src.arcade.dashboard"],
                 creationflags=creationflags,
             )
-            logger.info("Dashboard subprocess spawned (pid=%s)",
-                        self._dashboard_proc.pid)
+            logger.info("Dashboard subprocess spawned (pid=%s)", self._dashboard_proc.pid)
         except Exception as exc:
             logger.warning(
                 "Dashboard spawn failed (%s) — arcade continues without it",
@@ -297,6 +332,7 @@ class F1ArcadeView(arcade.View):
         calendar JSON) and finally to ``GP_TO_LOCATION`` for menu inputs
         that still carry a country-style label from the legacy table."""
         from src.arcade.config import GP_TO_LOCATION, get_gp_names
+
         if self._session.location:
             return self._session.location
         gp_name = self._session.gp_name or get_gp_names(self._year).get(1, "Sakhir")
@@ -393,9 +429,7 @@ class F1ArcadeView(arcade.View):
         if self._driver_rival:
             rival_frames = self._session.frames_by_driver.get(self._driver_rival)
             if rival_frames and frame_idx < len(rival_frames):
-                rival_tel = _frame_to_telemetry(
-                    rival_frames[frame_idx], circuit_length
-                )
+                rival_tel = _frame_to_telemetry(rival_frames[frame_idx], circuit_length)
         telemetry = {"main": main_tel, "rival": rival_tel}
         return {
             "gp_name": self._session.gp_name,
@@ -441,10 +475,7 @@ class F1ArcadeView(arcade.View):
         self._driver_info_main.draw(frame, sorted_progress)
         if self._driver_info_rival:
             self._driver_info_rival.set_top(
-                self._weather.bottom_y
-                - DRIVER_BOX_GAP
-                - DRIVER_BOX_HEIGHT
-                - DRIVER_BOX_GAP
+                self._weather.bottom_y - DRIVER_BOX_GAP - DRIVER_BOX_HEIGHT - DRIVER_BOX_GAP
             )
             self._driver_info_rival.draw(frame, sorted_progress)
 
@@ -512,9 +543,12 @@ class F1ArcadeView(arcade.View):
 
     def on_resize(self, width: float, height: float) -> None:
         self._track.update_scaling(
-            int(width), int(height),
-            margin_left=MARGIN_LEFT, margin_right=MARGIN_RIGHT,
-            margin_bottom=MARGIN_BOTTOM, margin_top=MARGIN_TOP,
+            int(width),
+            int(height),
+            margin_left=MARGIN_LEFT,
+            margin_right=MARGIN_RIGHT,
+            margin_bottom=MARGIN_BOTTOM,
+            margin_top=MARGIN_TOP,
         )
         self._leaderboard.x = int(width) - LEADERBOARD_RIGHT_MARGIN
         self._leaderboard.set_top(int(height) - 20)
@@ -542,10 +576,19 @@ class F1ArcadeView(arcade.View):
                 continue
             f = frames[frame_idx]
             drivers_dict[code] = {
-                "x": f.x, "y": f.y, "speed": f.speed, "gear": f.gear,
-                "drs": f.drs, "throttle": f.throttle, "brake": f.brake,
-                "lap": f.lap, "dist": f.dist, "rel_dist": f.rel_dist,
-                "tyre": f.tyre, "tyre_life": f.tyre_life, "active": f.active,
+                "x": f.x,
+                "y": f.y,
+                "speed": f.speed,
+                "gear": f.gear,
+                "drs": f.drs,
+                "throttle": f.throttle,
+                "brake": f.brake,
+                "lap": f.lap,
+                "dist": f.dist,
+                "rel_dist": f.rel_dist,
+                "tyre": f.tyre,
+                "tyre_life": f.tyre_life,
+                "active": f.active,
             }
             if code == self._driver_main:
                 main_frame = f
@@ -555,8 +598,12 @@ class F1ArcadeView(arcade.View):
             "t": main_frame.t if main_frame else 0.0,
             "drivers": drivers_dict,
             "weather": {
-                "track_temp": 45.0, "air_temp": 18.0, "humidity": 55.0,
-                "wind_speed": 12.0, "wind_direction": 180.0, "rain_state": "DRY",
+                "track_temp": 45.0,
+                "air_temp": 18.0,
+                "humidity": 55.0,
+                "wind_speed": 12.0,
+                "wind_direction": 180.0,
+                "rain_state": "DRY",
             },
         }
 
@@ -610,9 +657,7 @@ class F1ArcadeView(arcade.View):
         mm = int((t % 3600) // 60)
         ss = int(t % 60)
         paused = "  PAUSED" if self._is_paused else ""
-        self._time_text.text = (
-            f"{hh:02d}:{mm:02d}:{ss:02d}  x{self.playback_speed}{paused}"
-        )
+        self._time_text.text = f"{hh:02d}:{mm:02d}:{ss:02d}  x{self.playback_speed}{paused}"
         self._lap_label.draw()
         self._lap_text.draw()
         self._time_text.draw()
