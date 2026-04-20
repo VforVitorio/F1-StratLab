@@ -77,6 +77,16 @@ The four telemetry tools are wired to `CHART` so the frontend renders them as in
 
 All strategy endpoints live under `/api/v1/strategy/`. They accept JSON bodies and return `StrategyResponse` envelopes.
 
+### Consumers
+
+The `/api/v1/strategy/simulate` SSE endpoint is consumed by the Streamlit app and by
+`curl` / `TestClient` smoke tests. The arcade replay no longer calls this endpoint --
+as of Phase 3.5 Proceso B (April 2026), the arcade owns its own strategy pipeline via
+[`src/arcade/strategy_pipeline.py`](../src/arcade/strategy_pipeline.py) and does not
+require the FastAPI backend at runtime. The backend remains the single entry point for
+the Streamlit post-race dashboard and for the CLI smoke tests; `src/arcade/strategy.py::SimConnector`
+drives `RaceReplayEngine.replay()` directly inside the arcade subprocess.
+
 ### Metadata (GET)
 
 | Path | Description |

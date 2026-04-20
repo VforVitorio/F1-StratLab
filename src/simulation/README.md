@@ -1,5 +1,9 @@
 # src/simulation — Race replay engine
 
+> **Canonical narrative doc:** [`docs/simulation/overview.md`](../../docs/simulation/overview.md)
+> covers the `lap_state` contract and the data boundary with the agents.
+> This README is the package-level API pointer.
+
 Offline replay path for the multi-agent strategy system. Loads a race
 parquet from disk, walks it lap by lap, and emits a `lap_state` dict per
 lap that the agents and the orchestrator can consume directly. The same
@@ -49,15 +53,22 @@ python -m src.simulation Silverstone VER "Red Bull Racing" --interval 0
 
 ---
 
-## Relationship to `scripts/run_simulation_cli.py`
+## Consumers of `RaceReplayEngine`
 
-The `scripts/run_simulation_cli.py` headless simulator uses
-`RaceStateManager` directly (without the `RaceReplayEngine` wrapper) so it
-can interleave the radio runner, the strategy orchestrator, and the Rich
-inference panel within a single Live render loop. The replay engine here
-is the simpler "load and yield" entry point intended for demos, smoke
-tests, and the future Arcade frontend; the headless CLI is the production
-path that ships with the R1 release.
+Three entry points drive the replay engine today:
+
+- **CLI** — `scripts/run_simulation_cli.py` uses `RaceStateManager` directly (without
+  the `RaceReplayEngine` wrapper) so it can interleave the radio runner, the strategy
+  orchestrator, and the Rich inference panel within a single Live render loop. The
+  production path that ships with the R1 release.
+- **FastAPI backend SSE** — `src/telemetry/backend/services/simulation/` wraps
+  `RaceReplayEngine` inside the `simulate_race` async generator consumed by the
+  `POST /api/v1/strategy/simulate` SSE endpoint. Feeds the Streamlit dashboard and the
+  TestClient smoke tests.
+- **Arcade** — `src/arcade/strategy.py::SimConnector` drives `RaceReplayEngine.replay()`
+  locally inside the arcade subprocess and feeds the arcade's local strategy pipeline
+  (`src/arcade/strategy_pipeline.py`). No FastAPI involved; the arcade broadcasts the
+  merged state over TCP 127.0.0.1:9998 to the PySide6 dashboard.
 
 ---
 

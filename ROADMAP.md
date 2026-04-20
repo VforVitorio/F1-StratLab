@@ -396,6 +396,12 @@ Retrieval-augmented generation over FIA Sporting Regulations (2023–2025). Prov
 
 Wire the multi-agent system into the FastAPI backend, expose strategy tools via FastMCP, build Streamlit dashboard pages, and integrate Arcade for race replay visualization. Three independent releases ship from this work (R1 CLI wheel, R2 Arcade, R3 Streamlit + Backend).
 
+**Completed:**
+
+- Phase 3.5 Proceso A ✅ 2026-04-15 — `TelemetryStreamServer` (TCP :9998) + `StrategyState.snapshot_dict` + arcade broadcast wired in `F1ArcadeView.on_update`
+- Phase 3.5 Proceso B ✅ 2026-04-18 — PySide6 dashboard subprocess spawns both `MainWindow` (orchestrator + 6 sub-agent cards + reasoning tabs) and `TelemetryWindow` (2×2 circuit-comparison grid) from a single `f1-arcade --strategy` command; arcade-local `src/arcade/strategy_pipeline.py` duplicates the N31 orchestrator body so the arcade no longer depends on the FastAPI backend at runtime
+- Phase 3.5 polish ✅ 2026-04-18 → 2026-04-20 — Pirelli compound pills, alert flag chips, FiraCode mono stack, per-lap distance + FastF1 circuit length, F1-broadcast-style Delta chart, radio corpus injection via `RadioPipelineRunner`, all-20-cars toggle (A key), docs refresh with 5 drawio diagrams
+
 **R1 — CLI Release (wheel):** ✅ DONE
 
 - [X] `pyproject.toml` entry points (`f1-strat`, `f1-sim`) ✅
@@ -435,11 +441,26 @@ Wire the multi-agent system into the FastAPI backend, expose strategy tools via 
 - [X] `POST /api/v1/strategy/simulate` — `StreamingResponse(media_type="text/event-stream")` emitting `start` → N×`lap` → `summary` events ✅
 - [X] Validated via smoke unit (6-lap assertions) + FastAPI `TestClient` stream (5 frames, 200 OK, correct content-type) + CLI regression (no drift) ✅
 
-**Step 12 — Arcade simulation UI:** ⬜ Not started (see R2 block below)
+**Step 12 — Arcade simulation UI:** ✅ COMPLETE (Phase 3.5 Proceso B, 2026-04-18)
 
-- [ ] Consume `/api/v1/strategy/simulate` SSE stream in the Arcade game loop
-- [ ] Animate `cars` positions per lap event; pit stop animations on `action == "PIT_NOW"`
-- [ ] Post-run panel rendering the 11 fields of `RunSummary`
+- [X] Three windows from one command: pyglet race replay, PySide6 strategy dashboard,
+      PySide6 live telemetry (2x2 pyqtgraph grid). Single launcher:
+      `python -m src.arcade.main --viewer --strategy ...`
+- [X] Local strategy pipeline — `src/arcade/strategy_pipeline.py` duplicates the N31
+      orchestrator body with verbose outputs. The arcade no longer calls the FastAPI
+      SSE endpoint at runtime
+- [X] `src/arcade/stream.py::TelemetryStreamServer` broadcasts merged arcade + strategy
+      state over TCP 127.0.0.1:9998 at ~10 Hz; arcade spawns ONE dashboard subprocess
+      that hosts both Qt windows in a shared `QApplication` event loop
+- [X] Dashboard cards: orchestrator action + confidence + plan strip, 6 sub-agent cards
+      (N25-N30) rendering raw per-model outputs, pace CI band, tire stint chart,
+      reasoning tabs
+- [X] `src/arcade/data.py::SessionData.location` from FastF1 `session.event['Location']`;
+      `get_gp_names(year)` derives per-year calendars from
+      `data/tire_compounds_by_race.json`; `pyqtgraph>=0.13.0` added to pyproject
+- [X] `src/arcade/main.py` loads `.env` via `dotenv` so `OPENAI_API_KEY` reaches agents;
+      default LLM provider flipped from `lmstudio` to `openai` (override with
+      `F1_LLM_PROVIDER`)
 
 **Step 13 — Legacy cleanup:** ⬜ Not started
 
@@ -450,12 +471,12 @@ Wire the multi-agent system into the FastAPI backend, expose strategy tools via 
 
 At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). This pair feeds `RaceStateManager`, which constructs every `RaceState` from that driver's perspective. All downstream agents operate within this boundary automatically.
 
-**Arcade Visualization (R2):**
+**Arcade Visualization (R2):** ✅ shipped via `uv tool install` → `f1-arcade`
 
-- [ ] 2D circuit layout rendering with real-time car positions
-- [ ] DRS zone overlays + pit lane visualization
-- [ ] Frame streaming from `RaceReplayEngine` at 10Hz
-- [ ] Deployed via container (Modal or similar)
+- [X] 2D circuit layout rendering with real-time car positions (all 20 cars, toggle `A` to hide 18 background dots)
+- [X] DRS zone overlays + pit lane visualization (reference lap = quali fastest per f1_replay pattern)
+- [X] Frame streaming from `RaceReplayEngine` at 10Hz (TCP broadcast on 127.0.0.1:9998)
+- [X] Distribution: `uv tool install git+<repo>` exposes `f1-arcade` console script. Container deploy descoped — OpenGL + Qt through X forwarding is fragile cross-platform and offers no upside over the host install (`INSTALL.md` documents the rationale)
 
 **Voice Mode — low-latency upgrade (optional):**
 
@@ -533,8 +554,8 @@ Complete project delivery with thesis documentation, defense materials, and thre
 - [ ] 5-minute demonstration video (CLI + Streamlit + Arcade)
 - [ ] Technical documentation: API docs, deployment guide
 - [ ] R1 CLI wheel on GitHub Releases (tagged)
-- [ ] R2 Arcade deployment (container)
-- [ ] R3 Streamlit + Backend (Docker Compose or Streamlit Cloud)
+- [ ] R2 Arcade — `uv tool install` + `f1-arcade` console script (OpenGL/Qt container path dropped)
+- [ ] R3 Streamlit + Backend (Docker Compose — already shipping)
 
 **Success Criteria:**
 
@@ -606,5 +627,5 @@ Complete project delivery with thesis documentation, defense materials, and thre
 
 ---
 
-**Last Updated:** April 14, 2026
-**Version:** 1.7
+**Last Updated:** April 20, 2026
+**Version:** 1.9

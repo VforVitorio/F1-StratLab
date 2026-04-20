@@ -1,0 +1,153 @@
+<mxfile host="app.diagrams.net" modified="2026-04-18T00:00:00.000Z" agent="Claude" version="24.7.17">
+  <diagram id="tcp-broadcast-dataflow" name="TCP Broadcast Data Flow">
+    <mxGraphModel dx="1920" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1400" math="0" shadow="0" background="#0F1724">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0F1724;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="0" y="0" width="1920" height="1400" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="title" value="F1 Strategy Manager &#8212; Digital Twin Multi-Agent System" style="text;html=1;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#E6E8EF;" vertex="1" parent="1">
+          <mxGeometry x="360" y="20" width="1200" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="FastF1 &#8594; Arcade &#8594; TCP localhost:9998 &#8594; PySide6 Windows" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontStyle=2;fontColor=#8B5CF6;" vertex="1" parent="1">
+          <mxGeometry x="360" y="56" width="1200" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 1: FastF1 + SessionLoader -->
+        <mxCell id="s1" value="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#8B5CF6;strokeColor=#6D28D9;fontColor=#FFFFFF;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="130" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="ff1" value="FastF1 session.load()&#10;laps &#183; telemetry &#183; weather" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#243049;strokeColor=#A0A5B8;fontColor=#E6E8EF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="140" y="125" width="300" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="sl" value="SessionLoader&#10;Pool(processes=8) per-driver resample&#10;builds SessionData (location, circuit_length_m, frames_by_driver)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2B1A3C;strokeColor=#8B5CF6;fontColor=#E6E8EF;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="480" y="115" width="460" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-ff1-sl" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#A0A5B8;strokeWidth=2;" edge="1" parent="1" source="ff1" target="sl">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 2: F1ArcadeView starts server -->
+        <mxCell id="s2" value="2" style="ellipse;whiteSpace=wrap;html=1;fillColor=#8B5CF6;strokeColor=#6D28D9;fontColor=#FFFFFF;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="230" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="arcade-view" value="F1ArcadeView.__init__(session_data)&#10;allocates track, leaderboard, weather, driver_info widgets" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#243049;strokeColor=#4B5B82;fontColor=#E6E8EF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="140" y="225" width="480" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="stream-srv" value="TelemetryStreamServer.start()&#10;socket.bind(127.0.0.1, 9998) &#183; listen() &#183; accept loop" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1D3F2A;strokeColor=#4ADE80;fontColor=#E6E8EF;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="215" width="460" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-arcade-srv" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#4ADE80;strokeWidth=2;" edge="1" parent="1" source="arcade-view" target="stream-srv">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 3: SimConnector thread -->
+        <mxCell id="s3" value="3" style="ellipse;whiteSpace=wrap;html=1;fillColor=#8B5CF6;strokeColor=#6D28D9;fontColor=#FFFFFF;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="330" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="sim-conn" value="_init_strategy_layer()&#10;SimConnector(request, state) &#8212; daemon thread&#10;runs RaceReplayEngine + run_strategy_pipeline LOCALLY (no FastAPI)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2B1A3C;strokeColor=#8B5CF6;fontColor=#E6E8EF;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="315" width="980" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 4: StrategyState per lap -->
+        <mxCell id="s4" value="4" style="ellipse;whiteSpace=wrap;html=1;fillColor=#8B5CF6;strokeColor=#6D28D9;fontColor=#FFFFFF;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="430" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="strat-state" value="StrategyState (per lap)&#10;LapDecision &#183; PerAgentOutputs &#183; history_tail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3B1D1D;strokeColor=#EF4444;fontColor=#E6E8EF;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="420" width="500" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 5: _build_arcade_snapshot + broadcast -->
+        <mxCell id="s5" value="5" style="ellipse;whiteSpace=wrap;html=1;fillColor=#8B5CF6;strokeColor=#6D28D9;fontColor=#FFFFFF;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="530" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="build-snap" value="_build_arcade_snapshot()&#10;merges {arcade, strategy, playback} @ 10 Hz&#10;every 6th frame at 60 FPS in on_update()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1D3F2A;strokeColor=#4ADE80;fontColor=#E6E8EF;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="520" width="500" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="broadcast" value="TelemetryStreamServer.broadcast(payload)&#10;json.dumps + \n delimiter &#8594; each client socket" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1D3F2A;strokeColor=#4ADE80;fontColor=#E6E8EF;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="520" width="480" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-snap-broad" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#4ADE80;strokeWidth=2;" edge="1" parent="1" source="build-snap" target="broadcast">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- JSON shape block -->
+        <mxCell id="json-block" value="Broadcast JSON shape" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1A2138;strokeColor=#F59E0B;fontColor=#E6E8EF;fontStyle=1;fontSize=12;verticalAlign=top;spacingTop=8;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="220" width="660" height="370" as="geometry"/>
+        </mxCell>
+        <mxCell id="json-text" value="{&#10;  &quot;arcade&quot;: {&#10;    &quot;drivers&quot;: [ ... leaderboard entries ... ],&#10;    &quot;telemetry&quot;: {&#10;      &quot;main&quot;:  { speed, throttle, brake, delta, lap_dist },&#10;      &quot;rival&quot;: { speed, throttle, brake, delta, lap_dist }&#10;    },&#10;    &quot;circuit_length_m&quot;: 5807&#10;  },&#10;  &quot;strategy&quot;: {&#10;    &quot;start&quot;:  { driver, team, rival, year, round, gp },&#10;    &quot;latest&quot;: {&#10;      &quot;lap&quot;: 23,&#10;      &quot;action&quot;: &quot;STAY_OUT&quot;,&#10;      &quot;confidence&quot;: 0.72,&#10;      &quot;per_agent&quot;: { pace, tire, situation, pit, radio, rag }&#10;    },&#10;    &quot;history_tail&quot;: [ last 5 LapDecisions ]&#10;  },&#10;  &quot;playback&quot;: { frame, paused, speed_mult, lap_index }&#10;}" style="text;html=1;align=left;verticalAlign=top;fontSize=11;fontColor=#BDEBCC;fontFamily=Courier New;spacingLeft=12;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="250" width="640" height="330" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 6: Subscribers -->
+        <mxCell id="s6" value="6" style="ellipse;whiteSpace=wrap;html=1;fillColor=#8B5CF6;strokeColor=#6D28D9;fontColor=#FFFFFF;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="640" width="40" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dash-subs" value="Strategy Dashboard &#8212; MainWindow (QMainWindow)&#10;TelemetryStreamClient (QThread)&#10;socket.recv() &#8594; split by \n &#8594; pyqtSignal(dict)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1A2138;strokeColor=#F59E0B;fontColor=#E6E8EF;fontSize=11;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="140" y="640" width="560" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="tel-subs" value="Live Telemetry &#8212; TelemetryWindow (QMainWindow)&#10;TelemetryStreamClient (QThread) &#8212; separate socket connection&#10;consumes only arcade.telemetry.{main, rival}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1A2138;strokeColor=#06B6D4;fontColor=#E6E8EF;fontSize=11;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="740" y="640" width="560" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- Dashboard widgets -->
+        <mxCell id="dash-wid" value="Orchestrator Card &#183; MC Bars &#183; 6 Sub-Agent Cards &#183; Reasoning Tabs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#243049;strokeColor=#F59E0B;fontColor=#F0D49C;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="140" y="760" width="560" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="tel-wid" value="Delta &#183; Speed &#183; Brake &#183; Throttle &#8212; 2&#215;2 pyqtgraph grid" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#243049;strokeColor=#06B6D4;fontColor=#A6E0EC;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="740" y="760" width="560" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Inter-step arrows (vertical flow) -->
+        <mxCell id="a-sl-arcade" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#A0A5B8;strokeWidth=2;" edge="1" parent="1" source="sl" target="arcade-view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-srv-sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#8B5CF6;strokeWidth=2;" edge="1" parent="1" source="stream-srv" target="sim-conn">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-sim-state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#EF4444;strokeWidth=2;" edge="1" parent="1" source="sim-conn" target="strat-state">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-state-snap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#4ADE80;strokeWidth=2;" edge="1" parent="1" source="strat-state" target="build-snap">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Broadcast -> subscribers (TCP) -->
+        <mxCell id="a-broad-dash" value="TCP 9998" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#F59E0B;strokeWidth=3;fontColor=#F59E0B;fontStyle=1;fontSize=10;" edge="1" parent="1" source="broadcast" target="dash-subs">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="920" y="620"/>
+              <mxPoint x="420" y="620"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a-broad-tel" value="TCP 9998" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#06B6D4;strokeWidth=3;fontColor=#06B6D4;fontStyle=1;fontSize=10;" edge="1" parent="1" source="broadcast" target="tel-subs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- JSON reference arrow -->
+        <mxCell id="a-broad-json" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#F59E0B;strokeWidth=1;dashed=1;" edge="1" parent="1" source="broadcast" target="json-block">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Subscribers -> widgets -->
+        <mxCell id="a-ds-w" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#F59E0B;strokeWidth=2;" edge="1" parent="1" source="dash-subs" target="dash-wid">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-ts-w" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#06B6D4;strokeWidth=2;" edge="1" parent="1" source="tel-subs" target="tel-wid">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Footer note -->
+        <mxCell id="footer" value="Single producer (F1ArcadeView) &#8212; multi-consumer (dashboard + telemetry windows). No FastAPI, no SSE. Localhost-only TCP socket." style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#A0A5B8;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="360" y="850" width="1200" height="30" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

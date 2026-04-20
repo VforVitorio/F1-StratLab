@@ -50,6 +50,51 @@ graph TD
     LLM --> REC[StrategyRecommendation]
 ```
 
+## Three-window arcade
+
+Since Phase 3.5 Proceso B (April 2026), the `python -m src.arcade.main ... --strategy`
+launcher runs three windows driven by one shared telemetry stream. The layout is:
+
+```mermaid
+graph LR
+    subgraph arcade["Arcade process (pyglet)"]
+        REPLAY[F1ArcadeView<br/>race replay]
+        PIPE[StrategyPipeline<br/>local N31 copy]
+        STREAM[TelemetryStreamServer<br/>TCP 127.0.0.1:9998]
+    end
+
+    subgraph qt["Dashboard subprocess (single QApplication)"]
+        DASH[Strategy Dashboard<br/>QMainWindow]
+        TELE[Live Telemetry<br/>QMainWindow 2x2 pyqtgraph]
+    end
+
+    REPLAY --> PIPE
+    PIPE --> STREAM
+    REPLAY --> STREAM
+    STREAM -->|TCP broadcast ~10 Hz| DASH
+    STREAM -->|TCP broadcast ~10 Hz| TELE
+```
+
+Four properties are load-bearing:
+
+1. **The arcade owns the `TelemetryStreamServer`.** `src/arcade/stream.py` exposes the
+   merged arcade + strategy snapshot; every other window is a subscriber, never the
+   source of truth.
+2. **One subprocess hosts both Qt windows.** The arcade spawns a single
+   `subprocess.Popen` that boots one `QApplication`. Two windows inside one event loop is
+   cheaper than two OS processes and avoids duplicated imports of PySide6 + pyqtgraph.
+3. **Each window has its own `TelemetryStreamClient(QThread)`.** Subscribers do not
+   share sockets; each window reconnects independently when the arcade restarts, which
+   keeps the dashboard and telemetry windows decoupled.
+4. **Arcade runs a local strategy pipeline.** `src/arcade/strategy_pipeline.py` carries a
+   copy of the N31 orchestrator body so the arcade does not depend on the FastAPI
+   backend at runtime. See [`docs/strategy-pipeline-arcade.md`](strategy-pipeline-arcade.md)
+   for the rationale and [`docs/arcade-dashboard.md`](arcade-dashboard.md) for the
+   Qt-side architecture.
+
+See [`docs/diagrams/`](diagrams/) for the full drawio visuals (window layout, data flow,
+subprocess lifecycle).
+
 ## Agent Details
 
 ### N25 -- Pace Agent (`pace_agent.py`)

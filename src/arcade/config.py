@@ -1,0 +1,285 @@
+"""Constants and theme palette for the Arcade race replay.
+
+Centralises every magic number used across `data.py`, `track.py`, `overlays.py`
+and `app.py` so the visual design can be tuned from one place. Values are
+ported from the Tom Shaw f1-race-replay reference (cached audits in
+`c:/tmp/arcade_analysis/`) with TFG-specific overrides flagged inline.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+from pathlib import Path
+from typing import Final
+
+logger = logging.getLogger(__name__)
+
+# --- Playback & timing ----------------------------------------------------
+FPS: Final[int] = 25
+DT: Final[float] = 1.0 / FPS
+PLAYBACK_SPEEDS: Final[tuple[float, ...]] = (0.25, 0.5, 1.0, 2.0, 4.0, 8.0)
+DEFAULT_SPEED_IDX: Final[int] = PLAYBACK_SPEEDS.index(1.0)
+SEEK_RATE_MULTIPLIER: Final[float] = 3.0
+
+# --- Window geometry ------------------------------------------------------
+SCREEN_WIDTH: Final[int] = 1280
+SCREEN_HEIGHT: Final[int] = 720
+WINDOW_TITLE: Final[str] = "F1 Strategy Manager - Race Replay"
+
+# --- Viewport margins (reserve UI space before fitting track) -------------
+MARGIN_LEFT: Final[int] = 340
+MARGIN_RIGHT: Final[int] = 260
+MARGIN_BOTTOM: Final[int] = 90
+MARGIN_TOP: Final[int] = 20
+TRACK_PADDING: Final[float] = 0.05
+
+# --- Weather panel --------------------------------------------------------
+WEATHER_LEFT: Final[int] = 20
+WEATHER_TOP_OFFSET: Final[int] = 90
+WEATHER_WIDTH: Final[int] = 280
+WEATHER_ROW_GAP: Final[int] = 22
+WEATHER_ICON_SIZE: Final[int] = 16
+
+# --- Driver info panel ----------------------------------------------------
+DRIVER_BOX_WIDTH: Final[int] = 300
+DRIVER_BOX_HEIGHT: Final[int] = 145
+DRIVER_BOX_GAP: Final[int] = 32
+DRIVER_HEADER_HEIGHT: Final[int] = 28
+DRIVER_ROW_GAP: Final[int] = 19
+
+# --- Leaderboard ----------------------------------------------------------
+LEADERBOARD_WIDTH: Final[int] = 240
+LEADERBOARD_RIGHT_MARGIN: Final[int] = 260
+LEADERBOARD_ROW_HEIGHT: Final[int] = 28
+LEADERBOARD_N_SLOTS: Final[int] = 22
+
+# --- Progress bar ---------------------------------------------------------
+PROGRESS_BAR_BOTTOM: Final[int] = 30
+PROGRESS_BAR_HEIGHT: Final[int] = 24
+
+# --- Controls legend ------------------------------------------------------
+LEGEND_X: Final[int] = 20
+LEGEND_BOTTOM: Final[int] = 60
+
+# --- Theme palette (RGB tuples) ------------------------------------------
+# Mirrors src/telemetry/frontend/app/styles.py so the Arcade replay and the
+# Streamlit app read as the same product. The Streamlit file owns the
+# canonical hexes; duplicated here (not imported) to keep src/arcade/
+# dependency-free from the backend package.
+BG_COLOR: Final[tuple[int, int, int]] = (18, 17, 39)           # #121127 PRIMARY_BG
+CONTENT_BG: Final[tuple[int, int, int]] = (24, 22, 51)         # #181633 CONTENT_BG (panels)
+SECONDARY_BG: Final[tuple[int, int, int]] = (30, 27, 75)       # #1e1b4b SECONDARY_BG
+BORDER_COLOR: Final[tuple[int, int, int]] = (45, 45, 58)       # #2d2d3a BORDER
+TEXT_PRIMARY: Final[tuple[int, int, int]] = (255, 255, 255)    # #ffffff
+TEXT_SECONDARY: Final[tuple[int, int, int]] = (209, 213, 219)  # #d1d5db
+TEXT_TERTIARY: Final[tuple[int, int, int]] = (156, 163, 175)   # #9ca3af
+ACCENT: Final[tuple[int, int, int]] = (167, 139, 250)          # #a78bfa purple
+SUCCESS: Final[tuple[int, int, int]] = (16, 185, 129)          # #10b981 emerald
+WARNING: Final[tuple[int, int, int]] = (245, 158, 11)          # #f59e0b amber
+DANGER: Final[tuple[int, int, int]] = (239, 68, 68)            # #ef4444 red
+INFO: Final[tuple[int, int, int]] = (59, 130, 246)             # #3b82f6 blue
+
+# --- Typography (arcade.Text font_name accepts a fallback tuple) ---------
+FONT_BODY: Final[tuple[str, ...]] = ("Inter", "Segoe UI", "Arial")
+FONT_TITLE: Final[tuple[str, ...]] = ("Exo 2", "Inter", "Segoe UI", "Arial")
+
+# --- Track rendering ------------------------------------------------------
+TRACK_EDGE_COLOR: Final[tuple[int, int, int]] = (150, 150, 150)
+TRACK_EDGE_WIDTH: Final[int] = 4
+TRACK_FILL_COLOR: Final[tuple[int, int, int]] = (40, 40, 44)
+DRS_COLOR: Final[tuple[int, int, int]] = (0, 220, 0)
+DRS_WIDTH: Final[int] = 5
+FINISH_CHEQUER_SEGMENTS: Final[int] = 20
+FINISH_CHEQUER_WIDTH: Final[int] = 6
+TRACK_WIDTH_WORLD: Final[float] = 200.0
+TRACK_INTERP_REF: Final[int] = 4000
+TRACK_INTERP_EDGE: Final[int] = 2000
+
+# --- Tyre compounds (FastF1 int codes) -----------------------------------
+COMPOUND_COLORS: Final[dict[int, tuple[int, int, int]]] = {
+    0: (230, 50, 50),     # SOFT
+    1: (230, 200, 50),    # MEDIUM
+    2: (230, 230, 230),   # HARD
+    3: (60, 200, 60),     # INTERMEDIATE
+    4: (60, 130, 230),    # WET
+}
+COMPOUND_LETTERS: Final[dict[int, str]] = {
+    0: "S", 1: "M", 2: "H", 3: "I", 4: "W",
+}
+COMPOUND_NAMES: Final[dict[int, str]] = {
+    0: "SOFT", 1: "MEDIUM", 2: "HARD", 3: "INTER", 4: "WET",
+}
+
+# --- Car rendering --------------------------------------------------------
+CAR_RADIUS: Final[float] = 7.0
+CAR_BORDER_WIDTH: Final[float] = 2.0
+CAR_BORDER_COLOR: Final[tuple[int, int, int]] = (255, 255, 255)
+CAR_LABEL_FONT_SIZE: Final[int] = 11
+
+# --- Background cars (all 20 dots when "show all" toggle is on) ----------
+# Rendered smaller and less saturated than the featured main/rival dots
+# so the eye still tracks the selected driver(s) while having full field
+# context. Toggled with the ``A`` key at runtime (see ControlsLegend).
+CAR_BG_RADIUS: Final[float] = 3.8
+CAR_BG_ALPHA: Final[int] = 170
+
+# --- Progress bar flag colors --------------------------------------------
+FLAG_COLORS: Final[dict[str, tuple[int, int, int]]] = {
+    "yellow_flag": WARNING,
+    "red_flag": DANGER,
+    "safety_car": WARNING,
+    "vsc": (245, 158, 11),
+    "dnf": DANGER,
+    "progress_fill": ACCENT,
+    "lap_marker": BORDER_COLOR,
+    "background": CONTENT_BG,
+    "playhead": TEXT_PRIMARY,
+}
+
+# --- Paths ----------------------------------------------------------------
+REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+FASTF1_CACHE_DIR: Final[Path] = REPO_ROOT / "data" / "cache" / "fastf1"
+ARCADE_CACHE_DIR: Final[Path] = REPO_ROOT / "data" / "cache" / "arcade"
+CACHE_VERSION: Final[str] = "v5"  # circuit_length_m now sourced from FastF1 fastest-lap telemetry
+
+# --- Multiprocessing pool -------------------------------------------------
+# Serial by default — Windows spawn + pickling a loaded session across 8
+# workers has hung in cold-cache runs. Flip to >1 once FastF1 is warm.
+POOL_SIZE: Final[int] = 1
+
+# --- Backend (strategy SSE) ----------------------------------------------
+BACKEND_URL: Final[str] = os.environ.get("F1_BACKEND_URL", "http://localhost:8000")
+STRATEGY_ENDPOINT: Final[str] = "/api/v1/strategy/simulate"
+SSE_RECONNECT_DELAY_S: Final[float] = 2.0
+SSE_MAX_CONSECUTIVE_FAILURES: Final[int] = 3
+SSE_BACKOFF_AFTER_FAILURES_S: Final[float] = 10.0
+
+# --- Telemetry stream (arcade -> dashboard process) ----------------------
+STREAM_HOST: Final[str] = os.environ.get("F1_STREAM_HOST", "127.0.0.1")
+STREAM_PORT: Final[int] = int(os.environ.get("F1_STREAM_PORT", "9998"))
+# Broadcast every N arcade frames. At 60 FPS on_update, N=6 gives ~10 Hz,
+# smooth enough for the live charts without saturating localhost.
+STREAM_BROADCAST_EVERY_N_FRAMES: Final[int] = 6
+# Cap how many LapDecision entries we keep in the broadcast history tail.
+STREAM_HISTORY_TAIL: Final[int] = 30
+
+# --- Menu view ------------------------------------------------------------
+MENU_TITLE: Final[str] = "F1 STRATEGY MANAGER"
+MENU_ROW_HEIGHT: Final[int] = 40
+MENU_ROW_WIDTH: Final[int] = 540
+MENU_LABEL_FONT: Final[int] = 13
+MENU_VALUE_FONT: Final[int] = 15
+MENU_HINT_FONT: Final[int] = 11
+STRATEGY_REQUIRED_YEAR: Final[int] = 2025
+
+# --- 2025 grid: driver code -> team --------------------------------------
+# Mirrors `data/processed/laps_featured_2025.parquet` (unique Driver/Team
+# pairs). Consumed by MenuView to auto-fill the team field when the user
+# types a driver code — same UX as the CLI where team is derived from the
+# driver argument. Mid-season moves (TSU Racing Bulls -> Red Bull, LAW the
+# opposite) resolved to each driver's end-of-season team.
+DRIVER_TO_TEAM_2025: Final[dict[str, str]] = {
+    "VER": "Red Bull Racing", "TSU": "Red Bull Racing",
+    "NOR": "McLaren", "PIA": "McLaren",
+    "LEC": "Ferrari", "HAM": "Ferrari",
+    "RUS": "Mercedes", "ANT": "Mercedes",
+    "ALO": "Aston Martin", "STR": "Aston Martin",
+    "ALB": "Williams", "SAI": "Williams",
+    "GAS": "Alpine", "DOO": "Alpine", "COL": "Alpine",
+    "HUL": "Kick Sauber", "BOR": "Kick Sauber",
+    "BEA": "Haas F1 Team", "OCO": "Haas F1 Team",
+    "LAW": "Racing Bulls", "HAD": "Racing Bulls",
+}
+
+# --- Grand Prix names (round -> short label) -----------------------------
+GP_NAMES: Final[dict[int, str]] = {
+    1: "Bahrain", 2: "SaudiArabia", 3: "Australia", 4: "Japan",
+    5: "China", 6: "Miami", 7: "Monaco", 8: "Canada", 9: "Spain",
+    10: "Austria", 11: "Britain", 12: "Hungary", 13: "Belgium",
+    14: "Netherlands", 15: "Italy", 16: "Singapore", 17: "Mexico",
+    18: "Brazil", 19: "LasVegas", 20: "AbuDhabi", 21: "Qatar",
+    22: "USA", 23: "Monza",
+}
+
+# --- GP name → on-disk folder (FastF1 Location) --------------------------
+# The CLI / backend store per-race FastF1 data under ``data/raw/<year>/<loc>/``
+# where ``<loc>`` is the circuit Location FastF1 emits (``Sakhir`` for Bahrain,
+# ``Melbourne`` for Australia, ...). The menu / CLI in arcade currently uses
+# the country-ish labels in ``GP_NAMES`` for display; this mapping translates
+# them to the disk name for the local strategy pipeline so it can find the
+# race directory. Pass-through entries are included so a user who already
+# types a Location (e.g. ``--gp Melbourne`` from the CLI shortcut) does not
+# trip the lookup.
+# --- Canonical per-year calendar --- data/tire_compounds_by_race.json ---
+# Memory rule: ``data/tire_compounds_by_race.json`` is THE canonical source
+# for per-year GP metadata (see MEMORY.md → feedback_check_data_folder). The
+# arcade used to carry a hand-maintained ``GP_NAMES`` mapping that drifted
+# from the active season (``GP_NAMES[3] == "Australia"`` but 2025 round 3 is
+# Suzuka); ``get_gp_names(year)`` below reads the JSON and returns an
+# ``{round: Location}`` dict for the requested year, so menu/viewer/strategy
+# paths always resolve the right race without another hardcoded table.
+
+_GP_NAMES_JSON_PATH: Final[Path] = Path(__file__).resolve().parents[2] / "data" / "tire_compounds_by_race.json"
+_gp_names_cache: dict[int, dict[int, str]] = {}
+
+
+def get_gp_names(year: int) -> dict[int, str]:
+    """Return ``{round_number: Location}`` for ``year`` (1-indexed rounds).
+
+    Reads the canonical ``data/tire_compounds_by_race.json`` and assumes
+    the insertion order of the keys matches the calendar order (the
+    builder writes them in round order — verified for 2023/2024/2025).
+    Falls back to the hardcoded ``GP_NAMES`` table (2024 layout) when the
+    JSON is missing or the year is absent, so the arcade still boots
+    without the data artifact.
+    """
+    if year in _gp_names_cache:
+        return _gp_names_cache[year]
+    try:
+        with open(_GP_NAMES_JSON_PATH, encoding="utf-8") as fh:
+            raw = json.load(fh)
+    except (FileNotFoundError, json.JSONDecodeError) as exc:
+        logger.warning("GP calendar JSON unreadable (%s) — using hardcoded fallback", exc)
+        return GP_NAMES
+    year_block = raw.get(str(year))
+    if not isinstance(year_block, dict):
+        logger.warning("No calendar for %d in %s — using hardcoded fallback",
+                       year, _GP_NAMES_JSON_PATH.name)
+        return GP_NAMES
+    mapping = {
+        i + 1: name
+        for i, name in enumerate(year_block.keys())
+        if not name.startswith("_")
+    }
+    _gp_names_cache[year] = mapping
+    return mapping
+
+
+GP_TO_LOCATION: Final[dict[str, str]] = {
+    "Bahrain":       "Sakhir",
+    "SaudiArabia":   "Jeddah",
+    "Australia":     "Melbourne",
+    "Japan":         "Suzuka",
+    "China":         "Shanghai",
+    "Miami":         "Miami_Gardens",
+    "Monaco":        "Monaco",
+    "Canada":        "Montréal",
+    "Spain":         "Barcelona",
+    "Austria":       "Spielberg",
+    "Britain":       "Silverstone",
+    "Hungary":       "Budapest",
+    "Belgium":       "Spa-Francorchamps",
+    "Netherlands":   "Zandvoort",
+    "Italy":         "Monza",
+    "Singapore":     "Marina_Bay",
+    "Mexico":        "Mexico_City",
+    "Brazil":        "São_Paulo",
+    "LasVegas":      "Las_Vegas",
+    "AbuDhabi":      "Yas_Island",
+    "Qatar":         "Lusail",
+    "USA":           "Austin",
+    "Monza":         "Monza",
+    "Imola":         "Imola",
+}
