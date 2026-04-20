@@ -398,7 +398,9 @@ Wire the multi-agent system into the FastAPI backend, expose strategy tools via 
 
 **Completed:**
 
-- Phase 3.5 Proceso B ✅ 2026-04-18 — PySide6 dashboard subprocess + live telemetry window
+- Phase 3.5 Proceso A ✅ 2026-04-15 — `TelemetryStreamServer` (TCP :9998) + `StrategyState.snapshot_dict` + arcade broadcast wired in `F1ArcadeView.on_update`
+- Phase 3.5 Proceso B ✅ 2026-04-18 — PySide6 dashboard subprocess spawns both `MainWindow` (orchestrator + 6 sub-agent cards + reasoning tabs) and `TelemetryWindow` (2×2 circuit-comparison grid) from a single `f1-arcade --strategy` command; arcade-local `src/arcade/strategy_pipeline.py` duplicates the N31 orchestrator body so the arcade no longer depends on the FastAPI backend at runtime
+- Phase 3.5 polish ✅ 2026-04-18 → 2026-04-20 — Pirelli compound pills, alert flag chips, FiraCode mono stack, per-lap distance + FastF1 circuit length, F1-broadcast-style Delta chart, radio corpus injection via `RadioPipelineRunner`, all-20-cars toggle (A key), docs refresh with 5 drawio diagrams
 
 **R1 — CLI Release (wheel):** ✅ DONE
 
@@ -469,12 +471,12 @@ Wire the multi-agent system into the FastAPI backend, expose strategy tools via 
 
 At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). This pair feeds `RaceStateManager`, which constructs every `RaceState` from that driver's perspective. All downstream agents operate within this boundary automatically.
 
-**Arcade Visualization (R2):**
+**Arcade Visualization (R2):** ✅ shipped via `uv tool install` → `f1-arcade`
 
-- [ ] 2D circuit layout rendering with real-time car positions
-- [ ] DRS zone overlays + pit lane visualization
-- [ ] Frame streaming from `RaceReplayEngine` at 10Hz
-- [ ] Deployed via container (Modal or similar)
+- [X] 2D circuit layout rendering with real-time car positions (all 20 cars, toggle `A` to hide 18 background dots)
+- [X] DRS zone overlays + pit lane visualization (reference lap = quali fastest per f1_replay pattern)
+- [X] Frame streaming from `RaceReplayEngine` at 10Hz (TCP broadcast on 127.0.0.1:9998)
+- [X] Distribution: `uv tool install git+<repo>` exposes `f1-arcade` console script. Container deploy descoped — OpenGL + Qt through X forwarding is fragile cross-platform and offers no upside over the host install (`INSTALL.md` documents the rationale)
 
 **Voice Mode — low-latency upgrade (optional):**
 
@@ -552,8 +554,8 @@ Complete project delivery with thesis documentation, defense materials, and thre
 - [ ] 5-minute demonstration video (CLI + Streamlit + Arcade)
 - [ ] Technical documentation: API docs, deployment guide
 - [ ] R1 CLI wheel on GitHub Releases (tagged)
-- [ ] R2 Arcade deployment (container)
-- [ ] R3 Streamlit + Backend (Docker Compose or Streamlit Cloud)
+- [ ] R2 Arcade — `uv tool install` + `f1-arcade` console script (OpenGL/Qt container path dropped)
+- [ ] R3 Streamlit + Backend (Docker Compose — already shipping)
 
 **Success Criteria:**
 
@@ -625,5 +627,5 @@ Complete project delivery with thesis documentation, defense materials, and thre
 
 ---
 
-**Last Updated:** April 18, 2026
-**Version:** 1.8
+**Last Updated:** April 20, 2026
+**Version:** 1.9
