@@ -118,6 +118,13 @@ CAR_BORDER_WIDTH: Final[float] = 2.0
 CAR_BORDER_COLOR: Final[tuple[int, int, int]] = (255, 255, 255)
 CAR_LABEL_FONT_SIZE: Final[int] = 11
 
+# --- Background cars (all 20 dots when "show all" toggle is on) ----------
+# Rendered smaller and less saturated than the featured main/rival dots
+# so the eye still tracks the selected driver(s) while having full field
+# context. Toggled with the ``A`` key at runtime (see ControlsLegend).
+CAR_BG_RADIUS: Final[float] = 3.8
+CAR_BG_ALPHA: Final[int] = 170
+
 # --- Progress bar flag colors --------------------------------------------
 FLAG_COLORS: Final[dict[str, tuple[int, int, int]]] = {
     "yellow_flag": WARNING,

@@ -549,6 +549,7 @@ class ControlsLegend:
         ("Up / Down", "Speed +/-"),
         ("1 - 4", "0.5 / 1 / 2 / 4 x"),
         ("R", "Restart"),
+        ("A", "Toggle all 20 cars"),
         ("D", "Toggle DRS zones"),
         ("B", "Toggle progress bar"),
         ("ESC", "Close"),

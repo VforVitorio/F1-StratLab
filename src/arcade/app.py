@@ -19,6 +19,8 @@ import arcade
 
 from src.arcade.config import (
     ACCENT,
+    CAR_BG_ALPHA,
+    CAR_BG_RADIUS,
     BG_COLOR,
     CAR_BORDER_COLOR,
     CAR_BORDER_WIDTH,
@@ -137,6 +139,7 @@ class F1ArcadeView(arcade.View):
         self._was_paused_before_hold: bool = False
         self._show_progress_bar: bool = True
         self._show_drs_zones: bool = True
+        self._show_all_cars: bool = True
         self._selected_drivers: set[str] = {driver_main}
         if driver_rival:
             self._selected_drivers.add(driver_rival)
@@ -417,6 +420,12 @@ class F1ArcadeView(arcade.View):
         frame_idx = int(self._frame_index)
         frame = self._build_frame_dict(frame_idx)
 
+        # Draw the 18 non-featured cars first as small dimmed dots so the
+        # featured main/rival dots paint on top and always read clearly.
+        # Toggled by the ``A`` key (``self._show_all_cars``).
+        if self._show_all_cars:
+            self._draw_background_cars(frame_idx)
+
         self._draw_car(self._driver_main, self._car_label_main, above=True)
         if self._driver_rival:
             self._draw_car(self._driver_rival, self._car_label_rival, above=False)
@@ -478,6 +487,8 @@ class F1ArcadeView(arcade.View):
             self._show_drs_zones = not self._show_drs_zones
         elif symbol == arcade.key.B:
             self._show_progress_bar = not self._show_progress_bar
+        elif symbol == arcade.key.A:
+            self._show_all_cars = not self._show_all_cars
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         if symbol == arcade.key.LEFT:
@@ -549,6 +560,27 @@ class F1ArcadeView(arcade.View):
                 "wind_speed": 12.0, "wind_direction": 180.0, "rain_state": "DRY",
             },
         }
+
+    def _draw_background_cars(self, frame_idx: int) -> None:
+        """Render every non-featured driver as a small dimmed dot.
+
+        Skips the main and rival codes (they draw later with the full
+        radius + label + outline, so they always sit on top of the
+        field). Small cars are unlabeled — 20 labels at once would turn
+        the track into a tag cloud. Alpha is applied so the featured
+        dots still dominate visually."""
+        featured = {self._driver_main}
+        if self._driver_rival:
+            featured.add(self._driver_rival)
+        for code, frames in self._session.frames_by_driver.items():
+            if code in featured or not frames or frame_idx >= len(frames):
+                continue
+            f = frames[frame_idx]
+            if not f.active:
+                continue
+            sx, sy = self._track.project(f.x, f.y)
+            r, g, b = self._color_for(code)
+            arcade.draw_circle_filled(sx, sy, CAR_BG_RADIUS, (r, g, b, CAR_BG_ALPHA))
 
     def _draw_car(self, code: str, label: arcade.Text, above: bool) -> None:
         frames = self._session.frames_by_driver.get(code)
