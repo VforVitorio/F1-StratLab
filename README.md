@@ -56,14 +56,12 @@ F1_Strat_Manager/
 │   ├── telemetry/              # Secondary — FastAPI + Streamlit post-race analysis
 │   ├── agents/                 # Multi-agent orchestrator (N25-N31)
 │   ├── simulation/             # RaceReplayEngine + RaceStateManager (shared by CLI & arcade)
-│   ├── strategy/               # ML models (lap time, tire degradation)
-│   │   ├── models/
-│   │   ├── training/
-│   │   └── inference/
-│   ├── nlp/                    # Radio processing (sentiment, NER)
-│   ├── vision/                 # Computer vision
-│   └── shared/                 # Common utilities
-│       └── data_extraction/
+│   ├── strategy/               # Jupytext exports from early ML work (archived — superseded by src/agents/)
+│   ├── nlp/                    # Radio processing (RadioPipelineRunner, transcription, sentiment, intent, NER)
+│   ├── vision/                 # Archived YOLO experiments
+│   ├── rag/                    # Qdrant retriever + LangGraph regulation tool (N30)
+│   ├── f1_strat_manager/       # CLI infra package (data bootstrap + HF snapshot + GP slug resolver)
+│   └── shared/                 # Archived legacy data-extraction wrappers
 ├── notebooks/                  # Experimentation
 ├── data/                       # Datasets by year/race
 │   ├── raw/
