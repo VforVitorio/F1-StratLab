@@ -45,7 +45,6 @@ from PySide6.QtWidgets import (
 )
 
 from src.arcade.dashboard.theme import (
-    ACCENT,
     BG_COLOR,
     BORDER_COLOR,
     DANGER,

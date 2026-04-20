@@ -14,9 +14,9 @@ from __future__ import annotations
 import logging
 from typing import Final
 
-import arcade
 import numpy as np
 
+import arcade
 from src.arcade.config import (
     DRS_COLOR,
     DRS_WIDTH,

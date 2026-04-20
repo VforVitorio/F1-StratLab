@@ -11,9 +11,9 @@ from __future__ import annotations
 import argparse
 import logging
 
-import arcade
 from dotenv import load_dotenv
 
+import arcade
 from src.arcade.config import SCREEN_HEIGHT, SCREEN_WIDTH, WINDOW_TITLE
 
 # Load repo-root ``.env`` so OPENAI_API_KEY / F1_LLM_PROVIDER / HF_TOKEN are

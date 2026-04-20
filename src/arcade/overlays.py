@@ -14,17 +14,12 @@ import logging
 from typing import Any, Final
 
 import arcade
-
 from src.arcade.config import (
     ACCENT,
     BORDER_COLOR,
     COMPOUND_COLORS,
     COMPOUND_LETTERS,
     CONTENT_BG,
-    DANGER,
-    DRIVER_BOX_GAP,
-    DRIVER_BOX_HEIGHT,
-    DRIVER_BOX_WIDTH,
     DRIVER_HEADER_HEIGHT,
     DRIVER_ROW_GAP,
     FLAG_COLORS,
@@ -37,11 +32,9 @@ from src.arcade.config import (
     LEGEND_X,
     PROGRESS_BAR_BOTTOM,
     PROGRESS_BAR_HEIGHT,
-    SUCCESS,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
     TEXT_TERTIARY,
-    WARNING,
     WEATHER_LEFT,
     WEATHER_ROW_GAP,
     WEATHER_TOP_OFFSET,

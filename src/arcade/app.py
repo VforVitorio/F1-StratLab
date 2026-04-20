@@ -16,12 +16,11 @@ import subprocess
 import sys
 
 import arcade
-
 from src.arcade.config import (
     ACCENT,
+    BG_COLOR,
     CAR_BG_ALPHA,
     CAR_BG_RADIUS,
-    BG_COLOR,
     CAR_BORDER_COLOR,
     CAR_BORDER_WIDTH,
     CAR_LABEL_FONT_SIZE,

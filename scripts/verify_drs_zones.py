@@ -140,7 +140,7 @@ def audit_one(year: int, round_: int, min_length_m: float) -> dict:
         try:
             ci = session.get_circuit_info()
             corners_df = ci.corners
-        except Exception as exc:
+        except Exception:
             # Circuit info is only available on recent FastF1 versions /
             # for circuits FastF1 has the corner database for — graceful
             # degrade, the zone tags will read "—".

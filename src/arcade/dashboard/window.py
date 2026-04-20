@@ -37,8 +37,8 @@ from src.arcade.dashboard.agent_card import AgentCard
 from src.arcade.dashboard.agent_formatters import (
     format_pace,
     format_pit,
-    format_rag,
     format_radio,
+    format_rag,
     format_situation,
     format_tire,
 )
@@ -47,7 +47,6 @@ from src.arcade.dashboard.pace_chart import PaceChart
 from src.arcade.dashboard.reasoning_tabs import ReasoningTabs
 from src.arcade.dashboard.scenario_bars import ScenarioBars
 from src.arcade.dashboard.stream_client import TelemetryStreamClient
-from src.arcade.dashboard.tire_chart import TireChart
 from src.arcade.dashboard.theme import (
     DANGER,
     SUCCESS,
@@ -55,6 +54,7 @@ from src.arcade.dashboard.theme import (
     WARNING,
     hex_str,
 )
+from src.arcade.dashboard.tire_chart import TireChart
 
 logger = logging.getLogger(__name__)
 

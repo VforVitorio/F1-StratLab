@@ -15,17 +15,14 @@ from dataclasses import dataclass, field
 from typing import Callable
 
 import arcade
-
 from src.arcade.config import (
     ACCENT,
     BG_COLOR,
-    BORDER_COLOR,
     CONTENT_BG,
     DANGER,
     DRIVER_TO_TEAM_2025,
     FONT_BODY,
     FONT_TITLE,
-    get_gp_names,
     MENU_HINT_FONT,
     MENU_LABEL_FONT,
     MENU_ROW_HEIGHT,
@@ -37,6 +34,7 @@ from src.arcade.config import (
     TEXT_PRIMARY,
     TEXT_SECONDARY,
     TEXT_TERTIARY,
+    get_gp_names,
 )
 
 logger = logging.getLogger(__name__)

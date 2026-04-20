@@ -347,7 +347,8 @@ class SimConnector(threading.Thread):
         """
         try:
             from src.f1_strat_manager.data_cache import (
-                ensure_radio_corpus, get_data_root,
+                ensure_radio_corpus,
+                get_data_root,
             )
             from src.nlp.radio_runner import RadioPipelineRunner
         except Exception as exc:
@@ -553,7 +554,8 @@ def _dump_dataclass(obj: Any) -> dict[str, Any] | None:
     etc. turn into JSON-ready dicts without hand-written field mappings."""
     if obj is None:
         return None
-    from dataclasses import asdict as _asdict, is_dataclass
+    from dataclasses import asdict as _asdict
+    from dataclasses import is_dataclass
 
     if is_dataclass(obj):
         return _asdict(obj)
