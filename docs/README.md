@@ -8,7 +8,8 @@ Technical documentation for each `src/` module. Written for developers working o
 |---|---|---|
 | `src/agents/` | done (v0.9) | [Multi-Agent Architecture](architecture.md) |
 | `src/simulation/` | done (v0.9) | [Simulation Overview](simulation/overview.md) |
-| `src/telemetry/frontend/` | done | [Frontend (Streamlit)](frontend.md) |
+| `src/arcade/` | done (Phase 3.5) | [Arcade Dashboard](arcade/dashboard.md) |
+| `src/telemetry/frontend/` | done | [Streamlit Frontend](streamlit-frontend.md) |
 | `src/telemetry/backend/` | done | [Backend (FastAPI)](backend-api.md) |
 | `src/rag/` | done | -- |
 
@@ -16,10 +17,13 @@ Technical documentation for each `src/` module. Written for developers working o
 
 | Guide | Description |
 |---|---|
-| [Setup and Deployment](setup-and-deployment.md) | Docker, local dev, environment variables |
 | [Agents API Reference](agents-api-reference.md) | Entry points, output schemas, request/response models |
+| [Arcade Quick Start](arcade/quick-start.md) | One-command launch of the 3-window arcade MVP |
+| [Arcade Dashboard Architecture](arcade/dashboard.md) | PySide6 package layout, wire protocol, thread model |
+| [Arcade Strategy Pipeline](arcade/strategy-pipeline.md) | Why the arcade duplicates the N31 orchestrator body |
+| [Setup and Deployment](setup-and-deployment.md) | Docker, local dev, environment variables |
 | [Driver Colors](driver-colors.md) | Year-aware color palette system (2023--2025) |
-| [Frontend CSS Fixes](frontend-css-fixes.md) | Scroll fix, spinner removal, chart styling |
+| [Diagrams](diagrams/README.md) | Index of draw.io sources (architecture, data flow, sequences) |
 
 ## Conventions
 

@@ -236,33 +236,31 @@ def test_tire_request_defaults():
 # ---------------------------------------------------------------------------
 # Voice config constants
 # ---------------------------------------------------------------------------
+#
+# The voice stack was rolled back to Whisper + Edge-TTS after Nemotron /
+# Qwen3-TTS were found to pull ~5 GB of extra deps (NVIDIA NeMo, qwen_tts)
+# that did not fit the backend image. ``project_voice_stack_migration.md``
+# tracks the rationale. These tests pin the constants the FastAPI voice
+# endpoints currently read so future swaps do not silently break them.
 
 
 @_skip_no_backend
-def test_voice_config_nemotron():
-    """voice_config.py must expose Nemotron + Qwen3-TTS constants."""
+def test_voice_config_whisper_and_edge_tts():
+    """voice_config.py must expose Whisper STT + Edge-TTS defaults.
+
+    These constants are the public contract between the voice route layer
+    and the STT/TTS adapters; changing them without updating the adapters
+    is a silent regression.
+    """
     import sys
 
     sys.path.insert(0, str(ROOT / "src" / "telemetry"))
     from backend.core.voice_config import (
-        NEMOTRON_MODEL,
-        QWEN3_SAMPLE_RATE,
-        QWEN3_TTS_MODEL,
+        AUDIO_SAMPLE_RATE,
+        EDGE_TTS_DEFAULT_VOICE,
+        WHISPER_MODEL,
     )
 
-    assert "nemotron" in NEMOTRON_MODEL.lower()
-    assert "qwen" in QWEN3_TTS_MODEL.lower()
-    assert QWEN3_SAMPLE_RATE == 24000
-
-
-@_skip_no_backend
-def test_voice_config_no_whisper():
-    """Old Whisper/EdgeTTS constants must be gone."""
-    import sys
-
-    sys.path.insert(0, str(ROOT / "src" / "telemetry"))
-    import backend.core.voice_config as vc
-
-    assert not hasattr(vc, "WHISPER_MODEL"), "WHISPER_MODEL still present"
-    assert not hasattr(vc, "TTS_ENGINE"), "TTS_ENGINE still present"
-    assert not hasattr(vc, "TTS_VOICE"), "TTS_VOICE still present"
+    assert "whisper" in WHISPER_MODEL.lower()
+    assert "neural" in EDGE_TTS_DEFAULT_VOICE.lower()
+    assert AUDIO_SAMPLE_RATE == 16000

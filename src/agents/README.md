@@ -17,6 +17,18 @@ Each module is importable without a FastF1 session via its `*_from_state` RSM ad
 | `rag_agent.py` | N30 | FIA regulation retrieval (Qdrant + BGE-M3 + LangGraph ReAct) | `run_rag_agent(question)` · `run_rag_agent_from_state(lap_state)` |
 | `strategy_orchestrator.py` | N31 | MoE routing + MC simulation + LLM synthesis | `run_strategy_orchestrator(race_state, lap_state)` · `run_strategy_orchestrator_from_state(race_state, laps_df)` |
 
+### Arcade duplication
+
+`src/arcade/strategy_pipeline.py` carries a copy of the N31 orchestrator body that
+returns verbose per-stage outputs the arcade dashboard cards need (raw sub-agent
+payloads, MC scenario tables, guardrail overrides). The arcade runs this local pipeline
+instead of calling the FastAPI backend, which keeps the arcade installable as a
+standalone process.
+
+**If you change the orchestrator body in `strategy_orchestrator.py`, mirror the change
+in `src/arcade/strategy_pipeline.py`.** See [docs/strategy-pipeline-arcade.md](../../docs/strategy-pipeline-arcade.md)
+for the full rationale and the audit checklist.
+
 ---
 
 ## Output dataclasses
