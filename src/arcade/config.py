@@ -45,14 +45,14 @@ WEATHER_ICON_SIZE: Final[int] = 16
 # --- Driver info panel ----------------------------------------------------
 DRIVER_BOX_WIDTH: Final[int] = 300
 DRIVER_BOX_HEIGHT: Final[int] = 145
-DRIVER_BOX_GAP: Final[int] = 22
+DRIVER_BOX_GAP: Final[int] = 32
 DRIVER_HEADER_HEIGHT: Final[int] = 28
 DRIVER_ROW_GAP: Final[int] = 19
 
 # --- Leaderboard ----------------------------------------------------------
 LEADERBOARD_WIDTH: Final[int] = 240
 LEADERBOARD_RIGHT_MARGIN: Final[int] = 260
-LEADERBOARD_ROW_HEIGHT: Final[int] = 22
+LEADERBOARD_ROW_HEIGHT: Final[int] = 28
 LEADERBOARD_N_SLOTS: Final[int] = 22
 
 # --- Progress bar ---------------------------------------------------------
