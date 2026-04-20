@@ -200,6 +200,11 @@ class SimConnector(threading.Thread):
         self._request = request
         self._state = state
         self._stop_event = threading.Event()
+        # RadioPipelineRunner is materialised in _warmup_models after the
+        # corpus is ensured on disk; ``None`` until then (graceful
+        # degrade path — the agents run with empty radio_msgs if the
+        # corpus cannot be loaded).
+        self._radio_runner: Any = None
 
     def stop(self) -> None:
         self._stop_event.set()
@@ -251,6 +256,7 @@ class SimConnector(threading.Thread):
         )
         self._emit_start(lap_start, lap_end, engine.total_laps)
         self._warmup_models()
+        self._load_radio_corpus(laps_df)
 
         prev_lap_time = 0.0
         for lap_state in engine.replay():
@@ -322,6 +328,60 @@ class SimConnector(threading.Thread):
             with self._state._lock:
                 self._state.error = None
 
+    def _load_radio_corpus(self, laps_df: pd.DataFrame) -> None:
+        """Mount the OpenF1 radio + RCM corpus for this GP and wire the NLP
+        pipeline the CLI uses.
+
+        Mirrors ``scripts/run_simulation_cli.py`` L1600-1638: ensure the
+        per-GP audio tree is on disk (lazy download on first run),
+        build a ``RadioPipelineRunner`` that the per-lap loop queries
+        for ``(radios, rcms)`` dicts shaped as the radio agent expects.
+        Without this step the Radio card / alerts feed stay silent for
+        the whole race and N28/N30 never fire on radio triggers.
+
+        Graceful degrade: on any failure (corpus missing, Whisper
+        unavailable, transcript cache corrupt) we log a warning and
+        leave ``_radio_runner`` as ``None``; ``_build_race_state`` then
+        falls back to empty ``radio_msgs`` / ``rcm_events`` just like
+        before.
+        """
+        try:
+            from src.f1_strat_manager.data_cache import (
+                ensure_radio_corpus, get_data_root,
+            )
+            from src.nlp.radio_runner import RadioPipelineRunner
+        except Exception as exc:
+            logger.warning("Radio corpus deps unavailable (%s) — radio agent will see no events", exc)
+            return
+
+        with self._state._lock:
+            self._state.error = "Loading radio corpus…"
+        try:
+            ensure_radio_corpus(self._request.year, self._request.gp)
+            self._radio_runner = RadioPipelineRunner(
+                year=self._request.year,
+                gp_name=self._request.gp,
+                laps_df=laps_df,
+                data_root=get_data_root(),
+                whisper_model_name="turbo",
+                eager_transcribe=True,
+            )
+            logger.info(
+                "Radio corpus loaded: %d radios + %d rcms (%s)",
+                self._radio_runner.total_radios(),
+                self._radio_runner.total_rcms(),
+                self._radio_runner.slug,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Radio corpus load failed (%s: %s) — falling back to empty radios",
+                exc.__class__.__name__, exc,
+            )
+            self._radio_runner = None
+        finally:
+            with self._state._lock:
+                self._state.error = None
+
     def _emit_start(self, lap_start: int, lap_end: int, total_laps: int) -> None:
         with self._state._lock:
             self._state.start = StartEventDTO(
@@ -359,15 +419,27 @@ class SimConnector(threading.Thread):
         ``GP_NAMES``, but the race data folders under ``data/raw/<year>/``
         follow the FastF1 Location convention. ``GP_TO_LOCATION`` is the
         single translation table; falls back to the raw name when already
-        a Location so ``--gp Melbourne`` shortcuts keep working."""
+        a Location so ``--gp Melbourne`` shortcuts keep working. Also
+        tries the underscore variant because FastF1 emits ``Marina Bay``
+        / ``São Paulo`` with spaces but the raw folders use underscores."""
+        base = REPO_ROOT / "data" / "raw" / str(year)
         folder = GP_TO_LOCATION.get(gp, gp)
-        return REPO_ROOT / "data" / "raw" / str(year) / folder
+        candidate = base / folder
+        if candidate.exists():
+            return candidate
+        alt = base / folder.replace(" ", "_")
+        if alt.exists():
+            return alt
+        return candidate  # report the primary miss so error messaging stays clean
 
     def _build_race_state(self, lap_state: dict[str, Any], prev_lap_time: float):
         """Duplicate of ``_local_build_race_state`` from simulator.py — small
         enough to inline so the arcade stays independent of
         ``backend.utils.race_state_builder`` (which requires a sys.path
-        shim that only the FastAPI startup provides)."""
+        shim that only the FastAPI startup provides). Populates
+        ``radio_msgs`` / ``rcm_events`` from the ``RadioPipelineRunner``
+        corpus so the Radio agent sees the real OpenF1 team messages
+        (same as the CLI); empty lists when the corpus could not load."""
         from src.agents.strategy_orchestrator import RaceState
 
         driver_st = lap_state.get("driver", {})
@@ -385,9 +457,18 @@ class SimConnector(threading.Thread):
             abs(car_ahead.get("interval_to_driver_s") or 0.0) if car_ahead else 0.0
         )
 
+        lap_num = int(lap_state.get("lap_number", 1) or 1)
+        radio_msgs: list[dict] = []
+        rcm_events: list[dict] = []
+        if self._radio_runner is not None:
+            try:
+                radio_msgs, rcm_events = self._radio_runner.radios_for_lap(lap_num)
+            except Exception as exc:
+                logger.debug("radios_for_lap(%d) failed: %s", lap_num, exc)
+
         return RaceState(
             driver=driver_st.get("driver", "UNK"),
-            lap=lap_state.get("lap_number", 1),
+            lap=lap_num,
             total_laps=meta.get("total_laps", 57),
             position=driver_st.get("position", 10),
             compound=driver_st.get("compound", "MEDIUM"),
@@ -397,8 +478,8 @@ class SimConnector(threading.Thread):
             air_temp=float(weather.get("air_temp", 25.0)),
             track_temp=float(weather.get("track_temp", 35.0)),
             rainfall=bool(weather.get("rainfall", False)),
-            radio_msgs=[],
-            rcm_events=[],
+            radio_msgs=radio_msgs,
+            rcm_events=rcm_events,
             risk_tolerance=float(self._request.risk_tolerance),
         )
 
