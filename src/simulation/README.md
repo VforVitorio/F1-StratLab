@@ -1,5 +1,9 @@
 # src/simulation — Race replay engine
 
+> **Canonical narrative doc:** [`docs/simulation/overview.md`](../../docs/simulation/overview.md)
+> covers the `lap_state` contract and the data boundary with the agents.
+> This README is the package-level API pointer.
+
 Offline replay path for the multi-agent strategy system. Loads a race
 parquet from disk, walks it lap by lap, and emits a `lap_state` dict per
 lap that the agents and the orchestrator can consume directly. The same
