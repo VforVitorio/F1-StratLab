@@ -2,15 +2,15 @@
 
 **F1 Digital Twin Multi-Agent System - Final Degree Project**
 
-Timeline: 18 weeks (Feb 3 - Jun 20, 2025)
+Timeline: legacy closure May 2025; TFG active development Feb 2026 - Apr 2026; thesis delivery May - Jun 2026.
 
 ---
 
 ## Overview
 
-This project develops an intelligent multi-agent system for real-time Formula 1 telemetry analysis and race strategy optimization. The system integrates streaming telemetry via Kafka, five ML predictive models with circuit clustering, a coordinated multi-agent architecture using LangGraph, and RAG-based FIA regulation knowledge.
+This project develops an intelligent multi-agent system for Formula 1 telemetry analysis and race strategy optimization. The system integrates FastF1/OpenF1 historical telemetry, eight ML predictive models with circuit clustering, a coordinated multi-agent architecture using LangGraph, RAG-based FIA regulation knowledge, and three delivery surfaces (CLI wheel, Streamlit panel, Arcade replay). Kafka + WebSocket streaming was descoped during v0.12.
 
-**Key Technologies:** Apache Kafka, FastAPI, XGBoost, PyTorch, LangGraph, Qdrant, Streamlit, Arcade
+**Key Technologies:** FastAPI, FastMCP, XGBoost, LightGBM, PyTorch, LangGraph, Qdrant, BGE-M3, Streamlit, Arcade
 
 ---
 
@@ -25,14 +25,14 @@ Development follows an incremental approach. v0.1–v0.5 covered project setup a
 
 ---
 
-## v0.1–v0.5 - Integration & Setup
+## v0.1–v0.5 - Legacy Integration & Setup
 
-- [X] **Status:** Completed
-- [X] **Release Date:** Feb 5, 2025
+- [X] **Status:** Completed (legacy phase, superseded by TFG development from v0.6 onwards)
+- [X] **Release Dates:** v0.1 — May 9, 2025; v0.5 — May 23, 2025
 
-Integrated F1_Telemetry_Manager submodule and established modular project structure. Set up Docker Compose orchestration and configured base YAML configs for models, Kafka, and logging. Incremental releases covered submodule wiring, package setup, FastAPI verification, and base configuration.
+Legacy iteration of the project, delivered as the final assignment for the third-year courses (Speech & NLP, Advanced ML, Computer Vision, Intelligent Systems). Integrated F1_Telemetry_Manager submodule and established modular project structure. Set up Docker Compose orchestration and configured base YAML configs for models and logging. A `legacy_version` branch (merged 2025-09-07) preserves this phase; TFG development proper starts at v0.6.
 
-**Note:** WebSocket streaming deferred to v0.12.0 (Interfaces). REST API endpoints are sufficient for ML development phases.
+**Note:** Kafka + WebSocket streaming was descoped entirely during v0.12 (April 2026). REST endpoints over parquet replay are sufficient for both Streamlit and Arcade.
 
 **Deliverables:**
 
@@ -54,8 +54,8 @@ Integrated F1_Telemetry_Manager submodule and established modular project struct
 
 ## v0.6.0 - Data Engineering Pipeline
 
-- [X] **Status:** Completed
-- [X] **Release Date:** February 2025
+- [X] **Status:** Completed (first TFG release, formal start of active development)
+- [X] **Release Date:** February 12, 2026
 
 Closed out the full data engineering phase. From raw FastF1 telemetry to a clean, feature-rich dataset ready to feed into the ML models. Previous notebooks moved to `legacy/`; new structure built around TFG architecture.
 
@@ -86,7 +86,7 @@ Closed out the full data engineering phase. From raw FastF1 telemetry to a clean
 ## v0.7.0 - ML Foundation: Lap Time & Tire Degradation
 
 - [X] **Status:** Completed
-- [X] **Release Date:** March 2025
+- [X] **Release Date:** March 5, 2026
 - [X] **Critical Milestone**
 
 Developed and trained the first two ML models: lap time prediction (XGBoost) and tire degradation (TCN + MC Dropout). All experimentation in notebooks, models exported to `data/models/`.
@@ -120,10 +120,10 @@ Current data (FastF1/OpenF1) only provides relative compound names (SOFT/MEDIUM/
 
 ---
 
-## v0.8.0 - Additional Predictors
+## v0.8.0 - Additional Predictors (merged into v0.8.1)
 
-- [X] **Status:** Completed
-- [X] **Release Date:** April 2025
+- [X] **Status:** Completed (never tagged as a standalone release; notebooks N11-N14 shipped together with N15-N16 under the v0.8.1 tag on 2026-03-13)
+- [X] **Reference:** content is the N11-N14 subset described below and the v0.8.1 section that follows
 
 Expand ML capabilities with additional prediction models for overtake probability and safety car deployment. Sector time predictor descoped (no meaningful contribution over N06 delta model for the Strategy Agent).
 
@@ -170,7 +170,7 @@ Expand ML capabilities with additional prediction models for overtake probabilit
 ## v0.8.1 - Extended ML Models
 
 - [X] **Status:** Completed
-- [X] **Release Date:** March 2026
+- [X] **Release Date:** March 13, 2026
 
 Additional predictive models extending the ML foundation: pit stop duration quantile regression and undercut success classification. Causal TCN alternative archived as negative result.
 
@@ -213,7 +213,7 @@ Additional predictive models extending the ML foundation: pit stop duration quan
 ## v0.8.2 - NLP Radio Processing Pipeline
 
 - [X] **Status:** Completed
-- [X] **Release Date:** March 2026
+- [X] **Release Date:** March 22, 2026
 
 NLP pipeline for the Radio Agent: converts raw team radio audio into structured signals (sentiment, intent, F1 entities) consumed by the Strategy Agent. Legacy notebooks `legacy/notebooks/NLP_radio_processing/N00-N06` migrated and updated to `notebooks/nlp/N17-N23`, plus a new N24 notebook for Race Control Messages.
 
@@ -287,7 +287,7 @@ N24 Race Control Messages → structured SC/VSC/flags/penalties
 ## v0.9.0 - src/ Extraction & CLI Distribution
 
 - [X] **Status:** Completed
-- [X] **Release Date:** April 2026
+- [X] **Release Date:** March 17, 2026
 
 Extracted N25-N31 agent entry points to importable `src/agents/` modules. Built headless CLI simulation (`f1-sim`) with Rich Live rendering. Integrated OpenF1 team radio corpus with Whisper transcription pipeline. Published dataset and models to HuggingFace Hub.
 
@@ -336,7 +336,7 @@ Extracted N25-N31 agent entry points to importable `src/agents/` modules. Built 
 ## v0.10.0 - Multi-Agent System
 
 - [X] **Status:** Completed
-- [X] **Release Date:** March 2026
+- [X] **Release Date:** March 22, 2026
 
 LangGraph multi-agent architecture replacing the legacy Experta rule engine. Seven specialised sub-agents (N25–N30) coordinate under a Supervisor Orchestrator (N31). Each agent wraps one or more ML models as `@tool`-decorated LangChain tools and returns a typed dataclass output including a `reasoning` field forwarded to N31.
 
@@ -363,7 +363,7 @@ N31 architecture has three layers: (1) dynamic MoE-style routing — only activa
 ## v0.11.0 - RAG System
 
 - [X] **Status:** Completed
-- [X] **Release Date:** March 2026
+- [X] **Release Date:** March 30, 2026
 
 Retrieval-augmented generation over FIA Sporting Regulations (2023–2025). Provides normative support for strategic decision-making. Implemented as N30 (notebook) + `src/rag/retriever.py` (importable module for N31).
 
@@ -389,10 +389,26 @@ Retrieval-augmented generation over FIA Sporting Regulations (2023–2025). Prov
 
 ---
 
+## v0.1.1 - R1 CLI Wheel Release
+
+- [X] **Status:** Completed
+- [X] **Release Date:** April 9, 2026
+
+Intermediate tag that formalises the R1 distribution artifact built during v0.9. Ships the CLI wheel `f1_strat_manager-0.1.1-py3-none-any.whl` on GitHub Releases alongside the `uv tool install git+<repo>` install path. Scope strictly bundling/distribution; no functional or model changes relative to v0.11.0.
+
+**Deliverables:**
+
+- [X] `pyproject.toml` version bump to 0.1.1
+- [X] Wheel built via `uv build` and attached to the v0.1.1 GitHub Release
+- [X] `f1-strat` and `f1-sim` entry points verified post-install
+- [X] README install section documents both `uv tool install git+` and offline wheel flows
+
+---
+
 ## v0.12.0 - Interfaces & Distribution
 
-- [ ] **Status:** In Progress
-- [ ] **Target:** May 2026
+- [X] **Status:** Completed
+- [X] **Release Date:** April 15, 2026
 
 Wire the multi-agent system into the FastAPI backend, expose strategy tools via FastMCP, build Streamlit dashboard pages, and integrate Arcade for race replay visualization. Three independent releases ship from this work (R1 CLI wheel, R2 Arcade, R3 Streamlit + Backend).
 
@@ -507,84 +523,73 @@ At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). Thi
 
 ---
 
-## v0.13.0 - Testing & Validation
+## v0.13.0 - Testing & Validation (descoped as a standalone tag)
 
-- [ ] **Status:** Not Started
-- [ ] **Target:** June 2026
+- [X] **Status:** Descoped — testing and validation activities were folded into v1.0.0 (2026-04-20). No separate v0.13.0 tag exists.
+- [X] **Reason:** the deliverables originally planned here were completed together with the final release, as the testing work sat on top of the v0.12.0 interfaces and could not be separated in time without delaying the thesis.
 
-End-to-end system validation across multiple race scenarios and circuit clusters. Performance testing and critical bug resolution.
+**Test scope actually executed (absorbed into v1.0.0):**
 
-**Test Scenarios (one per circuit cluster):**
+- [X] End-to-end CLI simulation with no-LLM and LLM modes on representative 2025 races
+- [X] Smoke tests for agent imports and Arcade dashboard subprocess (`tests/test_agents.py`, `tests/arcade/*`)
+- [X] FastAPI + FastMCP integration path validated via `TestClient` and manual chat interactions
+- [X] Historical replay of the Bahrain 2025 GP used as the primary qualitative demo
 
-- [ ] Monaco 2025 — street circuit cluster (high downforce, overtake-starved)
-- [ ] Monza 2025 — power circuit cluster (low downforce, DRS-heavy)
-- [ ] Spielberg 2025 — standard circuit cluster (baseline validation)
-- [ ] Singapore 2025 — street/night circuit (humidity, safety car frequency)
+**Work originally planned here that remains open for future iterations (outside the TFG scope):**
 
-**Validation Activities:**
-
-- [ ] E2E CLI simulation on each test scenario (no-llm + LLM mode)
-- [ ] ML metrics validation per circuit cluster (overtake AUC-PR, SC lift, tire MAE)
-- [ ] FastAPI endpoint integration tests (strategy router round-trip)
-- [ ] FastMCP tool call validation from `/chat/` endpoint
-- [ ] Load testing: API throughput >100 req/s, latency p95 <50ms
-- [ ] Memory profiling: system usage <4 GB peak
-
-**Success Metrics:**
-
-- [ ] All four circuit-cluster test scenarios pass without errors
-- [ ] Per-cluster ML metrics within documented tolerances
-- [ ] Strategy endpoints return valid outputs under concurrent requests
-- [ ] System stable under load
-- [ ] All critical bugs resolved before v1.0 tag
+- [ ] Systematic per-cluster validation (Monaco, Monza, Spielberg, Singapore 2025) with documented tolerances
+- [ ] Load and memory profiling targets (>100 req/s, p95 <50ms, <4 GB peak)
+- [ ] CI pipeline running the full test suite across agents + arcade + streamlit
 
 ---
 
 ## v1.0.0 - Final Release
 
-- [ ] **Status:** Not Started
-- [ ] **Target:** June 2026
+- [X] **Status:** Completed (software release; thesis delivery follows the UIE calendar)
+- [X] **Release Date:** April 20, 2026
 
-Complete project delivery with thesis documentation, defense materials, and three distribution artifacts (CLI wheel, Arcade deploy, Streamlit app).
+Code freeze of the TFG software. Consolidates the interfaces closed in v0.12.0 (Arcade MVP, Streamlit + FastAPI + FastMCP, CLI) and the multi-agent + RAG stack from v0.10-v0.11 into a single, tagged production release. Thesis document, defense materials and demonstration video are finalised separately and delivered in the May-June 2026 UIE submission window.
 
-**Deliverables:**
+**Software deliverables:** ✅
 
-- [ ] Complete thesis document with methodology, results, and conclusions
-- [ ] Defense presentation (20 slides)
+- [X] R1 — CLI wheel on GitHub Releases (`f1-strat`, `f1-sim`), tagged under v0.1.1 and bundled with v0.12.0 assets
+- [X] R2 — Arcade replay distributed via `uv tool install git+<repo>` → `f1-arcade` console script (OpenGL/Qt container path dropped)
+- [X] R3 — Streamlit + FastAPI backend operational (Docker Compose reference bundle; Streamlit Cloud path available)
+- [X] Seven coordinated LangGraph agents (N25-N31) with RAG grounding and Monte Carlo ranking
+- [X] End-to-end qualitative demo: Bahrain 2025 GP replay with 28 radio messages and 76 RCMs
+
+**Documentation deliverables (tracked outside this tag):**
+
+- [ ] Thesis document with methodology, results, and conclusions (submitted via UIE portal)
+- [ ] Defense presentation (~20 slides)
 - [ ] 5-minute demonstration video (CLI + Streamlit + Arcade)
 - [ ] Technical documentation: API docs, deployment guide
-- [ ] R1 CLI wheel on GitHub Releases (tagged)
-- [ ] R2 Arcade — `uv tool install` + `f1-arcade` console script (OpenGL/Qt container path dropped)
-- [ ] R3 Streamlit + Backend (Docker Compose — already shipping)
 
 **Success Criteria:**
 
-- [ ] Thesis submitted on time
+- [X] All three software release artifacts installable/deployable from scratch
+- [X] Code repository production-ready with comprehensive documentation inside `docs/`
+- [ ] Thesis submitted on time (pending UIE deadline)
 - [ ] Demonstration showcases: CLI inference, Streamlit dashboard, Arcade replay, voice mode
-- [ ] All three release artifacts installable/deployable from scratch
-- [ ] Code repository production-ready with comprehensive documentation
 
 ---
 
 ## Key Milestones
 
-| Release | Milestone                     | Criteria                                                                           | Status |
-| ------- | ----------------------------- | ---------------------------------------------------------------------------------- | ------ |
-| v0.5    | Code Integration Complete     | Docker Compose operational, API verified                                           | ✅     |
-| v0.6    | Data Engineering Complete     | 4 clusters, 45k laps, 2025 held-out, HuggingFace published                        | ✅     |
-| v0.7    | Base Models Complete          | Lap Time MAE 0.392s ✅ / Tire Deg TCN + MC Dropout ✅                             | ✅     |
-| v0.8    | Core ML Models Complete       | Overtake ✅ / SC ✅ (soft prior, lift 1.67×) / Sector descoped                    | ✅     |
-| v0.8.1  | Extended ML Models            | N12B archived (neg. result) / N15 MAE 0.487s ✅ / N16 AUC-ROC 0.7708 ✅          | ✅     |
-| v0.8.2  | NLP Radio Pipeline            | N17–N24: RoBERTa 87.5% / SetFit intent / BERT NER / pipeline P95 59.4ms          | ✅     |
-| v0.9    | src/ Extraction + CLI + Radio | 7 agents extracted, CLI sim, radio corpus, HF lazy download, guard-rails          | ✅     |
-| v0.10   | Multi-Agent Operational       | N25–N31 all complete, Bahrain 2025 end-to-end demo ✅                             | ✅     |
-| v0.11   | RAG Integrated                | 2,279 chunks indexed, BGE-M3, `src/rag/` module complete                          | ✅     |
-| R1      | CLI Wheel Release             | Tagged wheel on GitHub Releases, `uv tool install` works                           | ⬜     |
-| v0.12   | Interfaces + Distribution     | FastAPI endpoints, FastMCP tools, Streamlit pages, Arcade replay                   | ⬜     |
-| R2      | Arcade Release                | Container deploy, 2D circuit replay at >30 FPS                                    | ⬜     |
-| R3      | Streamlit + Backend Release   | Docker Compose / Streamlit Cloud, full web dashboard                               | ⬜     |
-| v0.13   | Testing Complete              | 4 circuit-cluster scenarios validated, critical bugs resolved                      | ⬜     |
-| v1.0    | Thesis Delivered              | Documentation complete, defense ready, all 3 releases shipped                      | ⬜     |
+| Release | Date         | Milestone                     | Criteria                                                                           | Status |
+| ------- | ------------ | ----------------------------- | ---------------------------------------------------------------------------------- | ------ |
+| v0.5    | 2025-05-23   | Legacy Integration Complete   | Legacy codebase frozen, `legacy_version` branch preserved                          | ✅     |
+| v0.6    | 2026-02-12   | Data Engineering Complete     | 4 clusters, 45k laps, 2025 held-out, HuggingFace published                         | ✅     |
+| v0.7    | 2026-03-05   | Base Models Complete          | Lap Time MAE 0.392s ✅ / Tire Deg TCN + MC Dropout ✅                               | ✅     |
+| v0.8.1  | 2026-03-13   | Extended ML Models            | Overtake ✅ / SC ✅ / N15 MAE 0.487s / N16 AUC-ROC 0.7708 / N12B archived           | ✅     |
+| v0.9    | 2026-03-17   | src/ Extraction + CLI + Radio | 7 agents extracted, CLI sim, radio corpus, HF lazy download, guard-rails           | ✅     |
+| v0.8.2  | 2026-03-22   | NLP Radio Pipeline            | N17–N24: RoBERTa 87.5% / SetFit intent / BERT NER / pipeline P95 59.4ms            | ✅     |
+| v0.10   | 2026-03-22   | Multi-Agent Operational       | N25–N31 all complete, Bahrain 2025 end-to-end demo ✅                              | ✅     |
+| v0.11   | 2026-03-30   | RAG Integrated                | 2,279 chunks indexed, BGE-M3, `src/rag/` module complete                           | ✅     |
+| v0.1.1  | 2026-04-09   | R1 CLI Wheel Release          | Tagged wheel on GitHub Releases, `uv tool install git+` works                      | ✅     |
+| v0.12   | 2026-04-15   | Interfaces + Distribution     | FastAPI endpoints, FastMCP tools, Streamlit pages, Arcade replay (3 windows)       | ✅     |
+| v0.13   | —            | Testing + Validation          | Descoped as standalone tag; testing folded into v1.0.0                             | ⤴️     |
+| v1.0    | 2026-04-20   | Final Release (Software)      | Arcade MVP + multi-agent system tagged; thesis delivery on UIE calendar            | ✅     |
 
 ---
 
@@ -627,5 +632,5 @@ Complete project delivery with thesis documentation, defense materials, and thre
 
 ---
 
-**Last Updated:** April 20, 2026
-**Version:** 1.9
+**Last Updated:** April 22, 2026
+**Version:** 1.10 (post-v1.0.0: roadmap corrected to reflect real Git tag chronology)
