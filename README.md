@@ -1,30 +1,28 @@
 <div align="center">
 
-# F1 Strategy Manager
+# F1 StratLab
 
 ### *Race strategy, decided by six agents.*
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/) [![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-red)](https://streamlit.io/) [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-orange)](https://pytorch.org/) [![FastF1](https://img.shields.io/badge/FastF1-3.1%2B-red)](https://github.com/theOehrly/Fast-F1) [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/VforVitorio/F1_Strat_Manager)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/) [![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-red)](https://streamlit.io/) [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-orange)](https://pytorch.org/) [![FastF1](https://img.shields.io/badge/FastF1-3.1%2B-red)](https://github.com/theOehrly/Fast-F1) [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/VforVitorio/F1-StratLab)
 
 F1 StratLab orchestrates seven ML models and a LangGraph multi-agent system to produce real-time Formula 1 strategy recommendations — from lap time prediction to tire degradation, radio NLP, and RAG over FIA regulations.
 
-[Landing page](https://vforvitorio.github.io/f1stratlab-web/) · [Full documentation (DeepWiki)](https://deepwiki.com/VforVitorio/F1_Strat_Manager) · [Paper](documents/docs_legacy_strat_manager/F1_Strategy_Manager_AI.pdf) · [Hugging Face dataset](https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset)
+[Landing page](https://vforvitorio.github.io/f1stratlab-web/) · [Full documentation (DeepWiki)](https://deepwiki.com/VforVitorio/F1-StratLab) · [Paper](documents/docs_legacy_strat_manager/F1_Strategy_Manager_AI.pdf) · [Hugging Face dataset](https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset)
 
 </div>
 
-<p align="center">
-  <img
-    src="documents/banner/f1_strat_manager_banner.jpeg"
-    alt="F1 Strategy Manager banner"
-    style="width:85%; max-width:900px; border-radius:20px;"
-  />
-</p>
+<div align="center">
+  <a href="https://vforvitorio.github.io/f1stratlab-web/">
+    <img src="documents/banner/f1_stratlab_landing.png" alt="F1 StratLab landing page" width="800"/>
+  </a>
+</div>
 
 ---
 
 ## What it is
 
-In Formula 1, strategic decisions must be made within seconds while juggling weather, tire wear, track position, and fuel. **F1 Strategy Manager** packages a multi-agent AI system (seven specialised agents coordinated by an orchestrator) plus a 2D race replay and a post-race analytics UI into a single repository. Data comes from FastF1 and OpenF1; models span XGBoost, TCN + MC Dropout, LightGBM, RoBERTa / SetFit / BERT-large, Whisper, and FIA RAG over Qdrant.
+In Formula 1, strategic decisions must be made within seconds while juggling weather, tire wear, track position, and fuel. **F1 StratLab** packages a multi-agent AI system (seven specialised agents coordinated by an orchestrator) plus a 2D race replay and a post-race analytics UI into a single repository. Data comes from FastF1 and OpenF1; models span XGBoost, TCN + MC Dropout, LightGBM, RoBERTa / SetFit / BERT-large, Whisper, and FIA RAG over Qdrant.
 
 See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the one-page topology and [`docs/`](docs/) for the deep dives.
 
@@ -39,7 +37,7 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the one-page topology and [`docs/`]
 ## Install in 30 seconds
 
 ```bash
-uv tool install "git+https://github.com/VforVitorio/F1_Strat_Manager.git"
+uv tool install "git+https://github.com/VforVitorio/F1-StratLab.git"
 ```
 
 All three console scripts land on your PATH. For full install options (Docker Compose for the Streamlit stack, pip fallback, data bootstrap, LM Studio local provider) see [`INSTALL.md`](INSTALL.md).
@@ -66,7 +64,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for dev setup, code-style rules, and th
 
 This project is part of a broader F1 AI suite:
 
-- [F1 Strategy Manager (this repo)](https://github.com/VforVitorio/F1_Strat_Manager) — strategy engine
+- [F1 StratLab (this repo)](https://github.com/VforVitorio/F1-StratLab) — strategy engine
 - [F1 Telemetry Manager](https://github.com/VforVitorio/F1_Telemetry_Manager) — FastAPI backend + Streamlit post-race UI, vendored here under [`src/telemetry/`](src/telemetry/) as a git submodule
 - [F1 AI Team Detection](https://github.com/VforVitorio/F1_AI_team_detection) — YOLOv12 team identification from race footage
 - [F1 Strategy Dataset (Hugging Face)](https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset) — trained weights and processed race data
