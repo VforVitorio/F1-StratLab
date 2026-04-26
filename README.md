@@ -14,7 +14,7 @@ F1 StratLab orchestrates seven ML models and a LangGraph multi-agent system to p
 
 <div align="center">
   <a href="https://vforvitorio.github.io/f1stratlab-web/">
-    <img src="documents/banner/f1_stratlab_landing.png" alt="F1 StratLab landing page" width="800"/>
+    <img src="documents/banner/f1_stratlab_logo.png" alt="F1 StratLab" width="700"/>
   </a>
 </div>
 
