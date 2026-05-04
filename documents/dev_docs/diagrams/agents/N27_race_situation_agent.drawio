@@ -21,21 +21,16 @@
 
         <!-- TOOL 1 -->
         <mxCell id="tool1" value="&lt;b&gt;predict_overtake_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Model: LightGBM N12&lt;/i&gt;&lt;br/&gt;Platt calibrated&lt;br/&gt;→ overtake_prob per lap pair" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="60" y="345" width="210" height="80" as="geometry" />
+          <mxGeometry x="180" y="345" width="220" height="80" as="geometry" />
         </mxCell>
 
         <!-- TOOL 2 -->
         <mxCell id="tool2" value="&lt;b&gt;predict_sc_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Model: LightGBM N14&lt;/i&gt;&lt;br/&gt;Target: sc_within_3_laps&lt;br/&gt;→ sc_prob_3lap (soft prior)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="345" y="345" width="210" height="80" as="geometry" />
-        </mxCell>
-
-        <!-- TOOL 3 -->
-        <mxCell id="tool3" value="&lt;b&gt;get_race_context_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Race statistics&lt;/i&gt;&lt;br/&gt;Gap trend, position history&lt;br/&gt;→ compound comparison" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="630" y="345" width="210" height="80" as="geometry" />
+          <mxGeometry x="500" y="345" width="220" height="80" as="geometry" />
         </mxCell>
 
         <!-- OUTPUT -->
-        <mxCell id="output" value="&lt;b&gt;RaceSituationOutput&lt;/b&gt;&lt;br/&gt;overtake_prob · sc_prob_3lap · gap_trend · reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+        <mxCell id="output" value="&lt;b&gt;RaceSituationOutput&lt;/b&gt;&lt;br/&gt;overtake_prob · sc_prob_3lap · threat_level&lt;br/&gt;gap_ahead_s · pace_delta_s · reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
           <mxGeometry x="295" y="500" width="310" height="60" as="geometry" />
         </mxCell>
 
@@ -48,10 +43,8 @@
         <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="input" target="agent" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent" target="tool1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent" target="tool2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent" target="tool3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool1" target="output" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool2" target="output" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool3" target="output" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
       </root>
     </mxGraphModel>
   </diagram>

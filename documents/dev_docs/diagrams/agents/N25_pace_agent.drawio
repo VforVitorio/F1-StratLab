@@ -25,7 +25,7 @@
         </mxCell>
 
         <!-- TOOL 2 -->
-        <mxCell id="tool2" value="&lt;b&gt;get_session_median_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Race statistics&lt;/i&gt;&lt;br/&gt;Median lap time for driver/compound&lt;br/&gt;→ delta_vs_median" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="tool2" value="&lt;b&gt;get_session_median_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Race statistics&lt;/i&gt;&lt;br/&gt;Median lap time for GP/year/compound&lt;br/&gt;→ delta_vs_median" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="560" y="345" width="240" height="80" as="geometry" />
         </mxCell>
 
@@ -35,7 +35,7 @@
         </mxCell>
 
         <!-- NOTE -->
-        <mxCell id="note" value="→ N31 Strategy Orchestrator · N28 Pit Agent (dependency)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="note" value="→ N31 Strategy Orchestrator (consumed via prompt and Monte Carlo dispersion)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="230" y="578" width="440" height="20" as="geometry" />
         </mxCell>
 
