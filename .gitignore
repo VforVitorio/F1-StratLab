@@ -124,3 +124,13 @@ uv.lock
 
 # Notebook Python dumps (read-only knowledge base for Claude)
 .nb_py/
+
+# ===========================
+# code-review-graph
+# ===========================
+# Persistent knowledge graph DB and generated artifacts (visualize/wiki)
+graph.db
+graph.db-shm
+graph.db-wal
+graph_visualization.html
+graph_wiki/

@@ -1,0 +1,57 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="strategy_recommendation" name="StrategyRecommendation schema">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="StrategyRecommendation — orchestrator output schema (14 fields)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="20" width="970" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ROOT -->
+        <mxCell id="root" value="&lt;b&gt;StrategyRecommendation&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Pydantic BaseModel · structured output&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="445" y="80" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- BLOCK 1 — Primary decision -->
+        <mxCell id="b1" value="&lt;b&gt;Primary decision&lt;/b&gt;&lt;br/&gt;&lt;i&gt;3 fields · LLM&lt;/i&gt;&lt;br/&gt;&lt;br/&gt;action ∈ {STAY_OUT, PIT_NOW,&lt;br/&gt;UNDERCUT, OVERCUT, ALERT}&lt;br/&gt;reasoning : str&lt;br/&gt;confidence : [0, 1]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="200" width="220" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- BLOCK 2 — Pit execution -->
+        <mxCell id="b2" value="&lt;b&gt;Pit execution&lt;/b&gt;&lt;br/&gt;&lt;i&gt;3 fields · LLM (N28 fallback)&lt;/i&gt;&lt;br/&gt;&lt;br/&gt;pit_lap_target : int | None&lt;br/&gt;compound_next ∈ {SOFT,&lt;br/&gt;MEDIUM, HARD} | None&lt;br/&gt;undercut_target : str | None" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="290" y="200" width="220" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- BLOCK 3 — Driver-side instructions -->
+        <mxCell id="b3" value="&lt;b&gt;Driver-side instructions&lt;/b&gt;&lt;br/&gt;&lt;i&gt;3 fields · LLM&lt;/i&gt;&lt;br/&gt;&lt;br/&gt;pace_mode ∈ {PUSH, NEUTRAL,&lt;br/&gt;MANAGE, LIFT_AND_COAST}&lt;br/&gt;target_lap_time_s : float | None&lt;br/&gt;risk_posture ∈ {AGGRESSIVE,&lt;br/&gt;BALANCED, DEFENSIVE}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="540" y="200" width="220" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- BLOCK 4 — Multi-lap planning -->
+        <mxCell id="b4" value="&lt;b&gt;Multi-lap planning&lt;/b&gt;&lt;br/&gt;&lt;i&gt;3 fields · LLM&lt;/i&gt;&lt;br/&gt;&lt;br/&gt;contingencies : list[Contingency]&lt;br/&gt;(max 4 if-then branches)&lt;br/&gt;key_risks : list[str] (max 5)&lt;br/&gt;expected_stint_end : int | None" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="790" y="200" width="240" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- BLOCK 5 — Post-hoc grounding (centered below the four LLM blocks) -->
+        <mxCell id="b5" value="&lt;b&gt;Post-hoc grounding&lt;/b&gt;&lt;br/&gt;&lt;i&gt;2 fields · attached in code (not filled by the LLM)&lt;/i&gt;&lt;br/&gt;&lt;br/&gt;scenario_scores : dict — MC output per strategy (E, P10, P90, score)&lt;br/&gt;regulation_context : str — N30 RAG answer when activated" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="290" y="430" width="490" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- NOTE -->
+        <mxCell id="note" value="Schema validated by with_structured_output over _LLMSynthesis (extra=&quot;forbid&quot;) · _assemble_recommendation attaches scenario_scores and regulation_context after the LLM call, with N28 fallbacks for pit-execution fields the LLM left empty." style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="60" y="555" width="950" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- EDGES from root to four LLM blocks -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;" edge="1" source="root" target="b1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;" edge="1" source="root" target="b2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;" edge="1" source="root" target="b3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;" edge="1" source="root" target="b4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <!-- dashed edge from root to grounding block -->
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;dashed=1;strokeColor=#b85450;" edge="1" source="root" target="b5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
