@@ -10,12 +10,12 @@
         </mxCell>
 
         <!-- INPUT -->
-        <mxCell id="input" value="&lt;b&gt;Input — context_slice&lt;/b&gt;&lt;br/&gt;lap · driver · compound · tyre_life&lt;br/&gt;circuit_cluster · team · year" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+        <mxCell id="input" value="&lt;b&gt;Input — context_slice&lt;/b&gt;&lt;br/&gt;lap · driver · compound · tyre_life&lt;br/&gt;gp_name · team · year" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="295" y="70" width="310" height="60" as="geometry" />
         </mxCell>
 
         <!-- AGENT -->
-        <mxCell id="agent" value="&lt;b&gt;LangGraph ReAct Agent&lt;/b&gt;&lt;br/&gt;LM Studio local LLM&lt;br/&gt;Iterative tool calls until convergence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+        <mxCell id="agent" value="&lt;b&gt;LangGraph ReAct Agent&lt;/b&gt;&lt;br/&gt;Local/Cloud LLM&lt;br/&gt;Iterative tool calls until convergence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
           <mxGeometry x="295" y="195" width="310" height="70" as="geometry" />
         </mxCell>
 
