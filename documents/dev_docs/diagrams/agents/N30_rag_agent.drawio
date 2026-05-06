@@ -10,7 +10,7 @@
         </mxCell>
 
         <!-- ACTIVATION TRIGGER (side note) -->
-        <mxCell id="trigger" value="&lt;b&gt;Activated when:&lt;/b&gt;&lt;br/&gt;N27.sc_prob_3lap &gt; 0.3&lt;br/&gt;N29.alerts has PROBLEM/ORDER" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="trigger" value="&lt;b&gt;Activated when:&lt;/b&gt;&lt;br/&gt;N27.sc_prob_3lap &gt; 0.3&lt;br/&gt;N29.alerts has PENALTY/WARNING&lt;br/&gt;N28 active (compound change)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="30" y="85" width="210" height="70" as="geometry" />
         </mxCell>
 
@@ -20,7 +20,7 @@
         </mxCell>
 
         <!-- AGENT -->
-        <mxCell id="agent" value="&lt;b&gt;LangGraph ReAct Agent&lt;/b&gt;&lt;br/&gt;LM Studio local LLM&lt;br/&gt;Multi-query retrieval loop" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+        <mxCell id="agent" value="&lt;b&gt;LangGraph ReAct Agent&lt;/b&gt;&lt;br/&gt;Local/Cloud LLM&lt;br/&gt;Multi-query retrieval loop" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
           <mxGeometry x="330" y="210" width="310" height="70" as="geometry" />
         </mxCell>
 
