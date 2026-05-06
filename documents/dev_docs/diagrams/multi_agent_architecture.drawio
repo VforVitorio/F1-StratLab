@@ -116,7 +116,7 @@
           <mxGeometry x="410" y="464" width="162" height="176" as="geometry" />
         </mxCell>
 
-        <mxCell id="n28" value="&lt;b&gt;N28 — Pit Strategy&lt;/b&gt;&#xa;LangGraph ReAct&#xa;───────────&#xa;@tool predict_pit_dur&#xa;@tool predict_undercut&#xa;───────────&#xa;Output: PitStrategyOutput&#xa;p05 / p50 / p95&#xa;undercut_prob&#xa;reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+        <mxCell id="n28" value="&lt;b&gt;N28 — Pit Strategy&lt;/b&gt;&#xa;LangGraph ReAct&#xa;───────────&#xa;@tool predict_pit_dur&#xa;@tool score_undercut&#xa;@tool recommend_compound&#xa;───────────&#xa;Output: PitStrategyOutput&#xa;action · recommended_lap&#xa;compound_recommendation&#xa;p05/p50/p95 · undercut_prob&#xa;undercut_target · sc_reactive&#xa;reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="582" y="464" width="162" height="176" as="geometry" />
         </mxCell>
 
@@ -137,15 +137,7 @@
         <mxCell id="e_bert_n29"   style="edgeStyle=orthogonalEdgeStyle;strokeColor=#d6a070;" edge="1" source="m_bert"    target="n29" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="e_qdrant_n30" value="query_rag_tool" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#d6a070;fontColor=#a05000;fontSize=9;" edge="1" source="m_qdrant" target="n30" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
-        <!-- Cross-agent: N25 + N26 → N28 -->
-        <mxCell id="e_n25_n28" value="PaceOutput" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#FF6600;fontColor=#FF6600;fontSize=9;" edge="1" source="n25" target="n28" parent="1">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="140" y="800" />
-              <mxPoint x="663" y="800" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
+        <!-- Cross-agent: N26 → N28 (laps_to_cliff) and N27 → N28 (sc_prob) -->
         <mxCell id="e_n26_n28" value="TireOutput" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#FF6600;fontColor=#FF6600;fontSize=9;" edge="1" source="n26" target="n28" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
@@ -154,13 +146,21 @@
             </Array>
           </mxGeometry>
         </mxCell>
+        <mxCell id="e_n27_n28" value="sc_prob_3lap" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#FF6600;fontColor=#FF6600;fontSize=9;" edge="1" source="n27" target="n28" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="491" y="824" />
+              <mxPoint x="663" y="824" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
 
         <!-- ═══════════════════════════ N31 ORCHESTRATOR ═══════════════════════════ -->
-        <mxCell id="n31_lbl" value="N31 — Strategy Orchestrator (LangGraph multi-agent supervisor · LM Studio local LLM)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="n31_lbl" value="N31 — Strategy Orchestrator (LangGraph multi-agent supervisor · Local/Cloud LLM)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="60" y="658" width="990" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="n31_l1" value="&lt;b&gt;Layer 1 — Dynamic MoE Routing&lt;/b&gt;&lt;br/&gt;Always: N25 + N26 + N27&lt;br/&gt;N29.alerts PROBLEM/WARNING → N28&lt;br/&gt;N26.warning_level == PIT_SOON → N28&lt;br/&gt;N27.sc_prob_3lap &gt; 0.3 → N30&lt;br/&gt;N28 active → N30 (constraint check)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8d5f5;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+        <mxCell id="n31_l1" value="&lt;b&gt;Layer 1 — Dynamic MoE Routing&lt;/b&gt;&lt;br/&gt;Always: N25 + N26 + N27 + N29&lt;br/&gt;N29.alerts PROBLEM/WARNING → N28&lt;br/&gt;N26.warning_level == PIT_SOON → N28&lt;br/&gt;N27.sc_prob_3lap &gt; 0.3 → N30&lt;br/&gt;N29.alerts PENALTY/WARNING → N30&lt;br/&gt;N28 active → N30 (constraint check)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8d5f5;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
           <mxGeometry x="62" y="682" width="295" height="136" as="geometry" />
         </mxCell>
 
@@ -225,7 +225,7 @@
         <mxCell id="leg_n31l3" value="N31 Layer 3: LLM synthesis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8b0e0;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1">
           <mxGeometry x="1346" y="520" width="252" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="leg_dep_lbl" value="── ─ ─ → cross-agent dependency (N25/N26 → N28)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontColor=#FF6600;" vertex="1" parent="1">
+        <mxCell id="leg_dep_lbl" value="── ─ ─ → cross-agent dependency (N26/N27 → N28)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontColor=#FF6600;" vertex="1" parent="1">
           <mxGeometry x="1346" y="554" width="252" height="18" as="geometry" />
         </mxCell>
         <mxCell id="leg_hard_lbl" value="────────→ hard constraint (N30 → N31 L3)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontColor=#9673a6;" vertex="1" parent="1">
