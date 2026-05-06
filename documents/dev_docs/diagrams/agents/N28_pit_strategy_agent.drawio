@@ -13,15 +13,15 @@
         <mxCell id="in_ctx" value="&lt;b&gt;context_slice&lt;/b&gt;&lt;br/&gt;gap_ahead · position&lt;br/&gt;team · year · circuit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="60" y="70" width="200" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="in_pace" value="&lt;b&gt;PaceOutput (N25)&lt;/b&gt;&lt;br/&gt;lap_time_pred&lt;br/&gt;ci_p10 / ci_p90" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="in_pace" value="&lt;b&gt;sc_prob (N27)&lt;/b&gt;&lt;br/&gt;sc_prob_3lap&lt;br/&gt;(reactive-SC trigger)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="330" y="70" width="200" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="in_tire" value="&lt;b&gt;TireOutput (N26)&lt;/b&gt;&lt;br/&gt;tyre_life · cliff_lap&lt;br/&gt;warning_level" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="in_tire" value="&lt;b&gt;TireOutput (N26)&lt;/b&gt;&lt;br/&gt;laps_to_cliff_p50&lt;br/&gt;warning_level" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="600" y="70" width="200" height="70" as="geometry" />
         </mxCell>
 
         <!-- AGENT -->
-        <mxCell id="agent" value="&lt;b&gt;LangGraph ReAct Agent&lt;/b&gt;&lt;br/&gt;LM Studio local LLM&lt;br/&gt;Iterative tool calls until convergence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+        <mxCell id="agent" value="&lt;b&gt;LangGraph ReAct Agent&lt;/b&gt;&lt;br/&gt;Local/Cloud LLM&lt;br/&gt;Iterative tool calls until convergence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
           <mxGeometry x="295" y="210" width="310" height="70" as="geometry" />
         </mxCell>
 
@@ -36,18 +36,18 @@
         </mxCell>
 
         <!-- TOOL 3 -->
-        <mxCell id="tool3" value="&lt;b&gt;get_pit_context_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Circuit + team stats&lt;/i&gt;&lt;br/&gt;Circuit traversal lookup&lt;br/&gt;→ pit_delta, team rates" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="tool3" value="&lt;b&gt;recommend_compound_tool&lt;/b&gt;&lt;br/&gt;&lt;i&gt;N26 cliff signal + Pirelli stint windows&lt;/i&gt;&lt;br/&gt;FIA two-compound rule&lt;br/&gt;→ next compound, urgency, source" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="630" y="365" width="210" height="85" as="geometry" />
         </mxCell>
 
         <!-- OUTPUT -->
-        <mxCell id="output" value="&lt;b&gt;PitStrategyOutput&lt;/b&gt;&lt;br/&gt;p05/p50/p95_duration · undercut_prob · recommended_action · reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="280" y="525" width="340" height="60" as="geometry" />
+        <mxCell id="output" value="&lt;b&gt;PitStrategyOutput&lt;/b&gt;&lt;br/&gt;action · recommended_lap · compound_recommendation&lt;br/&gt;stop_duration_p05/p50/p95 · undercut_prob · undercut_target&lt;br/&gt;sc_reactive · reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="280" y="525" width="340" height="80" as="geometry" />
         </mxCell>
 
         <!-- NOTE -->
         <mxCell id="note" value="→ N31 Strategy Orchestrator (MC simulation samples p05/p50/p95 + undercut_prob)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="180" y="603" width="540" height="20" as="geometry" />
+          <mxGeometry x="180" y="623" width="540" height="20" as="geometry" />
         </mxCell>
 
         <!-- EDGES -->
