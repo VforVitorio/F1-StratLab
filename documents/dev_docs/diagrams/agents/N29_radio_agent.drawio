@@ -43,7 +43,7 @@
         </mxCell>
 
         <!-- NOTE -->
-        <mxCell id="note" value="→ N31 (routing: alerts.PROBLEM activates N28 · alerts.ORDER may activate N30)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="note" value="→ N31 (routing: alerts.PROBLEM/WARNING activates N28 · alerts.PENALTY/WARNING activates N30)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="200" y="800" width="560" height="20" as="geometry" />
         </mxCell>
 
