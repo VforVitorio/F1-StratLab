@@ -54,6 +54,31 @@ _logging.getLogger("setfit").setLevel(_logging.ERROR)
 _logging.getLogger("sentence_transformers").setLevel(_logging.ERROR)
 _logging.getLogger("torch").setLevel(_logging.ERROR)
 
+
+# Silence the cp1252 / UTF-8 collision in subprocess._readerthread on Windows.
+# Triggers: torch / triton / nvcc / ffmpeg fallbacks spawn a subprocess that
+# Python decodes as utf-8 in a background reader thread; on Windows their
+# stderr is cp1252 and the decoder crashes mid-byte. The traceback surfaces
+# on the terminal even though the parent loop continues unaffected. Filter
+# only this exact pattern (UnicodeDecodeError raised inside _readerthread)
+# so legitimate threading exceptions still propagate normally.
+import threading as _threading  # noqa: E402
+
+_orig_thread_excepthook = _threading.excepthook
+
+
+def _silence_subprocess_decode(args: _threading.ExceptHookArgs) -> None:
+    if args.exc_type is UnicodeDecodeError:
+        tb = args.exc_traceback
+        while tb is not None:
+            if tb.tb_frame.f_code.co_name == "_readerthread":
+                return
+            tb = tb.tb_next
+    _orig_thread_excepthook(args)
+
+
+_threading.excepthook = _silence_subprocess_decode
+
 import pandas as pd  # noqa: E402
 from rich.console import Console, Group  # noqa: E402
 from rich.live import Live  # noqa: E402
@@ -2377,10 +2402,19 @@ def _parse_args() -> argparse.Namespace:
 def main() -> None:
     """Console-script entry point (see ``[project.scripts]`` in pyproject.toml).
 
-    Parses argv and hands off to :func:`run`. Exists so that ``pip install .``
-    can expose the headless simulator as the ``f1-sim`` command.
+    Parses argv and hands off to :func:`run`. Wraps the simulation in a
+    KeyboardInterrupt guard so Ctrl+C exits with a clean italic notice
+    and status code 130 instead of a stack trace. Exists so that
+    ``pip install .`` can expose the headless simulator as the
+    ``f1-sim`` command.
     """
-    run(_parse_args())
+    try:
+        run(_parse_args())
+    except KeyboardInterrupt:
+        console.print()
+        console.print("  [italic dim]Interrupted.[/italic dim]")
+        console.print()
+        sys.exit(130)
 
 
 if __name__ == "__main__":
