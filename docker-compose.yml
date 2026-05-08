@@ -7,10 +7,19 @@ services:
     container_name: f1_telemetry_backend
     ports:
       - "8000:8000"
+    env_file:
+      - ./.env
     environment:
       - PYTHONUNBUFFERED=1
+      - F1_STRAT_DATA_ROOT=/app/data
+      - LM_STUDIO_HOST=host.docker.internal
     volumes:
-      - ./src/telemetry:/app
+      - ./src/telemetry/backend:/app/backend
+      - ./src:/app/src:ro
+      - ./data:/app/data:ro
+      - ./data/rag:/app/data/rag:rw
+      - backend_cache:/root/.cache
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
     networks:
       - f1_network
     restart: unless-stopped
@@ -27,7 +36,9 @@ services:
       - PYTHONUNBUFFERED=1
       - BACKEND_URL=http://backend:8000
     volumes:
-      - ./src/telemetry:/app
+      - ./src/telemetry/frontend:/app/frontend
+      - frontend_cache:/root/.cache
+    command: streamlit run frontend/app/main.py --server.port 8501 --server.address 0.0.0.0
     depends_on:
       - backend
     networks:
@@ -37,3 +48,7 @@ services:
 networks:
   f1_network:
     driver: bridge
+
+volumes:
+  backend_cache:
+  frontend_cache:
