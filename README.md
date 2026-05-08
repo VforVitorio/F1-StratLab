@@ -28,11 +28,11 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the one-page topology and [`docs/`]
 
 ## Three surfaces, one codebase
 
-| Surface | Command | When to use |
-|---|---|---|
-| **CLI** | `f1-sim VER Melbourne "Red Bull Racing" --year 2025` | Headless Rich-based live inference panel for a single race. |
+| Surface                            | Command                                                                                                     | When to use                                                                                          |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **CLI**                      | `f1-sim VER Melbourne "Red Bull Racing" --year 2025`                                                      | Headless Rich-based live inference panel for a single race.                                          |
 | **Arcade** (primary live UI) | `f1-arcade --viewer --year 2025 --round 3 --driver VER --team "Red Bull Racing" --driver2 LEC --strategy` | Three-window 2D race replay + PySide6 strategy dashboard + live telemetry grid. No backend required. |
-| **Streamlit** (post-race) | `docker compose up` *or* `f1-streamlit` | Analytics dashboard, chat Q&A, model lab, voice mode. Backed by FastAPI. |
+| **Streamlit** (post-race)    | `docker compose up` *or* `f1-streamlit`                                                               | Analytics dashboard, chat Q&A, model lab, voice mode. Backed by FastAPI.                             |
 
 ## How to run
 
