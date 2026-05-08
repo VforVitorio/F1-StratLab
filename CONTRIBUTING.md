@@ -62,6 +62,41 @@ Some code carries hard rules set by the TFG author:
 - **`notebooks/**`** and **`legacy/**`** — exploration / historical
   archive, different conventions.
 
+## Platform safeguards (Windows)
+
+A few load-bearing patches live near the top of the CLI to keep
+`f1-sim` / `f1-strat` usable on Windows hosts. **Do not remove them
+without testing on Windows first** — they paper over real issues that
+only surface there:
+
+- **`threading.excepthook` filter** in
+  [`scripts/run_simulation_cli.py`](scripts/run_simulation_cli.py).
+  Whisper / torch / triton fall back to subprocess JIT or ffmpeg
+  decoding paths whose stderr is **cp1252** on the Windows console
+  host. Python's `subprocess._readerthread` decodes that as UTF-8 and
+  crashes mid-byte (`UnicodeDecodeError: byte 0x82`). The parent loop
+  is unaffected, but the traceback floods the Rich live panel. The
+  hook swallows **only** `UnicodeDecodeError` whose stack passes
+  through `_readerthread`; every other thread exception goes to the
+  default hook unchanged.
+
+- **`KeyboardInterrupt` wrapper** on the `main()` of both
+  `run_simulation_cli.py` and `scripts/f1_cli.py`. Exits with status
+  130 and prints a single italic *Interrupted.* line so Ctrl+C in a
+  Rich Live render does not leak a stack trace through the panel
+  borders.
+
+- **`soundfile` decode path** in
+  [`src/nlp/radio_runner.py`](src/nlp/radio_runner.py)
+  `WhisperTranscriber.transcribe`. We avoid `librosa.load` because on
+  Windows it can fall back to the `audioread` backend, which spawns
+  ffmpeg with the same cp1252 / utf-8 reader-thread issue. Decoding
+  the OpenF1 MP3 corpus through libsndfile + `librosa.resample`
+  bypasses that fallback entirely.
+
+Linux / WSL hosts emit UTF-8 from the same subprocesses, so none of
+these safeguards trigger there. They are no-ops on POSIX.
+
 ## Pull request checklist
 
 - [ ] Branch off `dev` (`main` is release-only).
