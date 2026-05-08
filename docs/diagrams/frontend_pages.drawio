@@ -11,7 +11,7 @@
         </mxCell>
 
         <!-- main.py Router -->
-        <mxCell id="main" value="&lt;b&gt;app/main.py&lt;/b&gt;&lt;br&gt;Streamlit Router&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;sidebar navigation + auth check&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#a78bfa;strokeWidth=3;fontColor=#c4b5fd;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="main" value="&lt;b&gt;app/main.py&lt;/b&gt;&lt;br&gt;Streamlit Router&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;sidebar navigation&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#a78bfa;strokeWidth=3;fontColor=#c4b5fd;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="540" y="70" width="220" height="70" as="geometry"/>
         </mxCell>
 
@@ -62,9 +62,6 @@
         <mxCell id="c_layout" value="&lt;b&gt;layout/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;sidebar, header&lt;br&gt;page containers&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f3433;strokeColor=#14b8a6;fontColor=#99f6e4;fontSize=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
           <mxGeometry x="30" y="370" width="120" height="70" as="geometry"/>
         </mxCell>
-        <mxCell id="c_auth" value="&lt;b&gt;auth/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;login, signup&lt;br&gt;session state&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f3433;strokeColor=#14b8a6;fontColor=#99f6e4;fontSize=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
-          <mxGeometry x="170" y="370" width="120" height="70" as="geometry"/>
-        </mxCell>
         <mxCell id="c_chatbot" value="&lt;b&gt;chatbot/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;chat UI, message&lt;br&gt;bubbles, input&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f3433;strokeColor=#14b8a6;fontColor=#99f6e4;fontSize=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
           <mxGeometry x="310" y="370" width="120" height="70" as="geometry"/>
         </mxCell>
@@ -100,9 +97,6 @@
         </mxCell>
         <mxCell id="s_strat" value="strategy_service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#f59e0b;fontColor=#fef3c7;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="460" y="520" width="140" height="40" as="geometry"/>
-        </mxCell>
-        <mxCell id="s_auth" value="auth_service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#f59e0b;fontColor=#fef3c7;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="640" y="520" width="140" height="40" as="geometry"/>
         </mxCell>
         <mxCell id="s_voice" value="voice_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#f59e0b;fontColor=#fef3c7;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="820" y="520" width="140" height="40" as="geometry"/>

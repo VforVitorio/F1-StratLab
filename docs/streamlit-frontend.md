@@ -22,13 +22,12 @@ Entry point: `frontend/app/main.py`.
 ```
 frontend/
   app/
-    main.py            -- Streamlit entry point, page routing, auth check
+    main.py            -- Streamlit entry point, page routing
     setup_path.py      -- sys.path configuration
     styles.py          -- GLOBAL_CSS constant
     track_data.py      -- Track metadata
   pages/               -- One file per page
   components/
-    auth/              -- Login form
     chatbot/           -- Chat UI components (history, input, message, sidebar,
                           tool_result_renderer, chart_builders)
     common/            -- Shared: driver_colors, chart_styles, loading, data_selectors
@@ -41,7 +40,6 @@ frontend/
     telemetry/         -- Individual telemetry graphs (speed, brake, DRS, etc.)
     voice/             -- Voice input UI
   services/
-    auth_service.py    -- Authentication HTTP client
     chat_service.py    -- Chat HTTP client
     strategy_service.py -- Strategy endpoints HTTP client
     telemetry_service.py -- Telemetry HTTP client
@@ -60,13 +58,9 @@ frontend/
   config.py            -- BACKEND_URL, API_BASE_URL from env vars
 ```
 
-## Authentication
-
-The app uses a simple session-state authentication gate. When `st.session_state['authenticated']` is False, `render_auth_form()` is shown. After login, the navbar and page router are displayed.
-
 ## Navigation
 
-Page routing uses `st.session_state['current_page']`. The navbar (`components/layout/navbar.py`) sets this value. Pages are rendered conditionally in `main.py`.
+The app launches directly into the Dashboard. Page routing uses `st.session_state['current_page']`. The navbar (`components/layout/navbar.py`) sets this value. Pages are rendered conditionally in `main.py`.
 
 ## Strategy Page
 
