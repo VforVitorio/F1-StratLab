@@ -80,7 +80,8 @@ from rich.rule import Rule  # noqa: E402
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def main() -> None:
+def _run_wizard() -> None:
+    """Inner wizard loop. Wrapped by :func:`main` for Ctrl+C handling."""
     console.print()
     console.print(make_banner())
 
@@ -127,6 +128,24 @@ def main() -> None:
     console.print()
     console.print(f"  [{F1_GRAY}]Goodbye. Chequered flag.[/{F1_GRAY}]")
     console.print()
+
+
+def main() -> None:
+    """Console-script entry point (see ``[project.scripts]`` in pyproject.toml).
+
+    Wraps :func:`_run_wizard` in a :class:`KeyboardInterrupt` guard so
+    Ctrl+C anywhere in the wizard (arrow pickers, ``Prompt.ask`` calls,
+    the simulation subprocess) prints a single-line ``Interrupted.`` in
+    italic dim and exits with status 130, the conventional SIGINT code,
+    instead of leaking a stack trace.
+    """
+    try:
+        _run_wizard()
+    except KeyboardInterrupt:
+        console.print()
+        console.print(f"  [italic {F1_GRAY}]Interrupted.[/italic {F1_GRAY}]")
+        console.print()
+        sys.exit(130)
 
 
 if __name__ == "__main__":

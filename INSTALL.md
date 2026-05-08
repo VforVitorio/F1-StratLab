@@ -28,15 +28,27 @@ prerequisites are on the machine.
 
 ```bash
 uv tool install "git+https://github.com/VforVitorio/F1_Strat_Manager.git"
-f1-sim VER Melbourne "Red Bull Racing" --year 2025
+f1-strat
 ```
 
-`uv tool install` drops a global `f1-sim` binary that imports the full
-multi-agent stack. `--no-llm` runs the ML-only path (no OpenAI spend).
-See `python -m scripts.run_simulation_cli --help` for every flag.
+`uv tool install` drops two global binaries: `f1-strat` (interactive
+wizard with ASCII banner + arrow-key pickers for race / driver / laps /
+provider / head-to-head rival) and `f1-sim` (the headless argparse
+form). The wizard auto-resolves the team from
+`laps_featured_2025.parquet`, shells out to `f1-sim` under the hood and
+turns Ctrl+C into a clean italic *Interrupted.* notice.
 
-Already installed from a source checkout? `uv sync && uv run f1-sim ...`
-works too.
+Prefer the scripted form for demos and CI:
+
+```bash
+f1-sim Suzuka VER "Red Bull Racing" --year 2025
+```
+
+`--no-llm` runs the ML-only path (no OpenAI spend). See
+`python -m scripts.run_simulation_cli --help` for every flag.
+
+Already installed from a source checkout? `uv sync && uv run f1-strat`
+(or `uv run f1-sim ...`) works too.
 
 ---
 

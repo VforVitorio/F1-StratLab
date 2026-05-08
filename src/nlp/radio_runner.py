@@ -130,13 +130,16 @@ class WhisperTranscriber:
     def transcribe(self, audio_path: Path) -> dict:
         """Transcribe one MP3 and return ``{text, duration_s, model}``.
 
-        Loads the audio at the Whisper-native 16 kHz mono format using
-        librosa so the file can be a stereo or 48 kHz MP3 (which is what
-        OpenF1 ships) without going through Whisper's ffmpeg path —
-        librosa's resampler is enough for the radio corpus and skips an
-        external binary dependency on machines that do not have ffmpeg
-        on PATH. Uses fp16 only when CUDA is available because Whisper
-        warns and falls back to fp32 on CPU otherwise.
+        Decodes the audio with ``soundfile`` (libsndfile) and resamples
+        to Whisper's native 16 kHz mono via ``librosa.resample``. We
+        avoid ``librosa.load`` because on Windows it can fall back to
+        the ``audioread`` backend which spawns ``ffmpeg`` with a piped
+        stderr that emits cp1252 bytes — Python's subprocess reader
+        thread then crashes trying to decode that as UTF-8. Going
+        through ``soundfile`` directly skips that codepath entirely and
+        is also faster on the OpenF1 MP3 corpus. ``fp16`` is only
+        enabled on CUDA because Whisper warns and falls back to fp32
+        on CPU otherwise.
 
         Returns a dict with the joined transcript text, the audio
         duration in seconds (useful for QA later), and the model name
@@ -150,9 +153,16 @@ class WhisperTranscriber:
             raise FileNotFoundError(audio_path)
         self.ensure_loaded()
         import librosa
+        import numpy as np
+        import soundfile as sf
         import torch
-        audio, _ = librosa.load(str(audio_path), sr=16000, mono=True)
-        duration = float(librosa.get_duration(y=audio, sr=16000))
+        audio, src_sr = sf.read(str(audio_path), dtype="float32", always_2d=False)
+        if audio.ndim > 1:
+            audio = audio.mean(axis=1)
+        duration = float(len(audio)) / float(src_sr) if src_sr else 0.0
+        if src_sr != 16000:
+            audio = librosa.resample(audio, orig_sr=src_sr, target_sr=16000)
+        audio = np.ascontiguousarray(audio, dtype=np.float32)
         result = self._model.transcribe(  # type: ignore[union-attr]
             audio,
             task="transcribe",

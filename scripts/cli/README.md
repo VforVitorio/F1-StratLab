@@ -25,7 +25,7 @@ python scripts/f1_cli.py
   `F1_GRAY`), shared Rich `console` singleton, and the ASCII welcome banner.
 - `pickers.py` — `_arrow_pick` primitive (Windows `msvcrt` + POSIX `termios`
   branches), all interactive prompts (`pick_mode`, `pick_race`, `pick_driver`,
-  `pick_rival_code`, `pick_laps`, `pick_provider`, `pick_radio_every`,
+  `pick_rival_code`, `pick_laps`, `pick_provider`,
   `ask_again`), plus `discover_races(repo_root, year)` and the
   `_load_driver_team_map(repo_root)` parquet lookup.
 - `runner.py` — `build_sim_cmd(...)` builds the argv for
