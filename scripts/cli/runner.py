@@ -32,7 +32,6 @@ from .pickers import (
     pick_laps,
     pick_provider,
     pick_race,
-    pick_radio_every,
     pick_rival_code,
 )
 from .theme import F1_AMBER, F1_GREEN, F1_RED, F1_WHITE, console
@@ -98,7 +97,6 @@ def run_single(races: list[str], repo_root: Path, script_dir: Path) -> None:
     drv, team = pick_driver("Driver", repo_root)
     laps = pick_laps()
     provider = pick_provider()
-    radio_every = pick_radio_every()
 
     console.print()
     console.print(Rule(style=F1_RED))
@@ -115,7 +113,6 @@ def run_single(races: list[str], repo_root: Path, script_dir: Path) -> None:
         laps,
         provider,
         script_dir=script_dir,
-        radio_every=radio_every,
     )
     run_subprocess(cmd)
 
@@ -133,7 +130,6 @@ def run_h2h(races: list[str], repo_root: Path, script_dir: Path) -> None:
     drv2 = pick_rival_code(repo_root)
     laps = pick_laps()
     provider = pick_provider()
-    radio_every = pick_radio_every()
 
     console.print()
     console.print(Rule(style=F1_RED))
@@ -161,7 +157,6 @@ def run_h2h(races: list[str], repo_root: Path, script_dir: Path) -> None:
         provider,
         script_dir=script_dir,
         rival=drv2,
-        radio_every=radio_every,
     )
     rc = run_subprocess(cmd)
 

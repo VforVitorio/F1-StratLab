@@ -351,22 +351,6 @@ def pick_provider() -> str:
     return ["no-llm", "openai", "lmstudio"][sel]
 
 
-def pick_radio_every() -> int:
-    """Ask how often to generate simulated radio events (0 = disabled)."""
-    console.print()
-    sel = _arrow_pick(
-        "Simulated radio / RCM events (activates NLP agents):",
-        [
-            "Off          No simulated radio",
-            "Every 3 laps  Frequent — tests radio agent each stint",
-            "Every 5 laps  Balanced  [recommended]",
-            "Every 10 laps Occasional",
-        ],
-        default=0,
-    )
-    return [0, 3, 5, 10][sel]
-
-
 def ask_again() -> bool:
     """Ask the user if they want to run another simulation."""
     console.print()

@@ -30,18 +30,20 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the one-page topology and [`docs/`]
 
 | Surface                            | Command                                                                                                     | When to use                                                                                          |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **CLI**                      | `f1-sim VER Melbourne "Red Bull Racing" --year 2025`                                                      | Headless Rich-based live inference panel for a single race.                                          |
+| **CLI**                      | `f1-strat` (interactive wizard) · `f1-sim VER Melbourne "Red Bull Racing" --year 2025` (headless)                                                      | Headless Rich-based live inference panel for a single race. `f1-strat` opens an arrow-key menu (GP, driver, provider, head-to-head); `f1-sim` is the scripted form. |
 | **Arcade** (primary live UI) | `f1-arcade --viewer --year 2025 --round 3 --driver VER --team "Red Bull Racing" --driver2 LEC --strategy` | Three-window 2D race replay + PySide6 strategy dashboard + live telemetry grid. No backend required. |
 | **Streamlit** (post-race)    | `docker compose up` *or* `f1-streamlit`                                                               | Analytics dashboard, chat Q&A, model lab, voice mode. Backed by FastAPI.                             |
 
 ## How to run
 
-**CLI** — install the wheel, then run the simulator:
+**CLI** — install the wheel, then launch the interactive wizard (banner + arrow-key pickers):
 
 ```bash
 uv tool install "git+https://github.com/VforVitorio/F1-StratLab.git"
-f1-sim
+f1-strat
 ```
+
+For a scripted, no-menu run use `f1-sim <gp_name> <driver> <team> --year <yyyy>` instead.
 
 **Arcade** — same install drops `f1-arcade` on PATH:
 
