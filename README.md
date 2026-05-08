@@ -34,15 +34,30 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the one-page topology and [`docs/`]
 | **Arcade** (primary live UI) | `f1-arcade --viewer --year 2025 --round 3 --driver VER --team "Red Bull Racing" --driver2 LEC --strategy` | Three-window 2D race replay + PySide6 strategy dashboard + live telemetry grid. No backend required. |
 | **Streamlit** (post-race) | `docker compose up` *or* `f1-streamlit` | Analytics dashboard, chat Q&A, model lab, voice mode. Backed by FastAPI. |
 
-## Install in 30 seconds
+## How to run
+
+**CLI** — install the wheel, then run the simulator:
 
 ```bash
 uv tool install "git+https://github.com/VforVitorio/F1-StratLab.git"
+f1-sim
 ```
 
-All three console scripts land on your PATH. For full install options (Docker Compose for the Streamlit stack, pip fallback, data bootstrap, LM Studio local provider) see [`INSTALL.md`](INSTALL.md).
+**Arcade** — same install drops `f1-arcade` on PATH:
 
-Requires Python 3.10 / 3.11 and an `OPENAI_API_KEY` (or `F1_LLM_PROVIDER=lmstudio` for a local server). Dataset (~15 GB of models + race parquets) downloads lazily from Hugging Face on first run.
+```bash
+uv tool install "git+https://github.com/VforVitorio/F1-StratLab.git"
+f1-arcade
+```
+
+**Streamlit** — clone and bring the stack up with Docker:
+
+```bash
+git clone https://github.com/VforVitorio/F1-StratLab.git && cd F1-StratLab
+docker compose up
+```
+
+Requires Python 3.10 / 3.11 and an `OPENAI_API_KEY` (or `F1_LLM_PROVIDER=lmstudio`). Full options (pip fallback, local Streamlit, data bootstrap) in [`INSTALL.md`](INSTALL.md).
 
 ## Project layout
 
