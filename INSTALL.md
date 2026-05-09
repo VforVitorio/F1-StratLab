@@ -1,4 +1,4 @@
-# Install Guide — F1 Strategy Manager
+# Install Guide — F1 StratLab
 
 Three install paths, one per surface, each a **single command** once the
 prerequisites are on the machine.
