@@ -71,7 +71,7 @@ def run_strategy_pipeline(
         radio_alerts=radio_out.alerts,
     )
 
-    pit_out, regulation_context = _run_conditional_agents(
+    pit_out, regulation_context, rag_dict = _run_conditional_agents(
         active=active,
         lap_state=lap_state,
         tire_out=tire_out,
@@ -111,6 +111,10 @@ def run_strategy_pipeline(
         "radio_out": radio_out,
         "pit_out": pit_out,
         "regulation_context": regulation_context,
+        # Structured RAG payload (question / answer / articles / chunks)
+        # for the dashboard's RAG card. ``regulation_context`` above keeps
+        # the legacy answer string for the orchestrator's LLM prompt.
+        "rag": rag_dict,
         "active": list(active),
     }
     return rec, agent_outputs
