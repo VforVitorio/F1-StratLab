@@ -118,7 +118,9 @@ class TireChart(pg.PlotWidget):
         band_color = QColor(*WARNING)
         band_color.setAlpha(40)
         self._cliff_band = pg.FillBetweenItem(
-            self._cliff_lo, self._cliff_hi, brush=band_color,
+            self._cliff_lo,
+            self._cliff_hi,
+            brush=band_color,
         )
         self.addItem(self._cliff_band)
         self.addItem(self._cliff_lo)
@@ -398,8 +400,7 @@ def _build_stints(history: list[dict[str, Any]]) -> list[_Stint]:
             x = float(row.get("lap", 0))
         except (TypeError, ValueError):
             continue
-        compound = (str(row.get("compound") or "").upper().strip()
-                    or last_compound or "MEDIUM")
+        compound = str(row.get("compound") or "").upper().strip() or last_compound or "MEDIUM"
         if current is None or compound != current.compound:
             current = _Stint(compound=compound, xs=[], ys=[])
             stints.append(current)

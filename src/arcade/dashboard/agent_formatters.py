@@ -456,7 +456,7 @@ def _format_article_refs(articles: list[Any] | None) -> str:
         low = s.lower()
         for prefix in ("article ", "art. ", "art "):
             if low.startswith(prefix):
-                s = s[len(prefix):].strip()
+                s = s[len(prefix) :].strip()
                 break
         if s:
             cleaned.append(s)
