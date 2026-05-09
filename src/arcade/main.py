@@ -41,7 +41,7 @@ def main() -> None:
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="f1-arcade",
-        description="F1 Strategy Manager - visual race replay.",
+        description="F1 StratLab - visual race replay.",
     )
     parser.add_argument(
         "--viewer", action="store_true", help="Skip the menu and boot straight into the replay."
