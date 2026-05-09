@@ -1,4 +1,4 @@
-# F1 Strategy Manager — Project Index
+# F1 StratLab — Project Index
 
 _Revolutionising strategic decision-making in Formula 1 through AI-powered predictive models, computer vision, NLP radio analysis, and a multi-agent expert system._
 
