@@ -1,0 +1,3 @@
+row,device,entry_point,mean_ms,p50_ms,p95_ms,n_runs,notes
+cpu/run_pipeline,cpu,run_pipeline,490.014450,483.998050,557.681975,16,"8 messages x N runs, sentiment + intent + NER"
+cpu/run_rcm_pipeline,cpu,run_rcm_pipeline,0.005950,0.005700,0.007425,16,"8 RCM rows x N runs, rule-based parser only"
