@@ -121,7 +121,7 @@ class SubAgentLatencyRunner:
         self.lap_state = self.rsm.get_lap_state(fixture["lap_number"])
         self.lap_state["lap"] = fixture["lap_number"]
         self.lap_state["question"] = (
-            "¿Cuál es la duración mínima de una parada bajo Safety Car?"
+            "What is the minimum pit stop duration under Safety Car?"
         )
 
         # Featured 2025 laps — required by Tire / RaceSituation / Pit / Radio
