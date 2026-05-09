@@ -1,7 +1,7 @@
 agent,mean_ms,p50_ms,p95_ms,device,n_runs,notes
-pace_agent,263.624790,265.964250,309.556225,cuda,10,no external calls
-tire_agent,,,,cuda,0,"TCN MC dropout, no external calls — runtime error: OpenAIError('The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable')"
-race_situation_agent,,,,cuda,0,"LightGBM overtake + SC, may invoke LLM if configured — runtime error: OpenAIError('The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable')"
-pit_strategy_agent,,,,cuda,0,"HistGBT pit duration + LightGBM undercut, may invoke LLM — runtime error: OpenAIError('The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable')"
-radio_agent,1.268890,1.205650,1.479235,cuda,10,"BERT sentiment + SetFit intent + BERT NER, LLM synthesis when reachable"
-rag_agent,,,,cuda,0,Qdrant retrieval + LLM answer synthesis — runtime error: OpenAIError('The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable')
+pace_agent,270.195870,265.259900,330.721090,cuda,10,no external calls
+tire_agent,2634.599320,2619.332450,3317.677555,cuda,10,"TCN MC dropout, no external calls"
+race_situation_agent,2590.500400,2375.009950,3336.503080,cuda,10,"LightGBM overtake + SC, may invoke LLM if configured"
+pit_strategy_agent,3346.940140,3374.114950,3725.700460,cuda,10,"HistGBT pit duration + LightGBM undercut, may invoke LLM"
+radio_agent,1455.771840,1447.952450,1600.054725,cuda,10,"BERT sentiment + SetFit intent + BERT NER, LLM synthesis when reachable"
+rag_agent,,,,cuda,0,"Qdrant retrieval + LLM answer synthesis — runtime error: RuntimeError('Storage folder C:\\Users\\victo\\Desktop\\Documents\\Cuarto Año\\TFG\\F1_Strat_Manager\\data\\rag\\qdrant_local is already accessed by another instance of Qdrant client. If you require concurrent access, use Qdrant server instead.')"
