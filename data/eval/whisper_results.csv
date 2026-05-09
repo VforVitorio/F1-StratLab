@@ -1,0 +1,2 @@
+bucket,n_messages,mean_ms,latency_p50_ms,latency_p95_ms,device,notes
+overall,10,642.267670,369.721100,1995.440650,cuda,"WER no calculado: corpus de ground truth no pareado, pendiente Track-A radio benchmark"
