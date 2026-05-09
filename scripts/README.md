@@ -1,6 +1,6 @@
 # scripts — Top-level CLI tools
 
-Headless command-line tools for the F1 Strategy Manager. Each script is
+Headless command-line tools for F1 StratLab. Each script is
 self-contained: it imports from `src/`, walks up to the repo root, and is
 runnable directly with `python scripts/<name>.py` from any working
 directory.
