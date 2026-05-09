@@ -1,33 +1,33 @@
-# Resultados del benchmark cuantitativo del RAG Agent (N30)
+# Quantitative benchmark results - RAG Agent (N30)
 
-Set de evaluación: 15 queries en español sobre el reglamento deportivo FIA 2023-2025, distribuidas en 5 categorías (drs, flags_penalties, pit_stops, safety_car, tyre_allocation). Cada query lleva ground truth manual verificada como substring literal del PDF correspondiente.
+Evaluation set: 15 Spanish queries on the FIA Sporting Regulations 2023-2025, distributed across 5 categories (drs, flags_penalties, pit_stops, safety_car, tyre_allocation). Each query carries manual ground truth verified as a literal substring of the corresponding PDF.
 
-**Métricas reportadas.** `Precision@k (estricta)` exige match de artículo (en el payload o en el texto del chunk) **y** match de keyword en el texto. `Content P@5` relaja la condición y exige solo match de keyword, aislando así la calidad del embedding del ruido del article-tagging del indexador. Reportar ambas columnas es la forma honesta de presentar el resultado: la métrica estricta refleja lo que el agente realmente cita, la de contenido refleja lo que el retriever realmente encuentra.
+**Reported metrics.** `Precision@k (strict)` requires both an article match (in the payload or in the chunk text) **and** a keyword match in the text. `Content P@5` relaxes the condition and only requires a keyword match, isolating the embedding quality from the noise introduced by the indexer's article tagging. Reporting both columns is the honest way to present the result: the strict metric reflects what the agent actually cites, the content metric reflects what the retriever actually finds.
 
-## Tabla resumen comparativa
+## Comparative summary table
 
-| Configuración | Precision@1 | Precision@3 | Precision@5 | Content P@5 | MRR | Latencia P50 (ms) | Latencia P95 (ms) |
+| Configuration | Precision@1 | Precision@3 | Precision@5 | Content P@5 | MRR | Latency P50 (ms) | Latency P95 (ms) |
 |---|---|---|---|---|---|---|---|
-| BGE-M3 chunk 512 (production) | 0.133 | 0.133 | 0.200 | 0.800 | 0.191 | 34.6 | 107.8 |
-| MiniLM-L6-v2 chunk 512 | 0.000 | 0.067 | 0.067 | 0.267 | 0.033 | 17.5 | 26.2 |
-| BGE-M3 chunk 256 | 0.067 | 0.067 | 0.067 | 0.800 | 0.093 | 45.3 | 51.6 |
+| BGE-M3 chunk 512 (production) | 0.200 | 0.200 | 0.200 | 0.800 | 0.235 | 57.8 | 243.7 |
+| MiniLM-L6-v2 chunk 512 | 0.200 | 0.200 | 0.200 | 0.800 | 0.232 | 23.4 | 48.2 |
+| BGE-M3 chunk 256 | 0.067 | 0.133 | 0.133 | 0.800 | 0.108 | 70.4 | 94.3 |
 
-## Discusión
+## Discussion
 
-**Precision@5 estricta vs Content P@5.** La métrica estricta exige match de artículo (en payload o en texto del chunk) y match de keyword. La métrica `content_p_at_5` ignora el campo `article` y exige solo presencia de keyword en el texto, aislando así la calidad pura del embedding. La diferencia entre las dos columnas cuantifica el coste de la regex `_ARTICLE_RE` de `scripts/build_rag_index.py`, que tagea cada chunk con la primera referencia `Article X.Y` que encuentra - referencia que en muchos chunks corresponde a una cita cruzada (por ejemplo `Article 30.1a)`) y no al artículo del que el chunk realmente forma parte. Esta degradación es una limitación conocida del pipeline de indexación; mitigarla requiere un post-proceso del payload (enriquecer con la heading más cercana del documento) que está fuera de alcance de este benchmark.
+**Strict Precision@5 vs Content P@5.** The strict metric requires an article match (in payload or in chunk text) and a keyword match. The `content_p_at_5` metric ignores the `article` field and only requires a keyword in the text, isolating the pure embedding quality. The gap between the two columns quantifies the cost of the `_ARTICLE_RE` regex in `scripts/build_rag_index.py`, which tags every chunk with the first `Article X.Y` reference it finds - a reference that in many chunks corresponds to a cross-citation (for example `Article 30.1a)`) and not to the article the chunk actually belongs to. This degradation is a known limitation of the indexing pipeline; mitigating it would require post-processing the payload (enriching it with the closest document heading), which is out of scope for this benchmark.
 
-**BGE-M3 vs MiniLM-L6-v2.** BGE-M3 es un modelo multilingüe de 1024d con MTEB ~67 entrenado con contraste masivo; MiniLM-L6-v2 es ~6x más pequeño (384d) y monolingüe en inglés. La diferencia de Precision@k entre filas 1 y 2 de la tabla cuantifica el coste en calidad de sustituir el modelo de producción por una alternativa ligera, y la diferencia de latencia cuantifica el ahorro CPU correspondiente.
+**BGE-M3 vs MiniLM-L6-v2.** BGE-M3 is a multilingual 1024d model with MTEB ~67 trained with massive contrastive learning; MiniLM-L6-v2 is ~6x smaller (384d) and English-only. The Precision@k delta between rows 1 and 2 of the table quantifies the quality cost of replacing the production model with a lightweight alternative, and the latency delta quantifies the corresponding CPU saving.
 
-**Chunk 512 vs chunk 256 con BGE-M3.** Chunks más finos dan mayor granularidad de recuperación pero aumentan la probabilidad de partir un artículo en dos fragmentos. La comparación filas 1 y 3 de la tabla mide ese trade-off de forma directa: si Precision@5 cae al pasar a chunk 256, el chunking fino está dejando contenido relevante fuera del top-k.
+**Chunk 512 vs chunk 256 with BGE-M3.** Finer chunks provide more retrieval granularity but raise the probability of splitting an article into two fragments. Comparing rows 1 and 3 of the table measures that trade-off directly: if Precision@5 drops when moving to chunk 256, the fine chunking is leaving relevant content outside the top-k.
 
-**Latencia P50 / P95.** El retriever se llama una vez por turno del orquestador. Una P95 por debajo de 100 ms hace que el RAG no sea el cuello de botella frente a la llamada al LLM (varios cientos de ms incluso con un modelo local), de modo que el coste de la fase de recuperación es absorbible dentro del SLA del agente.
+**Latency P50 / P95.** The retriever is called once per orchestrator turn. A P95 below 100 ms keeps the RAG out of the bottleneck path against the LLM call (several hundred ms even with a local model), so the retrieval-stage cost stays well within the agent's SLA.
 
-### Casos de fallo típicos
+### Typical failure cases
 
-- **Chunking demasiado fino**: artículos como `30.2`, que ocupan más de 500 caracteres en el PDF, se parten en dos chunks. El chunk con la cláusula numérica concreta (por ejemplo `thirteen (13) sets`) puede quedar fuera del top-k aunque el artículo sí esté representado por su header.
-- **Query ambigua**: queries que mencionan simultáneamente DRS y Safety Car (Q14, Q15) compiten contra los chunks de las secciones 55 (Safety Car) y 56 (Virtual Safety Car), que también mencionan ambos términos.
-- **Año equivocado**: el retriever no filtra por temporada, así que para una query 2023 puede devolver un chunk 2025 con artículo correcto pero contenido distinto. Las keywords literales suelen capturar este fallo cuando los valores numéricos cambian entre años (intermediates: 4 sets en 2023 vs 5 sets en 2025; DRS habilitado tras 2 vueltas en 2023 vs 1 vuelta en 2025) pero no en todos los casos.
+- **Chunking too fine**: articles such as `30.2`, which span more than 500 characters in the PDF, get split into two chunks. The chunk holding the concrete numeric clause (for example `thirteen (13) sets`) may fall outside the top-k even when the article header is represented.
+- **Ambiguous query**: queries that simultaneously mention DRS and Safety Car (Q14, Q15) compete with the chunks of sections 55 (Safety Car) and 56 (Virtual Safety Car), which also mention both terms.
+- **Wrong year**: the retriever does not filter by season, so a 2023 query may return a 2025 chunk with the correct article but different content. Literal keywords usually capture this failure when numeric values change across years (intermediates: 4 sets in 2023 vs 5 sets in 2025; DRS enabled after 2 laps in 2023 vs 1 lap in 2025), but not in every case.
 
-### Reproducibilidad
+### Reproducibility
 
-El cuaderno `notebooks/agents/N30B_rag_benchmark.ipynb` reconstruye el set y las dos colecciones nuevas de Qdrant de forma idempotente: Restart Kernel → Run All las salta si ya existen. El JSON con las queries vive en `data/rag_eval/queries_v1.json` y la verificación literal de keywords es responsabilidad del autor del set, no del cuaderno - cualquier ampliación futura debe pasar por el mismo filtro contra los PDFs originales.
+The notebook `notebooks/agents/N30B_rag_benchmark.ipynb` rebuilds the set and the two new Qdrant collections idempotently: Restart Kernel -> Run All skips them if they already exist. The query JSON lives at `data/rag_eval/queries_v1.json`, and the literal keyword verification is the responsibility of the set author, not of the notebook - any future extension must go through the same filter against the original PDFs.
