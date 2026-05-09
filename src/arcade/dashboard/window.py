@@ -41,6 +41,8 @@ from src.arcade.dashboard.agent_formatters import (
     format_rag,
     format_situation,
     format_tire,
+    radio_tooltip_html,
+    rag_tooltip_html,
 )
 from src.arcade.dashboard.orchestrator_card import OrchestratorCard
 from src.arcade.dashboard.pace_chart import PaceChart
@@ -245,6 +247,7 @@ class MainWindow(QMainWindow):
             tire_row = self._tire_history.setdefault(lap, {})
             tire_row.setdefault("tyre_life", row.get("tyre_life"))
             tire_row.setdefault("compound", row.get("compound"))
+            tire_row.setdefault("lap_time_s", row.get("lap_time_s"))
         self._trim_history()
 
     def _ingest_latest_history(self, latest: dict[str, Any]) -> None:
@@ -267,6 +270,8 @@ class MainWindow(QMainWindow):
             trow["tyre_life"] = latest.get("tyre_life")
         if latest.get("compound"):
             trow["compound"] = latest.get("compound")
+        if latest.get("lap_time_s") is not None:
+            trow["lap_time_s"] = latest.get("lap_time_s")
         self._trim_history()
 
     def _tire_history_list(self) -> list[dict[str, Any]]:
@@ -299,15 +304,26 @@ class MainWindow(QMainWindow):
                 card.render(*fmt(None))
             self._card_pit.render(*format_pit(None, active=False))
             self._card_rag.render(*format_rag(None, active=False))
+            # Clear any tooltip left over from a prior tick — Qt keeps the
+            # last rich-text content cached on the widget otherwise.
+            self._card_radio.setToolTip("")
+            self._card_rag.setToolTip("")
             return
 
         active = set(per.get("active") or [])
         self._card_pace.render(*format_pace(per.get("pace")))
         self._card_tire.render(*format_tire(per.get("tire")))
         self._card_situation.render(*format_situation(per.get("situation")))
-        self._card_radio.render(*format_radio(per.get("radio")))
+        radio_block = per.get("radio")
+        self._card_radio.render(*format_radio(radio_block))
+        self._card_radio.setToolTip(radio_tooltip_html(radio_block))
         self._card_pit.render(*format_pit(per.get("pit"), active="N28" in active))
-        self._card_rag.render(*format_rag(per.get("regulation_context"), active="N30" in active))
+        # ``rag`` is the structured payload; ``regulation_context`` stays as a
+        # legacy fallback for producers that have not yet been updated.
+        rag_block = per.get("rag") or per.get("regulation_context")
+        rag_active = "N30" in active
+        self._card_rag.render(*format_rag(rag_block, active=rag_active))
+        self._card_rag.setToolTip(rag_tooltip_html(rag_block) if rag_active else "")
 
     def _on_conn_status(self, status: str) -> None:
         self._header.set_connection(status)
