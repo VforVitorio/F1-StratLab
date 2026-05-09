@@ -1,4 +1,4 @@
-## Undercut (N16) · barrido de umbral · holdout 2025
+## Undercut (N16) · threshold sweep · 2025 holdout
 
 | threshold | precision | recall | f1 | accuracy | tp | fp | fn | tn |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
