@@ -1,0 +1,242 @@
+[
+  {
+    "id": "Q01",
+    "year": 2025,
+    "query": "How many sets of slick tyres can a driver use during a non-sprint race weekend in 2025?",
+    "ground_truth": {
+      "article": "30.2",
+      "section": "Quantity, selection, and specification of tyres during a Competition",
+      "expected_keywords": [
+        "thirteen (13) sets",
+        "dry-weather tyres",
+        "Competition"
+      ],
+      "rationale": "Article 30.2 of the 2025 Sporting Regulations explicitly limits each driver to thirteen (13) sets of dry-weather tyres at non-sprint events, plus five (5) sets of intermediates and two (2) sets of wets."
+    },
+    "category": "tyre_allocation"
+  },
+  {
+    "id": "Q02",
+    "year": 2023,
+    "query": "How many sets of intermediate and wet tyres are allocated to each driver during a non-sprint weekend in 2023?",
+    "ground_truth": {
+      "article": "30.2",
+      "section": "Quantity, selection and specification of tyres during a Competition",
+      "expected_keywords": [
+        "four (4) sets of intermediate",
+        "three (3) sets of wet",
+        "thirteen (13) sets"
+      ],
+      "rationale": "Article 30.2 of the 2023 Sporting Regulations sets four (4) sets of intermediate tyres and three (3) sets of wet-weather tyres per Competition without sprint, alongside thirteen (13) sets of dry-weather tyres."
+    },
+    "category": "tyre_allocation"
+  },
+  {
+    "id": "Q03",
+    "year": 2025,
+    "query": "Which compound is mandatory for Q3 according to the 2025 sporting regulations?",
+    "ground_truth": {
+      "article": "30.2",
+      "section": "Quantity, selection, and specification of tyres during a Competition",
+      "expected_keywords": [
+        "mandatory",
+        "Q3 tyre specification",
+        "softest"
+      ],
+      "rationale": "Article 30.2c)iii) defines the mandatory dry-weather Q3 tyre specification as the softest of the three available specifications."
+    },
+    "category": "tyre_allocation"
+  },
+  {
+    "id": "Q04",
+    "year": 2025,
+    "query": "Is a driver required to use at least two different dry tyre compounds during the race in 2025?",
+    "ground_truth": {
+      "article": "30.5",
+      "section": "Use of Tyres",
+      "expected_keywords": [
+        "two (2) different",
+        "specifications of dry",
+        "during the race"
+      ],
+      "rationale": "Article 30.5m) requires each driver to use at least two (2) different specifications of dry-weather tyres during the race unless intermediates or wets have been used."
+    },
+    "category": "tyre_allocation"
+  },
+  {
+    "id": "Q05",
+    "year": 2025,
+    "query": "What is the pit lane speed limit during a competition in 2025?",
+    "ground_truth": {
+      "article": "34.7",
+      "section": "PIT ENTRY ROAD, PIT LANE AND PIT EXIT ROAD",
+      "expected_keywords": [
+        "80km/h",
+        "pit lane",
+        "speed limit"
+      ],
+      "rationale": "Article 34.7 fixes the pit-lane speed limit at 80 km/h throughout the Competition, subject to amendment by the Race Director on Safety Commission advice."
+    },
+    "category": "pit_stops"
+  },
+  {
+    "id": "Q06",
+    "year": 2025,
+    "query": "What penalty applies if a car is released from its pit stop under unsafe conditions during the race?",
+    "ground_truth": {
+      "article": "34.14",
+      "section": "PIT ENTRY ROAD, PIT LANE AND PIT EXIT ROAD",
+      "expected_keywords": [
+        "unsafe condition",
+        "Article 54.3d)",
+        "released"
+      ],
+      "rationale": "Article 34.14d) imposes a penalty in accordance with Article 54.3d) (ten-second stop-and-go) on any driver whose car is released in an unsafe condition during a sprint session or race."
+    },
+    "category": "pit_stops"
+  },
+  {
+    "id": "Q07",
+    "year": 2025,
+    "query": "Can a car enter the pit lane under Virtual Safety Car and for what purpose?",
+    "ground_truth": {
+      "article": "56.4",
+      "section": "VIRTUAL SAFETY CAR (VSC)",
+      "expected_keywords": [
+        "enter the pits",
+        "VSC procedure",
+        "changing tyres"
+      ],
+      "rationale": "Article 56.4 prohibits cars from entering the pits during a VSC unless the purpose is changing tyres."
+    },
+    "category": "pit_stops"
+  },
+  {
+    "id": "Q08",
+    "year": 2025,
+    "query": "What message does the FIA send through the official system when the Safety Car is deployed?",
+    "ground_truth": {
+      "article": "55.4",
+      "section": "SAFETY CAR",
+      "expected_keywords": [
+        "SAFETY CAR DEPLOYED",
+        "official messaging",
+        "FIA light panels"
+      ],
+      "rationale": "Article 55.4 mandates that the message \"SAFETY CAR DEPLOYED\" be sent to all Competitors via the official messaging system, with FIA light panels showing \"SC\" and marshal posts displaying waved yellow flags and SC boards."
+    },
+    "category": "safety_car"
+  },
+  {
+    "id": "Q09",
+    "year": 2025,
+    "query": "What signal indicates the start of the Virtual Safety Car procedure in 2025?",
+    "ground_truth": {
+      "article": "56.2",
+      "section": "VIRTUAL SAFETY CAR (VSC)",
+      "expected_keywords": [
+        "VSC DEPLOYED",
+        "official messaging",
+        "FIA light panels"
+      ],
+      "rationale": "Article 56.2 states that the message \"VSC DEPLOYED\" is sent to all Competitors via the official messaging system and that all FIA light panels will display \"VSC\"."
+    },
+    "category": "safety_car"
+  },
+  {
+    "id": "Q10",
+    "year": 2023,
+    "query": "What is communicated to the Competitors when the clerk of the course orders the deployment of the Safety Car in 2023?",
+    "ground_truth": {
+      "article": "55.4",
+      "section": "SAFETY CAR",
+      "expected_keywords": [
+        "SAFETY CAR DEPLOYED",
+        "official messaging",
+        "marshal"
+      ],
+      "rationale": "Article 55.4 of the 2023 Sporting Regulations requires the same \"SAFETY CAR DEPLOYED\" message via the official messaging system, FIA panels showing \"SC\" and marshal posts showing waved yellow flags and SC boards."
+    },
+    "category": "safety_car"
+  },
+  {
+    "id": "Q11",
+    "year": 2025,
+    "query": "What procedure is followed when the race is suspended with a red flag?",
+    "ground_truth": {
+      "article": "57.2",
+      "section": "SUSPENDING A SPRINT SESSION OR A RACE",
+      "expected_keywords": [
+        "overtaking is forbidden",
+        "pit exit will be closed",
+        "fast lane"
+      ],
+      "rationale": "Article 57.2 specifies that on a red flag overtaking is forbidden, the pit exit is closed and all cars proceed slowly into the pit lane forming up in the fast lane."
+    },
+    "category": "flags_penalties"
+  },
+  {
+    "id": "Q12",
+    "year": 2025,
+    "query": "What time penalties can the FIA impose after an in-race incident?",
+    "ground_truth": {
+      "article": "54.3",
+      "section": "INCIDENTS DURING THE SPRINT SESSION OR THE RACE",
+      "expected_keywords": [
+        "five (5) second time penalty",
+        "ten (10) second time penalty",
+        "drive-through penalty"
+      ],
+      "rationale": "Article 54.3 enumerates the time penalties available to the stewards: five-second penalty, ten-second penalty, drive-through and ten-second stop-and-go."
+    },
+    "category": "flags_penalties"
+  },
+  {
+    "id": "Q13",
+    "year": 2023,
+    "query": "Is a point awarded to the driver who sets the fastest lap of the race under the 2023 regulations?",
+    "ground_truth": {
+      "article": "6.4",
+      "section": "AWARDS",
+      "expected_keywords": [
+        "fastest valid lap",
+        "one (1) point",
+        "top ten"
+      ],
+      "rationale": "Article 6.4 of the 2023 Sporting Regulations awards one (1) point to the driver who achieves the fastest valid lap time provided he finishes within the top ten — this point was removed in subsequent seasons."
+    },
+    "category": "flags_penalties"
+  },
+  {
+    "id": "Q14",
+    "year": 2025,
+    "query": "When is DRS allowed to be activated after the race start or a Safety Car period in 2025?",
+    "ground_truth": {
+      "article": "22.1",
+      "section": "DRIVER ADJUSTABLE BODYWORK",
+      "expected_keywords": [
+        "one (1) lap",
+        "after the start",
+        "safety car period"
+      ],
+      "rationale": "Article 22.1c) permits activation of the adjustable bodywork after the driver has completed one (1) lap after the start or following a safety car period."
+    },
+    "category": "drs"
+  },
+  {
+    "id": "Q15",
+    "year": 2023,
+    "query": "How many laps must a driver complete after the start or a Safety Car before being allowed to use DRS in the race in 2023?",
+    "ground_truth": {
+      "article": "22.1",
+      "section": "DRIVER ADJUSTABLE BODYWORK",
+      "expected_keywords": [
+        "two laps",
+        "after the start",
+        "safety car period"
+      ],
+      "rationale": "Article 22.1c)ii) of the 2023 Sporting Regulations requires two laps after the start or following a safety car period before the adjustable bodywork may be activated during the race — this was reduced to one lap from 2024 onwards."
+    },
+    "category": "drs"
+  }
+]

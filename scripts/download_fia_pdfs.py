@@ -36,8 +36,8 @@ from bs4 import BeautifulSoup
 # Config
 # ---------------------------------------------------------------------------
 
-# python scripts/download_fia_pdfs.py             # descarga real
-# python scripts/build_rag_index.py               # indexa los PDFs descargados
+# python scripts/download_fia_pdfs.py             # real download
+# python scripts/build_rag_index.py               # index the downloaded PDFs
 
 
 @dataclass
