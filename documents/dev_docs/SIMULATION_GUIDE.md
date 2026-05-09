@@ -1,4 +1,4 @@
-# F1 Strategy Manager — Dev Testing & Simulation Guide
+# F1 StratLab — Dev Testing & Simulation Guide
 
 Quick reference for running, testing, and verifying every layer of the stack.
 
