@@ -57,8 +57,8 @@ _DEFAULT_SAMPLE_SIZE   = 50
 _AUDIO_SAMPLE_SEED     = 42
 _LATENCY_BUCKET_LABEL  = "overall"
 _NOTES_TEXT            = (
-    "WER no calculado: corpus de ground truth no pareado, "
-    "pendiente Track-A radio benchmark"
+    "WER not computed: ground-truth corpus not paired, "
+    "pending Track-A radio benchmark"
 )
 
 
