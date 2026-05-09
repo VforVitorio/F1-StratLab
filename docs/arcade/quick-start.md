@@ -1,6 +1,6 @@
 # Arcade Quick Start
 
-End-user guide for running the F1 Strategy Manager arcade replay with the
+End-user guide for running the F1 StratLab arcade replay with the
 live strategy dashboard. Aimed at someone who has cloned the repository
 and wants to see three synchronised windows on screen inside ten minutes.
 

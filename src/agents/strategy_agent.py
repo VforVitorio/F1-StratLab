@@ -1,5 +1,5 @@
 """
-F1 Strategy Manager - Rule Merging Module
+F1 StratLab - Rule Merging Module
 
 This module provides the integrated strategy engine that combines all rule systems:
 - Tire degradation rules

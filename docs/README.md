@@ -1,4 +1,4 @@
-# F1 Strategy Manager -- Developer Docs
+# F1 StratLab — Developer Docs
 
 Technical documentation for each `src/` module. Written for developers working on the codebase, not for end users.
 

@@ -1,6 +1,6 @@
 # `docs/diagrams/` — draw.io sources
 
-Architecture and data-flow diagrams for the F1 Strategy Manager TFG.
+Architecture and data-flow diagrams for the F1 StratLab TFG.
 Open any `.drawio` file with [draw.io desktop](https://www.drawio.com/)
 or [diagrams.net](https://app.diagrams.net/). The same files render as
 PNG on demand via `File → Export as → PNG` inside the editor.

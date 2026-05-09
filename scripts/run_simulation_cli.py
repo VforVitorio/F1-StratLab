@@ -1729,7 +1729,7 @@ def run(args: argparse.Namespace) -> None:
     console.print(
         Panel(
             header_body,
-            title="[bold cyan]F1 Strategy Manager[/bold cyan]",
+            title="[bold cyan]F1 StratLab[/bold cyan]",
             title_align="center",
             border_style="cyan",
             padding=(1, 2),
@@ -2307,7 +2307,7 @@ def _default_featured() -> str:
 
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="F1 Strategy Manager — headless CLI simulation demo",
+        description="F1 StratLab — headless CLI simulation demo",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )

@@ -1,4 +1,4 @@
-"""Upload the static OpenF1 radio corpus to the F1 Strategy Manager dataset on HF Hub.
+"""Upload the static OpenF1 radio corpus to the F1 StratLab dataset on HF Hub.
 
 The corpus is built locally by ``scripts/build_radio_dataset.py`` and lives in
 two parallel trees on disk:
@@ -171,7 +171,7 @@ def _upload_tree(
 
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="Upload the static OpenF1 radio corpus to the F1 Strategy Manager dataset on HF Hub.",
+        description="Upload the static OpenF1 radio corpus to the F1 StratLab dataset on HF Hub.",
     )
     p.add_argument(
         "--year",
@@ -241,7 +241,7 @@ def run(args: argparse.Namespace) -> None:
     console.print(
         Panel(
             grid,
-            title="[bold gold1]F1 Strategy Manager — radio corpus upload[/bold gold1]",
+            title="[bold gold1]F1 StratLab — radio corpus upload[/bold gold1]",
             title_align="center",
             border_style="gold1",
             padding=(1, 2),

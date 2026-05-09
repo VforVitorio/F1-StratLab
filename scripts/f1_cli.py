@@ -1,5 +1,5 @@
 """
-F1 Strategy Manager — Interactive CLI Launcher
+F1 StratLab — Interactive CLI Launcher
 
 Usage
 -----
