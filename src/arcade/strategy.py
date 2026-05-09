@@ -87,8 +87,12 @@ class PerAgentOutputsDTO:
     dashboard process.
 
     ``regulation_context`` is the string from N30 RAG (empty when the
-    agent did not fire). ``active`` lists the conditional agents routed
-    this lap so the dashboard can dim the cards that are idle.
+    agent did not fire). ``rag`` is the structured form of the same
+    output (``question`` / ``answer`` / ``articles`` / ``chunks``) used
+    by the dashboard's RAG card to render article references and the
+    full chunk transcripts on hover; ``None`` when the agent did not
+    fire. ``active`` lists the conditional agents routed this lap so
+    the dashboard can dim the cards that are idle.
     """
 
     pace: dict[str, Any] | None = None
@@ -97,6 +101,7 @@ class PerAgentOutputsDTO:
     radio: dict[str, Any] | None = None
     pit: dict[str, Any] | None = None
     regulation_context: str = ""
+    rag: dict[str, Any] | None = None
     active: list[str] = field(default_factory=list)
 
 
@@ -577,6 +582,7 @@ def _build_per_agent(agent_outputs: dict[str, Any]) -> PerAgentOutputsDTO:
         radio=_dump_dataclass(agent_outputs.get("radio_out")),
         pit=_dump_dataclass(agent_outputs.get("pit_out")),
         regulation_context=str(agent_outputs.get("regulation_context") or ""),
+        rag=agent_outputs.get("rag"),
         active=list(agent_outputs.get("active") or []),
     )
 
