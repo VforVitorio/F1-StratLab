@@ -1,4 +1,4 @@
-## Overtake (N12) · barrido de umbral · holdout 2025
+## Overtake (N12) · threshold sweep · 2025 holdout
 
 | threshold | precision | recall | f1 | accuracy | tp | fp | fn | tn |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
