@@ -1,4 +1,4 @@
-## MC Dropout · cobertura empírica · holdout 2025
+## MC Dropout · empirical coverage · 2025 holdout
 
 | compound | n_sequences | empirical_coverage | calibrated_coverage | mean_pred_sigma | empirical_sigma | calibrated_sigma |
 | --- | --- | --- | --- | --- | --- | --- |
