@@ -2,9 +2,9 @@
 
 | agent | mean_ms | p50_ms | p95_ms | device | n_runs | notes |
 |---|---|---|---|---|---|---|
-| pace_agent | 425,109 | 432,545 | 448,583 | cuda | 5 | no external calls |
-| tire_agent | — | — | — | cuda | 0 | TCN MC dropout, no external calls — runtime error: APIConnectionError('Connection error.') |
-| race_situation_agent | — | — | — | cuda | 0 | LightGBM overtake + SC, may invoke LLM if configured — runtime error: APIConnectionError('Connection error.') |
-| pit_strategy_agent | — | — | — | cuda | 0 | HistGBT pit duration + LightGBM undercut, may invoke LLM — runtime error: APIConnectionError('Connection error.') |
-| radio_agent | 13593,288 | 13622,456 | 13661,315 | cuda | 5 | BERT sentiment + SetFit intent + BERT NER, LLM synthesis when reachable |
-| rag_agent | — | — | — | cuda | 0 | Qdrant retrieval + LLM answer synthesis — runtime error: APIConnectionError('Connection error.') |
+| pace_agent | 263,625 | 265,964 | 309,556 | cuda | 10 | no external calls |
+| tire_agent | — | — | — | cuda | 0 | TCN MC dropout, no external calls — runtime error: OpenAIError('The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable') |
+| race_situation_agent | — | — | — | cuda | 0 | LightGBM overtake + SC, may invoke LLM if configured — runtime error: OpenAIError('The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable') |
+| pit_strategy_agent | — | — | — | cuda | 0 | HistGBT pit duration + LightGBM undercut, may invoke LLM — runtime error: OpenAIError('The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable') |
+| radio_agent | 1,269 | 1,206 | 1,479 | cuda | 10 | BERT sentiment + SetFit intent + BERT NER, LLM synthesis when reachable |
+| rag_agent | — | — | — | cuda | 0 | Qdrant retrieval + LLM answer synthesis — runtime error: OpenAIError('The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable') |
