@@ -59,7 +59,7 @@ _ART_STRAT = [
 _COMPACT = (
     f"[bold {F1_RED}]F1[/bold {F1_RED}] "
     f"[bold {F1_WHITE}]STRAT[/bold {F1_WHITE}]"
-    f"  [dim]Formula 1 Strategy Manager[/dim]"
+    f"  [dim]F1 StratLab[/dim]"
 )
 
 
@@ -85,7 +85,7 @@ def make_banner() -> Panel:
 
     lines += [
         Text(""),
-        Align.center(Text("Formula 1 Strategy Manager", style=f"bold {F1_GRAY}")),
+        Align.center(Text("F1 StratLab", style=f"bold {F1_GRAY}")),
         Align.center(Text("Multi-Agent Race Intelligence System · v0.9", style=F1_GRAY)),
     ]
 
