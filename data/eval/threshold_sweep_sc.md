@@ -1,4 +1,4 @@
-## Safety Car (N14) · barrido de umbral · holdout 2025
+## Safety Car (N14) · threshold sweep · 2025 holdout
 
 | threshold | precision | recall | f1 | accuracy | tp | fp | fn | tn |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
