@@ -8,8 +8,8 @@ under ``data/eval/``, ``time_function`` for the warm-up + measured
 latency loop, and ``make_start_panel`` for the opening Rich panel.
 
 Numeric formatting follows the thesis convention: comma decimal
-separator in the markdown output (Spanish text body) and dot decimal
-separator in the CSV (so the file is loadable with
+separator in the markdown output (target locale uses commas) and dot
+decimal separator in the CSV (so the file is loadable with
 ``pd.read_csv`` and convertible to LaTeX with ``df.to_latex``).
 """
 
@@ -122,7 +122,7 @@ def export_markdown(
     The first line is the H2 ``title``, followed by a blank line and
     then a GitHub-flavoured markdown table whose header row is the
     first ``columns`` entry. Floats use commas so the output drops
-    straight into a Spanish-language thesis paragraph without any
+    straight into the target-locale thesis paragraph without any
     locale post-processing.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
