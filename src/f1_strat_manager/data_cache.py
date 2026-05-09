@@ -336,7 +336,7 @@ def _render_header(console, data_root: Path) -> None:
     console.print(
         Panel(
             grid,
-            title=f"[bold {COL_WATCH}]F1 Strategy Manager — first-run setup[/bold {COL_WATCH}]",
+            title=f"[bold {COL_WATCH}]F1 StratLab — first-run setup[/bold {COL_WATCH}]",
             title_align="center",
             border_style=COL_WATCH,
             padding=(1, 2),
@@ -398,7 +398,7 @@ def ensure_setup(
         local_dir = _snapshot_download(patterns, show_progress=show_progress)
     except Exception as exc:
         raise RuntimeError(
-            "Failed to download F1 Strategy Manager assets from HuggingFace Hub.\n"
+            "Failed to download F1 StratLab assets from HuggingFace Hub.\n"
             f"  Dataset: {HF_DATASET_REPO_ID}\n"
             f"  Cache  : {data_root}\n"
             "  Check your internet connection, set HF_TOKEN if the dataset is\n"
