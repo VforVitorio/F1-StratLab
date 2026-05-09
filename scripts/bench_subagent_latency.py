@@ -37,6 +37,17 @@ _REPO_ROOT = next(
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+# Load .env so OPENAI_API_KEY and other secrets are available when the
+# RadioAgent / RagAgent reach out to the configured LLM provider.
+try:
+    from dotenv import load_dotenv
+
+    _env = _REPO_ROOT / ".env"
+    if _env.exists():
+        load_dotenv(_env)
+except ImportError:
+    pass
+
 # Library log noise — silence aggressive INFO from transformers / setfit
 warnings.filterwarnings("ignore", category=FutureWarning)
 for noisy in ("transformers", "setfit", "sentence_transformers", "torch", "src"):
