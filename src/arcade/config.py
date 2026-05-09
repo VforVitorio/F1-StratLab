@@ -26,7 +26,7 @@ SEEK_RATE_MULTIPLIER: Final[float] = 3.0
 # --- Window geometry ------------------------------------------------------
 SCREEN_WIDTH: Final[int] = 1280
 SCREEN_HEIGHT: Final[int] = 720
-WINDOW_TITLE: Final[str] = "F1 Strategy Manager - Race Replay"
+WINDOW_TITLE: Final[str] = "F1 StratLab - Race Replay"
 
 # --- Viewport margins (reserve UI space before fitting track) -------------
 MARGIN_LEFT: Final[int] = 340
@@ -174,7 +174,7 @@ STREAM_BROADCAST_EVERY_N_FRAMES: Final[int] = 6
 STREAM_HISTORY_TAIL: Final[int] = 30
 
 # --- Menu view ------------------------------------------------------------
-MENU_TITLE: Final[str] = "F1 STRATEGY MANAGER"
+MENU_TITLE: Final[str] = "F1 STRATLAB"
 MENU_ROW_HEIGHT: Final[int] = 40
 MENU_ROW_WIDTH: Final[int] = 540
 MENU_LABEL_FONT: Final[int] = 13
