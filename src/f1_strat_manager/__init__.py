@@ -1,4 +1,4 @@
-"""Cross-cutting infrastructure package for the F1 Strategy Manager CLI.
+"""Cross-cutting infrastructure package for the F1 StratLab CLI.
 
 Hosts modules that do not fit any single domain sub-package under ``src/``
 (`agents`, `nlp`, `rag`, `simulation`, …) — currently just the first-run
