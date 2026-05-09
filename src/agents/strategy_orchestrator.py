@@ -1093,8 +1093,15 @@ def _run_conditional_agents(
         When provided, N28 is called via run_pit_strategy_agent_from_state.
         When None, run_pit_strategy_agent is used (FastF1 entry point).
 
-    Returns (pit_out, regulation_context_str). Both may be None if the
-    respective agent was not activated this lap.
+    Returns ``(pit_out, regulation_context_str, rag_dict)``. ``pit_out`` and
+    ``regulation_context_str`` may be ``None`` when the respective agent was
+    not activated this lap; ``rag_dict`` is the structured payload from N30
+    (``question`` / ``answer`` / ``articles`` / ``chunks``) for downstream
+    consumers that need more than just the answer string (the arcade
+    dashboard surfaces article references and chunk text in its RAG card).
+    The legacy ``regulation_context_str`` is preserved verbatim for the
+    orchestrator's own LLM prompt and for ``StrategyRecommendation``,
+    neither of which depend on the structured shape.
     """
     pit_out = None
     if "N28" in active:
@@ -1108,7 +1115,8 @@ def _run_conditional_agents(
         else:
             pit_out = run_pit_strategy_agent(pit_lap_state)
 
-    regulation_context = None
+    regulation_context: str | None = None
+    rag_dict: dict | None          = None
     if "N30" in active:
         pit_action = pit_out.action if pit_out else None
         question   = _build_rag_question(
@@ -1118,8 +1126,24 @@ def _run_conditional_agents(
         )
         reg_out            = run_rag_agent(question)
         regulation_context = reg_out.answer
+        rag_dict = {
+            "question": reg_out.question,
+            "answer":   reg_out.answer,
+            "articles": list(reg_out.articles),
+            "chunks":   [
+                {
+                    "text":          c.text,
+                    "article":       c.article,
+                    "doc_type":      c.doc_type,
+                    "year":          c.year,
+                    "score":         c.score,
+                    "section_title": c.section_title,
+                }
+                for c in reg_out.chunks
+            ],
+        }
 
-    return pit_out, regulation_context
+    return pit_out, regulation_context, rag_dict
 
 
 # ==============================================================================
@@ -1217,8 +1241,9 @@ def run_strategy_orchestrator(
         radio_alerts = radio_out.alerts,
     )
 
-    # Layer 1c — conditional agents
-    pit_out, regulation_context = _run_conditional_agents(
+    # Layer 1c — conditional agents. The structured RAG dict is only used by
+    # the arcade dashboard; the orchestrator path keeps the answer string.
+    pit_out, regulation_context, _rag_dict = _run_conditional_agents(
         active        = active,
         lap_state     = lap_state,
         tire_out      = tire_out,
@@ -1333,8 +1358,9 @@ def run_strategy_orchestrator_from_state(
         radio_alerts = radio_out.alerts,
     )
 
-    # Layer 1c — conditional agents (RSM variants)
-    pit_out, regulation_context = _run_conditional_agents(
+    # Layer 1c — conditional agents (RSM variants). Same RAG-dict treatment
+    # as the FastF1 entry point: discarded here, consumed only by the arcade.
+    pit_out, regulation_context, _rag_dict = _run_conditional_agents(
         active        = active,
         lap_state     = lap_state,
         tire_out      = tire_out,
