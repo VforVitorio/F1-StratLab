@@ -1,0 +1,2 @@
+bucket,n_messages,mean_ms,latency_p50_ms,latency_p95_ms,device,notes
+overall,50,233.932300,182.642500,325.785700,cuda,"WER not computed: ground-truth corpus not paired, pending Track-A radio benchmark"

@@ -1,0 +1,5 @@
+row,device,entry_point,mean_ms,p50_ms,p95_ms,n_runs,notes
+cpu/run_pipeline,cpu,run_pipeline,335.830538,334.824050,364.060210,80,"8 messages x N runs, sentiment + intent + NER"
+cpu/run_rcm_pipeline,cpu,run_rcm_pipeline,0.003939,0.003900,0.004700,80,"8 RCM rows x N runs, rule-based parser only"
+cuda/run_pipeline,cuda,run_pipeline,42.069085,41.833550,44.245520,80,"8 messages x N runs, sentiment + intent + NER"
+cuda/run_rcm_pipeline,cuda,run_rcm_pipeline,0.002426,0.002400,0.002900,80,"8 RCM rows x N runs, rule-based parser only"

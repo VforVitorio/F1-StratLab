@@ -1,0 +1,4 @@
+model,mae_s,rmse_s,r2,n_laps_evaluated,notes
+persistence,0.408188,0.762464,0.994722,21247,y_pred = Prev_LapTime
+team_circuit_median,3.061616,4.712023,0.798436,21247,"median LapTime_s from 2023+2024 by (Team, GP_Name)"
+xgb_delta_prod,0.410363,0.764598,0.994693,21247,"XGBoost delta + Prev_LapTime, 25 production features"

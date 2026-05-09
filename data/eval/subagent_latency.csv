@@ -1,0 +1,7 @@
+agent,mean_ms,p50_ms,p95_ms,device,n_runs,notes
+pace_agent,487.358540,481.216050,588.363155,cuda,10,no external calls
+tire_agent,2828.971760,2736.490000,3236.851795,cuda,10,"TCN MC dropout, no external calls"
+race_situation_agent,2969.004650,2844.565200,4140.423405,cuda,10,"LightGBM overtake + SC, may invoke LLM if configured"
+pit_strategy_agent,3636.208840,3537.718400,4436.023875,cuda,10,"HistGBT pit duration + LightGBM undercut, may invoke LLM"
+radio_agent,1327.958550,1212.609650,1890.125800,cuda,10,"BERT sentiment + SetFit intent + BERT NER, LLM synthesis when reachable"
+rag_agent,4418.720950,2353.850250,13743.247465,cuda,10,Qdrant retrieval + LLM answer synthesis
