@@ -37,28 +37,28 @@ if str(_REPO_ROOT) not in sys.path:
 # Silence transformer / xgboost log noise so the Rich console stays clean.
 logging.getLogger("xgboost").setLevel(logging.ERROR)
 
-import numpy as np
-import pandas as pd
-import xgboost as xgb
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import xgboost as xgb  # noqa: E402
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score  # noqa: E402
 
-from scripts.bench._common import (
+from scripts.bench._common import (  # noqa: E402
     BenchResult,
     export_csv,
     export_markdown,
     make_start_panel,
     render_results_table,
 )
-from scripts.cli.theme import console
+from scripts.cli.theme import console  # noqa: E402
 
-_DATA_ROOT     = _REPO_ROOT / "data"
-_MODELS_DIR    = _DATA_ROOT / "models" / "lap_time"
+_DATA_ROOT = _REPO_ROOT / "data"
+_MODELS_DIR = _DATA_ROOT / "models" / "lap_time"
 _PROCESSED_DIR = _DATA_ROOT / "processed"
-_EVAL_DIR      = _DATA_ROOT / "eval"
+_EVAL_DIR = _DATA_ROOT / "eval"
 
 
 _PACE_FEATURES_PATH = _MODELS_DIR / "xgb_laptime_delta_feature_names.json"
-_PACE_MODEL_PATH    = _MODELS_DIR / "xgb_laptime_delta_final.json"
+_PACE_MODEL_PATH = _MODELS_DIR / "xgb_laptime_delta_final.json"
 
 
 class PaceBaselineRunner:
@@ -73,12 +73,31 @@ class PaceBaselineRunner:
     """
 
     REQUIRED_COLUMNS = (
-        "Year", "GP_Name", "Team", "LapTime_s", "Prev_LapTime",
-        "DriverNumber", "LapNumber", "Stint", "TyreLife", "FreshTyre",
-        "Position", "CompoundID", "TeamID", "LapsSincePitStop",
-        "FuelLoad", "FuelEffect", "Prev_TyreLife", "Prev_SpeedST",
-        "AirTemp", "TrackTemp", "Humidity", "Rainfall",
-        "laps_remaining", "Cluster", "mean_sector_speed",
+        "Year",
+        "GP_Name",
+        "Team",
+        "LapTime_s",
+        "Prev_LapTime",
+        "DriverNumber",
+        "LapNumber",
+        "Stint",
+        "TyreLife",
+        "FreshTyre",
+        "Position",
+        "CompoundID",
+        "TeamID",
+        "LapsSincePitStop",
+        "FuelLoad",
+        "FuelEffect",
+        "Prev_TyreLife",
+        "Prev_SpeedST",
+        "AirTemp",
+        "TrackTemp",
+        "Humidity",
+        "Rainfall",
+        "laps_remaining",
+        "Cluster",
+        "mean_sector_speed",
     )
 
     def __init__(self, year: int = 2025, device: str = "cpu") -> None:
@@ -92,10 +111,10 @@ class PaceBaselineRunner:
                 builds but currently ignored — the JSON artefact is
                 loaded with the default CPU predictor.
         """
-        self.year       = int(year)
-        self.device     = device
+        self.year = int(year)
+        self.device = device
         self.holdout_df = self._load_holdout(self.year)
-        self.train_df   = self._load_train(self.year)
+        self.train_df = self._load_train(self.year)
         self.model, self.features = self._load_xgb_model()
 
     # ── Loaders ──────────────────────────────────────────────────────────────
@@ -113,9 +132,7 @@ class PaceBaselineRunner:
         """
         path = _PROCESSED_DIR / f"laps_featured_{year}.parquet"
         if not path.exists():
-            raise FileNotFoundError(
-                f"Holdout parquet missing for year {year}: {path}"
-            )
+            raise FileNotFoundError(f"Holdout parquet missing for year {year}: {path}")
         df = pd.read_parquet(path)
         df = self._add_prev_deg_features(df)
         # Match N06's df25_d filter exactly: drop rows missing the delta target
@@ -138,11 +155,13 @@ class PaceBaselineRunner:
         distribution it was trained on, which is the only way to
         reproduce the headline MAE quoted in MEMORY.md.
         """
-        df = df.sort_values(["GP_Name", "Year", "DriverNumber", "Stint", "LapNumber"]).reset_index(drop=True)
+        df = df.sort_values(["GP_Name", "Year", "DriverNumber", "Stint", "LapNumber"]).reset_index(
+            drop=True
+        )
         grp = df.groupby(["GP_Name", "Year", "DriverNumber", "Stint"], sort=False, group_keys=False)
         for src, dst in (
             ("DegradationRate", "Prev_DegradationRate"),
-            ("CumulativeDeg",   "Prev_CumulativeDeg"),
+            ("CumulativeDeg", "Prev_CumulativeDeg"),
             ("DegAcceleration", "Prev_DegAcceleration"),
         ):
             if src in df.columns:
@@ -169,9 +188,7 @@ class PaceBaselineRunner:
                     f"[yellow]Warning:[/yellow] training parquet missing for {season} ({path}) — skipping"
                 )
                 continue
-            train_frames.append(
-                pd.read_parquet(path, columns=["GP_Name", "Team", "LapTime_s"])
-            )
+            train_frames.append(pd.read_parquet(path, columns=["GP_Name", "Team", "LapTime_s"]))
         if not train_frames:
             return pd.DataFrame(columns=["GP_Name", "Team", "LapTime_s"])
         return pd.concat(train_frames, ignore_index=True)
@@ -188,6 +205,7 @@ class PaceBaselineRunner:
         if not _PACE_FEATURES_PATH.exists():
             raise FileNotFoundError(f"XGB feature list missing: {_PACE_FEATURES_PATH}")
         import json
+
         features = json.loads(_PACE_FEATURES_PATH.read_text())
         model = xgb.XGBRegressor()
         model.load_model(_PACE_MODEL_PATH)
@@ -206,7 +224,8 @@ class PaceBaselineRunner:
         y_pred = self.holdout_df["Prev_LapTime"].to_numpy(dtype=float)
         return self._score(
             "persistence",
-            y_true, y_pred,
+            y_true,
+            y_pred,
             notes="y_pred = Prev_LapTime",
         )
 
@@ -241,7 +260,8 @@ class PaceBaselineRunner:
         y_true = self.holdout_df["LapTime_s"].to_numpy(dtype=float)
         return self._score(
             "team_circuit_median",
-            y_true, y_pred,
+            y_true,
+            y_pred,
             notes="median LapTime_s from 2023+2024 by (Team, GP_Name)",
         )
 
@@ -258,11 +278,14 @@ class PaceBaselineRunner:
         """
         feature_df = self._build_feature_frame(self.holdout_df, self.features)
         delta = self.model.predict(feature_df)
-        y_pred = self.holdout_df["Prev_LapTime"].to_numpy(dtype=float) + np.asarray(delta, dtype=float)
+        y_pred = self.holdout_df["Prev_LapTime"].to_numpy(dtype=float) + np.asarray(
+            delta, dtype=float
+        )
         y_true = self.holdout_df["LapTime_s"].to_numpy(dtype=float)
         return self._score(
             "xgb_delta_prod",
-            y_true, y_pred,
+            y_true,
+            y_pred,
             notes="XGBoost delta + Prev_LapTime, 25 production features",
         )
 
@@ -305,27 +328,27 @@ class PaceBaselineRunner:
             return BenchResult(
                 name=model_name,
                 metrics={
-                    "mae_s":             float("nan"),
-                    "rmse_s":            float("nan"),
-                    "r2":                float("nan"),
-                    "n_laps_evaluated":  0,
-                    "notes":             notes,
+                    "mae_s": float("nan"),
+                    "rmse_s": float("nan"),
+                    "r2": float("nan"),
+                    "n_laps_evaluated": 0,
+                    "notes": notes,
                 },
             )
         mask = np.isfinite(y_true) & np.isfinite(y_pred)
         y_true_clean = y_true[mask]
         y_pred_clean = y_pred[mask]
-        mae  = float(mean_absolute_error(y_true_clean, y_pred_clean))
+        mae = float(mean_absolute_error(y_true_clean, y_pred_clean))
         rmse = float(np.sqrt(mean_squared_error(y_true_clean, y_pred_clean)))
-        r2   = float(r2_score(y_true_clean, y_pred_clean))
+        r2 = float(r2_score(y_true_clean, y_pred_clean))
         return BenchResult(
             name=model_name,
             metrics={
-                "mae_s":             mae,
-                "rmse_s":            rmse,
-                "r2":                r2,
-                "n_laps_evaluated":  int(mask.sum()),
-                "notes":             notes,
+                "mae_s": mae,
+                "rmse_s": rmse,
+                "r2": r2,
+                "n_laps_evaluated": int(mask.sum()),
+                "notes": notes,
             },
         )
 
@@ -350,14 +373,15 @@ class PaceBaselineRunner:
 # ---------------------------------------------------------------------------
 
 _COLUMNS = ["model", "mae_s", "rmse_s", "r2", "n_laps_evaluated", "notes"]
-_TITLE   = "Pace baselines (2025 holdout)"
+_TITLE = "Pace baselines (2025 holdout)"
 
 
 def _parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the pace baselines benchmark.")
-    parser.add_argument("--year",   type=int, default=2025, help="Holdout season (default 2025).")
-    parser.add_argument("--device", type=str, default="cpu",
-                        help="Reserved for forward-compat (CPU XGBoost only).")
+    parser.add_argument("--year", type=int, default=2025, help="Holdout season (default 2025).")
+    parser.add_argument(
+        "--device", type=str, default="cpu", help="Reserved for forward-compat (CPU XGBoost only)."
+    )
     return parser.parse_args(argv)
 
 
@@ -371,7 +395,7 @@ def _check_xgb_anchor(results: list[BenchResult]) -> None:
     than silently shipping a wrong number into the thesis.
     """
     expected_mae = 0.4104
-    tolerance    = 0.001
+    tolerance = 0.001
     for row in results:
         if row.name != "xgb_delta_prod":
             continue
@@ -387,17 +411,19 @@ def _check_xgb_anchor(results: list[BenchResult]) -> None:
 
 def main(argv: Optional[list[str]] = None) -> int:
     args = _parse_args(argv)
-    console.print(make_start_panel(
-        "bench_pace_baselines.py",
-        f"Pace baselines vs 2025 holdout (year={args.year}).",
-    ))
+    console.print(
+        make_start_panel(
+            "bench_pace_baselines.py",
+            f"Pace baselines vs 2025 holdout (year={args.year}).",
+        )
+    )
 
-    runner  = PaceBaselineRunner(year=args.year, device=args.device)
+    runner = PaceBaselineRunner(year=args.year, device=args.device)
     results = runner.run_all()
 
     _check_xgb_anchor(results)
 
-    md_path  = _EVAL_DIR / "pace_baselines.md"
+    md_path = _EVAL_DIR / "pace_baselines.md"
     csv_path = _EVAL_DIR / "pace_baselines.csv"
     export_markdown(results, md_path, _TITLE, _COLUMNS)
     export_csv(results, csv_path, _COLUMNS)

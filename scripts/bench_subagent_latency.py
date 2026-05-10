@@ -68,25 +68,25 @@ from scripts.cli.theme import console  # noqa: E402
 from src.simulation.race_state_manager import RaceStateManager  # noqa: E402
 
 _DATA_ROOT = _REPO_ROOT / "data"
-_EVAL_DIR  = _DATA_ROOT / "eval"
+_EVAL_DIR = _DATA_ROOT / "eval"
 
 _FIXTURE_OPTIONS = (
     {
-        "label":      "Suzuka 2025 NOR lap 21",
-        "laps_path":  _DATA_ROOT / "raw" / "2025" / "Suzuka" / "laps.parquet",
-        "driver":     "NOR",
-        "team":       "McLaren",
-        "gp_name":    "Suzuka",
-        "year":       2025,
+        "label": "Suzuka 2025 NOR lap 21",
+        "laps_path": _DATA_ROOT / "raw" / "2025" / "Suzuka" / "laps.parquet",
+        "driver": "NOR",
+        "team": "McLaren",
+        "gp_name": "Suzuka",
+        "year": 2025,
         "lap_number": 21,
     },
     {
-        "label":      "Bahrain 2025 NOR lap 18",
-        "laps_path":  _DATA_ROOT / "raw" / "2025" / "Bahrain" / "laps.parquet",
-        "driver":     "NOR",
-        "team":       "McLaren",
-        "gp_name":    "Bahrain",
-        "year":       2025,
+        "label": "Bahrain 2025 NOR lap 18",
+        "laps_path": _DATA_ROOT / "raw" / "2025" / "Bahrain" / "laps.parquet",
+        "driver": "NOR",
+        "team": "McLaren",
+        "gp_name": "Bahrain",
+        "year": 2025,
         "lap_number": 18,
     },
 )
@@ -109,8 +109,8 @@ class SubAgentLatencyRunner:
         construction cost does not pollute the warm-up phase reported
         in the artefact.
         """
-        self.n_warmup     = int(n_warmup)
-        self.n_runs       = int(n_runs)
+        self.n_warmup = int(n_warmup)
+        self.n_runs = int(n_runs)
         self.device_label = self._resolve_device(device)
 
         fixture = self._pick_fixture()
@@ -131,9 +131,7 @@ class SubAgentLatencyRunner:
         )
         self.lap_state = self.rsm.get_lap_state(fixture["lap_number"])
         self.lap_state["lap"] = fixture["lap_number"]
-        self.lap_state["question"] = (
-            "What is the minimum pit stop duration under Safety Car?"
-        )
+        self.lap_state["question"] = "What is the minimum pit stop duration under Safety Car?"
 
         # Featured 2025 laps — required by Tire / RaceSituation / Pit / Radio
         # agents because they pull historical context out of the laps frame.
@@ -167,31 +165,39 @@ class SubAgentLatencyRunner:
         ``run_*_from_state`` entry point.
         """
         from src.agents.pace_agent import run_pace_agent_from_state
-        from src.agents.tire_agent import run_tire_agent_from_state
-        from src.agents.race_situation_agent import run_race_situation_agent_from_state
         from src.agents.pit_strategy_agent import run_pit_strategy_agent_from_state
+        from src.agents.race_situation_agent import run_race_situation_agent_from_state
         from src.agents.radio_agent import run_radio_agent_from_state
         from src.agents.rag_agent import run_rag_agent_from_state
+        from src.agents.tire_agent import run_tire_agent_from_state
 
         return [
-            ("pace_agent",
-             lambda: run_pace_agent_from_state(self.lap_state),
-             "no external calls"),
-            ("tire_agent",
-             lambda: run_tire_agent_from_state(self.lap_state, self.laps_featured),
-             "TCN MC dropout, no external calls"),
-            ("race_situation_agent",
-             lambda: run_race_situation_agent_from_state(self.lap_state, self.laps_featured),
-             "LightGBM overtake + SC, may invoke LLM if configured"),
-            ("pit_strategy_agent",
-             lambda: run_pit_strategy_agent_from_state(self.lap_state, self.laps_featured),
-             "HistGBT pit duration + LightGBM undercut, may invoke LLM"),
-            ("radio_agent",
-             lambda: run_radio_agent_from_state(self.lap_state, self.laps_featured),
-             "BERT sentiment + SetFit intent + BERT NER, LLM synthesis when reachable"),
-            ("rag_agent",
-             lambda: run_rag_agent_from_state(self.lap_state, self.laps_featured),
-             "Qdrant retrieval + LLM answer synthesis"),
+            ("pace_agent", lambda: run_pace_agent_from_state(self.lap_state), "no external calls"),
+            (
+                "tire_agent",
+                lambda: run_tire_agent_from_state(self.lap_state, self.laps_featured),
+                "TCN MC dropout, no external calls",
+            ),
+            (
+                "race_situation_agent",
+                lambda: run_race_situation_agent_from_state(self.lap_state, self.laps_featured),
+                "LightGBM overtake + SC, may invoke LLM if configured",
+            ),
+            (
+                "pit_strategy_agent",
+                lambda: run_pit_strategy_agent_from_state(self.lap_state, self.laps_featured),
+                "HistGBT pit duration + LightGBM undercut, may invoke LLM",
+            ),
+            (
+                "radio_agent",
+                lambda: run_radio_agent_from_state(self.lap_state, self.laps_featured),
+                "BERT sentiment + SetFit intent + BERT NER, LLM synthesis when reachable",
+            ),
+            (
+                "rag_agent",
+                lambda: run_rag_agent_from_state(self.lap_state, self.laps_featured),
+                "Qdrant retrieval + LLM answer synthesis",
+            ),
         ]
 
     # ── Orchestration ────────────────────────────────────────────────────────
@@ -209,29 +215,33 @@ class SubAgentLatencyRunner:
         for agent_name, call, notes in self._build_agent_calls():
             try:
                 latency = time_function(call, n_warmup=self.n_warmup, n_runs=self.n_runs)
-                rows.append(BenchResult(
-                    name=agent_name,
-                    metrics={
-                        "mean_ms": latency["mean_ms"],
-                        "p50_ms":  latency["p50_ms"],
-                        "p95_ms":  latency["p95_ms"],
-                        "device":  self.device_label,
-                        "n_runs":  latency["n_runs"],
-                        "notes":   notes,
-                    },
-                ))
+                rows.append(
+                    BenchResult(
+                        name=agent_name,
+                        metrics={
+                            "mean_ms": latency["mean_ms"],
+                            "p50_ms": latency["p50_ms"],
+                            "p95_ms": latency["p95_ms"],
+                            "device": self.device_label,
+                            "n_runs": latency["n_runs"],
+                            "notes": notes,
+                        },
+                    )
+                )
             except Exception as exc:  # noqa: BLE001 — log + continue
-                rows.append(BenchResult(
-                    name=agent_name,
-                    metrics={
-                        "mean_ms": float("nan"),
-                        "p50_ms":  float("nan"),
-                        "p95_ms":  float("nan"),
-                        "device":  self.device_label,
-                        "n_runs":  0,
-                        "notes":   f"{notes} — runtime error: {exc!r}",
-                    },
-                ))
+                rows.append(
+                    BenchResult(
+                        name=agent_name,
+                        metrics={
+                            "mean_ms": float("nan"),
+                            "p50_ms": float("nan"),
+                            "p95_ms": float("nan"),
+                            "device": self.device_label,
+                            "n_runs": 0,
+                            "notes": f"{notes} — runtime error: {exc!r}",
+                        },
+                    )
+                )
         return rows
 
 
@@ -240,27 +250,37 @@ class SubAgentLatencyRunner:
 # ---------------------------------------------------------------------------
 
 _COLUMNS = ["agent", "mean_ms", "p50_ms", "p95_ms", "device", "n_runs", "notes"]
-_TITLE   = "Sub-agent latency (single lap fixture)"
+_TITLE = "Sub-agent latency (single lap fixture)"
 
 
 def _parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Sub-agent isolated latency benchmark.")
-    parser.add_argument("--n-warmup", type=int, default=5, help="Warm-up runs per agent (default 5).")
-    parser.add_argument("--n-runs",   type=int, default=100, help="Measured runs per agent (default 100).")
-    parser.add_argument("--device",   type=str, default="auto",
-                        choices=("auto", "cpu", "cuda"),
-                        help="Device label for the artefact (auto resolves via torch.cuda.is_available).")
+    parser.add_argument(
+        "--n-warmup", type=int, default=5, help="Warm-up runs per agent (default 5)."
+    )
+    parser.add_argument(
+        "--n-runs", type=int, default=100, help="Measured runs per agent (default 100)."
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="auto",
+        choices=("auto", "cpu", "cuda"),
+        help="Device label for the artefact (auto resolves via torch.cuda.is_available).",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: Optional[list[str]] = None) -> int:
     args = _parse_args(argv)
-    console.print(make_start_panel(
-        "bench_subagent_latency.py",
-        f"6 sub-agents, single lap_state, n_warmup={args.n_warmup} n_runs={args.n_runs}.",
-    ))
+    console.print(
+        make_start_panel(
+            "bench_subagent_latency.py",
+            f"6 sub-agents, single lap_state, n_warmup={args.n_warmup} n_runs={args.n_runs}.",
+        )
+    )
 
-    runner  = SubAgentLatencyRunner(
+    runner = SubAgentLatencyRunner(
         n_warmup=args.n_warmup,
         n_runs=args.n_runs,
         device=args.device,
@@ -268,7 +288,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     console.print(f"[dim]Fixture:[/dim] {runner.fixture_label}")
     results = runner.run()
 
-    md_path  = _EVAL_DIR / "subagent_latency.md"
+    md_path = _EVAL_DIR / "subagent_latency.md"
     csv_path = _EVAL_DIR / "subagent_latency.csv"
     export_markdown(results, md_path, _TITLE, _COLUMNS)
     export_csv(results, csv_path, _COLUMNS)

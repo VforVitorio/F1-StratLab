@@ -65,13 +65,13 @@ from scripts.bench._common import (  # noqa: E402
 )
 from scripts.cli.theme import console  # noqa: E402
 
-_DATA_ROOT  = _REPO_ROOT / "data"
+_DATA_ROOT = _REPO_ROOT / "data"
 _MODELS_DIR = _DATA_ROOT / "models" / "nlp"
-_EVAL_DIR   = _DATA_ROOT / "eval"
+_EVAL_DIR = _DATA_ROOT / "eval"
 
 _SENTIMENT_DIR = _MODELS_DIR / "bert_sentiment_v1"
-_INTENT_DIR    = _MODELS_DIR / "intent_setfit_modernbert_v1"
-_NER_DIR       = _MODELS_DIR / "ner_v1" / "bert_bio_v1"
+_INTENT_DIR = _MODELS_DIR / "intent_setfit_modernbert_v1"
+_NER_DIR = _MODELS_DIR / "ner_v1" / "bert_bio_v1"
 
 # Same 8 messages N24's GPU benchmark uses, copied verbatim so the CPU
 # numbers in this artefact are directly comparable to the notebook's.
@@ -89,32 +89,81 @@ _BENCHMARK_MESSAGES: tuple[str, ...] = (
 # RCM rows mirror those used in N24's RCM demo — kept identical so the
 # rule-based parser sees the same input shape it does in the notebook.
 _RCM_ROWS: tuple[dict[str, Any], ...] = (
-    {"Category": "SafetyCar", "Flag": "SAFETY_CAR", "Message": "SAFETY CAR DEPLOYED",
-     "Scope": "Track", "Sector": None, "RacingNumber": None},
-    {"Category": "Flag", "Flag": "YELLOW", "Message": "DOUBLE YELLOW FLAG",
-     "Scope": "Sector", "Sector": 2, "RacingNumber": None},
-    {"Category": "Drs", "Flag": None, "Message": "DRS ENABLED",
-     "Scope": "Track", "Sector": None, "RacingNumber": None},
-    {"Category": "Other", "Flag": None, "Message": "CAR 44 RETIRED FROM THE RACE",
-     "Scope": "Track", "Sector": None, "RacingNumber": "44"},
-    {"Category": "Other", "Flag": None, "Message": "LAP 23 TURN 5 TIME DELETED - TRACK LIMITS",
-     "Scope": None, "Sector": None, "RacingNumber": "1"},
-    {"Category": "Flag", "Flag": "GREEN", "Message": "GREEN FLAG",
-     "Scope": "Track", "Sector": None, "RacingNumber": None},
-    {"Category": "CarEvent", "Flag": None, "Message": "CAR 1 COLLISION WITH CAR 4",
-     "Scope": "Track", "Sector": None, "RacingNumber": "1"},
-    {"Category": "Other", "Flag": None, "Message": "VIRTUAL SAFETY CAR DEPLOYED",
-     "Scope": "Track", "Sector": None, "RacingNumber": None},
+    {
+        "Category": "SafetyCar",
+        "Flag": "SAFETY_CAR",
+        "Message": "SAFETY CAR DEPLOYED",
+        "Scope": "Track",
+        "Sector": None,
+        "RacingNumber": None,
+    },
+    {
+        "Category": "Flag",
+        "Flag": "YELLOW",
+        "Message": "DOUBLE YELLOW FLAG",
+        "Scope": "Sector",
+        "Sector": 2,
+        "RacingNumber": None,
+    },
+    {
+        "Category": "Drs",
+        "Flag": None,
+        "Message": "DRS ENABLED",
+        "Scope": "Track",
+        "Sector": None,
+        "RacingNumber": None,
+    },
+    {
+        "Category": "Other",
+        "Flag": None,
+        "Message": "CAR 44 RETIRED FROM THE RACE",
+        "Scope": "Track",
+        "Sector": None,
+        "RacingNumber": "44",
+    },
+    {
+        "Category": "Other",
+        "Flag": None,
+        "Message": "LAP 23 TURN 5 TIME DELETED - TRACK LIMITS",
+        "Scope": None,
+        "Sector": None,
+        "RacingNumber": "1",
+    },
+    {
+        "Category": "Flag",
+        "Flag": "GREEN",
+        "Message": "GREEN FLAG",
+        "Scope": "Track",
+        "Sector": None,
+        "RacingNumber": None,
+    },
+    {
+        "Category": "CarEvent",
+        "Flag": None,
+        "Message": "CAR 1 COLLISION WITH CAR 4",
+        "Scope": "Track",
+        "Sector": None,
+        "RacingNumber": "1",
+    },
+    {
+        "Category": "Other",
+        "Flag": None,
+        "Message": "VIRTUAL SAFETY CAR DEPLOYED",
+        "Scope": "Track",
+        "Sector": None,
+        "RacingNumber": None,
+    },
 )
 
 _SENTIMENT_LABELS = ("negative", "neutral", "positive")
-_INTENT_LABELS    = ("INFORMATION", "PROBLEM", "ORDER", "WARNING", "QUESTION")
-_NER_MAX_LEN      = 128
+_INTENT_LABELS = ("INFORMATION", "PROBLEM", "ORDER", "WARNING", "QUESTION")
+_NER_MAX_LEN = 128
 
 
 # ---------------------------------------------------------------------------
 # Inline replicas of N24's loaders + predictors
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class _NlpModels:
@@ -126,30 +175,30 @@ class _NlpModels:
     for readers who only see the dataclass.
     """
 
-    sentiment_model:     Any
+    sentiment_model: Any
     sentiment_tokenizer: Any
-    intent_model:        Any
-    ner_model:           Any
-    ner_tokenizer:       Any
-    ner_label2id:        dict[str, int]
-    ner_id2label:        dict[int, str]
-    device:              str
+    intent_model: Any
+    ner_model: Any
+    ner_tokenizer: Any
+    ner_label2id: dict[str, int]
+    ner_id2label: dict[int, str]
+    device: str
 
 
 def _load_sentiment(device: str):
     """Load the fine-tuned RoBERTa sentiment classifier (mirrors N24)."""
-    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
     base_model = "roberta-base"
-    tokenizer  = AutoTokenizer.from_pretrained(base_model)
-    model      = AutoModelForSequenceClassification.from_pretrained(base_model, num_labels=3)
+    tokenizer = AutoTokenizer.from_pretrained(base_model)
+    model = AutoModelForSequenceClassification.from_pretrained(base_model, num_labels=3)
     state_dict = torch.load(
         _SENTIMENT_DIR / "best_roberta_sentiment_model.pt",
         map_location=device,
         weights_only=False,
     )
     if any(k.startswith("model.") for k in state_dict):
-        state_dict = {k[len("model."):]: v for k, v in state_dict.items()}
+        state_dict = {k[len("model.") :]: v for k, v in state_dict.items()}
     model.load_state_dict(state_dict)
     return model.to(device).eval(), tokenizer
 
@@ -179,13 +228,15 @@ def _load_ner(device: str):
     """Load the fine-tuned BERT-large CoNLL-03 BIO NER model (mirrors N24)."""
     from transformers import AutoTokenizer, BertForTokenClassification
 
-    cfg        = json.loads((_NER_DIR / "model_config.json").read_text())
-    label2id   = cfg["label2id"]
-    id2label   = {int(k): v for k, v in cfg["id2label"].items()}
+    cfg = json.loads((_NER_DIR / "model_config.json").read_text())
+    label2id = cfg["label2id"]
+    id2label = {int(k): v for k, v in cfg["id2label"].items()}
     base_model = cfg.get("model_name", "dbmdz/bert-large-cased-finetuned-conll03-english")
-    tokenizer  = AutoTokenizer.from_pretrained(str(_NER_DIR), use_fast=True)
-    model      = BertForTokenClassification.from_pretrained(
-        base_model, num_labels=len(label2id), ignore_mismatched_sizes=True,
+    tokenizer = AutoTokenizer.from_pretrained(str(_NER_DIR), use_fast=True)
+    model = BertForTokenClassification.from_pretrained(
+        base_model,
+        num_labels=len(label2id),
+        ignore_mismatched_sizes=True,
     )
     state_dict = torch.load(
         _NER_DIR / "bert_bio_state_dict.pt",
@@ -205,8 +256,8 @@ def _build_models(device: str) -> _NlpModels:
     """
     for required in (
         _SENTIMENT_DIR / "best_roberta_sentiment_model.pt",
-        _INTENT_DIR    / "config.json",
-        _NER_DIR       / "bert_bio_state_dict.pt",
+        _INTENT_DIR / "config.json",
+        _NER_DIR / "bert_bio_state_dict.pt",
     ):
         if not required.exists():
             raise FileNotFoundError(
@@ -218,14 +269,14 @@ def _build_models(device: str) -> _NlpModels:
     intent_model = _load_intent(device)
     ner_model, ner_tokenizer, label2id, id2label = _load_ner(device)
     return _NlpModels(
-        sentiment_model     = sentiment_model,
-        sentiment_tokenizer = sentiment_tokenizer,
-        intent_model        = intent_model,
-        ner_model           = ner_model,
-        ner_tokenizer       = ner_tokenizer,
-        ner_label2id        = label2id,
-        ner_id2label        = id2label,
-        device              = device,
+        sentiment_model=sentiment_model,
+        sentiment_tokenizer=sentiment_tokenizer,
+        intent_model=intent_model,
+        ner_model=ner_model,
+        ner_tokenizer=ner_tokenizer,
+        ner_label2id=label2id,
+        ner_id2label=id2label,
+        device=device,
     )
 
 
@@ -236,12 +287,16 @@ def _predict_sentiment(text: str, models: _NlpModels) -> tuple[str, float]:
     probability of the argmax class, returned as a float in [0, 1].
     """
     inputs = models.sentiment_tokenizer(
-        text, return_tensors="pt", truncation=True, padding=True, max_length=128,
+        text,
+        return_tensors="pt",
+        truncation=True,
+        padding=True,
+        max_length=128,
     )
     inputs = {k: v.to(models.device) for k, v in inputs.items()}
     with torch.no_grad():
         logits = models.sentiment_model(**inputs).logits
-    probs    = torch.softmax(logits, dim=-1).squeeze().cpu().numpy()
+    probs = torch.softmax(logits, dim=-1).squeeze().cpu().numpy()
     pred_idx = int(np.argmax(probs))
     return _SENTIMENT_LABELS[pred_idx], float(probs[pred_idx])
 
@@ -253,8 +308,8 @@ def _predict_intent(text: str, models: _NlpModels) -> tuple[str, float]:
     the bench passes a single string so the confidence is read from
     row 0 at the index matching the predicted class.
     """
-    pred_str  = models.intent_model.predict([text])[0]
-    probs     = models.intent_model.predict_proba([text])[0]
+    pred_str = models.intent_model.predict([text])[0]
+    probs = models.intent_model.predict_proba([text])[0]
     label_idx = _INTENT_LABELS.index(pred_str)
     return pred_str, float(probs[label_idx])
 
@@ -282,10 +337,14 @@ def _predict_entities(text: str, models: _NlpModels) -> list[dict[str, str]]:
     )
     word_ids = enc.word_ids(batch_index=0)
     with torch.no_grad():
-        logits = models.ner_model(
-            input_ids      = enc["input_ids"].to(models.device),
-            attention_mask = enc["attention_mask"].to(models.device),
-        ).logits[0].cpu()
+        logits = (
+            models.ner_model(
+                input_ids=enc["input_ids"].to(models.device),
+                attention_mask=enc["attention_mask"].to(models.device),
+            )
+            .logits[0]
+            .cpu()
+        )
     pred_ids = logits.argmax(dim=-1).tolist()
 
     word_tags: dict[int, str] = {}
@@ -300,22 +359,25 @@ def _predict_entities(text: str, models: _NlpModels) -> list[dict[str, str]]:
         tag = word_tags.get(wi, "O")
         if tag.startswith("B-"):
             if current_type is not None:
-                spans.append({"text": " ".join(span_words),
-                              "label": current_type.lower().replace("_", " ")})
+                spans.append(
+                    {"text": " ".join(span_words), "label": current_type.lower().replace("_", " ")}
+                )
             current_type, span_words = tag[2:], [word]
         elif tag.startswith("I-") and current_type == tag[2:]:
             span_words.append(word)
         else:
             if current_type is not None:
-                spans.append({"text": " ".join(span_words),
-                              "label": current_type.lower().replace("_", " ")})
+                spans.append(
+                    {"text": " ".join(span_words), "label": current_type.lower().replace("_", " ")}
+                )
             current_type = None
             span_words = []
             if tag.startswith("B-"):
                 current_type, span_words = tag[2:], [word]
     if current_type is not None:
-        spans.append({"text": " ".join(span_words),
-                      "label": current_type.lower().replace("_", " ")})
+        spans.append(
+            {"text": " ".join(span_words), "label": current_type.lower().replace("_", " ")}
+        )
     return spans
 
 
@@ -328,18 +390,18 @@ def _run_pipeline(text: str, models: _NlpModels) -> dict[str, Any]:
     the radio agent expects.
     """
     sentiment, sentiment_score = _predict_sentiment(text, models)
-    intent, intent_confidence  = _predict_intent(text, models)
-    entities                    = _predict_entities(text, models)
+    intent, intent_confidence = _predict_intent(text, models)
+    entities = _predict_entities(text, models)
     return {
-        "message":   text,
+        "message": text,
         "timestamp": datetime.utcnow().isoformat(),
         "analysis": {
-            "sentiment":         sentiment,
-            "sentiment_score":   round(sentiment_score, 4),
-            "intent":            intent,
+            "sentiment": sentiment,
+            "sentiment_score": round(sentiment_score, 4),
+            "intent": intent,
             "intent_confidence": round(intent_confidence, 4),
-            "entities":          entities,
-            "rcm":               None,
+            "entities": entities,
+            "rcm": None,
         },
     }
 
@@ -347,6 +409,7 @@ def _run_pipeline(text: str, models: _NlpModels) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # RCM rule-based parser (no ML — direct transcription of N24)
 # ---------------------------------------------------------------------------
+
 
 def _extract_car_number(message: str, racing_number: Any) -> Optional[str]:
     if racing_number is not None and pd.notna(racing_number) and str(racing_number).strip():
@@ -356,29 +419,42 @@ def _extract_car_number(message: str, racing_number: Any) -> Optional[str]:
 
 
 def _classify_rcm_event(row: dict[str, Any]) -> str:
-    cat  = str(row.get("Category", "")).strip()
+    cat = str(row.get("Category", "")).strip()
     flag = str(row.get("Flag", "")).strip().upper()
-    msg  = str(row.get("Message", "")).upper()
+    msg = str(row.get("Message", "")).upper()
 
     if cat == "SafetyCar":
         if "VIRTUAL" in msg:
-            return "VIRTUAL_SAFETY_CAR_DEPLOYED" if "DEPLOYED" in msg else "VIRTUAL_SAFETY_CAR_ENDING"
-        if "DEPLOYED" in msg: return "SAFETY_CAR_DEPLOYED"
-        if "PIT LANE" in msg or "IN THIS LAP" in msg: return "SAFETY_CAR_IN_PIT_LANE"
-        if "ENDING" in msg or "WITHDRAWN" in msg: return "SAFETY_CAR_ENDING"
+            return (
+                "VIRTUAL_SAFETY_CAR_DEPLOYED" if "DEPLOYED" in msg else "VIRTUAL_SAFETY_CAR_ENDING"
+            )
+        if "DEPLOYED" in msg:
+            return "SAFETY_CAR_DEPLOYED"
+        if "PIT LANE" in msg or "IN THIS LAP" in msg:
+            return "SAFETY_CAR_IN_PIT_LANE"
+        if "ENDING" in msg or "WITHDRAWN" in msg:
+            return "SAFETY_CAR_ENDING"
         return "OTHER"
 
     if cat == "Flag":
-        if flag == "CHEQUERED" or "CHEQUERED" in msg: return "CHEQUERED_FLAG"
-        if flag == "BLUE": return "BLUE_FLAG"
-        if flag == "BLACK AND WHITE": return "BLACK_AND_WHITE_FLAG"
-        if flag in ("VIRTUAL_SAFETY_CAR", "VSC"): return "VIRTUAL_SAFETY_CAR_DEPLOYED"
-        if flag == "SAFETY_CAR": return "SAFETY_CAR_DEPLOYED"
-        if flag == "RED" or "RED FLAG" in msg: return "RED_FLAG"
-        if flag == "GREEN" or "GREEN FLAG" in msg: return "GREEN_FLAG"
-        if flag == "CLEAR": return "CLEAR_FLAG"
+        if flag == "CHEQUERED" or "CHEQUERED" in msg:
+            return "CHEQUERED_FLAG"
+        if flag == "BLUE":
+            return "BLUE_FLAG"
+        if flag == "BLACK AND WHITE":
+            return "BLACK_AND_WHITE_FLAG"
+        if flag in ("VIRTUAL_SAFETY_CAR", "VSC"):
+            return "VIRTUAL_SAFETY_CAR_DEPLOYED"
+        if flag == "SAFETY_CAR":
+            return "SAFETY_CAR_DEPLOYED"
+        if flag == "RED" or "RED FLAG" in msg:
+            return "RED_FLAG"
+        if flag == "GREEN" or "GREEN FLAG" in msg:
+            return "GREEN_FLAG"
+        if flag == "CLEAR":
+            return "CLEAR_FLAG"
         if flag in ("YELLOW", "DOUBLE YELLOW"):
-            scope  = str(row.get("Scope", "")).strip()
+            scope = str(row.get("Scope", "")).strip()
             sector = row.get("Sector")
             if scope == "Sector" or (pd.notna(sector) if not isinstance(sector, str) else sector):
                 return "YELLOW_FLAG_SECTOR"
@@ -389,28 +465,45 @@ def _classify_rcm_event(row: dict[str, Any]) -> str:
         return "DRS_ENABLED" if "ENABLED" in msg else "DRS_DISABLED"
 
     if cat == "CarEvent":
-        if "RETIRED" in msg or "ABANDON" in msg: return "CAR_RETIRED"
-        if "COLLISION" in msg or "CONTACT" in msg: return "CAR_COLLISION"
-        if "MECHANICAL" in msg or "ENGINE" in msg or "GEARBOX" in msg: return "CAR_MECHANICAL"
+        if "RETIRED" in msg or "ABANDON" in msg:
+            return "CAR_RETIRED"
+        if "COLLISION" in msg or "CONTACT" in msg:
+            return "CAR_COLLISION"
+        if "MECHANICAL" in msg or "ENGINE" in msg or "GEARBOX" in msg:
+            return "CAR_MECHANICAL"
         return "OTHER"
 
     if cat == "Other":
-        if "RETIRED" in msg or "ABANDON" in msg: return "CAR_RETIRED"
-        if "COLLISION" in msg or "CONTACT" in msg: return "CAR_COLLISION"
-        if "DRS ENABLED" in msg: return "DRS_ENABLED"
-        if "DRS DISABLED" in msg: return "DRS_DISABLED"
-        if "TRACK LIMITS" in msg or "DELETED" in msg: return "LAP_DELETED"
-        if "UNDER INVESTIGATION" in msg or "NOTED" in msg: return "INVESTIGATION"
-        if "PENALTY" in msg or ("TIME" in msg and "SECOND" in msg): return "TIME_PENALTY"
-        if "PIT EXIT" in msg or "PIT LANE" in msg: return "PIT_EXIT"
+        if "RETIRED" in msg or "ABANDON" in msg:
+            return "CAR_RETIRED"
+        if "COLLISION" in msg or "CONTACT" in msg:
+            return "CAR_COLLISION"
+        if "DRS ENABLED" in msg:
+            return "DRS_ENABLED"
+        if "DRS DISABLED" in msg:
+            return "DRS_DISABLED"
+        if "TRACK LIMITS" in msg or "DELETED" in msg:
+            return "LAP_DELETED"
+        if "UNDER INVESTIGATION" in msg or "NOTED" in msg:
+            return "INVESTIGATION"
+        if "PENALTY" in msg or ("TIME" in msg and "SECOND" in msg):
+            return "TIME_PENALTY"
+        if "PIT EXIT" in msg or "PIT LANE" in msg:
+            return "PIT_EXIT"
         if (
             ("TRACK" in msg and ("CONDITION" in msg or "SLIPPERY" in msg))
-            or "DEBRIS" in msg or "FLUID" in msg or "LOW GRIP" in msg or "RAIN" in msg
+            or "DEBRIS" in msg
+            or "FLUID" in msg
+            or "LOW GRIP" in msg
+            or "RAIN" in msg
         ):
             return "TRACK_CONDITION"
-        if "LAPPED" in msg and "OVERTAKE" in msg: return "LAPPED_CARS_OVERTAKE"
-        if "ALL CARS MAY OVERTAKE" in msg: return "SAFETY_CAR_ENDING"
-        if "VIRTUAL SAFETY CAR DEPLOYED" in msg: return "VIRTUAL_SAFETY_CAR_DEPLOYED"
+        if "LAPPED" in msg and "OVERTAKE" in msg:
+            return "LAPPED_CARS_OVERTAKE"
+        if "ALL CARS MAY OVERTAKE" in msg:
+            return "SAFETY_CAR_ENDING"
+        if "VIRTUAL SAFETY CAR DEPLOYED" in msg:
+            return "VIRTUAL_SAFETY_CAR_DEPLOYED"
         return "OTHER"
 
     return "OTHER"
@@ -418,14 +511,14 @@ def _classify_rcm_event(row: dict[str, Any]) -> str:
 
 def _parse_rcm_row(row: dict[str, Any]) -> dict[str, Any]:
     event_type = _classify_rcm_event(row)
-    sector     = row.get("Sector")
+    sector = row.get("Sector")
     return {
-        "event_type":  event_type,
-        "category":    str(row.get("Category", "")).strip(),
-        "flag":        row.get("Flag") if pd.notna(row.get("Flag", None)) else None,
-        "scope":       row.get("Scope") if pd.notna(row.get("Scope", None)) else None,
-        "sector":      int(sector) if sector is not None and pd.notna(sector) else None,
-        "car_number":  _extract_car_number(str(row.get("Message", "")), row.get("RacingNumber")),
+        "event_type": event_type,
+        "category": str(row.get("Category", "")).strip(),
+        "flag": row.get("Flag") if pd.notna(row.get("Flag", None)) else None,
+        "scope": row.get("Scope") if pd.notna(row.get("Scope", None)) else None,
+        "sector": int(sector) if sector is not None and pd.notna(sector) else None,
+        "car_number": _extract_car_number(str(row.get("Message", "")), row.get("RacingNumber")),
         "message_raw": str(row.get("Message", "")).strip(),
     }
 
@@ -442,15 +535,15 @@ def _run_rcm_pipeline(rcm_row: dict[str, Any], models: _NlpModels) -> dict[str, 
         rcm_row = rcm_row.to_dict()
     rcm_result = _parse_rcm_row(rcm_row)
     return {
-        "message":   rcm_row.get("Message", ""),
+        "message": rcm_row.get("Message", ""),
         "timestamp": datetime.utcnow().isoformat(),
         "analysis": {
-            "sentiment":         None,
-            "sentiment_score":   None,
-            "intent":            None,
+            "sentiment": None,
+            "sentiment_score": None,
+            "intent": None,
             "intent_confidence": None,
-            "entities":          None,
-            "rcm":               rcm_result,
+            "entities": None,
+            "rcm": rcm_result,
         },
     }
 
@@ -458,6 +551,7 @@ def _run_rcm_pipeline(rcm_row: dict[str, Any], models: _NlpModels) -> dict[str, 
 # ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
+
 
 class NlpPipelineRunner:
     """Time both NLP entry points on every requested device.
@@ -472,7 +566,7 @@ class NlpPipelineRunner:
 
     def __init__(self, n_warmup: int = 5, n_runs: int = 20) -> None:
         self.n_warmup = int(n_warmup)
-        self.n_runs   = int(n_runs)
+        self.n_runs = int(n_runs)
 
     def _bench_one_device(self, device: str) -> list[BenchResult]:
         """Return one row per entry point on ``device``."""
@@ -489,8 +583,8 @@ class NlpPipelineRunner:
         n_total_pipeline = self.n_runs * len(_BENCHMARK_MESSAGES)
         latency_pipeline = time_function(
             _call_pipeline,
-            n_warmup = self.n_warmup * len(_BENCHMARK_MESSAGES),
-            n_runs   = n_total_pipeline,
+            n_warmup=self.n_warmup * len(_BENCHMARK_MESSAGES),
+            n_runs=n_total_pipeline,
         )
 
         # ── run_rcm_pipeline — rule-based, iterate the RCM rows ──
@@ -504,33 +598,33 @@ class NlpPipelineRunner:
         n_total_rcm = self.n_runs * len(_RCM_ROWS)
         latency_rcm = time_function(
             _call_rcm,
-            n_warmup = self.n_warmup * len(_RCM_ROWS),
-            n_runs   = n_total_rcm,
+            n_warmup=self.n_warmup * len(_RCM_ROWS),
+            n_runs=n_total_rcm,
         )
 
         return [
             BenchResult(
                 name=f"{device}/run_pipeline",
                 metrics={
-                    "device":      device,
+                    "device": device,
                     "entry_point": "run_pipeline",
-                    "mean_ms":     latency_pipeline["mean_ms"],
-                    "p50_ms":      latency_pipeline["p50_ms"],
-                    "p95_ms":      latency_pipeline["p95_ms"],
-                    "n_runs":      latency_pipeline["n_runs"],
-                    "notes":       "8 messages x N runs, sentiment + intent + NER",
+                    "mean_ms": latency_pipeline["mean_ms"],
+                    "p50_ms": latency_pipeline["p50_ms"],
+                    "p95_ms": latency_pipeline["p95_ms"],
+                    "n_runs": latency_pipeline["n_runs"],
+                    "notes": "8 messages x N runs, sentiment + intent + NER",
                 },
             ),
             BenchResult(
                 name=f"{device}/run_rcm_pipeline",
                 metrics={
-                    "device":      device,
+                    "device": device,
                     "entry_point": "run_rcm_pipeline",
-                    "mean_ms":     latency_rcm["mean_ms"],
-                    "p50_ms":      latency_rcm["p50_ms"],
-                    "p95_ms":      latency_rcm["p95_ms"],
-                    "n_runs":      latency_rcm["n_runs"],
-                    "notes":       "8 RCM rows x N runs, rule-based parser only",
+                    "mean_ms": latency_rcm["mean_ms"],
+                    "p50_ms": latency_rcm["p50_ms"],
+                    "p95_ms": latency_rcm["p95_ms"],
+                    "n_runs": latency_rcm["n_runs"],
+                    "notes": "8 RCM rows x N runs, rule-based parser only",
                 },
             ),
         ]
@@ -548,18 +642,24 @@ class NlpPipelineRunner:
 # ---------------------------------------------------------------------------
 
 _COLUMNS = ["row", "device", "entry_point", "mean_ms", "p50_ms", "p95_ms", "n_runs", "notes"]
-_TITLE   = "NLP pipeline latency (CPU vs GPU)"
+_TITLE = "NLP pipeline latency (CPU vs GPU)"
 
 
 def _parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="NLP pipeline (N24) latency benchmark.")
-    parser.add_argument("--device", type=str, default="cpu",
-                        choices=("cpu", "cuda", "both"),
-                        help="Device(s) to benchmark (default cpu).")
-    parser.add_argument("--n-warmup", type=int, default=5,
-                        help="Warm-up passes over the message bank (default 5).")
-    parser.add_argument("--n-runs", type=int, default=20,
-                        help="Measured passes over the message bank (default 20).")
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cpu",
+        choices=("cpu", "cuda", "both"),
+        help="Device(s) to benchmark (default cpu).",
+    )
+    parser.add_argument(
+        "--n-warmup", type=int, default=5, help="Warm-up passes over the message bank (default 5)."
+    )
+    parser.add_argument(
+        "--n-runs", type=int, default=20, help="Measured passes over the message bank (default 20)."
+    )
     return parser.parse_args(argv)
 
 
@@ -585,16 +685,18 @@ def _resolve_devices(device_arg: str) -> list[str]:
 
 def main(argv: Optional[list[str]] = None) -> int:
     args = _parse_args(argv)
-    console.print(make_start_panel(
-        "bench_nlp_pipeline_cpu.py",
-        f"NLP pipeline (N24) latency, device={args.device}, n_runs={args.n_runs}.",
-    ))
+    console.print(
+        make_start_panel(
+            "bench_nlp_pipeline_cpu.py",
+            f"NLP pipeline (N24) latency, device={args.device}, n_runs={args.n_runs}.",
+        )
+    )
 
     devices = _resolve_devices(args.device)
-    runner  = NlpPipelineRunner(n_warmup=args.n_warmup, n_runs=args.n_runs)
+    runner = NlpPipelineRunner(n_warmup=args.n_warmup, n_runs=args.n_runs)
     results = runner.run(devices)
 
-    md_path  = _EVAL_DIR / "nlp_pipeline_cpu.md"
+    md_path = _EVAL_DIR / "nlp_pipeline_cpu.md"
     csv_path = _EVAL_DIR / "nlp_pipeline_cpu.csv"
     export_markdown(results, md_path, _TITLE, _COLUMNS)
     export_csv(results, csv_path, _COLUMNS)
