@@ -49,17 +49,14 @@ from scripts.bench._common import (  # noqa: E402
 from scripts.cli.theme import console  # noqa: E402
 from src.nlp.radio_runner import WhisperTranscriber  # noqa: E402
 
-_DATA_ROOT  = _REPO_ROOT / "data"
+_DATA_ROOT = _REPO_ROOT / "data"
 _AUDIO_ROOT = _DATA_ROOT / "raw" / "radio_audio"
-_EVAL_DIR   = _DATA_ROOT / "eval"
+_EVAL_DIR = _DATA_ROOT / "eval"
 
-_DEFAULT_SAMPLE_SIZE   = 50
-_AUDIO_SAMPLE_SEED     = 42
-_LATENCY_BUCKET_LABEL  = "overall"
-_NOTES_TEXT            = (
-    "WER not computed: ground-truth corpus not paired, "
-    "pending Track-A radio benchmark"
-)
+_DEFAULT_SAMPLE_SIZE = 50
+_AUDIO_SAMPLE_SEED = 42
+_LATENCY_BUCKET_LABEL = "overall"
+_NOTES_TEXT = "WER not computed: ground-truth corpus not paired, pending Track-A radio benchmark"
 
 
 class WhisperLatencyRunner:
@@ -93,9 +90,9 @@ class WhisperLatencyRunner:
                 from disk. Falls back to whatever is available when
                 fewer files exist than the requested size.
         """
-        self.n_runs       = int(n_runs)
+        self.n_runs = int(n_runs)
         self.device_label = self._resolve_device(device)
-        self.transcriber  = WhisperTranscriber(model_name="turbo")
+        self.transcriber = WhisperTranscriber(model_name="turbo")
         self.sample_paths = self._sample_audio_paths(sample_size)
 
     @staticmethod
@@ -158,12 +155,12 @@ class WhisperLatencyRunner:
         self._call_idx = 0
         latency = time_function(self._transcribe_one, n_warmup=5, n_runs=self.n_runs)
         metrics = {
-            "n_messages":      len(self.sample_paths),
-            "mean_ms":         latency["mean_ms"],
-            "latency_p50_ms":  latency["p50_ms"],
-            "latency_p95_ms":  latency["p95_ms"],
-            "device":          self.device_label,
-            "notes":           _NOTES_TEXT,
+            "n_messages": len(self.sample_paths),
+            "mean_ms": latency["mean_ms"],
+            "latency_p50_ms": latency["p50_ms"],
+            "latency_p95_ms": latency["p95_ms"],
+            "device": self.device_label,
+            "notes": _NOTES_TEXT,
         }
         return BenchResult(name=_LATENCY_BUCKET_LABEL, metrics=metrics)
 
@@ -172,38 +169,59 @@ class WhisperLatencyRunner:
 # CLI entry point
 # ---------------------------------------------------------------------------
 
-_COLUMNS = ["bucket", "n_messages", "mean_ms", "latency_p50_ms",
-            "latency_p95_ms", "device", "notes"]
-_TITLE   = "Whisper turbo per-clip latency"
+_COLUMNS = [
+    "bucket",
+    "n_messages",
+    "mean_ms",
+    "latency_p50_ms",
+    "latency_p95_ms",
+    "device",
+    "notes",
+]
+_TITLE = "Whisper turbo per-clip latency"
 
 
 def _parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Whisper turbo latency benchmark.")
-    parser.add_argument("--n-runs", type=int, default=_DEFAULT_SAMPLE_SIZE,
-                        help="Measured runs (default 50). 5 warm-up runs always precede.")
-    parser.add_argument("--device", type=str, default="auto",
-                        choices=("auto", "cpu", "cuda"),
-                        help="Device label for the artefact (auto resolves via torch.cuda.is_available).")
-    parser.add_argument("--sample-size", type=int, default=_DEFAULT_SAMPLE_SIZE,
-                        help="Number of distinct mp3 files to sample (default 50).")
+    parser.add_argument(
+        "--n-runs",
+        type=int,
+        default=_DEFAULT_SAMPLE_SIZE,
+        help="Measured runs (default 50). 5 warm-up runs always precede.",
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="auto",
+        choices=("auto", "cpu", "cuda"),
+        help="Device label for the artefact (auto resolves via torch.cuda.is_available).",
+    )
+    parser.add_argument(
+        "--sample-size",
+        type=int,
+        default=_DEFAULT_SAMPLE_SIZE,
+        help="Number of distinct mp3 files to sample (default 50).",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: Optional[list[str]] = None) -> int:
     args = _parse_args(argv)
-    console.print(make_start_panel(
-        "bench_whisper.py",
-        f"Whisper turbo latency, {args.n_runs} measured runs (device={args.device}).",
-    ))
+    console.print(
+        make_start_panel(
+            "bench_whisper.py",
+            f"Whisper turbo latency, {args.n_runs} measured runs (device={args.device}).",
+        )
+    )
 
-    runner  = WhisperLatencyRunner(
+    runner = WhisperLatencyRunner(
         n_runs=args.n_runs,
         device=args.device,
         sample_size=args.sample_size,
     )
     results = [runner.run()]
 
-    md_path  = _EVAL_DIR / "whisper_results.md"
+    md_path = _EVAL_DIR / "whisper_results.md"
     csv_path = _EVAL_DIR / "whisper_results.csv"
     export_markdown(results, md_path, _TITLE, _COLUMNS)
     export_csv(results, csv_path, _COLUMNS)
