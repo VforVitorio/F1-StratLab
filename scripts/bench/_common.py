@@ -197,10 +197,10 @@ def time_function(
     arr = np.asarray(times_ms, dtype=float)
     return {
         "mean_ms": float(arr.mean()),
-        "p50_ms":  float(np.percentile(arr, 50)),
-        "p95_ms":  float(np.percentile(arr, 95)),
-        "std_ms":  float(arr.std()),
-        "n_runs":  int(len(arr)),
+        "p50_ms": float(np.percentile(arr, 50)),
+        "p95_ms": float(np.percentile(arr, 95)),
+        "std_ms": float(arr.std()),
+        "n_runs": int(len(arr)),
     }
 
 
