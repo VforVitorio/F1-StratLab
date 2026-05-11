@@ -5,8 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "f1-strat-manager"
 version = "1.1.0"
-description = "Sistema Multi-Agente para Analisis y Estrategia de Carreras F1"
-authors = [{name = "Victor"}]
+description = "F1 StratLab — multi-agent race strategy intelligence system"
+authors = [{name = "Victor Vega Sobral", email = "victorvegasobral@gmail.com"}]
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
 dependencies = [

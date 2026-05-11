@@ -1,0 +1,32 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Madrid"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    ignore:
+      # torch / torchvision are routed through CUDA-specific indexes in
+      # pyproject.toml [tool.uv.sources]. Dependabot bumps would break the
+      # cu128 wheel routing on Windows / Linux. Bump these manually if needed.
+      - dependency-name: "torch"
+      - dependency-name: "torchvision"
+      # transformers and sentence-transformers are pinned to versions that
+      # match the production model artefacts under data/models/nlp/.
+      # Bump these only alongside re-training the affected models (N17-N24).
+      - dependency-name: "transformers"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "ci"
