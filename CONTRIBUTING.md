@@ -122,3 +122,32 @@ request, data issue.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — one-page topology.
 - [`INSTALL.md`](INSTALL.md) — deep-dive install per surface.
 - [`ROADMAP.md`](ROADMAP.md) — release plan and completed phases.
+
+## Commit message convention
+
+This repository is now versioned automatically by
+[release-please](https://github.com/googleapis/release-please). The bot
+watches every push to `main`, reads the commit subjects, and opens a
+`chore: release X.Y.Z` pull request whenever it detects bumpable commits.
+
+Commit subjects must follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/):
+
+| Prefix          | Effect on the next release           |
+|-----------------|--------------------------------------|
+| `feat:`         | minor bump (`X.Y.Z` -> `X.Y+1.0`)    |
+| `fix:`          | patch bump (`X.Y.Z` -> `X.Y.Z+1`)    |
+| `feat!:` / `fix!:` or a `BREAKING CHANGE:` body line | major bump (`X.Y.Z` -> `X+1.0.0`) |
+| `chore:`, `ci:`, `docs:`, `refactor:`, `test:`, `style:`, `build:` | no bump, still listed under the right CHANGELOG section if not hidden |
+| `bench:`, `eval:`, `perf:` | no bump, surfaced in the CHANGELOG under their own section |
+| `lint:`         | no bump, hidden from the CHANGELOG    |
+
+Scopes are optional but encouraged for clarity, e.g. `feat(orchestrator): ...`,
+`fix(rag): ...`, `bench(whisper): ...`. Subjects should stay under 72
+characters; body text is free-form and goes after a blank line.
+
+Squash-merging on GitHub edits the squash commit subject — make sure
+that subject still follows the convention, otherwise release-please
+will miss the bump.
+
+See [the release-please config](release-please-config.json) for the
+exact section mapping used by this repo.
