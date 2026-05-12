@@ -466,7 +466,7 @@ function DocsFooter({ onNav }) {
           React.createElement("a", { href: "#/meet-the-author", onClick: e => { e.preventDefault(); onNav("meet-the-author"); } }, "Meet the author"),
           React.createElement("a", { href: "https://github.com/VforVitorio", target: "_blank" }, "GitHub profile"),
           React.createElement("a", { href: "https://www.linkedin.com/in/victorvegasobral/", target: "_blank" }, "LinkedIn"),
-          React.createElement("a", { href: "https://huggingface.co/VforVitorio", target: "_blank" }, "Hugging Face"),
+          React.createElement("a", { href: "https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset", target: "_blank" }, "HF dataset"),
           React.createElement("a", { href: "https://victorvegasobral.com", target: "_blank" }, "Portfolio"),
         ),
       ),
