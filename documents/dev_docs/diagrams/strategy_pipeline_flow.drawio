@@ -1,0 +1,184 @@
+<mxfile host="app.diagrams.net" modified="2026-04-18T00:00:00.000Z" agent="Claude" version="24.7.17">
+  <diagram id="strategy-pipeline" name="N31 Strategy Pipeline">
+    <mxGraphModel dx="1920" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1400" math="0" shadow="0" background="#0F1724">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0F1724;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="0" y="0" width="1920" height="1400" as="geometry"/>
+        </mxCell>
+
+        <!-- Title -->
+        <mxCell id="title" value="F1 StratLab &#8212; Digital Twin Multi-Agent System" style="text;html=1;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#E6E8EF;" vertex="1" parent="1">
+          <mxGeometry x="360" y="20" width="1200" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="N31 Strategy Orchestrator &#8212; 3-Layer Multi-Agent Flow" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontStyle=2;fontColor=#8B5CF6;" vertex="1" parent="1">
+          <mxGeometry x="360" y="56" width="1200" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- Race State Input -->
+        <mxCell id="input" value="RaceState &#183; laps_df &#183; lap_state" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#243049;strokeColor=#A0A5B8;fontColor=#E6E8EF;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="110" width="400" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- LAYER 1a Container -->
+        <mxCell id="layer1a" value="Layer 1a &#8212; Always-On Sub-Agents (parallel)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1A2138;strokeColor=#3B82F6;fontColor=#E6E8EF;fontStyle=1;fontSize=13;verticalAlign=top;spacingTop=8;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="80" y="200" width="1760" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="n25" value="N25 Pace Agent&#10;XGBoost delta lap time&#10;MAE 0.392s (2025)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1D2E3F;strokeColor=#3B82F6;fontColor=#E6E8EF;fontSize=11;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="130" y="250" width="360" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n25-out" value="PaceOutput&#10;pred_delta &#183; P10 &#183; P90 &#183; regime" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#243049;strokeColor=#3B82F6;fontColor=#A0B4D8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="130" y="345" width="360" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="n26" value="N26 Tire Agent&#10;TCN degradation + MC Dropout&#10;cliff detection per compound" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2F1D3F;strokeColor=#A855F7;fontColor=#E6E8EF;fontSize=11;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="530" y="250" width="360" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n26-out" value="TireOutput&#10;warning_level &#8712; OK / PIT_SOON / CRITICAL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#243049;strokeColor=#A855F7;fontColor=#D3B8E8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="530" y="345" width="360" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="n27" value="N27 Situation Agent&#10;SC LightGBM &#183; AUC-PR 0.0723&#10;soft contextual prior" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3F2D1D;strokeColor=#F59E0B;fontColor=#E6E8EF;fontSize=11;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="930" y="250" width="360" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n27-out" value="RaceSituationOutput&#10;sc_prob_3lap &#183; overtake_prob &#183; gap" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#243049;strokeColor=#F59E0B;fontColor=#F0D49C;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="930" y="345" width="360" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="n29" value="N29 Radio Agent&#10;Whisper + RoBERTa + SetFit + NER&#10;latency 47.8 ms GPU" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3F1D2D;strokeColor=#EC4899;fontColor=#E6E8EF;fontSize=11;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="250" width="360" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n29-out" value="RadioOutput&#10;alerts (PROBLEM/STATUS) &#183; intents" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#243049;strokeColor=#EC4899;fontColor=#F2B7D4;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="345" width="360" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Routing Decision -->
+        <mxCell id="router" value="_decide_agents_to_call()&#10;checks tire.warning_level &#183; situation.sc_prob_3lap &#183; radio.alerts" style="rhombus;whiteSpace=wrap;html=1;fillColor=#3B1D1D;strokeColor=#EF4444;fontColor=#E6E8EF;fontSize=11;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="720" y="450" width="480" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- LAYER 1b -->
+        <mxCell id="layer1b" value="Layer 1b &#8212; Conditional Sub-Agents (routed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1A2138;strokeColor=#4ADE80;fontColor=#E6E8EF;fontStyle=1;fontSize=13;verticalAlign=top;spacingTop=8;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="280" y="620" width="1360" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="n28" value="N28 Pit Strategy Agent&#10;fires if tire=PIT_SOON OR radio=PROBLEM&#10;UCUT LightGBM AUC-PR 0.6739 + OCUT model" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1D3F2A;strokeColor=#4ADE80;fontColor=#E6E8EF;fontSize=11;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="340" y="670" width="580" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n28-out" value="PitStrategyOutput&#10;recommend_pit_lap &#183; undercut_prob &#183; overcut_prob &#183; pit_delta_s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#243049;strokeColor=#4ADE80;fontColor=#BDEBCC;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="340" y="765" width="580" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="n30" value="N30 RAG Agent (FIA rules)&#10;fires if N28 fired OR sc_prob&gt;0.30 OR FIA warning&#10;Qdrant retriever + LLM answer synthesis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1D3F3F;strokeColor=#06B6D4;fontColor=#E6E8EF;fontSize=11;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="970" y="670" width="580" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n30-out" value="RAGOutput&#10;rule_citations &#183; penalty_flags &#183; rag_context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#243049;strokeColor=#06B6D4;fontColor=#A6E0EC;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="970" y="765" width="580" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- LAYER 2: Monte Carlo -->
+        <mxCell id="layer2" value="Layer 2 &#8212; Monte Carlo Simulation &#183; _run_mc_simulation()&#10;samples from sub-agent P10/P90 distributions &#183; 500 iterations per scenario&#10;scenarios: STAY_OUT &#183; PIT_NOW &#183; UNDERCUT &#183; OVERCUT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2B1A3C;strokeColor=#8B5CF6;fontColor=#E6E8EF;fontStyle=1;fontSize=12;strokeWidth=3;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="360" y="870" width="1200" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- LAYER 3: LLM Synthesis -->
+        <mxCell id="layer3" value="Layer 3 &#8212; LLM Synthesis&#10;ChatOpenAI gpt-4.1-mini (or LM Studio local)&#10;builds ACTION &#183; PACE &#183; RISK &#183; Plan decision richness (14-field schema)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3B1D1D;strokeColor=#EF4444;fontColor=#E6E8EF;fontStyle=1;fontSize=12;strokeWidth=3;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="360" y="1030" width="1200" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- Final Output -->
+        <mxCell id="final" value="StrategyRecommendation&#10;action &#183; confidence &#183; reasoning &#183; plan &#183; guardrail_flag" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1D3F2A;strokeColor=#4ADE80;fontColor=#E6E8EF;fontSize=13;fontStyle=1;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="560" y="1200" width="800" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrows: input -> layer 1a (4 agents) -->
+        <mxCell id="a-in-n25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#A0A5B8;strokeWidth=2;" edge="1" parent="1" source="input" target="n25">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-in-n26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#A0A5B8;strokeWidth=2;" edge="1" parent="1" source="input" target="n26">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-in-n27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#A0A5B8;strokeWidth=2;" edge="1" parent="1" source="input" target="n27">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-in-n29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#A0A5B8;strokeWidth=2;" edge="1" parent="1" source="input" target="n29">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Layer 1a outputs -> router -->
+        <mxCell id="a-n25-r" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#3B82F6;strokeWidth=2;" edge="1" parent="1" source="n25-out" target="router">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-n26-r" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#A855F7;strokeWidth=2;" edge="1" parent="1" source="n26-out" target="router">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-n27-r" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#F59E0B;strokeWidth=2;" edge="1" parent="1" source="n27-out" target="router">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-n29-r" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#EC4899;strokeWidth=2;" edge="1" parent="1" source="n29-out" target="router">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Router -> Layer 1b -->
+        <mxCell id="a-r-n28" value="if PIT_SOON&#10;or PROBLEM" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#4ADE80;strokeWidth=2;dashed=1;fontColor=#4ADE80;fontSize=10;" edge="1" parent="1" source="router" target="n28">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-r-n30" value="if N28 fires&#10;or sc&gt;0.30&#10;or FIA warn" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#06B6D4;strokeWidth=2;dashed=1;fontColor=#06B6D4;fontSize=10;" edge="1" parent="1" source="router" target="n30">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- All sub-agent outputs -> MC -->
+        <mxCell id="a-n25-mc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#3B82F6;strokeWidth=1;" edge="1" parent="1" source="n25-out" target="layer2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="310" y="410"/>
+              <mxPoint x="310" y="925"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a-n26-mc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#A855F7;strokeWidth=1;" edge="1" parent="1" source="n26-out" target="layer2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="410"/>
+              <mxPoint x="200" y="925"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a-n27-mc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#F59E0B;strokeWidth=1;" edge="1" parent="1" source="n27-out" target="layer2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1750" y="410"/>
+              <mxPoint x="1750" y="925"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a-n29-mc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#EC4899;strokeWidth=1;" edge="1" parent="1" source="n29-out" target="layer2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1820" y="410"/>
+              <mxPoint x="1820" y="925"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a-n28-mc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#4ADE80;strokeWidth=2;" edge="1" parent="1" source="n28-out" target="layer2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a-n30-mc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#06B6D4;strokeWidth=2;" edge="1" parent="1" source="n30-out" target="layer2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- MC -> LLM -->
+        <mxCell id="a-mc-llm" value="scenario win-rates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#8B5CF6;strokeWidth=3;fontColor=#8B5CF6;fontSize=11;fontStyle=1;" edge="1" parent="1" source="layer2" target="layer3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- LLM -> Final -->
+        <mxCell id="a-llm-final" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#EF4444;strokeWidth=3;" edge="1" parent="1" source="layer3" target="final">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
