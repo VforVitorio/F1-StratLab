@@ -11,6 +11,15 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [1.3.0](https://github.com/VforVitorio/F1-StratLab/compare/v1.2.0...v1.3.0) (2026-05-12)
+
+
+### Features
+
+* **docs:** point GitHub Pages at docs.f1stratlab.com via CNAME ([52b3238](https://github.com/VforVitorio/F1-StratLab/commit/52b3238454e1ac702cc80d4976ed55a1809ed818))
+* **docs:** update mkdocs site_url to docs.f1stratlab.com ([cf6cda6](https://github.com/VforVitorio/F1-StratLab/commit/cf6cda6679d1eb14d3624046fa812484320acc7c))
+* **docs:** wire docs.f1stratlab.com custom domain ([1fcf6ea](https://github.com/VforVitorio/F1-StratLab/commit/1fcf6ea756a661d554676b0359b018adfba1f187))
+
 ## [1.2.0](https://github.com/VforVitorio/F1-StratLab/compare/v1.1.1...v1.2.0) (2026-05-12)
 
 
