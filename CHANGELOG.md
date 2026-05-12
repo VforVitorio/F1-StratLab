@@ -11,6 +11,19 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [1.2.0](https://github.com/VforVitorio/F1-StratLab/compare/v1.1.1...v1.2.0) (2026-05-12)
+
+
+### Features
+
+* **docs:** add F1 StratLab brand theme and external-image hook ([0dc3db1](https://github.com/VforVitorio/F1-StratLab/commit/0dc3db1f84540864c8ac2d20a5452d5ca1ddd31f))
+* **docs:** launch mkdocs-material docs site with F1 StratLab branding ([7f7006d](https://github.com/VforVitorio/F1-StratLab/commit/7f7006de940dc8c7054a6f119e907a75119ab4b7))
+
+
+### Documentation
+
+* add landing, getting started, thesis results and maintenance pages ([defed4e](https://github.com/VforVitorio/F1-StratLab/commit/defed4e689508bcbce397292f1bbc8469abfcad8))
+
 ## [1.1.1](https://github.com/VforVitorio/F1-StratLab/compare/v1.1.0...v1.1.1) (2026-05-12)
 
 
