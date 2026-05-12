@@ -172,9 +172,21 @@ function GraphView({ mode = "overlay", onClose, onNav, currentSlug, initialTag }
       n.x = w / 2; n.y = h / 2; n.fixed = true;
     }
 
-    const params = mode === "mini"
-      ? { repulsion: 2400, linkDistance: 105, linkDistanceTag: 55, linkStrength: 0.05, linkStrengthTag: 0.07, gravity: 0.018, damping: 0.84 }
-      : { repulsion: 4800, linkDistance: 170, linkDistanceTag: 90, linkStrength: 0.04, linkStrengthTag: 0.07, gravity: 0.011, damping: 0.86 };
+    // Mobile viewports get a tighter layout so the entire graph fits in view
+    // instead of rendering only the central cluster behind a virtual zoom.
+    // We crank gravity, drop repulsion and shorten link distances; the result
+    // is a more compact graph that lands well inside a phone canvas.
+    const isMobile = (typeof window !== "undefined") && window.innerWidth < 768;
+    let params;
+    if (mode === "mini") {
+      params = isMobile
+        ? { repulsion: 1200, linkDistance: 60, linkDistanceTag: 32, linkStrength: 0.07, linkStrengthTag: 0.09, gravity: 0.045, damping: 0.84 }
+        : { repulsion: 2400, linkDistance: 105, linkDistanceTag: 55, linkStrength: 0.05, linkStrengthTag: 0.07, gravity: 0.018, damping: 0.84 };
+    } else {
+      params = isMobile
+        ? { repulsion: 2400, linkDistance: 95, linkDistanceTag: 52, linkStrength: 0.06, linkStrengthTag: 0.09, gravity: 0.035, damping: 0.86 }
+        : { repulsion: 4800, linkDistance: 170, linkDistanceTag: 90, linkStrength: 0.04, linkStrengthTag: 0.07, gravity: 0.011, damping: 0.86 };
+    }
 
     // Warm-up: settle the layout silently before the first paint so the user
     // doesn't see the violent rearrangement from random initial positions.

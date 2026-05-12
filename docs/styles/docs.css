@@ -69,16 +69,10 @@ body::after {
 .brand-mark {
   width: 22px; height: 22px;
   border-radius: 6px;
-  background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
-  position: relative;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 0 14px rgba(108,92,231,0.45);
-}
-.brand-mark::after {
-  content: '';
-  position: absolute; inset: 5px;
-  border-radius: 3px;
-  background: rgba(8,8,12,0.7);
-  border: 1px solid rgba(255,255,255,0.25);
+  background-image: url('../assets/favicon.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 .brand-name { color: var(--fg-1); }
 .brand-tag {
@@ -1065,6 +1059,82 @@ body::after {
   color: var(--fg-2);
   margin: 0;
   max-width: 500px;
+}
+
+/* Meet the author — home page card */
+.stratlab-author {
+  margin-top: 48px;
+  padding: 36px 32px;
+  background: var(--bg-1);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+}
+.stratlab-author-row {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+.stratlab-author-avatar {
+  border-radius: 50%;
+  border: 1px solid var(--divider, rgba(255,255,255,0.08));
+  box-shadow: 0 0 0 4px rgba(108,92,231,0.10);
+  flex-shrink: 0;
+}
+.stratlab-author-body { flex: 1; min-width: 0; }
+.stratlab-author-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 6px 0 6px;
+  color: var(--fg-1);
+}
+.stratlab-author-bio {
+  font-size: 13.5px;
+  color: var(--fg-3);
+  line-height: 1.55;
+  margin: 0 0 16px;
+  max-width: 560px;
+}
+.stratlab-author-links {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.stratlab-author-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  background: var(--bg-2, rgba(255,255,255,0.02));
+  border: 1px solid var(--divider, rgba(255,255,255,0.08));
+  border-radius: 10px;
+  color: var(--fg-2);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 0.18s, color 0.18s, background 0.18s, transform 0.18s;
+}
+.stratlab-author-card:hover {
+  border-color: var(--purple-400, #a29bfe);
+  color: #fff;
+  background: rgba(108, 92, 231, 0.10);
+  transform: translateY(-1px);
+}
+.stratlab-author-card svg { color: var(--purple-300, #a29bfe); }
+.stratlab-author-card-primary {
+  background: rgba(108,92,231,0.14);
+  border-color: rgba(108,92,231,0.40);
+  color: var(--fg-1);
+}
+.stratlab-author-card-primary svg { color: #fff; }
+@media (max-width: 640px) {
+  .stratlab-author { padding: 28px 20px; }
+  .stratlab-author-row { flex-direction: column; text-align: center; gap: 18px; }
+  .stratlab-author-links { justify-content: center; }
+  .stratlab-author-bio { margin-left: auto; margin-right: auto; }
 }
 
 /* Page footer (next/prev) */
