@@ -107,10 +107,13 @@ Thumbs.db
 desktop.ini
 
 # ===========================
-# Testing
+# Testing & linting caches
 # ===========================
 .coverage
+coverage.xml
 .pytest_cache/
+.ruff_cache/
+.mypy_cache/
 htmlcov/
 .tox/
 .nox/
@@ -136,9 +139,16 @@ uv.lock
 # ===========================
 # code-review-graph
 # ===========================
+# Tool working directory (cached graph DB, indexes, intermediate files)
+.code-review-graph/
 # Persistent knowledge graph DB and generated artifacts (visualize/wiki)
 graph.db
 graph.db-shm
 graph.db-wal
 graph_visualization.html
 graph_wiki/
+
+# ===========================
+# uv (Python package manager)
+# ===========================
+.uv-cache/
