@@ -1,0 +1,398 @@
+/* =========================================================
+   F1 StratLab — Documentation theme overrides
+   Mirrors the design tokens of the public landing page
+   (https://f1stratlab.com — colors_and_type.css).
+   ========================================================= */
+
+/* ---------- BRAND PALETTE (mirrors colors_and_type.css) ---------- */
+:root {
+  --md-primary-fg-color:        #6c5ce7;
+  --md-primary-fg-color--light: #8b7cf6;
+  --md-primary-fg-color--dark:  #5a48d4;
+  --md-accent-fg-color:         #a29bfe;
+  --md-accent-fg-color--transparent: rgba(162, 155, 254, 0.15);
+}
+
+/* Dark scheme — primary surface palette */
+[data-md-color-scheme="stratlab-dark"] {
+  --md-default-bg-color:       #08080c;
+  --md-default-bg-color--light: #0c0d14;
+  --md-default-fg-color:       #ffffff;
+  --md-default-fg-color--light: rgba(255, 255, 255, 0.72);
+  --md-default-fg-color--lighter: rgba(255, 255, 255, 0.52);
+  --md-default-fg-color--lightest: rgba(255, 255, 255, 0.32);
+
+  --md-primary-fg-color:        #6c5ce7;
+  --md-primary-bg-color:        #08080c;
+  --md-primary-bg-color--light: #0c0d14;
+
+  --md-accent-fg-color:         #a29bfe;
+  --md-accent-fg-color--transparent: rgba(162, 155, 254, 0.15);
+
+  --md-code-bg-color:           #17192b;
+  --md-code-fg-color:           #e0d9ff;
+
+  --md-typeset-a-color:         #a29bfe;
+
+  --md-footer-bg-color:         #0c0d14;
+  --md-footer-bg-color--dark:   #08080c;
+
+  --md-default-border-color:    rgba(255, 255, 255, 0.06);
+
+  color-scheme: dark;
+}
+
+/* ---------- TYPOGRAPHY — match the landing ---------- */
+.md-typeset {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6,
+.md-header__title,
+.md-tabs__link {
+  font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.md-typeset h1 {
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.md-typeset code,
+.md-typeset pre {
+  font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  font-feature-settings: "ss01", "ss02", "cv01";
+}
+
+/* ---------- HERO / HEADER ---------- */
+[data-md-color-scheme="stratlab-dark"] .md-header {
+  background: rgba(8, 8, 12, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-tabs {
+  background: rgba(8, 8, 12, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-tabs__link {
+  color: rgba(255, 255, 255, 0.72);
+  opacity: 1;
+  font-weight: 500;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-tabs__link:hover,
+[data-md-color-scheme="stratlab-dark"] .md-tabs__link--active {
+  color: #a29bfe;
+}
+
+/* ---------- LINKS ---------- */
+[data-md-color-scheme="stratlab-dark"] .md-typeset a {
+  color: #a29bfe;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-typeset a:hover {
+  color: #c2b4ff;
+  text-decoration: underline;
+}
+
+/* ---------- CODE BLOCKS ---------- */
+[data-md-color-scheme="stratlab-dark"] .md-typeset pre > code {
+  background: #17192b;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-typeset code {
+  background: rgba(108, 92, 231, 0.12);
+  color: #c2b4ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-clipboard {
+  color: rgba(255, 255, 255, 0.52);
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-clipboard:hover {
+  color: #a29bfe;
+}
+
+/* ---------- TABLES ---------- */
+[data-md-color-scheme="stratlab-dark"] .md-typeset table:not([class]) {
+  background: #0c0d14;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-typeset table:not([class]) th {
+  background: #111827;
+  color: #ffffff;
+  font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-typeset table:not([class]) td {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-typeset table:not([class]) tr:hover {
+  background: #17192b;
+}
+
+/* ---------- ADMONITIONS — purple-tinted by default ---------- */
+[data-md-color-scheme="stratlab-dark"] .md-typeset .admonition,
+[data-md-color-scheme="stratlab-dark"] .md-typeset details {
+  background: #0c0d14;
+  border: 1px solid rgba(108, 92, 231, 0.25);
+  border-left: 4px solid #6c5ce7;
+  border-radius: 12px;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-typeset .admonition-title,
+[data-md-color-scheme="stratlab-dark"] .md-typeset summary {
+  background: rgba(108, 92, 231, 0.10);
+  color: #c2b4ff;
+  font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+  font-weight: 600;
+}
+
+/* ---------- BUTTONS / PILLS ---------- */
+[data-md-color-scheme="stratlab-dark"] .md-button {
+  background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(108, 92, 231, 0.35);
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 30px rgba(108, 92, 231, 0.5);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-button--secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-button--secondary:hover {
+  background: rgba(108, 92, 231, 0.12);
+  border-color: #a29bfe;
+}
+
+/* ---------- SIDEBAR / NAV ---------- */
+[data-md-color-scheme="stratlab-dark"] .md-sidebar {
+  background: transparent;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-nav__title {
+  font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a29bfe;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-nav__link {
+  color: rgba(255, 255, 255, 0.72);
+  transition: color 0.15s ease;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-nav__link:hover,
+[data-md-color-scheme="stratlab-dark"] .md-nav__link--active {
+  color: #a29bfe;
+}
+
+/* ---------- TOC right ---------- */
+[data-md-color-scheme="stratlab-dark"] .md-nav--secondary .md-nav__link--active {
+  color: #a29bfe;
+  font-weight: 600;
+}
+
+/* ---------- FOOTER ---------- */
+[data-md-color-scheme="stratlab-dark"] .md-footer {
+  background: #0c0d14;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-footer-meta {
+  background: #08080c;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-social__link svg {
+  fill: rgba(255, 255, 255, 0.52);
+  transition: fill 0.2s ease;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-social__link:hover svg {
+  fill: #a29bfe;
+}
+
+/* ---------- SEARCH ---------- */
+[data-md-color-scheme="stratlab-dark"] .md-search__form {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-search__form:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+[data-md-color-scheme="stratlab-dark"] .md-search__input::placeholder {
+  color: rgba(255, 255, 255, 0.52);
+}
+
+/* ---------- SELECTION ---------- */
+::selection {
+  background: #6c5ce7;
+  color: #ffffff;
+}
+
+/* ---------- HOMEPAGE HERO SECTION ---------- */
+.stratlab-hero {
+  text-align: center;
+  padding: 80px 0 60px 0;
+  background: radial-gradient(ellipse 120% 80% at 50% 0%, rgba(108, 92, 231, 0.28) 0%, rgba(108, 92, 231, 0.08) 35%, transparent 70%);
+  border-radius: 16px;
+  margin-bottom: 48px;
+}
+
+.stratlab-hero .eyebrow {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a29bfe;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.stratlab-hero h1 {
+  font-family: "Space Grotesk", "Inter", system-ui, sans-serif !important;
+  font-size: clamp(40px, 6vw, 72px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  background: linear-gradient(135deg, #ffffff 0%, #a29bfe 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0 0 24px 0 !important;
+}
+
+.stratlab-hero p {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.72);
+  max-width: 720px;
+  margin: 0 auto 32px auto;
+  line-height: 1.45;
+}
+
+.stratlab-hero-cta {
+  display: inline-flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ---------- FEATURE CARDS ---------- */
+.stratlab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin: 32px 0;
+}
+
+.stratlab-card {
+  background: #0c0d14;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 28px 24px;
+  transition: all 0.2s ease;
+}
+
+.stratlab-card:hover {
+  border-color: rgba(108, 92, 231, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(108, 92, 231, 0.15);
+}
+
+.stratlab-card h3 {
+  font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 8px 0;
+  color: #ffffff;
+}
+
+.stratlab-card p {
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.stratlab-card a {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #a29bfe;
+}
+
+/* ---------- BADGES / KBD ---------- */
+[data-md-color-scheme="stratlab-dark"] .md-typeset kbd {
+  background: #17192b;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.18);
+  color: #c2b4ff;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+}
+
+/* ---------- SCROLLBAR ---------- */
+[data-md-color-scheme="stratlab-dark"] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+[data-md-color-scheme="stratlab-dark"] ::-webkit-scrollbar-track {
+  background: #0c0d14;
+}
+
+[data-md-color-scheme="stratlab-dark"] ::-webkit-scrollbar-thumb {
+  background: #23234a;
+  border-radius: 5px;
+}
+
+[data-md-color-scheme="stratlab-dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #6c5ce7;
+}
