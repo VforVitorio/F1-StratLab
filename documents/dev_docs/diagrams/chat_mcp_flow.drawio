@@ -1,0 +1,380 @@
+<mxfile host="app.diagrams.net" modified="2026-04-14" agent="Claude" version="24.7.17">
+  <diagram id="chat-mcp-1" name="Chat MCP Flow">
+    <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0" background="#0a0a1a">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- TITLE -->
+        <mxCell id="title" value="Chat &amp; QueryRouter Flow — From User Message to Inline Plotly Charts" style="text;html=1;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#a78bfa;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="300" y="10" width="1000" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Phase 2 update: tool payload split (full → UI, trimmed → LLM) + CHART display type renders inline Plotly figures" style="text;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=2;fontColor=#94a3b8;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="300" y="48" width="1000" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ STEP 1: USER INPUT ============ -->
+        <mxCell id="user" value="&lt;b&gt;User Message&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Text / Voice / Image&lt;br&gt;from Streamlit chat UI&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#a78bfa;strokeWidth=2;fontColor=#c4b5fd;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="150" width="180" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ STEP 2: FRONTEND SERVICE ============ -->
+        <mxCell id="fe_svc" value="&lt;b&gt;chat_service.py&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Frontend service layer&lt;br&gt;formats request, sends to backend&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#7c3aed;fontColor=#c4b5fd;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="280" width="180" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ STEP 3: CHAT ENDPOINT ============ -->
+        <mxCell id="chat_ep" value="&lt;b&gt;POST /api/v1/chat/query&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Main intelligent endpoint&lt;br&gt;(also: /message, /stream)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f3433;strokeColor=#2dd4bf;strokeWidth=2;fontColor=#99f6e4;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="150" width="200" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ STEP 4: QUERY CLASSIFIER ============ -->
+        <mxCell id="classifier" value="&lt;b&gt;QueryClassifier&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;LLM-based classification&lt;br&gt;Detects query type from message&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#f59e0b;fontColor=#fef3c7;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="530" y="100" width="200" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ QUERY TYPES ============ -->
+        <mxCell id="qt_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f0f2e;strokeColor=#f59e0b;strokeWidth=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="530" y="260" width="200" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="qt_label" value="Query Types" style="text;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#f59e0b;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="560" y="265" width="140" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="qt1" value="BASIC_QUERY" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#d97706;fontColor=#fef3c7;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="545" y="290" width="170" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="qt2" value="TECHNICAL_QUERY" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#d97706;fontColor=#fef3c7;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="545" y="320" width="170" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="qt3" value="COMPARISON_QUERY" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#d97706;fontColor=#fef3c7;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="545" y="350" width="170" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="qt4" value="REPORT_REQUEST" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#d97706;fontColor=#fef3c7;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="545" y="380" width="170" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="qt5" value="DOWNLOAD_REQUEST" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#d97706;fontColor=#fef3c7;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="545" y="410" width="170" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="qt6" value="STRATEGY_QUERY" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a1942;strokeColor=#ec4899;fontColor=#fce7f3;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="545" y="440" width="170" height="25" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ STEP 5: QUERY ROUTER ============ -->
+        <mxCell id="router" value="&lt;b&gt;QueryRouter&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Routes to specialized handler&lt;br&gt;based on detected QueryType&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#164e63;strokeColor=#22d3ee;strokeWidth=2;fontColor=#cffafe;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="800" y="150" width="200" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ STEP 6: HANDLERS ============ -->
+        <mxCell id="h_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f0f2e;strokeColor=#22d3ee;strokeWidth=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="780" y="260" width="250" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_label" value="Handlers" style="text;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#22d3ee;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="850" y="265" width="100" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="h1" value="BasicQueryHandler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#164e63;strokeColor=#0891b2;fontColor=#cffafe;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="795" y="290" width="220" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="h2" value="TechnicalQueryHandler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#164e63;strokeColor=#0891b2;fontColor=#cffafe;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="795" y="320" width="220" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="h3" value="ComparisonQueryHandler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#164e63;strokeColor=#0891b2;fontColor=#cffafe;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="795" y="350" width="220" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="h4" value="ReportHandler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#164e63;strokeColor=#0891b2;fontColor=#cffafe;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="795" y="380" width="220" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="h5" value="DownloadHandler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#164e63;strokeColor=#0891b2;fontColor=#cffafe;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="795" y="410" width="220" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="h6" value="StrategyHandler (N25-N31)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a1942;strokeColor=#ec4899;fontColor=#fce7f3;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="795" y="440" width="220" height="25" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ STEP 7: LM STUDIO ============ -->
+        <mxCell id="lm_studio" value="&lt;b&gt;LM Studio&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;gpt-4.1-mini / gpt-5.4-mini&lt;br&gt;OpenAI-compatible API :1234&lt;br&gt;Processes query or summarizes agent output&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#f59e0b;strokeWidth=2;fontColor=#fef3c7;fontSize=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="260" width="240" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ STEP 8: RESPONSE ============ -->
+        <mxCell id="response" value="&lt;b&gt;Rich Response&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Text + Charts + Tables&lt;br&gt;base64 images + dataframes&lt;br&gt;strategy cards, recommendations&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#14532d;strokeColor=#22c55e;strokeWidth=2;fontColor=#bbf7d0;fontSize=11;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="420" width="240" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ STEP 9: STREAMLIT RENDER ============ -->
+        <mxCell id="render" value="&lt;b&gt;Streamlit Chat UI&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;st.chat_message rendering&lt;br&gt;inline charts, tables, text&lt;br&gt;voice playback (if voice input)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#a78bfa;strokeWidth=2;fontColor=#c4b5fd;fontSize=11;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="570" width="240" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ FLOW ARROWS ============ -->
+        <!-- User to service -->
+        <mxCell id="e1" style="rounded=1;html=1;strokeColor=#a78bfa;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="user" target="fe_svc"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e1_l" value="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#a78bfa;strokeColor=none;fontColor=#0a0a1a;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="230" width="22" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- Service to endpoint -->
+        <mxCell id="e2" style="rounded=1;html=1;strokeColor=#2dd4bf;strokeWidth=2;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="fe_svc" target="chat_ep"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2_l" value="2" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2dd4bf;strokeColor=none;fontColor=#0a0a1a;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="195" width="22" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- Endpoint to classifier -->
+        <mxCell id="e3" style="rounded=1;html=1;strokeColor=#f59e0b;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="chat_ep" target="classifier"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3_l" value="3" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f59e0b;strokeColor=none;fontColor=#0a0a1a;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="498" y="173" width="22" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- Classifier to query types -->
+        <mxCell id="e4" style="rounded=1;html=1;strokeColor=#f59e0b;strokeWidth=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="classifier" target="qt_box"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- Classifier to router -->
+        <mxCell id="e5" style="rounded=1;html=1;strokeColor=#22d3ee;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="classifier" target="router"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5_l" value="4" style="ellipse;whiteSpace=wrap;html=1;fillColor=#22d3ee;strokeColor=none;fontColor=#0a0a1a;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="748" y="173" width="22" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- Router to handlers -->
+        <mxCell id="e6" style="rounded=1;html=1;strokeColor=#22d3ee;strokeWidth=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="router" target="h_box"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6_l" value="5" style="ellipse;whiteSpace=wrap;html=1;fillColor=#22d3ee;strokeColor=none;fontColor=#0a0a1a;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="895" y="232" width="22" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- Handlers to LM Studio -->
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f59e0b;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="h_box" target="lm_studio"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7_l" value="6" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f59e0b;strokeColor=none;fontColor=#0a0a1a;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="355" width="22" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- LM Studio to response -->
+        <mxCell id="e8" style="rounded=1;html=1;strokeColor=#22c55e;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="lm_studio" target="response"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8_l" value="7" style="ellipse;whiteSpace=wrap;html=1;fillColor=#22c55e;strokeColor=none;fontColor=#0a0a1a;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="375" width="22" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- Response to render -->
+        <mxCell id="e9" style="rounded=1;html=1;strokeColor=#a78bfa;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="response" target="render"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e9_l" value="8" style="ellipse;whiteSpace=wrap;html=1;fillColor=#a78bfa;strokeColor=none;fontColor=#0a0a1a;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="530" width="22" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ ALTERNATIVE PATH: Direct Chat ============ -->
+        <mxCell id="alt_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f0f2e;strokeColor=#64748b;strokeWidth=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="530" width="600" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="alt_label" value="Alternative Path: Direct LM Studio Chat (no routing)" style="text;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#64748b;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="340" y="535" width="480" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="alt1" value="POST /chat/message" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="570" width="160" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="alt_arrow" value="" style="shape=flexArrow;endArrow=classic;html=1;strokeColor=#475569;fillColor=#1e293b;width=8;endSize=4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="470" y="587" as="sourcePoint"/>
+            <mxPoint x="530" y="587" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="alt2" value="lmstudio_service.py&lt;br&gt;(build_messages + send)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="540" y="565" width="180" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="alt_arrow2" value="" style="shape=flexArrow;endArrow=classic;html=1;strokeColor=#475569;fillColor=#1e293b;width=8;endSize=4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="730" y="587" as="sourcePoint"/>
+            <mxPoint x="790" y="587" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="alt3" value="LM Studio :1234&lt;br&gt;(raw completion)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="565" width="150" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ VOICE PATH ============ -->
+        <mxCell id="voice_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f0f2e;strokeColor=#64748b;strokeWidth=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="400" width="430" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="voice_label" value="Voice Input Path (optional)" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#64748b;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="140" y="405" width="220" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="voice1" value="Audio recording" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="45" y="430" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="va1" value="" style="shape=flexArrow;endArrow=classic;html=1;strokeColor=#475569;fillColor=#1e293b;width=6;endSize=3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="150" y="447" as="sourcePoint"/>
+            <mxPoint x="170" y="447" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="voice2" value="POST /voice/transcribe" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="175" y="430" width="140" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="va2" value="" style="shape=flexArrow;endArrow=classic;html=1;strokeColor=#475569;fillColor=#1e293b;width=6;endSize=3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="447" as="sourcePoint"/>
+            <mxPoint x="340" y="447" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="voice3" value="text &amp;rarr; /chat/query" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="345" y="430" width="100" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ PHASE 2: TOOL EXECUTION + PAYLOAD SPLIT + CHART RENDER ============ -->
+        <mxCell id="p2_band" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10172a;strokeColor=#ec4899;strokeWidth=2;dashed=1;opacity=70;" vertex="1" parent="1">
+          <mxGeometry x="20" y="690" width="1560" height="470" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_label" value="Phase 2 — StrategyHandler.handle_with_tools()  ·  Tool execution → Payload split → Inline Plotly rendering" style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=#ec4899;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="40" y="700" width="900" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- Strategy handler entry -->
+        <mxCell id="sh_entry" value="&lt;b&gt;StrategyHandler&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;handlers/strategy_handler.py&lt;br&gt;handle_with_tools(message)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a1942;strokeColor=#ec4899;strokeWidth=2;fontColor=#fce7f3;fontSize=11;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="50" y="750" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- LLM ToolCall extraction -->
+        <mxCell id="llm_extract" value="&lt;b&gt;LLM ToolCall extraction&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;LM Studio decides which tool&lt;br&gt;+ arguments from user prompt&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#f59e0b;strokeWidth=2;fontColor=#fef3c7;fontSize=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="290" y="750" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Tool dispatch decision -->
+        <mxCell id="tool_dispatch" value="&lt;b&gt;Tool dispatcher&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;agent tool vs. telemetry tool&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#f59e0b;fontColor=#fef3c7;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="540" y="745" width="200" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Branch A: agent tool -->
+        <mxCell id="agent_tool" value="&lt;b&gt;Agent tool exec&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;run_tire_agent / run_pace_agent&lt;br&gt;run_pit_agent / run_radio_agent&lt;br&gt;in-process LangGraph call&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#164e63;strokeColor=#22d3ee;strokeWidth=2;fontColor=#cffafe;fontSize=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="800" y="700" width="220" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Branch B: telemetry HTTP -->
+        <mxCell id="telemetry_http" value="&lt;b&gt;Telemetry tool (HTTP)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;FastAPI /telemetry/* endpoint:&lt;br&gt;get_lap_times · get_telemetry&lt;br&gt;compare_drivers · get_race_data&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f3433;strokeColor=#2dd4bf;strokeWidth=2;fontColor=#99f6e4;fontSize=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="800" y="800" width="220" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- TOOL_DISPLAY_MAP lookup -->
+        <mxCell id="display_map" value="&lt;b&gt;TOOL_DISPLAY_MAP&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;models/tool_schemas.py&lt;br&gt;Phase 2 tools → DisplayType.CHART&lt;br&gt;(was TABLE)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3b0a3b;strokeColor=#d946ef;strokeWidth=2;fontColor=#f5d0fe;fontSize=10;verticalAlign=top;spacingTop=4;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="750" width="220" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ PAYLOAD SPLIT ============ -->
+        <mxCell id="split" value="&lt;b&gt;Payload split&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;raw response&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#7c1d6f;strokeColor=#ec4899;strokeWidth=3;fontColor=#fce7f3;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="540" y="900" width="200" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- Full payload -> UI -->
+        <mxCell id="full_payload" value="&lt;b&gt;tool_result.data&lt;/b&gt; (FULL)&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;every record kept&lt;br&gt;feeds frontend renderer&lt;br&gt;→ Plotly figure&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#14532d;strokeColor=#22c55e;strokeWidth=2;fontColor=#bbf7d0;fontSize=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="290" y="910" width="220" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Trimmed payload -> LLM -->
+        <mxCell id="trim_payload" value="&lt;b&gt;_trim_for_llm&lt;/b&gt; (TRIM)&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;cap 20 records&lt;br&gt;feeds LLM summariser&lt;br&gt;→ short text answer&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#f59e0b;strokeWidth=2;fontColor=#fef3c7;fontSize=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="800" y="910" width="220" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- LLM summariser -->
+        <mxCell id="llm_sum" value="&lt;b&gt;LM Studio summariser&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;writes natural-language reply&lt;br&gt;based on TRIMMED data only&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#f59e0b;strokeWidth=2;fontColor=#fef3c7;fontSize=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="910" width="220" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ FRONTEND CHART RENDERING ============ -->
+        <mxCell id="tool_result_renderer" value="&lt;b&gt;tool_result_renderer.py&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;dispatch on display_type:&lt;br&gt;_RENDERERS[&quot;chart&quot;] → _render_chart&lt;br&gt;try/except → _render_text fallback&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#a78bfa;strokeWidth=2;fontColor=#c4b5fd;fontSize=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1040" width="240" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- chart_builders.py -->
+        <mxCell id="chart_builders" value="&lt;b&gt;chart_builders.py&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;build_figure(tool_name, data) → go.Figure&lt;br&gt;• lap_times: line per driver&lt;br&gt;• telemetry: speed/throttle/brake panels&lt;br&gt;• compare_drivers: speed overlay + delta&lt;br&gt;• race_data: dual subplot pos + lap times&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3b0a3b;strokeColor=#d946ef;strokeWidth=2;fontColor=#f5d0fe;fontSize=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1040" width="320" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- Plotly figure inline -->
+        <mxCell id="plotly_inline" value="&lt;b&gt;Plotly figure inline&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;st.plotly_chart() inside&lt;br&gt;st.chat_message bubble&lt;br&gt;+ LLM text summary above&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#14532d;strokeColor=#22c55e;strokeWidth=2;fontColor=#bbf7d0;fontSize=11;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="710" y="1040" width="240" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Note: bug fix -->
+        <mxCell id="bug_note" value="&lt;b&gt;Side-effect:&lt;/b&gt; compare_drivers &quot;N/A&quot; bug&lt;br&gt;is fixed by design — chart consumes&lt;br&gt;raw nested payload directly, no flattening" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f0f2e;strokeColor=#22c55e;strokeWidth=1;dashed=1;fontColor=#bbf7d0;fontSize=9;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="1050" width="280" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ PHASE 2 EDGES ============ -->
+        <!-- StrategyHandler (h6) → SH entry -->
+        <mxCell id="pe0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ec4899;strokeWidth=2;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="h6" target="sh_entry"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- SH → LLM extract -->
+        <mxCell id="pe1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f59e0b;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="sh_entry" target="llm_extract"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe1_l" value="A" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f59e0b;strokeColor=none;fontColor=#0a0a1a;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="258" y="780" width="22" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- LLM extract → dispatch -->
+        <mxCell id="pe2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f59e0b;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="llm_extract" target="tool_dispatch"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe2_l" value="B" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f59e0b;strokeColor=none;fontColor=#0a0a1a;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="508" y="780" width="22" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- dispatch → agent_tool -->
+        <mxCell id="pe3a" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#22d3ee;strokeWidth=2;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tool_dispatch" target="agent_tool"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe3a_l" value="agent" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;fontColor=#22d3ee;fillColor=#0a0a1a;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="745" y="730" width="50" height="18" as="geometry"/>
+        </mxCell>
+
+        <!-- dispatch → telemetry_http -->
+        <mxCell id="pe3b" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2dd4bf;strokeWidth=2;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tool_dispatch" target="telemetry_http"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe3b_l" value="telemetry" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;fontColor=#2dd4bf;fillColor=#0a0a1a;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="740" y="833" width="60" height="18" as="geometry"/>
+        </mxCell>
+
+        <!-- telemetry → display_map (annotation) -->
+        <mxCell id="pe_dm" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d946ef;strokeWidth=1;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=open;" edge="1" parent="1" source="telemetry_http" target="display_map"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe_dm_l" value="lookup" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;fontColor=#d946ef;fillColor=#0a0a1a;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1025" y="828" width="50" height="18" as="geometry"/>
+        </mxCell>
+
+        <!-- agent_tool → split -->
+        <mxCell id="pe4a" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ec4899;strokeWidth=2;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="agent_tool" target="split"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- telemetry → split -->
+        <mxCell id="pe4b" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ec4899;strokeWidth=2;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="telemetry_http" target="split"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- split → full -->
+        <mxCell id="pe5a" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#22c55e;strokeWidth=3;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="split" target="full_payload"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe5a_l" value="FULL → UI" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#22c55e;fillColor=#0a0a1a;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="510" y="935" width="80" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- split → trim -->
+        <mxCell id="pe5b" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f59e0b;strokeWidth=3;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="split" target="trim_payload"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe5b_l" value="TRIM → LLM" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#f59e0b;fillColor=#0a0a1a;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="743" y="935" width="90" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- trim → llm summariser -->
+        <mxCell id="pe6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f59e0b;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="trim_payload" target="llm_sum"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- full → renderer -->
+        <mxCell id="pe7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#22c55e;strokeWidth=2;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="full_payload" target="tool_result_renderer"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- renderer → chart_builders -->
+        <mxCell id="pe8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d946ef;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tool_result_renderer" target="chart_builders"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe8_l" value="display_type==&quot;chart&quot;" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;fontStyle=2;fontColor=#d946ef;fillColor=#0a0a1a;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="295" y="1015" width="140" height="18" as="geometry"/>
+        </mxCell>
+
+        <!-- chart_builders → plotly_inline -->
+        <mxCell id="pe9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#22c55e;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="chart_builders" target="plotly_inline"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- llm_sum → plotly_inline (text alongside chart) -->
+        <mxCell id="pe10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f59e0b;strokeWidth=1;dashed=1;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endArrow=open;" edge="1" parent="1" source="llm_sum" target="plotly_inline"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe10_l" value="text caption" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;fontStyle=2;fontColor=#f59e0b;fillColor=#0a0a1a;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="970" y="1010" width="80" height="18" as="geometry"/>
+        </mxCell>
+
+        <!-- plotly_inline → render (existing Streamlit Chat UI) -->
+        <mxCell id="pe11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#a78bfa;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="plotly_inline" target="render"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe11_l" value="rendered in chat bubble" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;fontStyle=2;fontColor=#a78bfa;fillColor=#0a0a1a;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="960" y="700" width="160" height="18" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
