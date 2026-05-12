@@ -15,7 +15,7 @@ twin of an F1 race — and because nobody else was going to do it for me.
 - **Project landing** — [f1stratlab.com](https://f1stratlab.com/)
 - **DeepWiki** — [F1 StratLab on DeepWiki](https://deepwiki.com/VforVitorio/F1-StratLab)
 - **LinkedIn** — [victorvegasobral](https://www.linkedin.com/in/victorvegasobral/)
-- **Hugging Face** — [VforVitorio](https://huggingface.co/VforVitorio)
+- **Hugging Face dataset** — [f1-strategy-dataset](https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset)
 - **Portfolio** — [victorvegasobral.com](https://victorvegasobral.com)
 
 ## About the project
