@@ -1,0 +1,194 @@
+<mxfile host="app.diagrams.net" modified="2026-04-13" agent="Claude" version="24.7.17">
+  <diagram id="be-api-1" name="Backend API Endpoint Map">
+    <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0" background="#0a0a1a">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- TITLE -->
+        <mxCell id="title" value="FastAPI Backend — Endpoint Map (/api/v1)" style="text;html=1;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#2dd4bf;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="350" y="10" width="900" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- ROOT -->
+        <mxCell id="root_ep" value="&lt;b&gt;FastAPI app&lt;/b&gt;&lt;br&gt;GET / &amp;rarr; health" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f3433;strokeColor=#2dd4bf;strokeWidth=3;fontColor=#99f6e4;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="650" y="70" width="200" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- ======= TELEMETRY ROUTER ======= -->
+        <mxCell id="r_tele" value="" style="swimlane;html=1;startSize=30;fillColor=#121127;strokeColor=#a78bfa;strokeWidth=2;rounded=1;arcSize=6;swimlaneLine=0;" vertex="1" parent="1">
+          <mxGeometry x="30" y="170" width="220" height="310" as="geometry"/>
+        </mxCell>
+        <mxCell id="r_tele_title" value="/telemetry" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#a78bfa;fillColor=none;strokeColor=none;" vertex="1" parent="r_tele">
+          <mxGeometry x="5" y="0" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="t1" value="GET /data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#7c3aed;fontColor=#c4b5fd;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_tele">
+          <mxGeometry x="10" y="40" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2" value="GET /gps" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#7c3aed;fontColor=#c4b5fd;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_tele">
+          <mxGeometry x="10" y="78" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="t3" value="GET /sessions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#7c3aed;fontColor=#c4b5fd;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_tele">
+          <mxGeometry x="10" y="116" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="t4" value="GET /drivers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#7c3aed;fontColor=#c4b5fd;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_tele">
+          <mxGeometry x="10" y="154" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="t5" value="GET /lap-times" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#7c3aed;fontColor=#c4b5fd;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_tele">
+          <mxGeometry x="10" y="192" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="t6" value="GET /lap-telemetry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#7c3aed;fontColor=#c4b5fd;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_tele">
+          <mxGeometry x="10" y="230" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="t7" value="GET /race-data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#7c3aed;fontColor=#c4b5fd;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_tele">
+          <mxGeometry x="10" y="268" width="200" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- ======= STRATEGY ROUTER ======= -->
+        <mxCell id="r_strat" value="" style="swimlane;html=1;startSize=30;fillColor=#121127;strokeColor=#ec4899;strokeWidth=2;rounded=1;arcSize=6;swimlaneLine=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="170" width="240" height="590" as="geometry"/>
+        </mxCell>
+        <mxCell id="r_strat_title" value="/strategy (N25-N31)" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#ec4899;fillColor=none;strokeColor=none;" vertex="1" parent="r_strat">
+          <mxGeometry x="5" y="0" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1" value="GET /available-gps" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2d1a2e;strokeColor=#be185d;fontColor=#fce7f3;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="40" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2" value="GET /available-drivers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2d1a2e;strokeColor=#be185d;fontColor=#fce7f3;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="78" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3" value="GET /lap-range" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2d1a2e;strokeColor=#be185d;fontColor=#fce7f3;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="116" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4" value="GET /lap-state" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2d1a2e;strokeColor=#be185d;fontColor=#fce7f3;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="154" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s5" value="POST /pace  (N25)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a1942;strokeColor=#ec4899;fontColor=#fce7f3;fontSize=9;align=left;spacingLeft=6;fontStyle=1;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="200" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s5b" value="POST /pace-range" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a1942;strokeColor=#ec4899;fontColor=#fce7f3;fontSize=9;align=left;spacingLeft=6;fontStyle=1;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="238" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s6" value="POST /tire  (N26)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a1942;strokeColor=#ec4899;fontColor=#fce7f3;fontSize=9;align=left;spacingLeft=6;fontStyle=1;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="276" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s7" value="POST /situation  (N27)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a1942;strokeColor=#ec4899;fontColor=#fce7f3;fontSize=9;align=left;spacingLeft=6;fontStyle=1;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="314" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s8" value="POST /pit  (N28)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a1942;strokeColor=#ec4899;fontColor=#fce7f3;fontSize=9;align=left;spacingLeft=6;fontStyle=1;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="352" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s9" value="POST /radio  (N29)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a1942;strokeColor=#ec4899;fontColor=#fce7f3;fontSize=9;align=left;spacingLeft=6;fontStyle=1;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="390" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s10" value="POST /rag  (N30)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a1942;strokeColor=#ec4899;fontColor=#fce7f3;fontSize=9;align=left;spacingLeft=6;fontStyle=1;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="428" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s11" value="POST /recommend  (N31 full)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a1942;strokeColor=#f59e0b;fontColor=#fef3c7;fontSize=9;align=left;spacingLeft=6;fontStyle=1;strokeWidth=2;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="470" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s12" value="GET /radio-available-gps" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2d1a2e;strokeColor=#be185d;fontColor=#fce7f3;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="510" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="s13" value="GET /radio-laps" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2d1a2e;strokeColor=#be185d;fontColor=#fce7f3;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_strat">
+          <mxGeometry x="10" y="548" width="220" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- ======= CHAT ROUTER ======= -->
+        <mxCell id="r_chat" value="" style="swimlane;html=1;startSize=30;fillColor=#121127;strokeColor=#22d3ee;strokeWidth=2;rounded=1;arcSize=6;swimlaneLine=0;" vertex="1" parent="1">
+          <mxGeometry x="550" y="170" width="220" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="r_chat_title" value="/chat" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#22d3ee;fillColor=none;strokeColor=none;" vertex="1" parent="r_chat">
+          <mxGeometry x="5" y="0" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1" value="GET /health" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0c2e3e;strokeColor=#0891b2;fontColor=#cffafe;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_chat">
+          <mxGeometry x="10" y="40" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="GET /models" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0c2e3e;strokeColor=#0891b2;fontColor=#cffafe;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_chat">
+          <mxGeometry x="10" y="78" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3" value="POST /message" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#164e63;strokeColor=#22d3ee;fontColor=#cffafe;fontSize=9;align=left;spacingLeft=6;fontStyle=1;" vertex="1" parent="r_chat">
+          <mxGeometry x="10" y="116" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="c4" value="POST /stream  (SSE)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#164e63;strokeColor=#22d3ee;fontColor=#cffafe;fontSize=9;align=left;spacingLeft=6;fontStyle=1;" vertex="1" parent="r_chat">
+          <mxGeometry x="10" y="154" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="c5" value="POST /query  (QueryRouter)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#164e63;strokeColor=#f59e0b;fontColor=#fef3c7;fontSize=9;align=left;spacingLeft=6;fontStyle=1;strokeWidth=2;" vertex="1" parent="r_chat">
+          <mxGeometry x="10" y="192" width="200" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- ======= VOICE ROUTER ======= -->
+        <mxCell id="r_voice" value="" style="swimlane;html=1;startSize=30;fillColor=#121127;strokeColor=#a78bfa;strokeWidth=2;rounded=1;arcSize=6;swimlaneLine=0;" vertex="1" parent="1">
+          <mxGeometry x="800" y="170" width="220" height="270" as="geometry"/>
+        </mxCell>
+        <mxCell id="r_voice_title" value="/voice" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#a78bfa;fillColor=none;strokeColor=none;" vertex="1" parent="r_voice">
+          <mxGeometry x="5" y="0" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="v1" value="POST /transcribe" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#7c3aed;fontColor=#c4b5fd;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_voice">
+          <mxGeometry x="10" y="40" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="v2" value="POST /process-voice" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#7c3aed;fontColor=#c4b5fd;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_voice">
+          <mxGeometry x="10" y="78" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="v3" value="POST /complete-voice" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#7c3aed;fontColor=#c4b5fd;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_voice">
+          <mxGeometry x="10" y="116" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="v4" value="GET /models" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#7c3aed;fontColor=#c4b5fd;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_voice">
+          <mxGeometry x="10" y="154" width="200" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="v5" value="GET /status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#7c3aed;fontColor=#c4b5fd;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_voice">
+          <mxGeometry x="10" y="192" width="200" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- ======= COMPARISON + CIRCUIT ROUTERS ======= -->
+        <mxCell id="r_comp" value="" style="swimlane;html=1;startSize=30;fillColor=#121127;strokeColor=#64748b;strokeWidth=2;rounded=1;arcSize=6;swimlaneLine=0;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="170" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="r_comp_title" value="/compare" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#94a3b8;fillColor=none;strokeColor=none;" vertex="1" parent="r_comp">
+          <mxGeometry x="5" y="0" width="180" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="cp1" value="GET /compare" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_comp">
+          <mxGeometry x="10" y="40" width="180" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="r_circuit" value="" style="swimlane;html=1;startSize=30;fillColor=#121127;strokeColor=#64748b;strokeWidth=2;rounded=1;arcSize=6;swimlaneLine=0;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="310" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="r_circuit_title" value="/circuit-domination" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#94a3b8;fillColor=none;strokeColor=none;" vertex="1" parent="r_circuit">
+          <mxGeometry x="5" y="0" width="190" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="cd1" value="GET /" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="r_circuit">
+          <mxGeometry x="10" y="40" width="180" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Root to routers arrows -->
+        <mxCell id="er1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#334155;strokeWidth=1;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="root_ep" target="r_tele"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="er2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#334155;strokeWidth=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="root_ep" target="r_strat"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="er3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#334155;strokeWidth=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="root_ep" target="r_chat"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="er4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#334155;strokeWidth=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="root_ep" target="r_voice"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="er6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#334155;strokeWidth=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="root_ep" target="r_comp"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ============ LEGEND ============ -->
+        <mxCell id="legend" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#334155;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="500" width="250" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg_t" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;align=left;fontSize=11;fontColor=#e2e8f0;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="560" y="505" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg1" value="GET = read endpoints" style="text;html=1;align=left;fontSize=9;fontColor=#94a3b8;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="560" y="530" width="200" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg2" value="POST (bold) = agent / action endpoints" style="text;html=1;align=left;fontSize=9;fontColor=#ec4899;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="560" y="548" width="230" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg3" value="Amber border = key entry points" style="text;html=1;align=left;fontSize=9;fontColor=#f59e0b;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="560" y="566" width="230" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg4" value="Gray = utility routers" style="text;html=1;align=left;fontSize=9;fontColor=#64748b;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="560" y="584" width="200" height="16" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
