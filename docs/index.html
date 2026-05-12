@@ -6,6 +6,29 @@
   <title>F1 StratLab · Documentation</title>
   <meta name="description" content="Open-source multi-agent AI for real-time F1 race strategy. Architecture, agent API, arcade dashboard and deployment guides." />
 
+  <!-- Canonical -->
+  <link rel="canonical" href="https://docs.f1stratlab.com/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://docs.f1stratlab.com/" />
+  <meta property="og:title" content="F1 StratLab · Documentation" />
+  <meta property="og:description" content="Open-source multi-agent AI for real-time F1 race strategy. Architecture, agent API, arcade dashboard and deployment guides." />
+  <meta property="og:image" content="https://docs.f1stratlab.com/assets/og-card.jpg" />
+  <meta property="og:image:alt" content="F1 StratLab documentation banner with purple gradient and the F1 StratLab wordmark" />
+  <meta property="og:site_name" content="F1 StratLab Documentation" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://docs.f1stratlab.com/" />
+  <meta name="twitter:title" content="F1 StratLab · Documentation" />
+  <meta name="twitter:description" content="Open-source multi-agent AI for real-time F1 race strategy. Architecture, agent API, arcade dashboard and deployment guides." />
+  <meta name="twitter:image" content="https://docs.f1stratlab.com/assets/og-card.jpg" />
+
+  <!-- Theme color (mobile browsers) -->
+  <meta name="theme-color" content="#0c0d14" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#0c0d14" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -13,8 +36,9 @@
   <link rel="stylesheet" href="styles/tokens.css" />
   <link rel="stylesheet" href="styles/docs.css" />
 
-  <!-- Favicon — purple square + dark inner, matching brand mark -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'&gt;&lt;defs&gt;&lt;linearGradient id='g' x1='0' y1='0' x2='1' y2='1'&gt;&lt;stop offset='0' stop-color='%236c5ce7'/&gt;&lt;stop offset='1' stop-color='%23a29bfe'/&gt;&lt;/linearGradient&gt;&lt;/defs&gt;&lt;rect width='32' height='32' rx='8' fill='url(%23g)'/&gt;&lt;rect x='9' y='9' width='14' height='14' rx='3' fill='%230c0d14' stroke='%23ffffff' stroke-opacity='0.25'/&gt;&lt;/svg&gt;" />
+  <!-- Favicon — F1 StratLab brand icon -->
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
 </head>
 <body>
   <div id="root"></div>
@@ -36,11 +60,14 @@
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js"></script>
 
   <!-- App -->
-  <script src="app/nav.js?v=4"></script>
+  <script src="app/nav.js?v=5"></script>
   <script type="text/babel" data-presets="env,react" src="app/markdown.jsx?v=3"></script>
   <script type="text/babel" data-presets="env,react" src="app/components.jsx?v=7"></script>
-  <script type="text/babel" data-presets="env,react" src="app/graph.jsx?v=6"></script>
-  <script type="text/babel" data-presets="env,react" src="app/home.jsx?v=5"></script>
+  <script type="text/babel" data-presets="env,react" src="app/graph.jsx?v=7"></script>
+  <script type="text/babel" data-presets="env,react" src="app/home.jsx?v=6"></script>
   <script type="text/babel" data-presets="env,react" src="app/main.jsx?v=3"></script>
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "990410867d3e4ee5afb262861e771b0e"}'></script>
 </body>
 </html>
