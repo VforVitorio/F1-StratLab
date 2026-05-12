@@ -18,15 +18,15 @@ theme:
     text: Inter
     code: JetBrains Mono
   palette:
-    - scheme: stratlab-dark
-      primary: custom
-      accent: custom
+    - scheme: slate
+      primary: deep purple
+      accent: deep purple
       toggle:
         icon: material/weather-night
         name: Switch to light mode
     - scheme: default
       primary: deep purple
-      accent: purple
+      accent: deep purple
       toggle:
         icon: material/weather-sunny
         name: Switch to dark mode
@@ -139,6 +139,7 @@ nav:
     - Setup and deployment: setup-and-deployment.md
 
   - Architecture:
+    - Index: architecture/index.md
     - Overview: architecture.md
     - Multi-agent system: agents-api-reference.md
     - Simulation engine: simulation/overview.md
@@ -155,7 +156,9 @@ nav:
     - Diagrams: diagrams/README.md
 
   - Development:
+    - Index: development/index.md
     - Docs maintenance: development/docs-maintenance.md
+    - CI/CD pipeline: development/ci-cd-pipeline.md
 
   - Thesis results:
     - Overview: thesis-results/index.md
