@@ -178,6 +178,24 @@ window.PAGES = [
     eyebrow: "Actions",
     tags: ["dev", "git", "mkdocs", "release", "github-actions", "uv"],
   },
+  {
+    slug: "tags",
+    title: "Tags index",
+    section: "Development",
+    file: "pages/tags.md",
+    description: "Every tag declared by the docs site, grouped by theme.",
+    eyebrow: "Index",
+    tags: ["overview"],
+  },
+  {
+    slug: "changelog",
+    title: "Changelog",
+    section: "Development",
+    file: "pages/changelog.md",
+    description: "Mirrored release history from the repo root CHANGELOG.md.",
+    eyebrow: "Releases",
+    tags: ["release"],
+  },
 ];
 
 // Tag colour map (used as a soft white-ish neutral with subtle hue hints).
