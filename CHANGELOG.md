@@ -11,6 +11,23 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [1.1.1](https://github.com/VforVitorio/F1-StratLab/compare/v1.1.0...v1.1.1) (2026-05-12)
+
+
+### Bug Fixes
+
+* **ci:** use PAT for release-please so required checks run on release PRs ([b293342](https://github.com/VforVitorio/F1-StratLab/commit/b29334288c1c852dd0617b337de6451fd187652a))
+* **ci:** use PAT for release-please so required checks run on release PRs ([e276d45](https://github.com/VforVitorio/F1-StratLab/commit/e276d454d01d2a4fbc11d784aed667247290ab30))
+
+
+### Documentation
+
+* add data/eval/README inventory for benchmark outputs ([1f533fb](https://github.com/VforVitorio/F1-StratLab/commit/1f533fbcb7d935bac99c670b1dbf62f1d39528b6))
+* add data/rag_eval/README for the RAG ground-truth set ([f0c54a1](https://github.com/VforVitorio/F1-StratLab/commit/f0c54a1ec19c8eb7ae105ff7028df1044415cf6e))
+* add documents/images/README manifest for thesis figures ([f7c25d3](https://github.com/VforVitorio/F1-StratLab/commit/f7c25d3d06d2c86a41a594e0e780b98c9d47c961))
+* document Conventional Commits convention in CONTRIBUTING ([78049cb](https://github.com/VforVitorio/F1-StratLab/commit/78049cb0551bf8a6bdad5842aa2738d4c324b644))
+* seed CHANGELOG retroactively with release-please marker ([c870bcc](https://github.com/VforVitorio/F1-StratLab/commit/c870bcc27cfa8fcd52c80a1db24c577fdefb00ff))
+
 ## [1.1.0] - 2026-05-11
 
 Benchmark suite for the TFG thesis chapter 5 plus full English localization of
