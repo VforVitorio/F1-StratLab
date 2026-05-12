@@ -1,0 +1,57 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "documents/images/**"
+      - "mkdocs.yml"
+      - "requirements-docs.txt"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install drawio CLI for diagram export
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgbm-dev libnss3 libxss1 libasound2t64 libgtk-3-0 xvfb
+          # Headless drawio export tool used by mkdocs-drawio-exporter
+          curl -fsSL -o /tmp/drawio.deb "https://github.com/jgraph/drawio-desktop/releases/download/v24.7.17/drawio-amd64-24.7.17.deb"
+          sudo apt-get install -y /tmp/drawio.deb
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-docs.txt
+
+      - name: Configure git identity for mkdocs gh-deploy
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Build and deploy to gh-pages
+        env:
+          XVFB_RUN: 1
+        run: |
+          xvfb-run -a mkdocs gh-deploy --force --clean --verbose

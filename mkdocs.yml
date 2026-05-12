@@ -1,0 +1,166 @@
+site_name: F1 StratLab Documentation
+site_description: Multi-agent AI system for Formula 1 race strategy recommendations.
+site_author: Victor Vega Sobral
+site_url: https://vforvitorio.github.io/F1-StratLab/
+repo_url: https://github.com/VforVitorio/F1-StratLab
+repo_name: VforVitorio/F1-StratLab
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; 2025-2026 Victor Vega Sobral
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  language: en
+  custom_dir: docs/overrides
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:
+    - scheme: stratlab-dark
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+    - scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - navigation.indexes
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+    - content.action.view
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+    logo: material/flag-checkered
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  homepage: https://f1stratlab.com/
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/VforVitorio/F1-StratLab
+      name: F1 StratLab on GitHub
+    - icon: material/web
+      link: https://f1stratlab.com/
+      name: F1 StratLab landing
+    - icon: material/book-open-variant
+      link: https://deepwiki.com/VforVitorio/F1-StratLab
+      name: DeepWiki — auto-generated wiki
+  generator: false
+  version:
+    provider: mike
+    default: latest
+
+hooks:
+  - docs/_hooks/copy_external_images.py
+
+plugins:
+  - search:
+      lang: en
+      separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
+  - glightbox:
+      touchNavigation: true
+      loop: false
+      effect: zoom
+      width: 100%
+      height: auto
+      zoomable: true
+      draggable: true
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      permalink_title: Permalink to this section
+      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+nav:
+  - Home: index.md
+
+  - Getting started:
+    - Overview: getting-started/index.md
+    - Setup and deployment: setup-and-deployment.md
+
+  - Architecture:
+    - Overview: architecture.md
+    - Multi-agent system: agents-api-reference.md
+    - Simulation engine: simulation/overview.md
+    - Backend API: backend-api.md
+    - Streamlit frontend: streamlit-frontend.md
+
+  - Arcade:
+    - Quick start: arcade/quick-start.md
+    - Dashboard: arcade/dashboard.md
+    - Strategy pipeline: arcade/strategy-pipeline.md
+
+  - Reference:
+    - Driver colors: driver-colors.md
+    - Diagrams: diagrams/README.md
+
+  - Development:
+    - Docs maintenance: development/docs-maintenance.md
+
+  - Thesis results:
+    - Overview: thesis-results/index.md
+
+  - External:
+    - Landing site: https://f1stratlab.com/
+    - DeepWiki: https://deepwiki.com/VforVitorio/F1-StratLab
+    - GitHub releases: https://github.com/VforVitorio/F1-StratLab/releases
