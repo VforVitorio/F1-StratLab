@@ -64,6 +64,14 @@ build/
 .eggs/
 
 # ===========================
+# Documentation site (mkdocs)
+# ===========================
+# mkdocs build output — published to gh-pages automatically by .github/workflows/docs.yml
+site/
+# Auto-copied by docs/_hooks/copy_external_images.py at build time
+docs/_external_images/
+
+# ===========================
 # IDE & Editors
 # ===========================
 .vscode/

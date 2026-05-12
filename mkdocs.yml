@@ -1,7 +1,7 @@
 site_name: F1 StratLab Documentation
 site_description: Multi-agent AI system for Formula 1 race strategy recommendations.
 site_author: Victor Vega Sobral
-site_url: https://vforvitorio.github.io/F1-StratLab/
+site_url: https://docs.f1stratlab.com/
 repo_url: https://github.com/VforVitorio/F1-StratLab
 repo_name: VforVitorio/F1-StratLab
 edit_uri: edit/main/docs/
