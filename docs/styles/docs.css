@@ -1430,3 +1430,639 @@ body::after {
 
 /* Selection */
 ::selection { background: rgba(108,92,231,0.4); color: #fff; }
+
+/* =========================================================
+   RESPONSIVE OVERRIDES — surgical pass
+   Breakpoints applied additively as max-width overrides
+   so the desktop layout above stays the default.
+
+   Scale:
+     xl   1280px — TOC collapses, content widens
+     lg   1024px — sidebar off-canvas, grids tighten
+     md    768px — agent / stat grids tighten further, CTA stacks
+     sm    480px — single-column, hero scales down, scrolling fallbacks
+
+   Plus: @media (hover: hover) / (hover: none) and @media print.
+   ========================================================= */
+
+/* Sidebar off-canvas backdrop — base styles, only painted on mobile. */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 60px 0 0 0;
+  background: rgba(8, 8, 12, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 29;
+  animation: fade-in 0.18s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Scroll wrapper applied by the markdown renderer around mermaid SVGs. */
+.mermaid-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---------------------------------------------------------
+   xl  ≤ 1280px — drop the right-hand TOC column.
+   --------------------------------------------------------- */
+@media (max-width: 1280px) {
+  .shell {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+  .shell-no-toc {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+  .toc {
+    display: none;
+  }
+  .content {
+    padding: 36px 48px 72px;
+  }
+  .content-wide {
+    padding: 36px 56px 72px;
+  }
+  .docs-footer-inner {
+    padding: 0 40px;
+  }
+  .docs-footer-legal {
+    padding: 18px 40px 0;
+  }
+}
+
+/* ---------------------------------------------------------
+   lg  ≤ 1024px — sidebar becomes off-canvas, grids tighten.
+   --------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .topnav-inner {
+    grid-template-columns: auto 1fr auto;
+    padding: 0 16px;
+    gap: 12px;
+  }
+  .brand-tag {
+    display: none;
+  }
+  /* Pills keep icons, drop labels except the GitHub call to action. */
+  .nav-pill {
+    padding: 0 10px;
+  }
+  .nav-pill span:not(.brand-name) {
+    display: none;
+  }
+  .nav-pill.primary span:not(.brand-name) {
+    display: inline;
+  }
+
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .shell-no-toc {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    bottom: 0;
+    width: 288px;
+    max-width: 85vw;
+    height: calc(100vh - 60px);
+    padding: 22px 14px 32px 18px;
+    background: var(--bg-1);
+    border-right: 1px solid var(--divider);
+    z-index: 30;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
+    box-shadow: none;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-elev);
+  }
+  .sidebar-backdrop {
+    display: block;
+  }
+
+  .mobile-toggle {
+    display: inline-flex;
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--divider);
+    border-radius: 10px;
+    color: var(--fg-2);
+    cursor: pointer;
+  }
+  .mobile-toggle:hover {
+    color: var(--fg-1);
+    border-color: var(--divider-strong);
+  }
+
+  .content {
+    padding: 32px 40px 64px;
+  }
+  .content-wide {
+    padding: 32px 40px 64px;
+  }
+
+  /* Layer grid 3 → 2; agent grid 6 → auto-fit so it gracefully wraps. */
+  .layer-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .agent-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+  .stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .docs-footer-inner {
+    grid-template-columns: 1fr 1fr;
+    padding: 0 32px;
+    gap: 32px;
+  }
+  .docs-footer-legal {
+    padding: 18px 32px 0;
+  }
+}
+
+/* ---------------------------------------------------------
+   md  ≤ 768px — tablet portrait / phone landscape.
+   --------------------------------------------------------- */
+@media (max-width: 768px) {
+  /* TopNav: keep brand + burger + only the primary CTA visible.
+     Remaining pills collapse via existing label hide; icons stay. */
+  .topnav {
+    height: 56px;
+  }
+  .topnav-inner {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .search-wrap {
+    max-width: 100%;
+  }
+  .search-input {
+    height: 38px;
+    padding: 0 36px 0 36px;
+  }
+  .search-kbd {
+    display: none;
+  }
+  /* Anchor dropdown to the input but clamp to viewport width. */
+  .search-results {
+    max-width: calc(100vw - 24px);
+    max-height: 70vh;
+  }
+  .search-tag-row {
+    gap: 6px;
+  }
+
+  .nav-right {
+    gap: 4px;
+  }
+  /* Hide non-essential pills below 768px — Graph & Landing & DeepWiki. */
+  .nav-right .nav-pill:not(.primary):not(:first-child) {
+    display: none;
+  }
+  /* Keep Graph as the one non-primary affordance (icon-only). */
+  .nav-pill {
+    padding: 0 8px;
+  }
+
+  .content {
+    padding: 24px 18px 56px;
+  }
+  .content-wide {
+    padding: 20px 18px 56px;
+  }
+
+  /* Breadcrumb: never wrap onto two lines. Last segment truncates. */
+  .breadcrumb {
+    flex-wrap: nowrap;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .breadcrumb > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .article h1 {
+    font-size: clamp(28px, 7.5vw, 36px);
+    margin-bottom: 12px;
+  }
+  .article-lede {
+    font-size: 16px;
+  }
+  .article h2 {
+    font-size: 22px;
+    margin: 40px 0 12px;
+  }
+  .article h3 {
+    font-size: 18px;
+    margin: 28px 0 8px;
+  }
+  .article p,
+  .article ul,
+  .article ol {
+    font-size: 15px;
+    max-width: 100%;
+  }
+  /* Article content uses the full content width on mobile, no left max. */
+  .article ul,
+  .article ol {
+    padding-left: 20px;
+  }
+  /* Long URLs in inline code wrap so they never blow out the layout. */
+  .article :not(pre) > code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* Tables become horizontally scrollable on mobile. */
+  .article table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    border-radius: 10px;
+  }
+  .article thead,
+  .article tbody,
+  .article tr {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  /* Code blocks already have overflow-x: auto, but force on the pre. */
+  .code-block pre {
+    padding: 14px 16px;
+    font-size: 12.5px;
+  }
+  .code-block-chrome {
+    padding: 6px 12px;
+  }
+
+  /* Mermaid diagrams scroll horizontally instead of squashing. */
+  .mermaid-block {
+    padding: 16px 14px;
+    justify-content: flex-start;
+  }
+  .mermaid-block > svg,
+  .mermaid-block .mermaid-scroll {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Home hero. */
+  .home-hero {
+    padding: 36px 0 18px;
+  }
+  .home-h1 {
+    font-size: clamp(36px, 9vw, 52px);
+    margin-bottom: 18px;
+  }
+  .home-sub {
+    font-size: 16px;
+    margin-bottom: 22px;
+  }
+  .home-cta-row {
+    gap: 8px;
+  }
+  .home-cta-row .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+  .home-meta {
+    gap: 14px;
+    row-gap: 8px;
+  }
+
+  /* Layer grid 3 → 2 then 1; agent grid 6 → 2. */
+  .layer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .agent-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .agent-card {
+    padding: 16px;
+  }
+  .agent-card p,
+  .agent-card-meta {
+    overflow-wrap: anywhere;
+  }
+
+  /* Stat grid 6 → 3. */
+  .stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .stat-cell {
+    padding: 14px;
+  }
+  .stat-cell-num {
+    font-size: clamp(22px, 6vw, 28px);
+  }
+
+  /* CTA strip stacks vertically. */
+  .cta-strip {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 22px 22px;
+    gap: 18px;
+    margin-top: 48px;
+  }
+  .cta-strip .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Page footer stacks. */
+  .page-footer {
+    grid-template-columns: 1fr;
+  }
+  .page-footer-link.next {
+    text-align: left;
+  }
+
+  /* Footer columns 4 → 2 → and brand spans full width. */
+  .docs-footer {
+    padding: 36px 0 24px;
+    margin-top: 56px;
+  }
+  .docs-footer-inner {
+    grid-template-columns: 1fr 1fr;
+    padding: 0 18px;
+    gap: 24px;
+  }
+  .docs-footer-inner > div:first-child {
+    grid-column: 1 / -1;
+  }
+  .docs-footer-legal {
+    padding: 18px 18px 0;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Mini-graph teaser. */
+  .mini-graph {
+    min-height: 0;
+    aspect-ratio: auto;
+    height: clamp(280px, 55vw, 420px);
+  }
+  .mini-graph-overlay {
+    padding: 14px 16px;
+  }
+
+  /* Graph overlay (full viewport on small screens). */
+  .graph-header {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .graph-title {
+    font-size: 14px;
+  }
+  .graph-subtitle {
+    display: none;
+  }
+  .graph-legend {
+    left: 12px;
+    bottom: 12px;
+    padding: 10px 12px;
+    font-size: 11px;
+    max-width: calc(100vw - 24px);
+  }
+
+  /* Permalink anchors: hide for h1 always; reveal for h2/h3 on touch. */
+  .article h1 .heading-anchor {
+    display: none;
+  }
+  .article h2 .heading-anchor,
+  .article h3 .heading-anchor {
+    opacity: 0.55;
+    font-size: 0.6em;
+    margin-left: 6px;
+  }
+
+  /* Tag chips: ensure adequate tap target. */
+  .tag-chip {
+    height: 28px;
+    padding: 0 12px;
+    font-size: 11.5px;
+  }
+}
+
+/* ---------------------------------------------------------
+   sm  ≤ 480px — small phones.
+   --------------------------------------------------------- */
+@media (max-width: 480px) {
+  .topnav {
+    height: 54px;
+  }
+  .topnav-inner {
+    padding: 0 10px;
+    gap: 6px;
+  }
+  /* On very small screens the brand label drops; only the mark remains. */
+  .brand-name {
+    display: none;
+  }
+
+  .content {
+    padding: 20px 14px 48px;
+  }
+  .content-wide {
+    padding: 16px 14px 48px;
+  }
+
+  .home-hero {
+    padding: 28px 0 12px;
+  }
+  .home-h1 {
+    font-size: clamp(32px, 10vw, 40px);
+    line-height: 1.05;
+  }
+  .home-sub {
+    font-size: 15px;
+  }
+  .home-cta-row {
+    flex-direction: column;
+  }
+  .home-cta-row .btn {
+    width: 100%;
+  }
+
+  .layer-grid,
+  .agent-grid {
+    grid-template-columns: 1fr;
+  }
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .article h1 {
+    font-size: clamp(26px, 8vw, 32px);
+  }
+  .article h2 {
+    font-size: 20px;
+    margin: 32px 0 10px;
+  }
+
+  /* Footer collapses to a single column on phones. */
+  .docs-footer-inner {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .docs-footer-inner > div:first-child {
+    grid-column: auto;
+  }
+
+  /* Search dropdown anchored to input, full viewport width minus gutter. */
+  .search-results {
+    left: -10px;
+    right: -10px;
+    max-width: calc(100vw - 20px);
+    border-radius: 10px;
+  }
+
+  /* Mini-graph minimum sane height on tiny screens. */
+  .mini-graph {
+    height: clamp(240px, 70vw, 320px);
+  }
+
+  /* Tag chips wrap freely; keep tap-friendly height. */
+  .tag-chips {
+    gap: 6px;
+  }
+
+  /* Callouts breathe a bit less. */
+  .callout {
+    padding: 14px 14px;
+    gap: 10px;
+  }
+}
+
+/* ---------------------------------------------------------
+   Pointer / hover capability — keep lift+shadow only where it makes sense.
+   --------------------------------------------------------- */
+@media (hover: hover) {
+  /* No-op: hover styles defined above already apply on these devices. */
+}
+
+@media (hover: none) {
+  /* On touch devices, suppress the lift transforms that "stick" after tap. */
+  .layer-card:hover,
+  .agent-card:hover,
+  .btn-primary:hover,
+  .page-footer-link:hover,
+  .mini-graph:hover {
+    transform: none;
+  }
+  /* Permalink anchors are always visible on touch (no hover to reveal them). */
+  .article h2 .heading-anchor,
+  .article h3 .heading-anchor {
+    opacity: 0.5;
+  }
+  /* Ensure all interactive buttons meet the 44px tap target. */
+  .btn {
+    min-height: 44px;
+  }
+  .nav-pill {
+    min-height: 36px;
+  }
+  .mobile-toggle {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* ---------------------------------------------------------
+   Print — useful for thesis annex export.
+   --------------------------------------------------------- */
+@media print {
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
+  body::before,
+  body::after {
+    display: none !important;
+  }
+  .topnav,
+  .sidebar,
+  .sidebar-backdrop,
+  .toc,
+  .docs-footer,
+  .page-footer,
+  .graph-overlay,
+  .mobile-toggle,
+  .nav-right,
+  .home-cta-row,
+  .cta-strip,
+  .mini-graph {
+    display: none !important;
+  }
+  .shell,
+  .shell-no-toc,
+  .shell-wide {
+    display: block;
+    max-width: none;
+    margin: 0;
+  }
+  .content,
+  .content-wide {
+    padding: 0 !important;
+    max-width: none;
+  }
+  .article h1,
+  .article h2,
+  .article h3,
+  .article h4,
+  .article p,
+  .article li,
+  .article strong,
+  .article em {
+    color: #000000 !important;
+    background: none !important;
+    -webkit-text-fill-color: #000000 !important;
+  }
+  .article a {
+    color: #000000 !important;
+    text-decoration: underline;
+    border-bottom: 0 !important;
+  }
+  .article :not(pre) > code,
+  .code-block,
+  .mermaid-block,
+  .callout,
+  .article blockquote,
+  .article table {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: 1px solid #cccccc !important;
+  }
+  .article table th,
+  .article table td {
+    color: #000000 !important;
+  }
+  /* Avoid awkward page breaks inside code/tables/figures. */
+  .code-block,
+  .mermaid-block,
+  .article table,
+  .callout,
+  figure {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
