@@ -11,6 +11,23 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [1.3.1](https://github.com/VforVitorio/F1-StratLab/compare/v1.3.0...v1.3.1) (2026-05-12)
+
+
+### Bug Fixes
+
+* **docs:** repair slate scheme contrast and add brand-aligned theme variables ([6516709](https://github.com/VforVitorio/F1-StratLab/commit/6516709ffbe2d6ff36f8b96f0c0aca7b9ea58512))
+
+
+### Documentation
+
+* add architecture hub landing with sequence diagram and key contracts ([3fb717e](https://github.com/VforVitorio/F1-StratLab/commit/3fb717ea90c8fbb335d2b19dfebba9d8785fc8a4))
+* add branded 404 page with hero styling and recovery links ([188491b](https://github.com/VforVitorio/F1-StratLab/commit/188491b64c67527aa320358c059badcbb7e27e90))
+* add CI/CD pipeline narrative covering branching releases and deployment ([db48476](https://github.com/VforVitorio/F1-StratLab/commit/db48476ba7db5198981e01803c7a79b6cfd34855))
+* add development hub landing with conventional commits cheat sheet ([5e28bb1](https://github.com/VforVitorio/F1-StratLab/commit/5e28bb11e2f09233021013894a170f2831cecf9e))
+* redesign landing with hero, agent grid, mermaid system diagram and stats ([e6525cc](https://github.com/VforVitorio/F1-StratLab/commit/e6525ccb7e4f51c391d31c5ca8aee4112c3ead7c))
+* ship docs site revamp with CI/CD narrative and contrast fix ([b64ce12](https://github.com/VforVitorio/F1-StratLab/commit/b64ce12471fd1ecc0cd4272f403ca079224e0f3c))
+
 ## [1.3.0](https://github.com/VforVitorio/F1-StratLab/compare/v1.2.0...v1.3.0) (2026-05-12)
 
 
