@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: F1 StratLab
+message: If you use F1 StratLab in your work, please cite it as below.
+type: software
+authors:
+  - given-names: Víctor
+    family-names: Vega Sobral
+    alias: VforVitorio
+repository-code: https://github.com/VforVitorio/F1-StratLab
+url: https://docs.f1stratlab.com/
+abstract: >
+  Open-source multi-agent AI system for real-time Formula 1 race strategy
+  recommendations. Combines seven machine-learning models, six LangGraph
+  ReAct agents and one strategy orchestrator. Final-Degree Project on
+  Intelligent Systems Engineering at UIE.
+keywords:
+  - formula-1
+  - multi-agent
+  - langgraph
+  - race-strategy
+  - machine-learning
+  - thesis
+license: Apache-2.0
+version: 1.3.1
+date-released: 2026-05-12
