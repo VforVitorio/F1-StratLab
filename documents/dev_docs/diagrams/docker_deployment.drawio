@@ -1,0 +1,126 @@
+<mxfile host="app.diagrams.net" modified="2026-04-13" agent="Claude" version="24.7.17">
+  <diagram id="docker-1" name="Docker Deployment">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0" background="#0a0a1a">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- TITLE -->
+        <mxCell id="title" value="Docker Deployment — docker-compose.yml" style="text;html=1;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#a78bfa;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="250" y="10" width="700" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ HOST MACHINE ============ -->
+        <mxCell id="host" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f0f2e;strokeColor=#64748b;strokeWidth=2;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="60" width="1140" height="700" as="geometry"/>
+        </mxCell>
+        <mxCell id="host_label" value="HOST MACHINE (Windows 11)" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=#64748b;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="40" y="65" width="300" height="25" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ DOCKER NETWORK ============ -->
+        <mxCell id="network" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#121127;strokeColor=#a78bfa;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="60" y="100" width="1080" height="540" as="geometry"/>
+        </mxCell>
+        <mxCell id="net_label" value="f1_network (bridge)" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=#a78bfa;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="75" y="105" width="250" height="25" as="geometry"/>
+        </mxCell>
+
+        <!-- ======= FRONTEND CONTAINER ======= -->
+        <mxCell id="fe_container" value="" style="swimlane;html=1;startSize=35;fillColor=#1e1b4b;strokeColor=#7c3aed;strokeWidth=2;rounded=1;arcSize=6;swimlaneLine=0;" vertex="1" parent="1">
+          <mxGeometry x="100" y="150" width="440" height="350" as="geometry"/>
+        </mxCell>
+        <mxCell id="fe_label" value="f1_telemetry_frontend" style="text;html=1;align=left;verticalAlign=middle;fontSize=14;fontStyle=1;fontColor=#a78bfa;fillColor=none;strokeColor=none;" vertex="1" parent="fe_container">
+          <mxGeometry x="10" y="0" width="250" height="35" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fe_img" value="&lt;b&gt;Image&lt;/b&gt;: python:3.11-slim&lt;br&gt;&lt;b&gt;Dockerfile&lt;/b&gt;: frontend/Dockerfile&lt;br&gt;&lt;b&gt;Context&lt;/b&gt;: ./src/telemetry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312e81;strokeColor=#6366f1;fontColor=#a5b4fc;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=4;" vertex="1" parent="fe_container">
+          <mxGeometry x="20" y="45" width="400" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fe_port" value="&lt;font style=&quot;font-size:16px&quot;&gt;:8501&lt;/font&gt;&lt;br&gt;Streamlit" style="ellipse;whiteSpace=wrap;html=1;fillColor=#3b0764;strokeColor=#a855f7;fontColor=#e9d5ff;fontSize=11;fontStyle=1;" vertex="1" parent="fe_container">
+          <mxGeometry x="20" y="120" width="100" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fe_env" value="&lt;b&gt;Environment&lt;/b&gt;&lt;br&gt;PYTHONUNBUFFERED=1&lt;br&gt;BACKEND_URL=http://backend:8000" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312e81;strokeColor=#6366f1;fontColor=#a5b4fc;fontSize=9;align=left;spacingLeft=8;verticalAlign=top;spacingTop=4;" vertex="1" parent="fe_container">
+          <mxGeometry x="140" y="120" width="280" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fe_vol" value="&lt;b&gt;Volume Mount&lt;/b&gt;&lt;br&gt;./src/telemetry &amp;rarr; /app" style="shape=cylinder3;size=10;whiteSpace=wrap;html=1;fillColor=#312e81;strokeColor=#6366f1;fontColor=#a5b4fc;fontSize=10;verticalAlign=middle;" vertex="1" parent="fe_container">
+          <mxGeometry x="20" y="210" width="200" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fe_depends" value="depends_on: backend&lt;br&gt;restart: unless-stopped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312e81;strokeColor=#6366f1;fontColor=#818cf8;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="fe_container">
+          <mxGeometry x="20" y="290" width="200" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- ======= BACKEND CONTAINER ======= -->
+        <mxCell id="be_container" value="" style="swimlane;html=1;startSize=35;fillColor=#0f3433;strokeColor=#14b8a6;strokeWidth=2;rounded=1;arcSize=6;swimlaneLine=0;" vertex="1" parent="1">
+          <mxGeometry x="600" y="150" width="440" height="350" as="geometry"/>
+        </mxCell>
+        <mxCell id="be_label" value="f1_telemetry_backend" style="text;html=1;align=left;verticalAlign=middle;fontSize=14;fontStyle=1;fontColor=#2dd4bf;fillColor=none;strokeColor=none;" vertex="1" parent="be_container">
+          <mxGeometry x="10" y="0" width="250" height="35" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="be_img" value="&lt;b&gt;Image&lt;/b&gt;: python:3.11-slim&lt;br&gt;&lt;b&gt;Dockerfile&lt;/b&gt;: backend/Dockerfile&lt;br&gt;&lt;b&gt;Context&lt;/b&gt;: ./src/telemetry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#134e4a;strokeColor=#0d9488;fontColor=#5eead4;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=4;" vertex="1" parent="be_container">
+          <mxGeometry x="20" y="45" width="400" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="be_port" value="&lt;font style=&quot;font-size:16px&quot;&gt;:8000&lt;/font&gt;&lt;br&gt;FastAPI" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0f3433;strokeColor=#2dd4bf;fontColor=#99f6e4;fontSize=11;fontStyle=1;" vertex="1" parent="be_container">
+          <mxGeometry x="20" y="120" width="100" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="be_env" value="&lt;b&gt;Environment&lt;/b&gt;&lt;br&gt;PYTHONUNBUFFERED=1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#134e4a;strokeColor=#0d9488;fontColor=#5eead4;fontSize=9;align=left;spacingLeft=8;verticalAlign=top;spacingTop=4;" vertex="1" parent="be_container">
+          <mxGeometry x="140" y="120" width="280" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="be_vol" value="&lt;b&gt;Volume Mount&lt;/b&gt;&lt;br&gt;./src/telemetry &amp;rarr; /app" style="shape=cylinder3;size=10;whiteSpace=wrap;html=1;fillColor=#134e4a;strokeColor=#0d9488;fontColor=#5eead4;fontSize=10;verticalAlign=middle;" vertex="1" parent="be_container">
+          <mxGeometry x="20" y="210" width="200" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="be_restart" value="restart: unless-stopped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#134e4a;strokeColor=#0d9488;fontColor=#2dd4bf;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="be_container">
+          <mxGeometry x="20" y="290" width="200" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- ======= ARROW: Frontend to Backend ======= -->
+        <mxCell id="fe_to_be" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#67e8f9;strokeWidth=3;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="fe_container" target="be_container">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fe_be_label" value="&lt;b&gt;HTTP&lt;/b&gt;&lt;br&gt;http://backend:8000" style="edgeLabel;html=1;fontSize=10;fontColor=#67e8f9;fillColor=#0a0a1a;" vertex="1" connectable="0" parent="fe_to_be">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+
+        <!-- ======= EXTERNAL: LM Studio ======= -->
+        <mxCell id="lms_ext" value="&lt;b&gt;LM Studio&lt;/b&gt;&lt;br&gt;:1234&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;(host machine)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#422006;strokeColor=#f59e0b;fontColor=#fef3c7;fontSize=11;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="800" y="660" width="150" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="be_to_lms" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f59e0b;strokeWidth=2;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="be_container" target="lms_ext">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="lms_label" value="OpenAI-compat API" style="edgeLabel;html=1;fontSize=9;fontColor=#f59e0b;fillColor=none;" vertex="1" connectable="0" parent="be_to_lms">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+
+        <!-- ======= EXTERNAL: Browser ======= -->
+        <mxCell id="browser" value="&lt;b&gt;Browser&lt;/b&gt;&lt;br&gt;localhost:8501" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#a78bfa;fontColor=#c4b5fd;fontSize=11;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="660" width="150" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="browser_to_fe" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#a78bfa;strokeWidth=2;dashed=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="browser" target="fe_container">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="browser_label" value="HTTP :8501" style="edgeLabel;html=1;fontSize=9;fontColor=#a78bfa;fillColor=none;" vertex="1" connectable="0" parent="browser_to_fe">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+
+        <!-- Port mapping annotations -->
+        <mxCell id="port_note_fe" value="&lt;font style=&quot;font-size:9px&quot;&gt;host 8501 &amp;rarr; container 8501&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;fontColor=#818cf8;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="100" y="530" width="180" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="port_note_be" value="&lt;font style=&quot;font-size:9px&quot;&gt;host 8000 &amp;rarr; container 8000&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;fontColor=#5eead4;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="600" y="530" width="180" height="18" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
