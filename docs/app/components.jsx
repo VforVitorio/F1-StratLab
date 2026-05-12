@@ -265,31 +265,51 @@ function Sidebar({ activeSlug, onNav, open, onClose }) {
     return g;
   }, []);
 
-  return React.createElement("aside", { className: "sidebar" + (open ? " open" : "") },
-    window.SECTIONS.map(sec =>
-      React.createElement("div", { key: sec, className: "sidebar-section" },
-        React.createElement("div", { className: "sidebar-section-title" }, sec),
-        (grouped[sec] || []).map(p =>
-          React.createElement("a", {
-            key: p.slug,
-            className: "sidebar-link" + (activeSlug === p.slug ? " active" : ""),
-            href: "#/" + p.slug,
-            onClick: e => { e.preventDefault(); onNav(p.slug); if (onClose) onClose(); },
-          },
-            React.createElement("span", null, p.title),
+  // Lock body scroll while the off-canvas sidebar is open on small screens.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function onKey(e) { if (e.key === "Escape" && onClose) onClose(); }
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose]);
+
+  return React.createElement(React.Fragment, null,
+    open && React.createElement("div", {
+      className: "sidebar-backdrop",
+      onClick: () => onClose && onClose(),
+      "aria-hidden": "true",
+    }),
+    React.createElement("aside", { className: "sidebar" + (open ? " open" : "") },
+      window.SECTIONS.map(sec =>
+        React.createElement("div", { key: sec, className: "sidebar-section" },
+          React.createElement("div", { className: "sidebar-section-title" }, sec),
+          (grouped[sec] || []).map(p =>
+            React.createElement("a", {
+              key: p.slug,
+              className: "sidebar-link" + (activeSlug === p.slug ? " active" : ""),
+              href: "#/" + p.slug,
+              onClick: e => { e.preventDefault(); onNav(p.slug); if (onClose) onClose(); },
+            },
+              React.createElement("span", null, p.title),
+            )
           )
         )
-      )
-    ),
-    React.createElement("div", { className: "sidebar-footer" },
-      React.createElement("strong", null, "Companion resources"),
-      React.createElement("div", { style: { marginTop: 6 } },
-        React.createElement("a", { href: "https://f1stratlab.com/", target: "_blank", rel: "noopener noreferrer" }, "f1stratlab.com"),
-        " · ",
-        React.createElement("a", { href: "https://deepwiki.com/VforVitorio/F1-StratLab", target: "_blank", rel: "noopener noreferrer" }, "DeepWiki"),
       ),
-      React.createElement("div", { style: { marginTop: 6 } },
-        React.createElement("a", { href: "https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset", target: "_blank", rel: "noopener noreferrer" }, "HF dataset"),
+      React.createElement("div", { className: "sidebar-footer" },
+        React.createElement("strong", null, "Companion resources"),
+        React.createElement("div", { style: { marginTop: 6 } },
+          React.createElement("a", { href: "https://f1stratlab.com/", target: "_blank", rel: "noopener noreferrer" }, "f1stratlab.com"),
+          " · ",
+          React.createElement("a", { href: "https://deepwiki.com/VforVitorio/F1-StratLab", target: "_blank", rel: "noopener noreferrer" }, "DeepWiki"),
+        ),
+        React.createElement("div", { style: { marginTop: 6 } },
+          React.createElement("a", { href: "https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset", target: "_blank", rel: "noopener noreferrer" }, "HF dataset"),
+        ),
       ),
     ),
   );
