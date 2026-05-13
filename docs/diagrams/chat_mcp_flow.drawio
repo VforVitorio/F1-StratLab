@@ -175,7 +175,7 @@
             <mxPoint x="530" y="587" as="targetPoint"/>
           </mxGeometry>
         </mxCell>
-        <mxCell id="alt2" value="lmstudio_service.py&lt;br&gt;(build_messages + send)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=10;" vertex="1" parent="1">
+        <mxCell id="alt2" value="llm_service.py&lt;br&gt;(build_messages + send)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="540" y="565" width="180" height="45" as="geometry"/>
         </mxCell>
         <mxCell id="alt_arrow2" value="" style="shape=flexArrow;endArrow=classic;html=1;strokeColor=#475569;fillColor=#1e293b;width=8;endSize=4;" edge="1" parent="1">
