@@ -43,15 +43,31 @@ Entry point: `backend/main.py` -- creates the FastAPI app and registers all rout
 |---|---|---|
 | GET | `/api/v1/chat/health` | LM Studio health check |
 | GET | `/api/v1/chat/models` | List available LM Studio models |
-| POST | `/api/v1/chat/message` | Non-streaming chat message |
-| POST | `/api/v1/chat/stream` | Streaming chat response (SSE) |
-| POST | `/api/v1/chat/query` | Routed query (detects intent, dispatches) |
+| GET | `/api/v1/chat/status` | Current backend stage for a `request_id` (smart-spinner poll) |
+| POST | `/api/v1/chat/message` | Non-streaming chat message (raw LLM, no tools) |
+| POST | `/api/v1/chat/stream` | Streaming chat response (raw LLM, no tools) |
+| POST | `/api/v1/chat/tool-message` | Tool-aware chat -- JSON response |
+| POST | `/api/v1/chat/tool-message-stream` | Tool-aware chat -- Server-Sent Events stream |
 
-Chat proxies to a local LM Studio instance. The `QueryRouter` classifies user intent and dispatches to specialized handlers.
+Chat proxies the configured LLM provider (LM Studio local or OpenAI cloud, switchable via `F1_LLM_PROVIDER`). Tool-aware endpoints route through the **MCP-driven `chat_engine`** (see below); raw `/message` and `/stream` skip the tool layer and return whatever the model writes.
+
+### MCP-Driven Tool Routing
+
+`/chat/tool-message` and `/chat/tool-message-stream` are powered by `services/chatbot/chat_engine.py`. The engine pulls every tool from the FastMCP server (`backend.mcp_tools.mcp`) via the in-process `fastmcp.Client`, exposes them to the LLM as OpenAI-style `tools=[...]` schemas, and dispatches the model's chosen tool back through the MCP client. There is **no parallel keyword/regex registry** anymore -- tool definitions live in one place and the LLM sees the same schemas an external MCP client (Claude Desktop, Cursor) would see when it dials `/mcp`.
+
+The flow per request:
+
+1. **Pull tool catalog** -- `mcp_bridge.list_openai_tools()` returns every Phase 1 `@mcp.tool` plus the Phase 2 telemetry tools auto-mounted from the FastAPI OpenAPI spec, formatted as `{"type": "function", "function": {...}}`.
+2. **First LLM call** -- with `tools=` populated. The model decides whether to call a tool or reply in plain text. Casual greetings, meta questions ("what tools do you have?"), and general F1 knowledge are answered directly without dispatching.
+3. **Tool dispatch** (only when the model returned a `tool_call`) -- `mcp_bridge.call_mcp_tool(name, args)` runs the tool through the FastMCP client and returns the structured data.
+4. **`tool_result` SSE event** -- the structured payload is wrapped in `{tool_name, display_type, data, summary}` and emitted so the frontend can render the right component (chart / metrics / strategy card / table / text).
+5. **Second LLM call** -- without `tools=`, feeding the tool's output back as a `role=tool` message so the model summarises the data in the user's language.
+
+The streaming endpoint emits four SSE event types in order: `stage` (every checkpoint, also reflected in `/chat/status`), `tool_result` (rich payload), `token` (LLM text chunks), `done` (final marker with provider metadata).
 
 ### Tool Results and Display Hints
 
-Handlers under `services/chatbot/handlers/` can invoke MCP-style tools (pace, tire, situation, pit, regulations, and the Phase 2 telemetry tools `get_lap_times`, `get_telemetry`, `compare_drivers`, `get_race_data`). Each tool entry in `TOOL_DISPLAY_MAP` (`models/tool_schemas.py`) carries a `DisplayType` hint the frontend uses for rendering:
+Each tool is mapped to a `DisplayType` hint via `TOOL_DISPLAY_MAP` (`models/tool_schemas.py`); the frontend's chat renderer chooses a component based on the hint:
 
 | DisplayType | Used by |
 |---|---|
@@ -61,9 +77,21 @@ Handlers under `services/chatbot/handlers/` can invoke MCP-style tools (pace, ti
 | `TEXT` | `query_regulations`, `list_gps`, `list_drivers`, `get_lap_range` |
 | `CHART` | `get_lap_times`, `get_telemetry`, `compare_drivers`, `get_race_data` |
 
-The four telemetry tools are wired to `CHART` so the frontend renders them as inline Plotly figures (see [Frontend -- Chat Tool-Result Rendering](frontend.md#chat-tool-result-rendering)).
+`chat_engine._trim_for_llm` caps long arrays before they are sent back to the LLM for summarisation; the unmodified payload still reaches the frontend on `tool_result.data` so charts retain the full series.
 
-`StrategyHandler._execute_telemetry_tool` returns the raw tool payload unchanged on `tool_result.data`. A separate static helper `_trim_for_llm(raw)` produces a 20-record-capped shallow copy that is only fed to the LLM summariser. This split keeps the LLM context small without starving the UI of the full series needed to draw the chart.
+### Smart-Spinner Stage Tracker
+
+The frontend mints a UUID, sends it on every chat request via the `X-Request-Id` header, and polls `/api/v1/chat/status?request_id=...` every second. The backend writes the current stage (`preparing_tools`, `model_choosing_tool`, `calling_<tool>`, `summarizing_with_llm`, ...) into a process-global tracker (`services/chatbot/stage_tracker.py`) at every checkpoint, cleared in a `try/finally` so the dict never leaks. The Streamlit chat page maps these stages to humanised labels so the spinner narrates the slow phases (model loading, tool execution).
+
+### Module Layout
+
+`services/chatbot/` now contains only what the MCP-driven flow needs:
+
+- `chat_engine.py` -- async orchestrator (stream + sync entry points).
+- `mcp_bridge.py` -- async adapter to the FastMCP server (`list_openai_tools`, `call_mcp_tool`).
+- `llm_service.py` -- provider abstraction (LM Studio + OpenAI), now with `tools=` support.
+- `stage_tracker.py` -- per-request stage dict for the smart-spinner.
+- `utils/` -- empty placeholder; the legacy `tool_param_extractor`, `query_classifier`, `validators`, the per-handler files, the `router/` package and the `prompts/` directory were deleted along with the `/chat/query` endpoint.
 
 ## Voice Endpoints
 
