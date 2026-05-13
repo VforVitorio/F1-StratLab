@@ -11,6 +11,15 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [1.4.1](https://github.com/VforVitorio/F1-StratLab/compare/v1.4.0...v1.4.1) (2026-05-13)
+
+
+### Documentation
+
+* **api:** document MCP-driven chat endpoints and module layout ([30a5120](https://github.com/VforVitorio/F1-StratLab/commit/30a51208d7e5666d7ffc872629d053620ad8edc5))
+* **diagrams:** rename lmstudio_service.py to llm_service.py in chat MCP flow ([68efe8f](https://github.com/VforVitorio/F1-StratLab/commit/68efe8ff469c9cf5f68c2aadb5572a0013390484))
+* **frontend:** point chat tool-result renderer at /chat/tool-message-stream ([fdaeb6e](https://github.com/VforVitorio/F1-StratLab/commit/fdaeb6ec3356df8eb39dd37da9301779be3e3b01))
+
 ## [1.4.0](https://github.com/VforVitorio/F1-StratLab/compare/v1.3.1...v1.4.0) (2026-05-12)
 
 
