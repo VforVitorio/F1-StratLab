@@ -74,7 +74,7 @@ The Strategy page (`pages/strategy.py`) is the primary interface for the N25–N
 
 ## Chat tool-result rendering
 
-The Chat page (`pages/chat.py`) consumes the MCP-style tool results returned by `/api/v1/chat/query`. Each tool result carries a `display_type` hint (see `TOOL_DISPLAY_MAP` in [Backend API](#/backend-api)) that tells the frontend how to render the payload.
+The Chat page (`pages/chat.py`) consumes the MCP tool results streamed by `/api/v1/chat/tool-message-stream` (and the JSON variant at `/api/v1/chat/tool-message`). Each tool result carries a `display_type` hint (see `TOOL_DISPLAY_MAP` in [Backend API](#/backend-api)) that tells the frontend how to render the payload.
 
 Dispatch lives in `components/chatbot/tool_result_renderer.py`:
 
