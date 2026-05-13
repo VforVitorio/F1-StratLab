@@ -343,16 +343,16 @@ $response = Invoke-RestMethod -Uri "http://localhost:8000/api/v1/voice/synthesiz
 
 ---
 
-## 8. Chat endpoint — verificar routing de estrategia (Step 9b)
+## 8. Chat endpoint — verificar routing de tool MCP (Step 9b)
 
 ```powershell
-# Pregunta de estrategia — debe enrutar a StrategyHandler
-$chatBody = '{"message":"Should NOR pit this lap? Tyres are 22 laps old on MEDIUM."}'
-Invoke-RestMethod -Uri "http://localhost:8000/api/v1/chat/query" -Method POST -ContentType "application/json" -Body $chatBody
+# Strategy query — el LLM debe elegir predict_pit / predict_tire / recommend_strategy via MCP
+$chatBody = '{"text":"Should NOR pit this lap? He is on lap 22 with MEDIUMS in Monza."}'
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/chat/tool-message" -Method POST -ContentType "application/json" -Body $chatBody
 
-# Pregunta técnica — debe enrutar a TechnicalQueryHandler
-$chatBody2 = '{"message":"What was the top speed in sector 2?"}'
-Invoke-RestMethod -Uri "http://localhost:8000/api/v1/chat/query" -Method POST -ContentType "application/json" -Body $chatBody2
+# Telemetry comparison — el LLM debe elegir compare_drivers (Phase 2 OpenAPI tool)
+$chatBody2 = '{"text":"compare VER vs HAM telemetry at Monza 2024"}'
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/chat/tool-message" -Method POST -ContentType "application/json" -Body $chatBody2
 ```
 
 ---
