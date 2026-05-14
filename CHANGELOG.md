@@ -11,6 +11,13 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [1.4.3](https://github.com/VforVitorio/F1-StratLab/compare/v1.4.2...v1.4.3) (2026-05-14)
+
+
+### Bug Fixes
+
+* **chat:** wire Download Report button to live /tool-message endpoint (submodule a921032) ([1dd018d](https://github.com/VforVitorio/F1-StratLab/commit/1dd018d29a874b5622650794c0cd72102392c889))
+
 ## [1.4.2](https://github.com/VforVitorio/F1-StratLab/compare/v1.4.1...v1.4.2) (2026-05-13)
 
 
