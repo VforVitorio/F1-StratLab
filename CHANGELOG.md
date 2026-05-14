@@ -11,6 +11,13 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [1.4.2](https://github.com/VforVitorio/F1-StratLab/compare/v1.4.1...v1.4.2) (2026-05-13)
+
+
+### Documentation
+
+* **dev:** update chat smoke commands to /tool-message + MCP examples ([b7526d0](https://github.com/VforVitorio/F1-StratLab/commit/b7526d05cc2cde1e08e56545e0730df7298074d5))
+
 ## [1.4.1](https://github.com/VforVitorio/F1-StratLab/compare/v1.4.0...v1.4.1) (2026-05-13)
 
 
