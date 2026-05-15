@@ -242,6 +242,35 @@ class SimConnector(threading.Thread):
                 return False
         return True
 
+    # Number of laps the agent loop is allowed to lag behind the arcade
+    # before we consider the lap "stale" and skip the LLM call.  One lap
+    # of buffer absorbs the natural drift between the ~5 s agent step and
+    # the visual replay without making the dashboard miss the lap the
+    # user is actively watching.
+    _STALE_LAP_TOLERANCE: int = 1
+
+    def _should_skip_stale(self, lap_num: int) -> bool:
+        """True when arcade has seeked far enough ahead to drop this lap.
+
+        Always ``False`` when no playback provider is wired — CLI / smoke
+        tests must keep processing every lap end-to-end.
+        """
+        if self._current_lap_provider is None:
+            return False
+        return self._current_lap_provider() > lap_num + self._STALE_LAP_TOLERANCE
+
+    @staticmethod
+    def _lap_time_from_state(lap_state: dict[str, Any], fallback: float) -> float:
+        """Pull the real lap time out of a skipped lap_state, falling back.
+
+        Keeps the next agent call's ``prev_lap_time`` baseline accurate
+        even when we skipped one or several intermediate laps; using the
+        actual recorded lap time is more truthful than carrying the last
+        predicted value forward.
+        """
+        driver = lap_state.get("driver") or {}
+        return float(driver.get("lap_time_s") or fallback)
+
     def run(self) -> None:
         """Drive the local strategy loop and capture fatal errors.
 
@@ -302,6 +331,14 @@ class SimConnector(threading.Thread):
             # (CLI / smoke tests preserve the as-fast-as-possible loop).
             if not self._wait_for_arcade(lap_num):
                 return
+            # Skip stale laps when the user has seeked the arcade well ahead
+            # of where the agent loop sits.  Without this, a fast-forward
+            # from V2 to V20 would burn ~17 LLM calls for laps the user
+            # never sees again.  We still keep ``prev_lap_time`` accurate
+            # so the next processed lap sees a sensible baseline.
+            if self._should_skip_stale(lap_num):
+                prev_lap_time = self._lap_time_from_state(lap_state, prev_lap_time)
+                continue
             try:
                 prev_lap_time = self._step_once(laps_df, lap_state, prev_lap_time)
             except Exception as exc:
