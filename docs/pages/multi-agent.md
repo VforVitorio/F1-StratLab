@@ -105,15 +105,23 @@ Wraps per-compound TireDegTCN models (N09/N10) with MC Dropout inference. Answer
 Combines N12 (overtake probability via LightGBM) and N14 (safety car probability via LightGBM) into a single threat assessment per lap.
 
 - **Models**: LightGBM overtake (AUC-PR 0.5491) + LightGBM SC (AUC-PR 0.0723)
-- **Output**: `RaceSituationOutput` (overtake_prob, sc_prob_3lap, threat_level)
+- **Output**: `RaceSituationOutput` (overtake_prob, sc_prob_3lap, threat_level, **sc_currently_active**)
+
+#### RCM Safety Car override
+
+The N14 LightGBM was trained to predict a *future* SC, not to recognise one already deployed. To close that gap, N27 inspects the lap's `rcm_events` (forwarded by the orchestrator from `RadioPipelineRunner`) and, when any event matches `SAFETY_CAR_DEPLOYED` or `VIRTUAL_SAFETY_CAR_DEPLOYED`, forces `sc_prob_3lap = 1.0`, sets `sc_currently_active = True`, and elevates `threat_level` to `HIGH`. Release events (`SAFETY_CAR_ENDING`, `SAFETY_CAR_IN_PIT_LANE`, `VIRTUAL_SAFETY_CAR_ENDING`) take priority in the same window so the override clears as soon as the SC ends. The override is logged in the `reasoning` field with an `[RCM OVERRIDE: ...]` prefix so the audit trail survives the chat / arcade summary path.
 
 ### N28 — Pit Strategy Agent (`pit_strategy_agent.py`)
 
 Wraps N15 (physical pit stop duration P05/P50/P95 via HistGBT) and N16 (undercut success probability via LightGBM). Recommends when to pit, what compound to fit, and whether to undercut.
 
 - **Models**: HistGBT quantile pit duration + LightGBM undercut
-- **Output**: `PitStrategyOutput` (action, compound_recommendation, stop_duration_p05/p50/p95, undercut_prob)
-- **Activation**: conditional — only runs when tire_warning is PIT_SOON or radio flags PROBLEM/WARNING
+- **Output**: `PitStrategyOutput` (action, compound_recommendation, stop_duration_p05/p50/p95, undercut_prob, sc_reactive)
+- **Activation**: conditional — runs when tire_warning is PIT_SOON, radio flags PROBLEM/WARNING, **or N27 reports `sc_currently_active = True`** (the RCM-override path)
+
+#### Honoring an active Safety Car
+
+When the orchestrator sets `sc_currently_active = True` on the lap state, N28's prompt swaps the legacy "SC probability" line for an explicit `SC STATUS: SAFETY CAR DEPLOYED RIGHT NOW` banner and the system prompt waives the `MINIMUM STINT LENGTH` constraint (pitting under SC costs ~10 s vs ~22 s, inverting the cost/benefit). A code-level guard-rail then flips any residual `STAY_OUT` to `PIT_NOW` so a misbehaving LLM can't override the deterministic signal — replicating the McLaren Catar 2025 V7 fix where the chain of safeguards previously locked the recommendation into `STAY_OUT` despite a confirmed SC.
 
 ### N29 — Radio Agent (`radio_agent.py`)
 
@@ -128,7 +136,7 @@ Answers regulation questions by retrieving relevant FIA Sporting Regulation pass
 
 - **Retriever**: Qdrant + BGE-M3 embeddings
 - **Output**: `RegulationContext` (answer, articles, chunks)
-- **Activation**: conditional — only runs when sc_prob > 0.30 or N28 is active
+- **Activation**: conditional — only runs when sc_prob > 0.30, N28 is active, **or N27 reports `sc_currently_active = True`** (so the orchestrator pulls the SC pit-lane regulation snippet into the recommendation context)
 
 ### N31 — Strategy Orchestrator (`strategy_orchestrator.py`)
 
