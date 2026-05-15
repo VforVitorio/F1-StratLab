@@ -19,7 +19,7 @@ import logging
 import os
 import threading
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 import pandas as pd
 
@@ -203,11 +203,19 @@ class SimConnector(threading.Thread):
         request: SimulateRequestDTO,
         state: StrategyState,
         backend_url: str = "",  # kept for backwards compat, unused
+        current_lap_provider: Callable[[], int] | None = None,
     ) -> None:
         super().__init__(name="SimConnector")
         self._request = request
         self._state = state
         self._stop_event = threading.Event()
+        # Optional callback the arcade view supplies to publish the lap the
+        # user is currently watching.  When set, the lap loop blocks until
+        # arcade catches up before kicking the agents — so pausing the
+        # replay also pauses the agentic flow.  When ``None`` (e.g. CLI
+        # smoke tests) the loop runs as fast as the LLM allows, preserving
+        # pre-existing behaviour.
+        self._current_lap_provider = current_lap_provider
         # RadioPipelineRunner is materialised in _warmup_models after the
         # corpus is ensured on disk; ``None`` until then (graceful
         # degrade path — the agents run with empty radio_msgs if the
@@ -216,6 +224,23 @@ class SimConnector(threading.Thread):
 
     def stop(self) -> None:
         self._stop_event.set()
+
+    def _wait_for_arcade(self, target_lap: int, poll_interval_s: float = 0.2) -> bool:
+        """Block until the arcade replay's current lap reaches ``target_lap``.
+
+        Returns ``True`` when the wait succeeded (arcade caught up or no
+        provider was wired) and ``False`` when ``stop()`` was called while
+        we were waiting — the caller propagates that as a clean exit.
+        Polls instead of using a condition variable because the arcade
+        view's frame index is read from a different thread without a lock
+        and we only need lap-level granularity, not frame-level.
+        """
+        if self._current_lap_provider is None:
+            return True
+        while self._current_lap_provider() < target_lap:
+            if self._stop_event.wait(poll_interval_s):
+                return False
+        return True
 
     def run(self) -> None:
         """Drive the local strategy loop and capture fatal errors.
@@ -269,6 +294,14 @@ class SimConnector(threading.Thread):
             lap_num = int(lap_state.get("lap_number") or 0)
             if lap_num < lap_start or lap_num > lap_end:
                 continue
+            # Block until the arcade replay reaches this lap.  Without this
+            # gate the agent thread storms ahead of the visual replay (one
+            # LLM call per lap, ~5-10 s), so pausing arcade in V2 used to
+            # leave the dashboard rendering recommendations for V3, V4, …
+            # ``_wait_for_arcade`` is a no-op when no provider is wired
+            # (CLI / smoke tests preserve the as-fast-as-possible loop).
+            if not self._wait_for_arcade(lap_num):
+                return
             try:
                 prev_lap_time = self._step_once(laps_df, lap_state, prev_lap_time)
             except Exception as exc:
