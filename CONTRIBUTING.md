@@ -110,6 +110,26 @@ these safeguards trigger there. They are no-ops on POSIX.
 - [ ] If you added a new sub-agent output, update
       `docs/agents-api-reference.md`.
 
+## CI pipeline
+
+Three parallel jobs run on every push and PR (`.github/workflows/ci.yml`):
+
+| Job | Installs | Runs |
+|---|---|---|
+| `lint` | nothing — ruff via `uvx` | `ruff check .` + `ruff format --check .` |
+| `typecheck` | `uv sync --extra dev` (mypy + project deps, no voice extras) | `mypy src/rag/` |
+| `test` | `uv sync --all-extras` (full ML/voice/arcade stack) | `pytest -v` |
+
+All jobs share uv's wheel cache (`enable-cache: true`, keyed off
+`uv.lock`), so only the first run after a lockfile change pays the full
+download cost. Subsequent runs drop "Install dependencies" from ~60s to
+<10s.
+
+A `concurrency:` block at the top of the workflow cancels in-flight runs
+when a newer commit lands on the same ref. This was added after
+release-please's back-to-back PR refreshes piled 4+ runs into the queue
+at once and stranded them for 20+ minutes.
+
 ## Issue templates
 
 File an issue via the GitHub UI. Three templates are available under
