@@ -150,7 +150,7 @@ FLAG_COLORS: Final[dict[str, tuple[int, int, int]]] = {
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 FASTF1_CACHE_DIR: Final[Path] = REPO_ROOT / "data" / "cache" / "fastf1"
 ARCADE_CACHE_DIR: Final[Path] = REPO_ROOT / "data" / "cache" / "arcade"
-CACHE_VERSION: Final[str] = "v5"  # circuit_length_m now sourced from FastF1 fastest-lap telemetry
+CACHE_VERSION: Final[str] = "v6"  # adds track_status_by_lap for the race-events HUD card
 
 # --- Multiprocessing pool -------------------------------------------------
 # Serial by default — Windows spawn + pickling a loaded session across 8

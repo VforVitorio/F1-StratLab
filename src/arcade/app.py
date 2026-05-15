@@ -54,6 +54,7 @@ from src.arcade.overlays import (
     DriverInfoPanel,
     LeaderboardPanel,
     ProgressBar,
+    RaceEventsPanel,
     WeatherPanel,
 )
 from src.arcade.track import Track
@@ -190,6 +191,14 @@ class F1ArcadeView(arcade.View):
         self._leaderboard = LeaderboardPanel(
             x=w - LEADERBOARD_RIGHT_MARGIN,
             top_y=h - 20,
+            width=LEADERBOARD_WIDTH,
+        )
+        # Race-events HUD card (Safety Car / VSC / Yellow / Red flag).  Sits
+        # right under the leaderboard; the panel hides itself unless the
+        # current lap's TrackStatus is non-clear.
+        self._race_events = RaceEventsPanel(
+            x=w - LEADERBOARD_RIGHT_MARGIN,
+            top_y=h - 220,
             width=LEADERBOARD_WIDTH,
         )
         self._driver_info_main = DriverInfoPanel(
@@ -371,7 +380,21 @@ class F1ArcadeView(arcade.View):
             self._frame_index += delta_time * FPS * self.playback_speed
             self._frame_index = max(0.0, min(max_f, self._frame_index))
 
+        # Drive the race-events HUD fade animation off the same delta the rest
+        # of the panels see.  Lap is read from the main driver's current frame
+        # so the status follows whichever driver the user is following.
+        self._race_events.update(delta_time, self._current_track_status())
+
         self._broadcast_if_due()
+
+    def _current_track_status(self) -> str:
+        """Return the FastF1 ``TrackStatus`` digit string for the active lap."""
+        frames = self._session.frames_by_driver.get(self._driver_main)
+        if not frames:
+            return ""
+        idx = max(0, min(int(self._frame_index), len(frames) - 1))
+        lap = int(getattr(frames[idx], "lap", 1) or 1)
+        return self._session.track_status_by_lap.get(lap, "")
 
     def _broadcast_if_due(self) -> None:
         """Throttle the TCP broadcast to ~10 Hz regardless of arcade FPS."""
@@ -467,6 +490,11 @@ class F1ArcadeView(arcade.View):
         self._leaderboard.draw(
             frame, self._session.driver_colors, track_len, self._selected_drivers
         )
+        # Anchor the race-events pill right under the leaderboard's bottom
+        # edge — the leaderboard's row count varies per session, so we read
+        # ``bottom_y`` (set during draw above) instead of hard-coding an offset.
+        self._race_events.set_top(self._leaderboard.bottom_y - RaceEventsPanel.GAP_FROM_LEADERBOARD)
+        self._race_events.draw()
         self._weather.draw(frame, self.window.height)
         sorted_progress = self._leaderboard.sorted_progress(frame, track_len)
         # DRIVER_BOX_GAP also controls the weather → main-driver gap for
@@ -552,6 +580,10 @@ class F1ArcadeView(arcade.View):
         )
         self._leaderboard.x = int(width) - LEADERBOARD_RIGHT_MARGIN
         self._leaderboard.set_top(int(height) - 20)
+        # The race-events pill rides the leaderboard's right edge; on_draw
+        # re-anchors top_y from leaderboard.bottom_y but the x must follow
+        # window resizes the same way the leaderboard does.
+        self._race_events.x = self._leaderboard.x
         self._lap_label.y = int(height) - 20
         self._lap_text.y = int(height) - 36
         self._time_text.y = int(height) - 66

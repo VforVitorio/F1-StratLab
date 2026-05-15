@@ -104,6 +104,13 @@ class SessionData:
     )
     ref_lap_drs: np.ndarray = field(default_factory=lambda: np.zeros(0))
     events: list[dict[str, Any]] = field(default_factory=list)
+    # Per-lap FastF1 ``TrackStatus`` codes (multi-digit strings, e.g. ``"1"``,
+    # ``"24"``, ``"567"``).  Consumed by the arcade race-events HUD card so
+    # the user sees a coloured "SAFETY CAR" / "VSC" / "YELLOW FLAG" /
+    # "RED FLAG" pill the moment the lap window enters a non-clear status.
+    # Empty dict means the loader did not populate it (e.g. older cache);
+    # the panel treats unknown laps as clear and stays hidden.
+    track_status_by_lap: dict[int, str] = field(default_factory=dict)
 
 
 def _enable_fastf1_cache() -> None:
@@ -285,6 +292,7 @@ class SessionLoader:
         ref_x, ref_y, ref_drs = self._extract_reference_lap(session, year, round_)
         rotation_deg = self._safe_rotation(session)
         circuit_length = self._session_circuit_length(session, ref_x, ref_y)
+        track_status_by_lap = self._extract_track_status_by_lap(session)
 
         sd = SessionData(
             version=CACHE_VERSION,
@@ -302,6 +310,7 @@ class SessionLoader:
             ref_lap_xy=(ref_x, ref_y),
             ref_lap_drs=ref_drs,
             events=[],
+            track_status_by_lap=track_status_by_lap,
         )
 
         with cache_path.open("wb") as f:
@@ -456,6 +465,28 @@ class SessionLoader:
         except Exception as exc:
             logger.info("Quali load failed (%s)", exc)
             return None
+
+    def _extract_track_status_by_lap(self, session: Any) -> dict[int, str]:
+        """Build ``{lap_number: TrackStatus}`` from the loaded laps DataFrame.
+
+        FastF1 stores the status as a multi-digit string (``"1"`` clear,
+        ``"2"`` yellow, ``"4"`` Safety Car, ``"5"`` red flag, ``"6"`` /
+        ``"7"`` VSC).  Because every driver in the same lap window sees
+        the same status we keep the first row per lap.  Missing /
+        malformed columns return an empty dict so the panel just stays
+        hidden instead of raising at load time.
+        """
+        try:
+            laps = session.laps
+            if laps is None or "TrackStatus" not in getattr(laps, "columns", []):
+                return {}
+            subset = laps[["LapNumber", "TrackStatus"]].dropna()
+            if subset.empty:
+                return {}
+            grouped = subset.groupby("LapNumber")["TrackStatus"].first()
+            return {int(lap): str(code) for lap, code in grouped.items()}
+        except Exception:
+            return {}
 
     def _safe_rotation(self, session: Any) -> float:
         try:

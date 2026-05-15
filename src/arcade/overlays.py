@@ -360,6 +360,10 @@ class LeaderboardPanel:
         self.x = x
         self.top_y = top_y
         self.width = width
+        # Read by RaceEventsPanel (positioned right under the leaderboard) so
+        # the new event card stays glued to the leaderboard's bottom edge as
+        # the row count changes between sessions / DNFs.
+        self.bottom_y: int = top_y
         self._row_rects: list[tuple[str, float, float, float, float]] = []
         self._title = arcade.Text(
             "LEADERBOARD",
@@ -421,6 +425,7 @@ class LeaderboardPanel:
         ranked = self._rank_drivers(frame, track_len)
         n_rows = min(len(ranked), len(self._rank_texts))
         panel_h = self.HEADER_H + n_rows * LEADERBOARD_ROW_HEIGHT + 8
+        self.bottom_y = self.top_y - panel_h
         self._draw_card(panel_h)
 
         self._title.x = self.x + self.PAD_X
@@ -504,6 +509,112 @@ class LeaderboardPanel:
             out.append((code, data, progress))
         out.sort(key=lambda e: e[2], reverse=True)
         return out
+
+
+class RaceEventsPanel:
+    """Coloured pill that announces non-clear track status under the leaderboard.
+
+    Reads the FastF1 ``TrackStatus`` digit string for the current lap (cached
+    on ``SessionData.track_status_by_lap`` by ``SessionLoader``) and renders
+    a Safety Car / VSC / Yellow / Red flag banner the same way a TV broadcast
+    would.  The card is hidden when the status is clear (``"1"`` or empty)
+    and fades in / out over ~0.4 s on transitions so consecutive laps with
+    the same status do not flicker.
+
+    Multi-digit codes are parsed with priority ``red > SC > VSC > yellow``,
+    matching how race control announces concurrent events (a red flag wins
+    even if a yellow was already out in another sector).
+    """
+
+    HEIGHT: int = 36
+    GAP_FROM_LEADERBOARD: int = 12
+    FADE_PER_SECOND: float = 255.0 / 0.35  # ~0.35 s linear fade
+
+    def __init__(
+        self,
+        x: int,
+        top_y: int,
+        width: int = LEADERBOARD_WIDTH,
+    ) -> None:
+        self.x = x
+        self.top_y = top_y
+        self.width = width
+        self._label = ""
+        self._color: tuple[int, int, int] = (255, 255, 255)
+        self._alpha: float = 0.0
+        self._target_alpha: float = 0.0
+        self._text = arcade.Text(
+            "",
+            x + width // 2,
+            top_y - self.HEIGHT // 2,
+            (255, 255, 255),
+            14,
+            bold=True,
+            font_name=FONT_TITLE,
+            anchor_x="center",
+            anchor_y="center",
+        )
+
+    def set_top(self, top_y: int) -> None:
+        """Reposition the card after the leaderboard's bottom edge moves."""
+        self.top_y = top_y
+
+    def update(self, dt: float, track_status: str | None) -> None:
+        """Re-evaluate the visible status and advance the fade animation.
+
+        ``dt`` is the seconds elapsed since the last update; pyglet feeds
+        the same value it already passes to ``F1ArcadeView.on_update``.
+        Pass an empty string / ``None`` for clear.
+        """
+        status = self._status_for(track_status or "")
+        if status is None:
+            self._target_alpha = 0.0
+        else:
+            self._label, self._color = status
+            self._target_alpha = 255.0
+        self._tick_alpha(dt)
+
+    def draw(self) -> None:
+        """Render the card; bails out cheaply when fully transparent."""
+        if self._alpha < 1.0 or not self._label:
+            return
+        alpha = int(self._alpha)
+        bg = (self._color[0], self._color[1], self._color[2], alpha)
+        rect = arcade.LBWH(self.x, self.top_y - self.HEIGHT, self.width, self.HEIGHT)
+        arcade.draw_rect_filled(rect, bg)
+        arcade.draw_rect_outline(rect, (255, 255, 255, alpha), 1)
+        self._text.x = self.x + self.width // 2
+        self._text.y = self.top_y - self.HEIGHT // 2
+        self._text.text = self._label
+        self._text.color = (255, 255, 255, alpha)
+        self._text.draw()
+
+    @staticmethod
+    def _status_for(code: str) -> tuple[str, tuple[int, int, int]] | None:
+        """Map a FastF1 multi-digit ``TrackStatus`` to (label, RGB).
+
+        Priority red > SC > VSC > yellow > clear.  Returns ``None`` when the
+        status is empty / unknown / pure clear so the panel hides itself.
+        """
+        if not code:
+            return None
+        digits = set(code)
+        if "5" in digits:
+            return ("RED FLAG", (239, 68, 68))
+        if "4" in digits:
+            return ("SAFETY CAR", (255, 140, 0))
+        if "6" in digits or "7" in digits:
+            return ("VSC", (245, 158, 11))
+        if "2" in digits:
+            return ("YELLOW FLAG", (250, 204, 21))
+        return None
+
+    def _tick_alpha(self, dt: float) -> None:
+        delta = self.FADE_PER_SECOND * max(dt, 0.0)
+        if self._alpha < self._target_alpha:
+            self._alpha = min(self._target_alpha, self._alpha + delta)
+        elif self._alpha > self._target_alpha:
+            self._alpha = max(self._target_alpha, self._alpha - delta)
 
 
 class ProgressBar:
