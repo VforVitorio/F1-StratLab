@@ -1,0 +1,211 @@
+/* =========================================================
+   F1 Strategy Manager — Design Tokens
+   Source of truth: legacy/app_streamlit_v1/assets/style.css
+   ========================================================= */
+
+:root {
+  /* ---------- BASE BACKGROUND RAMP ---------- */
+  --bg-0:   #08080c;   /* page black */
+  --bg-1:   #0c0d14;   /* deep surface (hero) */
+  --bg-2:   #111827;   /* sidebar / card dark */
+  --bg-3:   #17192b;   /* card resting */
+  --bg-4:   #1e2139;   /* card hovered / elevated */
+  --bg-5:   #23234a;   /* sidebar-hover / input bg */
+
+  /* ---------- FOREGROUND RAMP ---------- */
+  --fg-1:   #ffffff;           /* primary text */
+  --fg-2:   rgba(255,255,255,0.72);  /* secondary text */
+  --fg-3:   rgba(255,255,255,0.52);  /* tertiary / captions */
+  --fg-4:   rgba(255,255,255,0.32);  /* disabled / hairline labels */
+  --fg-inv: #0c0d14;           /* on-primary text */
+
+  /* ---------- BRAND / PURPLE (PRIMARY) ---------- */
+  --purple-50:  #f2efff;
+  --purple-100: #e0d9ff;
+  --purple-200: #c2b4ff;
+  --purple-300: #a29bfe;   /* hover */
+  --purple-400: #8b7cf6;
+  --purple-500: #7f6ff0;   /* secondary */
+  --purple-600: #6c5ce7;   /* PRIMARY */
+  --purple-700: #5a48d4;
+  --purple-800: #4434a6;
+  --purple-900: #2a1f6b;
+
+  --accent-primary:   var(--purple-600);
+  --accent-secondary: var(--purple-500);
+  --accent-hover:     var(--purple-300);
+
+  /* ---------- BLUE (TELEMETRY / DATA) ---------- */
+  --blue-300: #60a5fa;
+  --blue-400: #3385ff;
+  --blue-500: #2563eb;
+  --blue-600: #1d4ed8;
+
+  /* ---------- SEMANTIC / STATUS ---------- */
+  --success: #43ff64;   /* green pill */
+  --warning: #ffbd33;   /* amber */
+  --danger:  #ff5733;   /* pit/stop red */
+  --info:    #3385ff;   /* info blue */
+
+  /* ---------- F1 TIRE COMPOUND ACCENTS ---------- */
+  --tire-soft:   #ff2d3a;   /* red */
+  --tire-medium: #ffcf2d;   /* yellow */
+  --tire-hard:   #e6e6e6;   /* white */
+  --tire-inter:  #2dd47a;   /* green */
+  --tire-wet:    #2d8fff;   /* blue */
+
+  /* ---------- DIVIDERS / SURFACES ---------- */
+  --divider:        rgba(255,255,255,0.10);
+  --divider-strong: rgba(255,255,255,0.18);
+  --hairline:       rgba(255,255,255,0.06);
+
+  /* ---------- GRADIENTS ---------- */
+  --grad-purple: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+  --grad-purple-soft: linear-gradient(135deg, rgba(108,92,231,0.18) 0%, rgba(162,155,254,0.08) 100%);
+  --grad-hero: radial-gradient(ellipse 120% 80% at 50% 0%, rgba(108,92,231,0.28) 0%, rgba(108,92,231,0.08) 35%, transparent 70%);
+  --grad-halo: radial-gradient(circle at 50% 50%, rgba(162,155,254,0.35) 0%, transparent 60%);
+
+  /* ---------- SHADOWS ---------- */
+  --shadow-card:    0 2px 10px rgba(0,0,0,0.25);
+  --shadow-elev:    0 12px 40px rgba(0,0,0,0.45);
+  --shadow-glow:    0 0 0 1px rgba(108,92,231,0.35), 0 12px 40px rgba(108,92,231,0.25);
+  --shadow-inset:   inset 0 1px 0 rgba(255,255,255,0.06);
+
+  /* ---------- RADII ---------- */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* ---------- SPACING SCALE (4px base) ---------- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* ---------- TYPOGRAPHY ---------- */
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Type scale (display-heavy, 1.25 ratio) */
+  --fs-xs:   12px;
+  --fs-sm:   14px;
+  --fs-base: 16px;
+  --fs-md:   18px;
+  --fs-lg:   20px;
+  --fs-xl:   24px;
+  --fs-2xl:  32px;
+  --fs-3xl:  44px;
+  --fs-4xl:  60px;
+  --fs-5xl:  84px;
+  --fs-6xl:  112px;
+
+  --lh-tight: 1.05;
+  --lh-snug:  1.2;
+  --lh-normal:1.45;
+  --lh-loose: 1.6;
+
+  --tracking-tightest: -0.04em;
+  --tracking-tighter:  -0.02em;
+  --tracking-tight:    -0.01em;
+  --tracking-normal:    0;
+  --tracking-wide:      0.04em;
+  --tracking-widest:    0.18em;
+
+  /* Semantic type tokens */
+  --h1-size: var(--fs-5xl);
+  --h1-lh:   var(--lh-tight);
+  --h1-weight: 700;
+  --h1-tracking: var(--tracking-tightest);
+
+  --h2-size: var(--fs-3xl);
+  --h2-lh:   var(--lh-snug);
+  --h2-weight: 600;
+  --h2-tracking: var(--tracking-tighter);
+
+  --h3-size: var(--fs-2xl);
+  --h3-weight: 600;
+
+  --eyebrow-size: var(--fs-xs);
+  --eyebrow-weight: 600;
+  --eyebrow-tracking: var(--tracking-widest);
+
+  --body-size: var(--fs-base);
+  --body-lh:   var(--lh-loose);
+
+  --code-size: var(--fs-sm);
+}
+
+/* =========================================================
+   BASE ELEMENT STYLES
+   ========================================================= */
+
+html, body {
+  background: var(--bg-0);
+  color: var(--fg-1);
+  font-family: var(--font-body);
+  font-size: var(--body-size);
+  line-height: var(--body-lh);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
+}
+
+h1, .h1 {
+  font-family: var(--font-display);
+  font-size: var(--h1-size);
+  line-height: var(--h1-lh);
+  font-weight: var(--h1-weight);
+  letter-spacing: var(--h1-tracking);
+  margin: 0;
+}
+
+h2, .h2 {
+  font-family: var(--font-display);
+  font-size: var(--h2-size);
+  line-height: var(--h2-lh);
+  font-weight: var(--h2-weight);
+  letter-spacing: var(--h2-tracking);
+  margin: 0;
+}
+
+h3, .h3 {
+  font-family: var(--font-display);
+  font-size: var(--h3-size);
+  font-weight: var(--h3-weight);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-tight);
+  margin: 0;
+}
+
+p { margin: 0; color: var(--fg-2); }
+
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: var(--eyebrow-size);
+  font-weight: var(--eyebrow-weight);
+  letter-spacing: var(--eyebrow-tracking);
+  text-transform: uppercase;
+  color: var(--purple-300);
+}
+
+code, .code, pre {
+  font-family: var(--font-mono);
+  font-size: var(--code-size);
+  font-feature-settings: "ss01", "ss02", "cv01";
+}
+
+/* Selection */
+::selection { background: var(--purple-600); color: var(--fg-1); }
