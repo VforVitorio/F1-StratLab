@@ -13,6 +13,21 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Notes on dependency strategy across the three jobs:
+#   - All three jobs enable uv's built-in cache (`enable-cache: true`).  The
+#     cache key is keyed off `pyproject.toml` because `uv.lock` is
+#     gitignored in this repo (see .gitignore line 134); pyproject changes
+#     are a fine invalidation proxy.  Same-pyproject runs reuse the wheel
+#     store and drop "Install dependencies" from ~60s to <10s.
+#   - `lint` does NOT call `uv sync`.  Ruff is the only tool it needs, so
+#     `uvx ruff` runs it as an ephemeral tool — skips installing the full
+#     ML/torch stack just to lint Python style.
+#   - `typecheck` calls `uv sync --extra dev` (mypy lives in the dev extra)
+#     but skips `--all-extras` since the `voice` extra is irrelevant to
+#     `src/rag/`.
+#   - `test` keeps `uv sync --all-extras` because the test suite touches
+#     voice / streamlit / arcade paths that need every extra installed.
+
 jobs:
   test:
     name: test
@@ -24,6 +39,8 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
 
       - name: Set up Python
         run: uv python install 3.12
@@ -42,15 +59,15 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
-
-      - name: Install dependencies
-        run: uv sync --all-extras
+        with:
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
 
       - name: Ruff check
-        run: uv run ruff check .
+        run: uvx ruff check .
 
       - name: Ruff format check
-        run: uv run ruff format --check .
+        run: uvx ruff format --check .
 
   typecheck:
     name: typecheck
@@ -60,9 +77,12 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
 
       - name: Install dependencies
-        run: uv sync --all-extras
+        run: uv sync --extra dev
 
       - name: Mypy
         run: uv run mypy src/rag/
