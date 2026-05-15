@@ -66,10 +66,10 @@ def run_strategy_pipeline(
     )
 
     active = _decide_agents_to_call(
-        tire_warning        = tire_out.warning_level,
-        sc_prob_3lap        = situation_out.sc_prob_3lap,
-        radio_alerts        = radio_out.alerts,
-        sc_currently_active = situation_out.sc_currently_active,
+        tire_warning=tire_out.warning_level,
+        sc_prob_3lap=situation_out.sc_prob_3lap,
+        radio_alerts=radio_out.alerts,
+        sc_currently_active=situation_out.sc_currently_active,
     )
 
     pit_out, regulation_context, rag_dict = _run_conditional_agents(

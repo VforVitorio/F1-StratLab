@@ -70,7 +70,7 @@ def test_qatar_2025_v7_pia_sc_override():
     pytest.importorskip("langchain_openai", reason="needs LLM stack")
 
     laps_path = ROOT / "data" / "raw" / "2025" / "Lusail" / "laps.parquet"
-    rcm_path  = ROOT / "data" / "raw" / "2025" / "Lusail" / "rcm.parquet"
+    rcm_path = ROOT / "data" / "raw" / "2025" / "Lusail" / "rcm.parquet"
     if not (laps_path.exists() and rcm_path.exists()):
         pytest.skip("Qatar 2025 parquets not available in this environment")
 
@@ -78,10 +78,9 @@ def test_qatar_2025_v7_pia_sc_override():
     from src.agents.strategy_orchestrator import _to_rcm_event
     from src.simulation.race_state_manager import RaceStateManager
 
-    laps    = pd.read_parquet(laps_path)
-    rcms    = pd.read_parquet(rcm_path)
-    sc_lap7 = rcms[(rcms["lap_number"] == 7) &
-                   (rcms["category"] == "SafetyCar")].to_dict("records")
+    laps = pd.read_parquet(laps_path)
+    rcms = pd.read_parquet(rcm_path)
+    sc_lap7 = rcms[(rcms["lap_number"] == 7) & (rcms["category"] == "SafetyCar")].to_dict("records")
     assert sc_lap7, "fixture must contain a SafetyCar RCM at lap 7"
 
     rsm = RaceStateManager(laps, "PIA", "McLaren", gp_name="Lusail", year=2025)
