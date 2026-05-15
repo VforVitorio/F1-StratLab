@@ -298,7 +298,15 @@ class F1ArcadeView(arcade.View):
             interval_s=0.0,
         )
         self._strategy_state = StrategyState()
-        self._strategy_connector = SimConnector(request=request, state=self._strategy_state)
+        # Pass the lap provider so SimConnector blocks at each lap until the
+        # arcade replay catches up — pausing the visor with SPACE in V2 now
+        # also pauses the agentic flow instead of letting it storm ahead
+        # through V3, V4, V5 …
+        self._strategy_connector = SimConnector(
+            request=request,
+            state=self._strategy_state,
+            current_lap_provider=self._current_arcade_lap,
+        )
         self._strategy_connector.start()
 
         try:
@@ -387,14 +395,23 @@ class F1ArcadeView(arcade.View):
 
         self._broadcast_if_due()
 
-    def _current_track_status(self) -> str:
-        """Return the FastF1 ``TrackStatus`` digit string for the active lap."""
+    def _current_arcade_lap(self) -> int:
+        """Return the lap number the user is currently watching (main driver).
+
+        Used by the race-events HUD card and as the playback gate that
+        keeps the strategy SimConnector in sync with what is on screen.
+        Falls back to 0 when the main driver has no frames yet (very
+        first frame after view construction).
+        """
         frames = self._session.frames_by_driver.get(self._driver_main)
         if not frames:
-            return ""
+            return 0
         idx = max(0, min(int(self._frame_index), len(frames) - 1))
-        lap = int(getattr(frames[idx], "lap", 1) or 1)
-        return self._session.track_status_by_lap.get(lap, "")
+        return int(getattr(frames[idx], "lap", 1) or 1)
+
+    def _current_track_status(self) -> str:
+        """Return the FastF1 ``TrackStatus`` digit string for the active lap."""
+        return self._session.track_status_by_lap.get(self._current_arcade_lap(), "")
 
     def _broadcast_if_due(self) -> None:
         """Throttle the TCP broadcast to ~10 Hz regardless of arcade FPS."""
