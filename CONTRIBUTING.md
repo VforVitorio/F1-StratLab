@@ -121,8 +121,8 @@ Three parallel jobs run on every push and PR (`.github/workflows/ci.yml`):
 | `test` | `uv sync --all-extras` (full ML/voice/arcade stack) | `pytest -v` |
 
 All jobs share uv's wheel cache (`enable-cache: true`, keyed off
-`uv.lock`), so only the first run after a lockfile change pays the full
-download cost. Subsequent runs drop "Install dependencies" from ~60s to
+`pyproject.toml` since `uv.lock` is gitignored), so only the first run
+after a `pyproject.toml` change pays the full download cost. Subsequent runs drop "Install dependencies" from ~60s to
 <10s.
 
 A `concurrency:` block at the top of the workflow cancels in-flight runs

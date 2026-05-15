@@ -15,9 +15,10 @@ concurrency:
 
 # Notes on dependency strategy across the three jobs:
 #   - All three jobs enable uv's built-in cache (`enable-cache: true`).  The
-#     cache key is keyed off `uv.lock`, so it only invalidates when the
-#     lockfile actually changes; same-lock runs reuse the wheel store and
-#     drop "Install dependencies" from ~60s to <10s.
+#     cache key is keyed off `pyproject.toml` because `uv.lock` is
+#     gitignored in this repo (see .gitignore line 134); pyproject changes
+#     are a fine invalidation proxy.  Same-pyproject runs reuse the wheel
+#     store and drop "Install dependencies" from ~60s to <10s.
 #   - `lint` does NOT call `uv sync`.  Ruff is the only tool it needs, so
 #     `uvx ruff` runs it as an ephemeral tool — skips installing the full
 #     ML/torch stack just to lint Python style.
@@ -39,7 +40,7 @@ jobs:
         with:
           version: "latest"
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: "pyproject.toml"
 
       - name: Set up Python
         run: uv python install 3.12
@@ -77,7 +78,7 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: "pyproject.toml"
 
       - name: Install dependencies
         run: uv sync --extra dev
