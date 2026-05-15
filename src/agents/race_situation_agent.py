@@ -64,6 +64,22 @@ _INCIDENT_RE     = r'INCIDENT|COLLISION|CONTACT|SPIN|OFF TRACK|STOPPED CAR|DEBRI
 _EXCLUDE_RE      = r'TRACK LIMITS|LAP TIME|PENALTY|PIT LANE|FORMATION|GRID|DRS|SAFETY CAR|VIRTUAL'
 
 
+# ── RCM context override (post-hoc fix for "SC active but model says low") ────
+# RCM event types that confirm a Safety Car is physically deployed RIGHT NOW.
+# Strings match exactly what radio_agent._classify_rcm_event() emits.
+_SC_ACTIVE_EVENT_TYPES: frozenset[str] = frozenset({
+    "SAFETY_CAR_DEPLOYED",
+    "VIRTUAL_SAFETY_CAR_DEPLOYED",
+})
+
+# RCM event types that confirm the SC phase is ending and release the override.
+_SC_RELEASE_EVENT_TYPES: frozenset[str] = frozenset({
+    "SAFETY_CAR_ENDING",
+    "SAFETY_CAR_IN_PIT_LANE",
+    "VIRTUAL_SAFETY_CAR_ENDING",
+})
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # RaceSituationConfig
 # ─────────────────────────────────────────────────────────────────────────────
@@ -178,9 +194,10 @@ class RaceSituationOutput:
     gap_ahead_s: float  = 0.0
     pace_delta_s: float = 0.0
     reasoning: str      = ''
+    sc_currently_active: bool = False  # True when an RCM confirms a SC/VSC is deployed AHORA
 
     def __post_init__(self) -> None:
-        if self.overtake_prob >= CFG.high_overtake or self.sc_prob_3lap >= CFG.high_sc:
+        if self.sc_currently_active or self.overtake_prob >= CFG.high_overtake or self.sc_prob_3lap >= CFG.high_sc:
             self.threat_level = 'HIGH'
         elif self.overtake_prob >= CFG.medium_overtake or self.sc_prob_3lap >= CFG.medium_sc:
             self.threat_level = 'MEDIUM'
@@ -1021,6 +1038,9 @@ class RaceSituationAgent:
             'track_temp_start': float(_wx['TrackTemp'].iloc[0]) if 'TrackTemp' in _wx else 38.0,
         }
 
+        # Carry the RCM events into _run_core so the SC override can read them
+        # without changing the function's positional signature.
+        self._pending_rcm_events = lap_state.get("rcm_events", []) or []
         return self._run_core(driver, rival_ahead, lap_number)
 
     def run_from_state(self, lap_state: dict, laps_df: pd.DataFrame) -> RaceSituationOutput:
@@ -1083,6 +1103,8 @@ class RaceSituationAgent:
             'track_temp_start': wx.get('track_temp', 38.0),
         }
 
+        # Carry the RCM events into _run_core so the SC override can read them.
+        self._pending_rcm_events = lap_state.get("rcm_events", []) or []
         return self._run_core(driver, rival_ahead, lap_number)
 
     def _run_core(
@@ -1124,13 +1146,83 @@ class RaceSituationAgent:
         parsed      = _parse_tool_outputs(response['messages'])
         reasoning   = response['messages'][-1].content
 
-        return RaceSituationOutput(
-            overtake_prob = round(parsed['overtake_prob'], 3),
-            sc_prob_3lap  = round(parsed['sc_prob_3lap'],  3),
-            gap_ahead_s   = round(parsed['gap_ahead_s'],   2),
-            pace_delta_s  = round(parsed['pace_delta_s'],  3),
-            reasoning     = reasoning,
+        # Post-hoc override: when the lap's RCM events confirm a SC/VSC is
+        # currently deployed, force sc_prob_3lap to 1.0 and flag the output
+        # so downstream agents (N28 pit, N31 orchestrator) can react.  The
+        # legacy LightGBM model was trained to predict FUTURE SC, not to
+        # recognise a SC already in progress, hence the patch.
+        sc_active           = _sc_active_from_rcm(getattr(self, "_pending_rcm_events", None) or [])
+        raw_sc_prob         = round(parsed['sc_prob_3lap'], 3)
+        effective_sc_prob   = 1.0 if sc_active else raw_sc_prob
+        effective_reasoning = (
+            reasoning
+            if not sc_active
+            else (
+                f"[RCM OVERRIDE: SAFETY_CAR_DEPLOYED active — model output "
+                f"sc_prob_3lap={raw_sc_prob:.2f} overridden to 1.00.] {reasoning}"
+            )
         )
+
+        return RaceSituationOutput(
+            overtake_prob       = round(parsed['overtake_prob'], 3),
+            sc_prob_3lap        = effective_sc_prob,
+            gap_ahead_s         = round(parsed['gap_ahead_s'],   2),
+            pace_delta_s        = round(parsed['pace_delta_s'],  3),
+            reasoning           = effective_reasoning,
+            sc_currently_active = sc_active,
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RCM context override helper
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _sc_active_from_rcm(rcm_events: list | None) -> bool:
+    """True if the lap's RCM events confirm a Safety Car is deployed RIGHT NOW.
+
+    Accepts whatever shape the lap_state ships:
+      - dicts already pre-classified with an ``event_type`` key
+        (the cheap path used by RaceStateManager once a lap has been
+        classified upstream),
+      - ``RCMEvent`` dataclass instances from radio_agent,
+      - raw FastF1-shaped dicts (``message``, ``flag``, ``category``,
+        ``lap``...) which we promote to RCMEvent and classify.
+
+    Resolution order (so a deploy + ending in the same window correctly
+    releases the override instead of pinning):
+      1. Any release event in the list  → False.
+      2. Any deploy event in the list   → True.
+      3. Anything else                  → False.
+
+    The radio_agent import is lazy to avoid the agents → orchestrator →
+    radio_agent → agents loop at module import time.
+    """
+    if not rcm_events:
+        return False
+
+    from src.agents.radio_agent import RCMEvent, _classify_rcm_event
+
+    classified: list[str] = []
+    for ev in rcm_events:
+        if isinstance(ev, dict) and "event_type" in ev:
+            classified.append(ev["event_type"])
+            continue
+        if isinstance(ev, RCMEvent):
+            classified.append(_classify_rcm_event(ev))
+            continue
+        if isinstance(ev, dict):
+            classified.append(_classify_rcm_event(RCMEvent(
+                message=str(ev.get("message", "")),
+                flag=str(ev.get("flag", "") or ""),
+                category=str(ev.get("category", "")),
+                lap=int(ev.get("lap", 0) or 0),
+                racing_number=ev.get("racing_number") or ev.get("RacingNumber"),
+                scope=str(ev.get("scope", "") or ""),
+            )))
+
+    if any(t in _SC_RELEASE_EVENT_TYPES for t in classified):
+        return False
+    return any(t in _SC_ACTIVE_EVENT_TYPES for t in classified)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

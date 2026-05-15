@@ -276,6 +276,7 @@ def _build_pit_prompt(
     rival_str: str,
     sc_prob: float,
     laps_to_cliff_p10: float,
+    sc_currently_active: bool = False,
 ) -> str:
     """Build the natural-language prompt for the Pit Strategy ReAct agent.
 
@@ -289,15 +290,25 @@ def _build_pit_prompt(
         rival_str: Description of the nearest rival ahead.
         sc_prob: Safety Car probability from N27.
         laps_to_cliff_p10: P10 laps-to-cliff from N26 TireOutput.
+        sc_currently_active: True when an RCM confirms a SC/VSC is deployed
+            right now.  Replaces the legacy "SC probability" line with an
+            unambiguous "SC STATUS: SAFETY CAR DEPLOYED RIGHT NOW" banner so
+            the model cannot mistake an active SC for a low future-SC
+            probability (the historical N28 failure mode at Catar 2025 V7).
 
     Returns:
         Formatted prompt string for the ReAct agent.
     """
+    sc_line = (
+        "SC STATUS: SAFETY CAR DEPLOYED RIGHT NOW (confirmed by RCM).\n"
+        if sc_currently_active
+        else f"SC probability (next 3 laps): {sc_prob:.2f}\n"
+    )
     return (
         f'Driver {driver} | Lap {lap_number} | P{position} | '
         f'Tyre: {compound} (life {tyre_life} laps)\n'
         f'Rival ahead: {rival_str}\n'
-        f'SC probability (next 3 laps): {sc_prob:.2f}\n'
+        f'{sc_line}'
         f'Laps to tyre cliff P10: {laps_to_cliff_p10:.1f}\n\n'
         f'Team: {team}\n\n'
         'Analyse the pit stop window. Call predict_pit_duration_tool, '
@@ -345,7 +356,8 @@ Decision rules:
 
 PIT WINDOW — early race:
   NEVER recommend PIT_NOW, UNDERCUT, or OVERCUT before lap 5 of the race.
-  Exception: Safety Car IS currently deployed, or radio confirms damage/puncture/mechanical failure.
+  Exception: Safety Car IS currently deployed (prompt shows "SC STATUS: SAFETY
+  CAR DEPLOYED RIGHT NOW"), or radio confirms damage/puncture/mechanical failure.
   Rationale: no tyre degrades enough in 1-4 laps to justify a stop; the pit lane time cost
   (~22-25s) is unrecoverable this early. Force STAY_OUT and note "pit window not open yet"
   in your reasoning.
@@ -362,6 +374,11 @@ MINIMUM STINT LENGTH before a pit makes sense:
   If the driver has NOT completed the minimum stint, recommend STAY_OUT (the current
   set still has useful life; pitting now wastes a tyre allocation).
 
+  EXCEPTION — SC ACTIVE: when the prompt states "SC STATUS: SAFETY CAR DEPLOYED
+  RIGHT NOW", the minimum stint constraint DOES NOT APPLY. Pitting under a
+  deployed SC costs ~10s instead of ~22s, so the cost/benefit inverts.  Recommend
+  PIT_NOW (action=PIT_NOW, not REACTIVE_SC) regardless of tyre_life.
+
 COMPOUND vs REMAINING LAPS:
   SOFT: recommend only if remaining laps <= 15 (it won't last longer).
   MEDIUM: suitable for 12-30 remaining laps.
@@ -369,10 +386,12 @@ COMPOUND vs REMAINING LAPS:
   Picking SOFT with 25 laps to go forces an extra pit stop — factor that cost in.
 
 REACTIVE_SC usage:
-  REACTIVE_SC is ONLY for when a Safety Car IS currently deployed (confirmed by race
-  control, not merely predicted). A high sc_prob (>= 0.30) means "prepare a contingency
-  for SC pit" — mention it in reasoning as a contingency, but set ACTION to STAY_OUT
-  unless the SC is actually out.
+  REACTIVE_SC is for the rare in-between case where sc_prob is elevated but the
+  Safety Car is NOT yet deployed.  When the prompt states "SC STATUS: SAFETY CAR
+  DEPLOYED RIGHT NOW", prefer PIT_NOW directly.  Use REACTIVE_SC only when
+  sc_prob >= 0.30 AND the prompt shows the legacy "SC probability" line.  A high
+  sc_prob without confirmation is still a contingency — mention it in reasoning
+  and set ACTION to STAY_OUT unless the SC is actually out.
 
 Always end your response with a structured summary:
 ACTION: <PIT_NOW|STAY_OUT|UNDERCUT|OVERCUT|REACTIVE_SC>
@@ -864,7 +883,11 @@ class PitStrategyAgent:
             'team_lookup': team_lookup,
         }
 
-        return self._run_core(driver, lap_number, compound, rival, sc_prob, laps_cliff)
+        sc_currently_active = bool(lap_state.get('sc_currently_active', False))
+        return self._run_core(
+            driver, lap_number, compound, rival, sc_prob, laps_cliff,
+            sc_currently_active=sc_currently_active,
+        )
 
     def run_from_state(self, lap_state: dict, laps_df: pd.DataFrame) -> PitStrategyOutput:
         """RSM adapter: run the Pit Strategy Agent from a RaceStateManager lap_state.
@@ -916,10 +939,14 @@ class PitStrategyAgent:
             'team_lookup': team_lookup,
         }
 
-        sc_prob    = lap_state.get('sc_prob', 0.0)
-        laps_cliff = lap_state.get('laps_to_cliff')
+        sc_prob             = lap_state.get('sc_prob', 0.0)
+        laps_cliff          = lap_state.get('laps_to_cliff')
+        sc_currently_active = bool(lap_state.get('sc_currently_active', False))
 
-        return self._run_core(driver, lap_number, compound, rival_ahead, sc_prob, laps_cliff)
+        return self._run_core(
+            driver, lap_number, compound, rival_ahead, sc_prob, laps_cliff,
+            sc_currently_active=sc_currently_active,
+        )
 
     def _run_core(
         self,
@@ -929,6 +956,7 @@ class PitStrategyAgent:
         rival: Optional[str],
         sc_prob: float,
         laps_cliff: Optional[float],
+        sc_currently_active: bool = False,
     ) -> PitStrategyOutput:
         """Core invocation: self.laps_df / self.session_meta already set.
 
@@ -961,6 +989,7 @@ class PitStrategyAgent:
             compound=compound, team=team, position=position, rival_str=rival_str,
             sc_prob=sc_prob,
             laps_to_cliff_p10=laps_cliff if laps_cliff is not None else 0.0,
+            sc_currently_active=sc_currently_active,
         )
 
         react_agent = self.get_react_agent()
@@ -970,7 +999,15 @@ class PitStrategyAgent:
         parsed                          = _parse_tool_outputs(messages)
         action, compound_rec, reasoning = _parse_agent_summary(messages[-1].content)
 
-        sc_reactive = (action == 'REACTIVE_SC') or (
+        # Code-level guard: if the SC is confirmed deployed but the LLM still
+        # returned STAY_OUT (e.g. it weighted MINIMUM STINT too heavily), force
+        # PIT_NOW.  Tag the reasoning so the override is auditable in the chat
+        # bubble / arcade dashboard.
+        if sc_currently_active and action == 'STAY_OUT':
+            action    = 'PIT_NOW'
+            reasoning = f"[OVERRIDE: SC deployed — forcing PIT_NOW.] {reasoning}"
+
+        sc_reactive = sc_currently_active or (action == 'REACTIVE_SC') or (
             sc_prob >= 0.30 and action in ('PIT_NOW', 'UNDERCUT')
         )
 

@@ -264,3 +264,80 @@ def test_voice_config_whisper_and_edge_tts():
     assert "whisper" in WHISPER_MODEL.lower()
     assert "neural" in EDGE_TTS_DEFAULT_VOICE.lower()
     assert AUDIO_SAMPLE_RATE == 16000
+
+
+# ---------------------------------------------------------------------------
+# RCM context override (SC-active patch) — tests for the post-hoc safeguard
+# that flips N27/N28/N31 routing when an RCM confirms a deployed Safety Car.
+# ---------------------------------------------------------------------------
+
+
+@_skip_no_models
+def test_race_situation_sc_override_pure():
+    """The pure helper recognises SC deploy, dict shape, and release-wins ordering."""
+    from src.agents.race_situation_agent import _sc_active_from_rcm
+    from src.agents.radio_agent import RCMEvent
+
+    assert _sc_active_from_rcm([]) is False
+    assert _sc_active_from_rcm(None) is False
+
+    sc_ev = RCMEvent(message="SAFETY CAR DEPLOYED", flag="",
+                     category="SafetyCar", lap=7)
+    assert _sc_active_from_rcm([sc_ev]) is True
+
+    end_ev = RCMEvent(message="SAFETY CAR ENDING", flag="",
+                      category="SafetyCar", lap=7)
+    # Release wins over deploy in the same RCM window.
+    assert _sc_active_from_rcm([sc_ev, end_ev]) is False
+
+    # Raw FastF1-shaped dict is also accepted (auto-classified inside the helper).
+    assert _sc_active_from_rcm([
+        {"message": "VIRTUAL SAFETY CAR DEPLOYED",
+         "flag": "", "category": "SafetyCar", "lap": 7}
+    ]) is True
+
+
+@_skip_no_models
+def test_race_situation_output_has_sc_active_field():
+    """The dataclass exposes sc_currently_active and bumps threat_level to HIGH."""
+    import dataclasses
+
+    from src.agents.race_situation_agent import RaceSituationOutput
+
+    fields = {f.name for f in dataclasses.fields(RaceSituationOutput)}
+    assert "sc_currently_active" in fields
+
+    out = RaceSituationOutput(
+        overtake_prob=0.1, sc_prob_3lap=0.05, sc_currently_active=True
+    )
+    assert out.threat_level == "HIGH"
+
+
+@_skip_no_models
+def test_pit_prompt_sc_deployed_banner():
+    """The pit prompt must replace the 'SC probability' line with the deploy banner."""
+    from src.agents.pit_strategy_agent import _build_pit_prompt
+
+    prompt = _build_pit_prompt(
+        driver="PIA", lap_number=7, tyre_life=6, compound="MEDIUM",
+        team="McLaren", position=3, rival_str="VER",
+        sc_prob=0.10, laps_to_cliff_p10=15.0,
+        sc_currently_active=True,
+    )
+    assert "SAFETY CAR DEPLOYED RIGHT NOW" in prompt
+    assert "SC probability (next 3 laps)" not in prompt
+
+
+@_skip_no_models
+def test_orchestrator_routing_sc_active_forces_n28():
+    """sc_currently_active must force both N28 (pit) and N30 (RAG) into the active set."""
+    from src.agents.strategy_orchestrator import _decide_agents_to_call
+
+    active = _decide_agents_to_call(
+        tire_warning="OK",
+        sc_prob_3lap=0.05,
+        radio_alerts=[],
+        sc_currently_active=True,
+    )
+    assert "N28" in active
+    assert "N30" in active
