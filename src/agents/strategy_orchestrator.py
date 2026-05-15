@@ -476,6 +476,7 @@ def _decide_agents_to_call(
     tire_warning:  str,
     sc_prob_3lap:  float,
     radio_alerts:  list,
+    sc_currently_active: bool = False,
 ) -> set:
     """Layer 1 MoE routing — returns set of conditional agent keys to activate.
 
@@ -524,6 +525,13 @@ def _decide_agents_to_call(
         activate.add("N30")
 
     if "N28" in activate:
+        activate.add("N30")
+
+    # SC physically deployed (confirmed by RCM, not just predicted): force
+    # N28 so the pit decision is re-evaluated, and N30 so we consult the
+    # sporting regulations covering pitting under SC and pit-lane closure.
+    if sc_currently_active:
+        activate.add("N28")
         activate.add("N30")
 
     return activate
@@ -1019,12 +1027,16 @@ def _run_always_on_agents(race_state: "RaceState", lap_state: dict) -> tuple:
         gp_name        = lap_state["gp_name"],
     )
 
-    tire_out      = run_tire_agent(lap_state)
-    situation_out = run_race_situation_agent(lap_state)
+    tire_out = run_tire_agent(lap_state)
 
-    radio_msgs = [_to_radio_message(m) for m in race_state.radio_msgs]
-    rcm_events = [_to_rcm_event(e) for e in race_state.rcm_events]
-    radio_out  = run_radio_agent({
+    # Build the RCM list once so we can feed it to BOTH the radio agent
+    # (its primary consumer) and the situation agent (so the SC override
+    # in N27 can flip sc_currently_active when a SAFETY_CAR_DEPLOYED is
+    # active in this lap window).
+    radio_msgs    = [_to_radio_message(m) for m in race_state.radio_msgs]
+    rcm_events    = [_to_rcm_event(e) for e in race_state.rcm_events]
+    situation_out = run_race_situation_agent({**lap_state, "rcm_events": rcm_events})
+    radio_out     = run_radio_agent({
         **lap_state,
         "lap":        race_state.lap,
         "radio_msgs": radio_msgs,
@@ -1052,11 +1064,14 @@ def _run_always_on_agents_from_state(
     rcm_events      = [_to_rcm_event(e) for e in race_state.rcm_events]
     radio_lap_state = {**lap_state, "lap": race_state.lap,
                        "radio_msgs": radio_msgs, "rcm_events": rcm_events}
+    # N27 needs the RCM events too so the SC override fires when the
+    # SAFETY_CAR_DEPLOYED message is in the current lap window.
+    sit_lap_state   = {**lap_state, "rcm_events": rcm_events}
 
     # N25 + N27 in parallel (no shared PyTorch state)
     with ThreadPoolExecutor(max_workers=2) as pool:
         fut_pace = pool.submit(run_pace_agent_from_state, lap_state)
-        fut_sit  = pool.submit(run_race_situation_agent_from_state, lap_state, laps_df)
+        fut_sit  = pool.submit(run_race_situation_agent_from_state, sit_lap_state, laps_df)
         pace_out      = fut_pace.result()
         situation_out = fut_sit.result()
 
@@ -1107,8 +1122,12 @@ def _run_conditional_agents(
     if "N28" in active:
         pit_lap_state = {
             **lap_state,
-            "laps_to_cliff": tire_out.laps_to_cliff_p50,
-            "sc_prob":       situation_out.sc_prob_3lap,
+            "laps_to_cliff":       tire_out.laps_to_cliff_p50,
+            "sc_prob":             situation_out.sc_prob_3lap,
+            # N28 reads this flag to (a) replace the "SC probability" line in
+            # its prompt with the deploy banner, (b) bypass the minimum-stint
+            # guard, and (c) trip the post-LLM STAY_OUT→PIT_NOW guard-rail.
+            "sc_currently_active": situation_out.sc_currently_active,
         }
         if laps_df is not None:
             pit_out = run_pit_strategy_agent_from_state(pit_lap_state, laps_df)
@@ -1236,9 +1255,10 @@ def run_strategy_orchestrator(
 
     # Layer 1b — routing
     active = _decide_agents_to_call(
-        tire_warning = tire_out.warning_level,
-        sc_prob_3lap = situation_out.sc_prob_3lap,
-        radio_alerts = radio_out.alerts,
+        tire_warning        = tire_out.warning_level,
+        sc_prob_3lap        = situation_out.sc_prob_3lap,
+        radio_alerts        = radio_out.alerts,
+        sc_currently_active = situation_out.sc_currently_active,
     )
 
     # Layer 1c — conditional agents. The structured RAG dict is only used by
@@ -1353,9 +1373,10 @@ def run_strategy_orchestrator_from_state(
 
     # Layer 1b — routing
     active = _decide_agents_to_call(
-        tire_warning = tire_out.warning_level,
-        sc_prob_3lap = situation_out.sc_prob_3lap,
-        radio_alerts = radio_out.alerts,
+        tire_warning        = tire_out.warning_level,
+        sc_prob_3lap        = situation_out.sc_prob_3lap,
+        radio_alerts        = radio_out.alerts,
+        sc_currently_active = situation_out.sc_currently_active,
     )
 
     # Layer 1c — conditional agents (RSM variants). Same RAG-dict treatment
