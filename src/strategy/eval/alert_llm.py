@@ -25,6 +25,7 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from src.f1_strat_manager.data_cache import get_data_root
+from src.agents._shared_defaults import lm_studio_base_url
 from src.strategy.eval.nlp import _ALERT_INTENTS, _load_intent_setfit_free
 from src.strategy.eval.report import build_header, write_report
 
@@ -67,7 +68,7 @@ def _make_judge_llm() -> Any:
     if provider == "lmstudio":
         return ChatOpenAI(
             model="local-model",
-            base_url="http://localhost:1234/v1",
+            base_url=lm_studio_base_url(),
             api_key="lm-studio",
             temperature=0,
         )

@@ -202,4 +202,9 @@ Both defaults live in `src/agents/_shared_defaults.py`, resolved by `subagent_mo
 `orchestrator_model()` at the moment a client is built, so setting either variable after import
 still takes effect. `OrchestratorCFG.model_name` overrides the second one for a single process.
 
+When `F1_LLM_PROVIDER=lmstudio`, every agent client also resolves its endpoint at build time from
+`LM_STUDIO_HOST` through `lm_studio_base_url()`. The default host is `localhost` and the port is
+1234; compose sets the host to `host.docker.internal` so the container reaches LM Studio on the
+host.
+
 Notebooks default to `local-model` (LM Studio). Switch to the OpenAI model IDs above when deploying via FastAPI.

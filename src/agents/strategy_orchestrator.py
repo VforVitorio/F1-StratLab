@@ -47,7 +47,7 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.agents._shared_defaults import LLM_MAX_RETRIES, orchestrator_model
+from src.agents._shared_defaults import LLM_MAX_RETRIES, lm_studio_base_url, orchestrator_model
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +146,7 @@ class OrchestratorCFG:
     # policy at import. Set it to override for one process; otherwise `orchestrator_model()` wins.
     # `scripts/prompt_ab/_common.py:apply_model_flag` writes it for an A/B run.
     model_name:             str | None = None
-    base_url:               str   = "http://localhost:1234/v1"
+    base_url:               str | None = None
     temperature:            float = 0.0
     n_sim:                  int   = 500
     sc_prob_threshold:      float = 0.30
@@ -205,7 +205,7 @@ def _get_orchestrator_llm():
         else:
             llm = ChatOpenAI(
                 model=model_name,
-                base_url=CFG.base_url,
+                base_url=CFG.base_url or lm_studio_base_url(),
                 api_key="lm-studio",
                 temperature=CFG.temperature,
                 model_kwargs={"parallel_tool_calls": False},
