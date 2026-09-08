@@ -146,7 +146,7 @@ def _driver_number(value: Any) -> int | None:
 
 def _message_id(session_key: int | None, date: Any, message: str) -> str:
     raw = f"{session_key}|{_text(date)}|{message}".encode("utf-8")
-    return hashlib.sha1(raw).hexdigest()[:16]
+    return hashlib.sha256(raw).hexdigest()[:16]
 
 
 def _penalty_type(message: str) -> str:

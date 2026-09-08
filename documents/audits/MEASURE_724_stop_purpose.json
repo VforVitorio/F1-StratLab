@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T12:13:53+00:00",
+  "generated_at": "2026-09-08T12:20:53+00:00",
   "year": 2025,
   "races": 24,
   "raw_lap_rows": 26692,
@@ -62,131 +62,7 @@
   },
   "evidence": [
     {
-      "evidence_id": "00cd4db99c81e765",
-      "session_key": 9850,
-      "rcm_lap": 19,
-      "date": "2025-11-30 16:32:47+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 18 (STR) REVIEWED NO FURTHER INVESTIGATION - YELLOW FLAG INFRINGEMENT",
-      "car_numbers": [
-        18
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "0277c49bbc2bbe9b",
-      "session_key": 9858,
-      "rcm_lap": 20,
-      "date": "2025-11-23 04:36:49+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 23 (ALB) - CAUSING A COLLISION",
-      "car_numbers": [
-        23
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "0360a758793daf6c",
-      "session_key": 10022,
-      "rcm_lap": 3,
-      "date": "2025-04-20 17:11:26+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 1 (VER) - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        1
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "037e5401b965ff77",
-      "session_key": 9877,
-      "rcm_lap": 56,
-      "date": "2025-10-26 21:19:55+00:00",
-      "message": "FIA STEWARDS: DRIVE THROUGH PENALTY FOR CAR 55 (SAI) - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "drive_through",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "03dd01dd58bc93c9",
-      "session_key": 9955,
-      "rcm_lap": 20,
-      "date": "2025-06-29 13:42:40+00:00",
-      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 22 (TSU) AND 18 (STR) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "05b93a23ffff3ace",
-      "session_key": 9877,
-      "rcm_lap": 27,
-      "date": "2025-10-26 20:40:03+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 55 (SAI) - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "0c3fba0874838a05",
-      "session_key": 9971,
-      "rcm_lap": 7,
-      "date": "2025-06-01 13:12:04+00:00",
-      "message": "FIA STEWARDS: LAP 1 TURN 1 INCIDENT INVOLVING CAR 27 (HUL) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        27
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "0d3b44be9d5dc234",
-      "session_key": 9947,
-      "rcm_lap": 25,
-      "date": "2025-07-06 14:56:10+00:00",
-      "message": "FIA STEWARDS: TURN 6 INCIDENT INVOLVING CARS 22 (TSU) AND 87 (BEA) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "0e0960f2558103cd",
-      "session_key": 9839,
-      "rcm_lap": 38,
-      "date": "2025-12-07 13:59:34+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 23 (ALB) UNDER INVESTIGATION - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        23
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "0fe5bd8db26a6d0c",
-      "session_key": 9693,
-      "rcm_lap": 41,
-      "date": "2025-03-16 05:31:01+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CARS 5 (BOR) AND 30 (LAW) UNDER INVESTIGATION - UNSAFE RELEASE",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "11a18fe6d7fcffa8",
+      "evidence_id": "00cc6041ae31a5fd",
       "session_key": 9877,
       "rcm_lap": 49,
       "date": "2025-10-26 21:10:22+00:00",
@@ -199,256 +75,7 @@
       "forced_entry": false
     },
     {
-      "evidence_id": "11b82485d588302f",
-      "session_key": 10006,
-      "rcm_lap": 26,
-      "date": "2025-04-06 05:43:05+00:00",
-      "message": "FIA STEWARDS: PIT EXIT INCIDENT INVOLVING CARS 1 (VER) AND 4 (NOR) REVIEWED NO FURTHER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "11e4d43ffb309cc4",
-      "session_key": 9858,
-      "rcm_lap": 37,
-      "date": "2025-11-23 05:04:26+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 23 (ALB) - CAUSING A COLLISION",
-      "car_numbers": [
-        23
-      ],
-      "penalty_type": "5s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "123e805eac724dd4",
-      "session_key": 9920,
-      "rcm_lap": 33,
-      "date": "2025-08-31 13:46:45+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 55 (SAI) - CAUSING A COLLISION",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "13beef0f50da6e77",
-      "session_key": 9971,
-      "rcm_lap": 62,
-      "date": "2025-06-01 14:30:59+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 1 (VER) AND 63 (RUS) UNDER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "144c1cd391bd10d8",
-      "session_key": 10006,
-      "rcm_lap": 21,
-      "date": "2025-04-06 05:35:26+00:00",
-      "message": "FIA STEWARDS: TURN 17 INCIDENT INVOLVING CAR 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "16cf3fa10d54c4cc",
-      "session_key": 10014,
-      "rcm_lap": 42,
-      "date": "2025-04-13 16:14:09+00:00",
-      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 30 (LAW) AND 18 (STR) REVIEWED NO FURTHER INVESTIGATION - SAFETY CAR INFRINGEMENT",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "18517aa52284e2dc",
-      "session_key": 9869,
-      "rcm_lap": 40,
-      "date": "2025-11-09 17:56:23+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 81 (PIA) - CAUSING A COLLISION",
-      "car_numbers": [
-        81
-      ],
-      "penalty_type": "10s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "19de81aeffffbda5",
-      "session_key": 9979,
-      "rcm_lap": 10,
-      "date": "2025-05-25 13:16:58+00:00",
-      "message": "PIT LANE ENTRY CLOSED",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "unknown",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "1b1cb6b75541764a",
-      "session_key": 9839,
-      "rcm_lap": 8,
-      "date": "2025-12-07 13:14:33+00:00",
-      "message": "FIA STEWARDS: TURN 6 INCIDENT INVOLVING CARS 12 (ANT) AND 18 (STR) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "1b4c03bc4ce75f91",
-      "session_key": 9963,
-      "rcm_lap": 60,
-      "date": "2025-06-15 19:19:22+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 30 (LAW) REVIEWED NO FURTHER INVESTIGATION - IGNORING BLUE FLAGS",
-      "car_numbers": [
-        30
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "1beb6ca077ae155e",
-      "session_key": 9947,
-      "rcm_lap": 5,
-      "date": "2025-07-06 14:12:35+00:00",
-      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 31 (OCO) AND 30 (LAW) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "1c11c5a50ceb9ee2",
-      "session_key": 9869,
-      "rcm_lap": 36,
-      "date": "2025-11-09 17:50:38+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 44 (HAM) - CAUSING A COLLISION",
-      "car_numbers": [
-        44
-      ],
-      "penalty_type": "5s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "1ee2523c522bab36",
-      "session_key": 9912,
-      "rcm_lap": 46,
-      "date": "2025-09-07 14:07:12+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 87 (BEA) - CAUSING A COLLISION",
-      "car_numbers": [
-        87
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "1f56cc2df8a3bd8f",
-      "session_key": 9971,
-      "rcm_lap": 33,
-      "date": "2025-06-01 13:46:45+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 30 (LAW) AND 87 (BEA) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "1fac83e019b8e98b",
-      "session_key": 9858,
-      "rcm_lap": 5,
-      "date": "2025-11-23 04:11:51+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 5 (BOR) AND 18 (STR) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "2038e1558bd455a3",
-      "session_key": 9896,
-      "rcm_lap": 3,
-      "date": "2025-10-05 12:07:07+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 6 (HAD) AND 87 (BEA) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "22b5b3d472dd2542",
-      "session_key": 10033,
-      "rcm_lap": 31,
-      "date": "2025-05-04 20:52:24+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 22 (TSU) UNDER INVESTIGATION - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "240f677eb7873335",
-      "session_key": 9987,
-      "rcm_lap": 62,
-      "date": "2025-05-18 14:33:47+00:00",
-      "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 16 (LEC) AND 23 (ALB) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "25bf78edb0335725",
-      "session_key": 9839,
-      "rcm_lap": 9,
-      "date": "2025-12-07 13:16:30+00:00",
-      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 10 (GAS) AND 27 (HUL) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "291be9657fcb6aad",
-      "session_key": 9987,
-      "rcm_lap": 55,
-      "date": "2025-05-18 14:24:31+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CARS 4 (NOR) AND 23 (ALB) REVIEWED NO FURTHER INVESTIGATION - SAFETY CAR INFRINGEMENT",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "2a2e1f8279476959",
-      "session_key": 9839,
-      "rcm_lap": 46,
-      "date": "2025-12-07 14:11:15+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 10 (GAS) UNDER INVESTIGATION - TRACK LIMITS",
-      "car_numbers": [
-        10
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "2ab8c3c4d9607bb8",
+      "evidence_id": "01afed769ab2de77",
       "session_key": 10014,
       "rcm_lap": 7,
       "date": "2025-04-13 15:14:51+00:00",
@@ -461,1863 +88,20 @@
       "forced_entry": false
     },
     {
-      "evidence_id": "2acb338537289d9a",
-      "session_key": 9850,
-      "rcm_lap": 8,
-      "date": "2025-11-30 16:14:24+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 31 (OCO) UNDER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
-      "car_numbers": [
-        31
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "2bfd349e45367764",
-      "session_key": 9955,
-      "rcm_lap": 55,
-      "date": "2025-06-29 14:23:54+00:00",
-      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 43 (COL) AND 81 (PIA) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "2c6846b3b495a12a",
-      "session_key": 9971,
-      "rcm_lap": 26,
-      "date": "2025-06-01 13:37:25+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 23 (ALB) AND 30 (LAW) UNDER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "2d87a321dcb9979a",
-      "session_key": 9839,
-      "rcm_lap": 31,
-      "date": "2025-12-07 13:49:23+00:00",
-      "message": "FIA STEWARDS: TURN 9 INCIDENT INVOLVING CARS 16 (LEC) AND 63 (RUS) REVIEWED NO FURTHER INVESTIGATION - MOVING UNDER BRAKING",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "2f4fc738113d19c6",
-      "session_key": 9963,
-      "rcm_lap": 56,
-      "date": "2025-06-15 19:13:52+00:00",
-      "message": "FIA STEWARDS: TURN 13 INCIDENT INVOLVING CARS 87 (BEA) AND 6 (HAD) REVIEWED NO FURTHER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "334762c1f0bde10b",
-      "session_key": 10014,
-      "rcm_lap": 51,
-      "date": "2025-04-13 16:29:27+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 30 (LAW) AND 27 (HUL) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "3376e0244f705f50",
-      "session_key": 9979,
-      "rcm_lap": 6,
-      "date": "2025-05-25 13:11:07+00:00",
-      "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 12 (ANT) AND 5 (BOR) REVIEWED NO FURTHER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "349344f3ef831a1d",
-      "session_key": 9693,
-      "rcm_lap": 43,
-      "date": "2025-03-16 05:35:17+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 5 (BOR) - UNSAFE RELEASE",
-      "car_numbers": [
-        5
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "35924da71cd84589",
-      "session_key": 9888,
-      "rcm_lap": 3,
-      "date": "2025-10-19 19:08:26+00:00",
-      "message": "FIA STEWARDS: TURN 12 INCIDENT INVOLVING CARS 23 (ALB) AND 5 (BOR) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "35925d86c2035a2c",
-      "session_key": 9839,
-      "rcm_lap": 21,
-      "date": "2025-12-07 13:34:41+00:00",
-      "message": "FIA STEWARDS: TURN 6 INCIDENT INVOLVING CARS 30 (LAW) AND 18 (STR) REVIEWED NO FURTHER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "36959dce1dcac58e",
-      "session_key": 9869,
-      "rcm_lap": 16,
-      "date": "2025-11-09 17:26:07+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 81 (PIA) - CAUSING A COLLISION",
-      "car_numbers": [
-        81
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "37306c1f60e9476e",
-      "session_key": 10014,
-      "rcm_lap": 40,
-      "date": "2025-04-13 16:10:59+00:00",
-      "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 30 (LAW) AND 18 (STR) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "37aa3729f5704869",
-      "session_key": 9998,
-      "rcm_lap": 48,
-      "date": "2025-03-23 08:21:24+00:00",
-      "message": "FIA STEWARDS: TURN 14 INCIDENT INVOLVING CARS 7 (DOO) AND 6 (HAD) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "3981b7c432fe2048",
-      "session_key": 10014,
-      "rcm_lap": 45,
-      "date": "2025-04-13 16:18:50+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 22 (TSU) AND 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "3a8c9332fd04d2a0",
-      "session_key": 9912,
-      "rcm_lap": 26,
-      "date": "2025-09-07 13:39:15+00:00",
-      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CAR 55 (SAI) UNDER INVESTIGATION - FAILING TO FOLLOW RACE DIRECTORS INSTRUCTIONS – ESCAPE ROAD INSTRUCTIONS",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "3b90dc248872e3e5",
-      "session_key": 9920,
-      "rcm_lap": 17,
-      "date": "2025-08-31 13:23:40+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 5 (BOR) UNDER INVESTIGATION - UNSAFE CONDITION",
-      "car_numbers": [
-        5
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "3b9fd93c09a2186d",
-      "session_key": 9928,
-      "rcm_lap": 8,
-      "date": "2025-08-03 13:12:57+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 5 (BOR) REVIEWED NO FURTHER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
-      "car_numbers": [
-        5
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "3e7ab1bec1620599",
-      "session_key": 10033,
-      "rcm_lap": 6,
-      "date": "2025-05-04 20:12:34+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 7 (DOO) AND 30 (LAW) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "3f48cd1b758625bc",
-      "session_key": 9928,
-      "rcm_lap": 69,
-      "date": "2025-08-03 14:37:01+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 16 (LEC) - DRIVING ERRATICALLY",
-      "car_numbers": [
-        16
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "3f6ffbc5cea02c46",
-      "session_key": 9904,
-      "rcm_lap": 5,
-      "date": "2025-09-21 11:14:58+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 81 (PIA) - FALSE START - MOVING BEFORE SIGNAL",
-      "car_numbers": [
-        81
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "3f839cb65b1fcd34",
-      "session_key": 9850,
-      "rcm_lap": 35,
-      "date": "2025-11-30 16:56:32+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 87 (BEA) UNDER INVESTIGATION - UNSAFE CONDITION",
-      "car_numbers": [
-        87
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "41b93960eb4a2e0e",
-      "session_key": 9947,
-      "rcm_lap": 48,
-      "date": "2025-07-06 15:33:41+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 81 (PIA) - SAFETY CAR INFRINGEMENT",
-      "car_numbers": [
-        81
-      ],
-      "penalty_type": "10s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "47a71ce1fa491260",
-      "session_key": 9877,
-      "rcm_lap": 22,
-      "date": "2025-10-26 20:32:55+00:00",
-      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CAR 1 (VER) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        1
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "4ac077f50d679765",
-      "session_key": 9877,
-      "rcm_lap": 14,
-      "date": "2025-10-26 20:21:48+00:00",
-      "message": "FIA STEWARDS: LAP 1 TURN 2 INCIDENT INVOLVING CARS 55 (SAI) AND 14 (ALO) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "4ac40e07dd6ecbc8",
-      "session_key": 9947,
-      "rcm_lap": 41,
-      "date": "2025-07-06 15:23:21+00:00",
-      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 16 (LEC) AND 55 (SAI) REVIEWED NO FURTHER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "4b8a6583275cddb1",
-      "session_key": 9904,
-      "rcm_lap": 6,
-      "date": "2025-09-21 11:17:31+00:00",
-      "message": "FIA STEWARDS: TURN 6 INCIDENT INVOLVING CARS 27 (HUL) AND 31 (OCO) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "4c522d0ca0bb63e0",
-      "session_key": 10014,
-      "rcm_lap": 14,
-      "date": "2025-04-13 15:26:17+00:00",
-      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 55 (SAI) AND 1 (VER) REVIEWED NO FURTHER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "4d3d5c6cd238646d",
-      "session_key": 9912,
-      "rcm_lap": 42,
-      "date": "2025-09-07 14:01:49+00:00",
-      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 87 (BEA) AND 55 (SAI) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "4e40a16ad86a1f26",
-      "session_key": 9839,
-      "rcm_lap": 46,
-      "date": "2025-12-07 14:11:25+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 10 (GAS) - TRACK LIMITS",
-      "car_numbers": [
-        10
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "4f8a3b58558d714f",
-      "session_key": 9920,
-      "rcm_lap": 31,
-      "date": "2025-08-31 13:44:12+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 55 (SAI) AND 30 (LAW) UNDER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "5092c02297c1d6db",
-      "session_key": 10014,
-      "rcm_lap": 17,
-      "date": "2025-04-13 15:30:36+00:00",
-      "message": "PIT LANE INCIDENT INVOLVING CAR 87 (BEA) NOTED - UNSAFE RELEASE",
-      "car_numbers": [
-        87
-      ],
-      "penalty_type": "unknown",
-      "phase": "noted",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "52b9e5787cd5be11",
-      "session_key": 9858,
-      "rcm_lap": 11,
-      "date": "2025-11-23 04:22:21+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 12 (ANT) UNDER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
-      "car_numbers": [
-        12
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "5365a8b4c02d2924",
-      "session_key": 9877,
-      "rcm_lap": 53,
-      "date": "2025-10-26 21:14:57+00:00",
-      "message": "INCIDENT INVOLVING CAR 55 (SAI) NOTED - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "unknown",
-      "phase": "noted",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "5b2da46e7c57aef2",
-      "session_key": 9693,
-      "rcm_lap": 10,
-      "date": "2025-03-16 04:38:41+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 22 (TSU) UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "5dc9a7fafbf8cd62",
-      "session_key": 9912,
-      "rcm_lap": 7,
-      "date": "2025-09-07 13:12:23+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 22 (TSU) AND 44 (HAM) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "5eb3408b94bb44c0",
-      "session_key": 9869,
-      "rcm_lap": 16,
-      "date": "2025-11-09 17:25:37+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 81 (PIA) AND 12 (ANT) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "63d37d3c8c652afd",
-      "session_key": 9955,
-      "rcm_lap": 9,
-      "date": "2025-06-29 13:29:32+00:00",
-      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 43 (COL) AND 87 (BEA) UNDER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "64869e769a54bc7c",
-      "session_key": 10022,
-      "rcm_lap": 35,
-      "date": "2025-04-20 18:00:29+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 5 (BOR) AND 14 (ALO) REVIEWED NO FURTHER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "651aa55015fa0805",
-      "session_key": 9928,
-      "rcm_lap": 57,
-      "date": "2025-08-03 14:20:37+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 27 (HUL) AND 22 (TSU) UNDER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "65eaa94277566f0c",
-      "session_key": 9693,
-      "rcm_lap": 19,
-      "date": "2025-03-16 04:52:52+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 23 (ALB) UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT",
-      "car_numbers": [
-        23
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "6624ee8dc90a67dc",
-      "session_key": 9928,
-      "rcm_lap": 67,
-      "date": "2025-08-03 14:34:14+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 10 (GAS) - CAUSING A COLLISION",
-      "car_numbers": [
-        10
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "66e41446f1b9a7a6",
-      "session_key": 9912,
-      "rcm_lap": 2,
-      "date": "2025-09-07 13:05:38+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 1 (VER) AND 4 (NOR) REVIEWED NO FURTHER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "67af5d87af32ca66",
-      "session_key": 10014,
-      "rcm_lap": 18,
-      "date": "2025-04-13 15:32:51+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 4 (NOR) - FALSE START - OUT OF POSITION",
-      "car_numbers": [
-        4
-      ],
-      "penalty_type": "5s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "67c13c83444d2072",
-      "session_key": 9869,
-      "rcm_lap": 17,
-      "date": "2025-11-09 17:27:19+00:00",
-      "message": "FIA STEWARDS: LAP 1 TURN 1 INCIDENT INVOLVING CARS 55 (SAI) AND 44 (HAM) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "6b69660625d2b39d",
-      "session_key": 9963,
-      "rcm_lap": 47,
-      "date": "2025-06-15 19:02:33+00:00",
-      "message": "FIA STEWARDS: TURN 13 INCIDENT INVOLVING CARS 18 (STR) AND 10 (GAS) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "6beed9ffc0a426f5",
-      "session_key": 9920,
-      "rcm_lap": 56,
-      "date": "2025-08-31 14:17:56+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 12 (ANT) - CAUSING A COLLISION",
-      "car_numbers": [
-        12
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "6c3091b1b19fe6cf",
-      "session_key": 9869,
-      "rcm_lap": 33,
-      "date": "2025-11-09 17:47:45+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - FAILING TO SERVE TIME PENALTY CORRECTLY",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "6c588687293d8b28",
-      "session_key": 9877,
-      "rcm_lap": 26,
-      "date": "2025-10-26 20:38:58+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 55 (SAI) UNDER INVESTIGATION - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "6cc59140f4ab4ca1",
-      "session_key": 9850,
-      "rcm_lap": 40,
-      "date": "2025-11-30 17:03:08+00:00",
-      "message": "FIA STEWARDS: 10 SECOND STOP/GO PENALTY FOR CAR 87 (BEA) - UNSAFE CONDITION",
-      "car_numbers": [
-        87
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "6cfafc1a32ade882",
-      "session_key": 10014,
-      "rcm_lap": 36,
-      "date": "2025-04-13 16:04:43+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 22 (TSU) AND 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "6e04b2c0e547ae55",
-      "session_key": 9877,
-      "rcm_lap": 9,
-      "date": "2025-10-26 20:14:21+00:00",
-      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CAR 44 (HAM) UNDER INVESTIGATION - FAILING TO FOLLOW RACE DIRECTORS INSTRUCTIONS – ESCAPE ROAD INSTRUCTIONS",
-      "car_numbers": [
-        44
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "6ee51963a88f4d58",
-      "session_key": 10033,
-      "rcm_lap": 21,
-      "date": "2025-05-04 20:35:30+00:00",
-      "message": "FIA STEWARDS: TURN 11 INCIDENT INVOLVING CARS 4 (NOR) AND 1 (VER) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "6f0b96a3dc9e3905",
-      "session_key": 9850,
-      "rcm_lap": 19,
-      "date": "2025-11-30 16:33:01+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 5 (BOR) REVIEWED NO FURTHER INVESTIGATION - YELLOW FLAG INFRINGEMENT",
-      "car_numbers": [
-        5
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "6f28c5b3d2400a3a",
-      "session_key": 10006,
-      "rcm_lap": 29,
-      "date": "2025-04-06 05:47:54+00:00",
-      "message": "FIA STEWARDS: TURN 17 INCIDENT INVOLVING CAR 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "6f87f14c0f632b4d",
-      "session_key": 9869,
-      "rcm_lap": 12,
-      "date": "2025-11-09 17:21:01+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - CAUSING A COLLISION",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "7149311cdc09e82a",
-      "session_key": 9869,
-      "rcm_lap": 26,
-      "date": "2025-11-09 17:38:51+00:00",
-      "message": "INCIDENT INVOLVING CAR 22 (TSU) NOTED - FAILING TO SERVE TIME PENALTY CORRECTLY",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "other",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "72d7f3b15baf6653",
-      "session_key": 9920,
-      "rcm_lap": 56,
-      "date": "2025-08-31 14:17:34+00:00",
-      "message": "CORRECTION:: TURN 3 INCIDENT INVOLVING CARS 12 (ANT) AND 16 (LEC) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "75cd4995ebc11bfe",
-      "session_key": 9920,
-      "rcm_lap": 59,
-      "date": "2025-08-31 14:22:51+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 12 (ANT) UNDER INVESTIGATION - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        12
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "75d35b81ed28dd3b",
-      "session_key": 9693,
-      "rcm_lap": 9,
-      "date": "2025-03-16 04:37:41+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 14 (ALO) UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT",
-      "car_numbers": [
-        14
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "771e880d7497ef80",
-      "session_key": 9928,
-      "rcm_lap": 36,
-      "date": "2025-08-03 13:51:24+00:00",
-      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 1 (VER) AND 44 (HAM) UNDER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "77233488cd9c4f13",
-      "session_key": 9850,
-      "rcm_lap": 13,
-      "date": "2025-11-30 16:24:04+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 31 (OCO) REVIEWED NO FURTHER INVESTIGATION - FAILING TO SERVE TIME PENALTY CORRECTLY",
-      "car_numbers": [
-        31
-      ],
-      "penalty_type": "other",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "78da64b9e835b7da",
-      "session_key": 10014,
-      "rcm_lap": 44,
-      "date": "2025-04-13 16:17:04+00:00",
-      "message": "FIA STEWARDS: TURN 10 INCIDENT INVOLVING CARS 55 (SAI) AND 12 (ANT) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "798fadd011e0d74f",
-      "session_key": 9850,
-      "rcm_lap": 37,
-      "date": "2025-11-30 16:59:35+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 22 (TSU) REVIEWED NO FURTHER INVESTIGATION - UNSAFE RELEASE",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "7b6bda3ac1f719ca",
-      "session_key": 9877,
-      "rcm_lap": 53,
-      "date": "2025-10-26 21:15:03+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 55 (SAI) UNDER INVESTIGATION - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "7bd7e63b71941da5",
-      "session_key": 9839,
-      "rcm_lap": 26,
-      "date": "2025-12-07 13:41:25+00:00",
-      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 4 (NOR) AND 22 (TSU) UNDER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "7d593d822203899e",
-      "session_key": 10033,
-      "rcm_lap": 20,
-      "date": "2025-05-04 20:35:09+00:00",
-      "message": "FIA STEWARDS: TURN 15 INCIDENT INVOLVING CAR 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "7d83dabe17a539c0",
-      "session_key": 9928,
-      "rcm_lap": 64,
-      "date": "2025-08-03 14:30:14+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 16 (LEC) AND 63 (RUS) UNDER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "7e58ac74655c5870",
-      "session_key": 9920,
-      "rcm_lap": 57,
-      "date": "2025-08-31 14:19:53+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 55 (SAI)",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "10s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "7e6210fd961d44d4",
-      "session_key": 9928,
-      "rcm_lap": 66,
-      "date": "2025-08-03 14:32:16+00:00",
-      "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 10 (GAS) AND 55 (SAI) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "7eacf257ec6d4071",
-      "session_key": 9869,
-      "rcm_lap": 18,
-      "date": "2025-11-09 17:28:16+00:00",
-      "message": "FIA STEWARDS: TURN 15 INCIDENT INVOLVING CARS 44 (HAM) AND 43 (COL) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "7eedd4a35c0d545f",
-      "session_key": 9912,
-      "rcm_lap": 8,
-      "date": "2025-09-07 13:13:58+00:00",
-      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 31 (OCO) AND 18 (STR) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "827492ffad7a8e60",
-      "session_key": 9920,
-      "rcm_lap": 55,
-      "date": "2025-08-31 14:16:37+00:00",
-      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 63 (RUS) AND 16 (LEC) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "8343f4e757947f38",
-      "session_key": 9979,
-      "rcm_lap": 11,
-      "date": "2025-05-25 13:18:48+00:00",
-      "message": "PIT LANE ENTRY OPEN",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "unknown",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "84624c67b8aff079",
-      "session_key": 9904,
-      "rcm_lap": 4,
-      "date": "2025-09-21 11:13:28+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 14 (ALO) UNDER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
-      "car_numbers": [
-        14
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "8467fd314a795211",
-      "session_key": 9850,
-      "rcm_lap": 27,
-      "date": "2025-11-30 16:43:59+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 18 (STR) UNDER INVESTIGATION - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        18
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "84f159fca0c1e078",
-      "session_key": 9693,
-      "rcm_lap": 56,
-      "date": "2025-03-16 05:59:02+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 12 (ANT) UNDER INVESTIGATION - UNSAFE RELEASE",
-      "car_numbers": [
-        12
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "853e9fe2eca5d66c",
-      "session_key": 9955,
-      "rcm_lap": 65,
-      "date": "2025-06-29 14:35:43+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - CAUSING A COLLISION",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "10s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "863a5525655fa74a",
-      "session_key": 9850,
-      "rcm_lap": 52,
-      "date": "2025-11-30 17:20:41+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 18 (STR) - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        18
-      ],
-      "penalty_type": "5s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "870086546e05191e",
-      "session_key": 9839,
-      "rcm_lap": 36,
-      "date": "2025-12-07 13:56:54+00:00",
-      "message": "INCIDENT INVOLVING CAR 23 (ALB) NOTED - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        23
-      ],
-      "penalty_type": "unknown",
-      "phase": "noted",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "87fbd2bef25ff3fa",
-      "session_key": 10022,
-      "rcm_lap": 38,
-      "date": "2025-04-20 18:06:19+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 30 (LAW) - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        30
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "89684134b4239f66",
-      "session_key": 9877,
-      "rcm_lap": 58,
-      "date": "2025-10-26 21:22:20+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - DRIVE THROUGH PENALTY FOR CAR 55 (SAI) - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "drive_through",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "899b4be0bff16b8c",
-      "session_key": 9971,
-      "rcm_lap": 62,
-      "date": "2025-06-01 14:30:10+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 87 (BEA) - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        87
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "8cd67f3317a43217",
-      "session_key": 9839,
-      "rcm_lap": 29,
-      "date": "2025-12-07 13:46:38+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 22 (TSU) - MORE THAN ONE CHANGE OF DIRECTION",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "8de702f290013df3",
-      "session_key": 9955,
-      "rcm_lap": 33,
-      "date": "2025-06-29 13:58:27+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - CAUSING A COLLISION",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "8f082dd43db02210",
-      "session_key": 9955,
-      "rcm_lap": 33,
-      "date": "2025-06-29 13:57:44+00:00",
-      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 22 (TSU) AND 43 (COL) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "8ff272c6962ccae3",
-      "session_key": 9904,
-      "rcm_lap": 24,
-      "date": "2025-09-21 11:48:32+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 14 (ALO) - FALSE START - MOVING BEFORE SIGNAL",
-      "car_numbers": [
-        14
-      ],
-      "penalty_type": "5s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "9077213c9868cc00",
-      "session_key": 9877,
-      "rcm_lap": 53,
-      "date": "2025-10-26 21:15:13+00:00",
-      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 81 (PIA) AND 31 (OCO) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "9129f8734e8b0c0c",
-      "session_key": 9850,
-      "rcm_lap": 10,
-      "date": "2025-11-30 16:19:03+00:00",
-      "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 10 (GAS) AND 27 (HUL) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "93a8a041d879c568",
-      "session_key": 9928,
-      "rcm_lap": 8,
-      "date": "2025-08-03 13:13:05+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 27 (HUL) UNDER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
-      "car_numbers": [
-        27
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "99376d9c96484857",
-      "session_key": 9947,
-      "rcm_lap": 23,
-      "date": "2025-07-06 14:51:57+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 81 (PIA) UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT",
-      "car_numbers": [
-        81
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "9941fe8b4a4a78aa",
-      "session_key": 9839,
-      "rcm_lap": 5,
-      "date": "2025-12-07 13:09:29+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 43 (COL) REVIEWED NO FURTHER INVESTIGATION - STARTING PROCEDURE INFRINGEMENT",
-      "car_numbers": [
-        43
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "99c03946e5ee3daf",
-      "session_key": 9693,
-      "rcm_lap": 2,
-      "date": "2025-03-16 04:21:22+00:00",
-      "message": "SAFETY CAR THROUGH THE PIT LANE",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "unknown",
-      "forced_entry": true
-    },
-    {
-      "evidence_id": "9e89f95594a806ff",
-      "session_key": 9877,
-      "rcm_lap": 26,
-      "date": "2025-10-26 20:38:54+00:00",
-      "message": "INCIDENT INVOLVING CAR 55 (SAI) NOTED - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "unknown",
-      "phase": "noted",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "9e8a542625c3feaa",
-      "session_key": 9839,
-      "rcm_lap": 14,
-      "date": "2025-12-07 13:23:13+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 30 (LAW) - DRIVING ERRATICALLY",
-      "car_numbers": [
-        30
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "9f2a745f3fd22103",
-      "session_key": 9979,
-      "rcm_lap": 53,
-      "date": "2025-05-25 14:11:10+00:00",
-      "message": "FIA STEWARDS: DRIVE THROUGH PENALTY FOR CAR 63 (RUS) - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        63
-      ],
-      "penalty_type": "drive_through",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "a3747e5e12694c3c",
-      "session_key": 9963,
-      "rcm_lap": 49,
-      "date": "2025-06-15 19:05:00+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 18 (STR) - FORCING ANOTHER DRIVER OFF THE TRACK",
-      "car_numbers": [
-        18
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "a3ee117387e89a4f",
-      "session_key": 9858,
-      "rcm_lap": 15,
-      "date": "2025-11-23 04:28:12+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 12 (ANT) - FALSE START - MOVING BEFORE SIGNAL",
-      "car_numbers": [
-        12
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "a5149de2f4f8f3f1",
-      "session_key": 9869,
-      "rcm_lap": 28,
-      "date": "2025-11-09 17:40:50+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 22 (TSU) UNDER INVESTIGATION - FAILING TO SERVE TIME PENALTY CORRECTLY",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "other",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "a5eda7c93d02803a",
-      "session_key": 9904,
-      "rcm_lap": 4,
-      "date": "2025-09-21 11:13:24+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 81 (PIA) UNDER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
-      "car_numbers": [
-        81
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "a609520591352f7b",
-      "session_key": 9850,
-      "rcm_lap": 8,
-      "date": "2025-11-30 16:15:12+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 31 (OCO) - FALSE START - MOVING BEFORE SIGNAL",
-      "car_numbers": [
-        31
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "a769f832456f6a86",
-      "session_key": 9850,
-      "rcm_lap": 46,
-      "date": "2025-11-30 17:11:52+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND STOP/GO PENALTY FOR CAR 87 (BEA) - UNSAFE CONDITION",
-      "car_numbers": [
-        87
-      ],
-      "penalty_type": "10s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "a7bd4e1c1a2dc350",
-      "session_key": 9955,
-      "rcm_lap": 31,
-      "date": "2025-06-29 13:55:17+00:00",
-      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 43 (COL) AND 31 (OCO) REVIEWED NO FURTHER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "a8af1dd3a48e726c",
-      "session_key": 9920,
-      "rcm_lap": 62,
-      "date": "2025-08-31 14:25:55+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 12 (ANT) - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        12
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "ac27691b125563b1",
-      "session_key": 9947,
-      "rcm_lap": 48,
-      "date": "2025-07-06 15:34:12+00:00",
-      "message": "FIA STEWARDS: TURN 15 INCIDENT INVOLVING CARS 55 (SAI) AND 16 (LEC) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "ac6261d8871a797e",
-      "session_key": 10022,
-      "rcm_lap": 23,
-      "date": "2025-04-20 17:42:04+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 1 (VER)",
-      "car_numbers": [
-        1
-      ],
-      "penalty_type": "5s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "af2a2a4b8fc61181",
-      "session_key": 9877,
-      "rcm_lap": 26,
-      "date": "2025-10-26 20:38:19+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 44 (HAM) - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        44
-      ],
-      "penalty_type": "10s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "b27dfa0363ab3f5f",
-      "session_key": 10014,
-      "rcm_lap": 41,
-      "date": "2025-04-13 16:13:05+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 30 (LAW) - CAUSING A COLLISION",
-      "car_numbers": [
-        30
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "b46056fd16a9a32a",
-      "session_key": 9869,
-      "rcm_lap": 50,
-      "date": "2025-11-09 18:08:36+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - FAILING TO SERVE TIME PENALTY CORRECTLY",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "10s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "b4762455df3bcc58",
-      "session_key": 9839,
-      "rcm_lap": 36,
-      "date": "2025-12-07 13:56:37+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 22 (TSU) - MORE THAN ONE CHANGE OF DIRECTION",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "5s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "b5c715c669c4d6f6",
-      "session_key": 9839,
-      "rcm_lap": 38,
-      "date": "2025-12-07 14:00:05+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 23 (ALB) - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        23
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "b762bf29dda44b60",
-      "session_key": 9971,
-      "rcm_lap": 16,
-      "date": "2025-06-01 13:24:25+00:00",
-      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CAR 14 (ALO) REVIEWED NO FURTHER INVESTIGATION - REJOINING UNSAFELY",
-      "car_numbers": [
-        14
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "b7b1180c5a159703",
-      "session_key": 9971,
-      "rcm_lap": 54,
-      "date": "2025-06-01 14:15:57+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 87 (BEA) AND 30 (LAW) UNDER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "b8a8d3e8b4b81d91",
-      "session_key": 9896,
-      "rcm_lap": 61,
-      "date": "2025-10-05 13:41:44+00:00",
-      "message": "FIA STEWARDS: TURN 7 INCIDENT INVOLVING CAR 18 (STR) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        18
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "b91a9537f232e0e3",
-      "session_key": 9904,
-      "rcm_lap": 5,
-      "date": "2025-09-21 11:15:23+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 14 (ALO) - FALSE START - MOVING BEFORE SIGNAL",
-      "car_numbers": [
-        14
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "b994a42da1b6d28c",
-      "session_key": 9896,
-      "rcm_lap": 4,
-      "date": "2025-10-05 12:08:58+00:00",
-      "message": "FIA STEWARDS: LAP 1 TURN 3 INCIDENT INVOLVING CARS 4 (NOR) AND 81 (PIA) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "bb441923f26fa719",
-      "session_key": 9947,
-      "rcm_lap": 27,
-      "date": "2025-07-06 14:59:11+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - CAUSING A COLLISION",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "bc060ad39bb13242",
-      "session_key": 9850,
-      "rcm_lap": 12,
-      "date": "2025-11-30 16:22:38+00:00",
-      "message": "INCIDENT INVOLVING CAR 31 (OCO) NOTED - FAILING TO SERVE TIME PENALTY CORRECTLY",
-      "car_numbers": [
-        31
-      ],
-      "penalty_type": "other",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "beb9074ecb152e00",
-      "session_key": 9971,
-      "rcm_lap": 30,
-      "date": "2025-06-01 13:43:02+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 23 (ALB)",
-      "car_numbers": [
-        23
-      ],
-      "penalty_type": "10s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "bfa3cc03fad35448",
-      "session_key": 9928,
-      "rcm_lap": 9,
-      "date": "2025-08-03 13:15:06+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 27 (HUL) - FALSE START - MOVING BEFORE SIGNAL",
-      "car_numbers": [
-        27
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "c1e79576c355b929",
-      "session_key": 9877,
-      "rcm_lap": 15,
-      "date": "2025-10-26 20:23:21+00:00",
-      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CAR 44 (HAM) UNDER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        44
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "c1f8011917fa2114",
-      "session_key": 9955,
-      "rcm_lap": 57,
-      "date": "2025-06-29 14:26:00+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 43 (COL) - FORCING ANOTHER DRIVER OFF THE TRACK",
-      "car_numbers": [
-        43
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "c2528fe33d5cafc7",
-      "session_key": 9920,
-      "rcm_lap": 56,
-      "date": "2025-08-31 14:18:54+00:00",
-      "message": "INCIDENT INVOLVING CAR 12 (ANT) NOTED - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        12
-      ],
-      "penalty_type": "unknown",
-      "phase": "noted",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "c5f49557c835c0b5",
-      "session_key": 9858,
-      "rcm_lap": 3,
-      "date": "2025-11-23 04:09:36+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 81 (PIA) AND 30 (LAW) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "ca87d736a58136fc",
-      "session_key": 9963,
-      "rcm_lap": 67,
-      "date": "2025-06-15 19:27:49+00:00",
-      "message": "ALL CARS TO FOLLOW THE SAFETY CAR THROUGH THE PIT LANE",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "unknown",
-      "forced_entry": true
-    },
-    {
-      "evidence_id": "cd192e61239d0cea",
-      "session_key": 9869,
-      "rcm_lap": 28,
-      "date": "2025-11-09 17:41:27+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 44 (HAM) - CAUSING A COLLISION",
-      "car_numbers": [
-        44
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "cf2b89df81e00a8c",
-      "session_key": 9971,
-      "rcm_lap": 27,
-      "date": "2025-06-01 13:39:31+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 23 (ALB) -LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        23
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "cfc1b3a2952d8574",
-      "session_key": 9987,
-      "rcm_lap": 40,
-      "date": "2025-05-18 13:58:03+00:00",
-      "message": "FIA STEWARDS: TURN 7 INCIDENT INVOLVING CAR 23 (ALB) REVIEWED NO FURTHER INVESTIGATION - YELLOW FLAG INFRINGEMENT",
-      "car_numbers": [
-        23
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "d0ac2d02ae20f436",
-      "session_key": 9998,
-      "rcm_lap": 50,
-      "date": "2025-03-23 08:24:22+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 7 (DOO) - FORCING ANOTHER DRIVER OFF THE TRACK",
-      "car_numbers": [
-        7
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "d150cd7a421b392e",
-      "session_key": 9869,
-      "rcm_lap": 10,
-      "date": "2025-11-09 17:18:44+00:00",
-      "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 22 (TSU) AND 18 (STR) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "d20e54c9f4c105f2",
-      "session_key": 9912,
-      "rcm_lap": 47,
-      "date": "2025-09-07 14:07:27+00:00",
-      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 12 (ANT) AND 23 (ALB) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "d5f6f6d3455d54bc",
-      "session_key": 9877,
-      "rcm_lap": 20,
-      "date": "2025-10-26 20:29:31+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 1 (VER) AND 44 (HAM) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "d7b498d4b2a184c5",
-      "session_key": 10014,
-      "rcm_lap": 19,
-      "date": "2025-04-13 15:33:56+00:00",
-      "message": "FIA STEWARDS: PIT LANE INCIDENT INVOLVING CAR 87 (BEA) REVIEWED NO FURTHER INVESTIGATION - UNSAFE RELEASE",
-      "car_numbers": [
-        87
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "d8cd90673555df2e",
-      "session_key": 9928,
-      "rcm_lap": 44,
-      "date": "2025-08-03 14:02:27+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 27 (HUL) - FALSE START - MOVING BEFORE SIGNAL",
-      "car_numbers": [
-        27
-      ],
-      "penalty_type": "5s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "da1407bcbff9907c",
+      "evidence_id": "02ae42d9ed7c93a1",
       "session_key": 10033,
       "rcm_lap": 31,
-      "date": "2025-05-04 20:52:10+00:00",
-      "message": "INCIDENT INVOLVING CAR 22 (TSU) NOTED - SPEEDING IN THE PIT LANE",
+      "date": "2025-05-04 20:52:24+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 22 (TSU) UNDER INVESTIGATION - SPEEDING IN THE PIT LANE",
       "car_numbers": [
         22
       ],
       "penalty_type": "unknown",
-      "phase": "noted",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "dcb4066739950a2a",
-      "session_key": 10022,
-      "rcm_lap": 3,
-      "date": "2025-04-20 17:09:12+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 1 (VER) AND 81 (PIA) UNDER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
       "phase": "under_investigation",
       "forced_entry": false
     },
     {
-      "evidence_id": "dcea68529a117f2c",
-      "session_key": 10022,
-      "rcm_lap": 43,
-      "date": "2025-04-20 18:14:11+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 4 (NOR) REVIEWED NO FURTHER INVESTIGATION - FAILING TO FOLLOW RACE DIRECTORS INSTRUCTIONS – CROSSING THE LINE AT PIT EXIT",
-      "car_numbers": [
-        4
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "dd01181ae77743e9",
-      "session_key": 10033,
-      "rcm_lap": 6,
-      "date": "2025-05-04 20:13:41+00:00",
-      "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 1 (VER) AND 4 (NOR) REVIEWED NO FURTHER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "dd4b0ff4e2b76fd0",
-      "session_key": 9877,
-      "rcm_lap": 16,
-      "date": "2025-10-26 20:24:03+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 44 (HAM) - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        44
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "df21b6c123aeef76",
-      "session_key": 9904,
-      "rcm_lap": 19,
-      "date": "2025-09-21 11:40:29+00:00",
-      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 23 (ALB) AND 43 (COL) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "df3aa394bb8dfa11",
-      "session_key": 9850,
-      "rcm_lap": 27,
-      "date": "2025-11-30 16:44:48+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 18 (STR) - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        18
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "e0045ffe5c03b9cd",
-      "session_key": 10014,
-      "rcm_lap": 54,
-      "date": "2025-04-13 16:33:55+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 30 (LAW) - CAUSING A COLLISION",
-      "car_numbers": [
-        30
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "e0fe8245181476ba",
-      "session_key": 9850,
-      "rcm_lap": 19,
-      "date": "2025-11-30 16:33:37+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 23 (ALB) REVIEWED NO FURTHER INVESTIGATION - YELLOW FLAG INFRINGEMENT",
-      "car_numbers": [
-        23
-      ],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "e3b53aab86074f0f",
-      "session_key": 9839,
-      "rcm_lap": 7,
-      "date": "2025-12-07 13:12:53+00:00",
-      "message": "FIA STEWARDS: TURN 7 INCIDENT INVOLVING CARS 44 (HAM) AND 23 (ALB) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "e6724f2f26c781a7",
-      "session_key": 9839,
-      "rcm_lap": 10,
-      "date": "2025-12-07 13:18:25+00:00",
-      "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 30 (LAW) AND 87 (BEA) UNDER INVESTIGATION - DRIVING ERRATICALLY",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "e7e5d1bf78267c94",
-      "session_key": 9896,
-      "rcm_lap": 48,
-      "date": "2025-10-05 13:21:23+00:00",
-      "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 27 (HUL) AND 43 (COL) REVIEWED NO FURTHER INVESTIGATION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "e859abf251444f67",
-      "session_key": 10014,
-      "rcm_lap": 5,
-      "date": "2025-04-13 15:10:28+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 4 (NOR) UNDER INVESTIGATION - FALSE START - OUT OF POSITION",
-      "car_numbers": [
-        4
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "ec165b2125a6703f",
-      "session_key": 9979,
-      "rcm_lap": 51,
-      "date": "2025-05-25 14:09:00+00:00",
-      "message": "FIA STEWARDS: TURN 10 INCIDENT INVOLVING CAR 63 (RUS) UNDER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
-      "car_numbers": [
-        63
-      ],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "ec203db377569f87",
-      "session_key": 9920,
-      "rcm_lap": 10,
-      "date": "2025-08-31 13:15:44+00:00",
-      "message": "FIA STEWARDS: TURN 11 INCIDENT INVOLVING CARS 18 (STR) AND 5 (BOR) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "ecb47121f6aa4c94",
-      "session_key": 9858,
-      "rcm_lap": 16,
-      "date": "2025-11-23 04:30:49+00:00",
-      "message": "FIA STEWARDS: TURN 14 INCIDENT INVOLVING CARS 23 (ALB) AND 44 (HAM) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "ed5583f424cb4588",
-      "session_key": 9839,
-      "rcm_lap": 27,
-      "date": "2025-12-07 13:42:34+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 30 (LAW) - DRIVING ERRATICALLY",
-      "car_numbers": [
-        30
-      ],
-      "penalty_type": "5s",
-      "phase": "served",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "ee676a57b543a295",
-      "session_key": 9987,
-      "rcm_lap": 35,
-      "date": "2025-05-18 13:51:21+00:00",
-      "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 22 (TSU) AND 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "no_further_action",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "eeb7afc65ff028b0",
-      "session_key": 10033,
-      "rcm_lap": 32,
-      "date": "2025-05-04 20:53:15+00:00",
-      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 22 (TSU) - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        22
-      ],
-      "penalty_type": "5s",
-      "phase": "awarded",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "f0015bd65e246239",
+      "evidence_id": "04af96967d94429b",
       "session_key": 9912,
       "rcm_lap": 9,
       "date": "2025-09-07 13:15:35+00:00",
@@ -2330,61 +114,61 @@
       "forced_entry": false
     },
     {
-      "evidence_id": "f172d10650d47764",
-      "session_key": 9850,
-      "rcm_lap": 26,
-      "date": "2025-11-30 16:43:53+00:00",
-      "message": "INCIDENT INVOLVING CAR 18 (STR) NOTED - SPEEDING IN THE PIT LANE",
-      "car_numbers": [
-        18
-      ],
-      "penalty_type": "unknown",
-      "phase": "noted",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "f1979f22e8bf0dcf",
-      "session_key": 9920,
-      "rcm_lap": 36,
-      "date": "2025-08-31 13:50:24+00:00",
-      "message": "FIA STEWARDS: TURN 12 INCIDENT INVOLVING CARS 16 (LEC) AND 63 (RUS) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "f47405be1b62e7cf",
+      "evidence_id": "077351a8cc919e33",
       "session_key": 9947,
-      "rcm_lap": 25,
-      "date": "2025-07-06 14:55:02+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 81 (PIA) - SAFETY CAR INFRINGEMENT",
+      "rcm_lap": 27,
+      "date": "2025-07-06 14:59:11+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - CAUSING A COLLISION",
       "car_numbers": [
-        81
+        22
       ],
       "penalty_type": "10s",
       "phase": "awarded",
       "forced_entry": false
     },
     {
-      "evidence_id": "f699142862b2dbc5",
-      "session_key": 9963,
-      "rcm_lap": 59,
-      "date": "2025-06-15 19:18:01+00:00",
-      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 18 (STR) - FORCING ANOTHER DRIVER OFF THE TRACK",
-      "car_numbers": [
-        18
-      ],
-      "penalty_type": "10s",
-      "phase": "served",
+      "evidence_id": "077efa471823ecf0",
+      "session_key": 9987,
+      "rcm_lap": 55,
+      "date": "2025-05-18 14:24:31+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CARS 4 (NOR) AND 23 (ALB) REVIEWED NO FURTHER INVESTIGATION - SAFETY CAR INFRINGEMENT",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
       "forced_entry": false
     },
     {
-      "evidence_id": "f75fdf0a04ed425a",
-      "session_key": 9693,
-      "rcm_lap": 19,
-      "date": "2025-03-16 04:53:00+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 44 (HAM) UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT",
+      "evidence_id": "0817e09d4a315130",
+      "session_key": 9912,
+      "rcm_lap": 26,
+      "date": "2025-09-07 13:39:15+00:00",
+      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CAR 55 (SAI) UNDER INVESTIGATION - FAILING TO FOLLOW RACE DIRECTORS INSTRUCTIONS – ESCAPE ROAD INSTRUCTIONS",
+      "car_numbers": [
+        55
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "0832fea1310987a9",
+      "session_key": 9987,
+      "rcm_lap": 40,
+      "date": "2025-05-18 13:58:03+00:00",
+      "message": "FIA STEWARDS: TURN 7 INCIDENT INVOLVING CAR 23 (ALB) REVIEWED NO FURTHER INVESTIGATION - YELLOW FLAG INFRINGEMENT",
+      "car_numbers": [
+        23
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "089a1547c1784e2f",
+      "session_key": 9877,
+      "rcm_lap": 15,
+      "date": "2025-10-26 20:23:21+00:00",
+      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CAR 44 (HAM) UNDER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
       "car_numbers": [
         44
       ],
@@ -2393,57 +177,227 @@
       "forced_entry": false
     },
     {
-      "evidence_id": "f7748b2f7bb54538",
-      "session_key": 9971,
-      "rcm_lap": 28,
-      "date": "2025-06-01 13:41:03+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 23 (ALB) AND 30 (LAW) UNDER INVESTIGATION - CAUSING A COLLISION",
-      "car_numbers": [],
-      "penalty_type": "unknown",
-      "phase": "under_investigation",
-      "forced_entry": false
-    },
-    {
-      "evidence_id": "f8b0866ec60b3249",
-      "session_key": 9888,
-      "rcm_lap": 9,
-      "date": "2025-10-19 19:18:38+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 31 (OCO) REVIEWED NO FURTHER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
+      "evidence_id": "0920effd7a9cb72f",
+      "session_key": 10006,
+      "rcm_lap": 29,
+      "date": "2025-04-06 05:47:54+00:00",
+      "message": "FIA STEWARDS: TURN 17 INCIDENT INVOLVING CAR 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
       "car_numbers": [
-        31
+        55
       ],
       "penalty_type": "unknown",
       "phase": "no_further_action",
       "forced_entry": false
     },
     {
-      "evidence_id": "f8cec22d78b28ac0",
-      "session_key": 10014,
-      "rcm_lap": 44,
-      "date": "2025-04-13 16:17:16+00:00",
-      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 55 (SAI) - FORCING ANOTHER DRIVER OFF THE TRACK",
-      "car_numbers": [
-        55
-      ],
-      "penalty_type": "10s",
-      "phase": "awarded",
+      "evidence_id": "0b1f14c73cf66cf0",
+      "session_key": 9928,
+      "rcm_lap": 36,
+      "date": "2025-08-03 13:51:24+00:00",
+      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 1 (VER) AND 44 (HAM) UNDER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
       "forced_entry": false
     },
     {
-      "evidence_id": "f927dd98ae636534",
-      "session_key": 9858,
-      "rcm_lap": 19,
-      "date": "2025-11-23 04:34:45+00:00",
-      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 23 (ALB) UNDER INVESTIGATION - STARTING PROCEDURE INFRINGEMENT",
+      "evidence_id": "0d2fc6cad874a3b7",
+      "session_key": 9904,
+      "rcm_lap": 4,
+      "date": "2025-09-21 11:13:28+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 14 (ALO) UNDER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
       "car_numbers": [
-        23
+        14
       ],
       "penalty_type": "unknown",
       "phase": "under_investigation",
       "forced_entry": false
     },
     {
-      "evidence_id": "f9842a620b7bd75a",
+      "evidence_id": "0d4347a5754d5260",
+      "session_key": 9928,
+      "rcm_lap": 57,
+      "date": "2025-08-03 14:20:37+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 27 (HUL) AND 22 (TSU) UNDER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "0fffc5fd3f6c90c0",
+      "session_key": 9979,
+      "rcm_lap": 51,
+      "date": "2025-05-25 14:09:00+00:00",
+      "message": "FIA STEWARDS: TURN 10 INCIDENT INVOLVING CAR 63 (RUS) UNDER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [
+        63
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "10ed87a10298dd30",
+      "session_key": 10014,
+      "rcm_lap": 42,
+      "date": "2025-04-13 16:14:09+00:00",
+      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 30 (LAW) AND 18 (STR) REVIEWED NO FURTHER INVESTIGATION - SAFETY CAR INFRINGEMENT",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "12277579cc8714d0",
+      "session_key": 9963,
+      "rcm_lap": 56,
+      "date": "2025-06-15 19:13:52+00:00",
+      "message": "FIA STEWARDS: TURN 13 INCIDENT INVOLVING CARS 87 (BEA) AND 6 (HAD) REVIEWED NO FURTHER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "1351f22e41aa89cd",
+      "session_key": 9877,
+      "rcm_lap": 58,
+      "date": "2025-10-26 21:22:20+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - DRIVE THROUGH PENALTY FOR CAR 55 (SAI) - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        55
+      ],
+      "penalty_type": "drive_through",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "13566ab7193a0d7a",
+      "session_key": 9920,
+      "rcm_lap": 62,
+      "date": "2025-08-31 14:25:55+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 12 (ANT) - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        12
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "1438934c1f5c3a3d",
+      "session_key": 10006,
+      "rcm_lap": 26,
+      "date": "2025-04-06 05:43:05+00:00",
+      "message": "FIA STEWARDS: PIT EXIT INCIDENT INVOLVING CARS 1 (VER) AND 4 (NOR) REVIEWED NO FURTHER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "157acd59d513813b",
+      "session_key": 9877,
+      "rcm_lap": 26,
+      "date": "2025-10-26 20:38:54+00:00",
+      "message": "INCIDENT INVOLVING CAR 55 (SAI) NOTED - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        55
+      ],
+      "penalty_type": "unknown",
+      "phase": "noted",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "1ab035b776df36d6",
+      "session_key": 9979,
+      "rcm_lap": 6,
+      "date": "2025-05-25 13:11:07+00:00",
+      "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 12 (ANT) AND 5 (BOR) REVIEWED NO FURTHER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "1b47f1b1adf25307",
+      "session_key": 9869,
+      "rcm_lap": 33,
+      "date": "2025-11-09 17:47:45+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - FAILING TO SERVE TIME PENALTY CORRECTLY",
+      "car_numbers": [
+        22
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "1b84f983b4d2780c",
+      "session_key": 9858,
+      "rcm_lap": 37,
+      "date": "2025-11-23 05:04:26+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 23 (ALB) - CAUSING A COLLISION",
+      "car_numbers": [
+        23
+      ],
+      "penalty_type": "5s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "1bc4978f93f7c20c",
+      "session_key": 9971,
+      "rcm_lap": 27,
+      "date": "2025-06-01 13:39:31+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 23 (ALB) -LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [
+        23
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "1fd695173a94e31b",
+      "session_key": 10014,
+      "rcm_lap": 18,
+      "date": "2025-04-13 15:32:51+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 4 (NOR) - FALSE START - OUT OF POSITION",
+      "car_numbers": [
+        4
+      ],
+      "penalty_type": "5s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "20d8425aaa35d5be",
+      "session_key": 10033,
+      "rcm_lap": 31,
+      "date": "2025-05-04 20:52:10+00:00",
+      "message": "INCIDENT INVOLVING CAR 22 (TSU) NOTED - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        22
+      ],
+      "penalty_type": "unknown",
+      "phase": "noted",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "23f0d55c1b584eb3",
+      "session_key": 9904,
+      "rcm_lap": 6,
+      "date": "2025-09-21 11:17:31+00:00",
+      "message": "FIA STEWARDS: TURN 6 INCIDENT INVOLVING CARS 27 (HUL) AND 31 (OCO) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "289f720feb291dd2",
       "session_key": 9904,
       "rcm_lap": 19,
       "date": "2025-09-21 11:41:00+00:00",
@@ -2456,7 +410,1343 @@
       "forced_entry": false
     },
     {
-      "evidence_id": "faf9ad00a56dcfa6",
+      "evidence_id": "28b4727993318427",
+      "session_key": 9869,
+      "rcm_lap": 36,
+      "date": "2025-11-09 17:50:38+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 44 (HAM) - CAUSING A COLLISION",
+      "car_numbers": [
+        44
+      ],
+      "penalty_type": "5s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "28dff7e848272934",
+      "session_key": 9839,
+      "rcm_lap": 38,
+      "date": "2025-12-07 13:59:34+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 23 (ALB) UNDER INVESTIGATION - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        23
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "2a0e338bb7837509",
+      "session_key": 9947,
+      "rcm_lap": 25,
+      "date": "2025-07-06 14:55:02+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 81 (PIA) - SAFETY CAR INFRINGEMENT",
+      "car_numbers": [
+        81
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "2ae7e3fcfbaa6c9b",
+      "session_key": 9963,
+      "rcm_lap": 59,
+      "date": "2025-06-15 19:18:01+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 18 (STR) - FORCING ANOTHER DRIVER OFF THE TRACK",
+      "car_numbers": [
+        18
+      ],
+      "penalty_type": "10s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "2d09dd73a6dfa0a9",
+      "session_key": 10022,
+      "rcm_lap": 38,
+      "date": "2025-04-20 18:06:19+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 30 (LAW) - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [
+        30
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "2d1a6a8be35d05e0",
+      "session_key": 10022,
+      "rcm_lap": 3,
+      "date": "2025-04-20 17:11:26+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 1 (VER) - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [
+        1
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "31cdcc153a0c7422",
+      "session_key": 9955,
+      "rcm_lap": 65,
+      "date": "2025-06-29 14:35:43+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - CAUSING A COLLISION",
+      "car_numbers": [
+        22
+      ],
+      "penalty_type": "10s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "31dc062264414f48",
+      "session_key": 9920,
+      "rcm_lap": 33,
+      "date": "2025-08-31 13:46:45+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 55 (SAI) - CAUSING A COLLISION",
+      "car_numbers": [
+        55
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "32003d4b3323df86",
+      "session_key": 9869,
+      "rcm_lap": 28,
+      "date": "2025-11-09 17:41:27+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 44 (HAM) - CAUSING A COLLISION",
+      "car_numbers": [
+        44
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "3434ada371f57318",
+      "session_key": 9963,
+      "rcm_lap": 49,
+      "date": "2025-06-15 19:05:00+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 18 (STR) - FORCING ANOTHER DRIVER OFF THE TRACK",
+      "car_numbers": [
+        18
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "35723979f5887ef4",
+      "session_key": 10033,
+      "rcm_lap": 6,
+      "date": "2025-05-04 20:13:41+00:00",
+      "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 1 (VER) AND 4 (NOR) REVIEWED NO FURTHER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "358026a8363bd70d",
+      "session_key": 9912,
+      "rcm_lap": 46,
+      "date": "2025-09-07 14:07:12+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 87 (BEA) - CAUSING A COLLISION",
+      "car_numbers": [
+        87
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "39f4a980a6cb8698",
+      "session_key": 9912,
+      "rcm_lap": 8,
+      "date": "2025-09-07 13:13:58+00:00",
+      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 31 (OCO) AND 18 (STR) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "3ab2bb359f90005f",
+      "session_key": 9998,
+      "rcm_lap": 50,
+      "date": "2025-03-23 08:24:22+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 7 (DOO) - FORCING ANOTHER DRIVER OFF THE TRACK",
+      "car_numbers": [
+        7
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "3d1b1876da184bd5",
+      "session_key": 10022,
+      "rcm_lap": 37,
+      "date": "2025-04-20 18:04:41+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 30 (LAW) AND 7 (DOO) UNDER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "3ebb4fb419724b72",
+      "session_key": 9850,
+      "rcm_lap": 10,
+      "date": "2025-11-30 16:19:03+00:00",
+      "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 10 (GAS) AND 27 (HUL) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "3ec827e7dde7b3a5",
+      "session_key": 9971,
+      "rcm_lap": 28,
+      "date": "2025-06-01 13:41:03+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 23 (ALB) AND 30 (LAW) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "40cfd14715ca8672",
+      "session_key": 9896,
+      "rcm_lap": 4,
+      "date": "2025-10-05 12:08:58+00:00",
+      "message": "FIA STEWARDS: LAP 1 TURN 3 INCIDENT INVOLVING CARS 4 (NOR) AND 81 (PIA) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "41fe8388958643ea",
+      "session_key": 9869,
+      "rcm_lap": 17,
+      "date": "2025-11-09 17:27:19+00:00",
+      "message": "FIA STEWARDS: LAP 1 TURN 1 INCIDENT INVOLVING CARS 55 (SAI) AND 44 (HAM) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "4224a033be52e784",
+      "session_key": 9955,
+      "rcm_lap": 31,
+      "date": "2025-06-29 13:55:17+00:00",
+      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 43 (COL) AND 31 (OCO) REVIEWED NO FURTHER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "42fa72fb74954c07",
+      "session_key": 10014,
+      "rcm_lap": 19,
+      "date": "2025-04-13 15:33:56+00:00",
+      "message": "FIA STEWARDS: PIT LANE INCIDENT INVOLVING CAR 87 (BEA) REVIEWED NO FURTHER INVESTIGATION - UNSAFE RELEASE",
+      "car_numbers": [
+        87
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "4383b01f925a4bc4",
+      "session_key": 9693,
+      "rcm_lap": 19,
+      "date": "2025-03-16 04:53:00+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 44 (HAM) UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT",
+      "car_numbers": [
+        44
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "442f5b94fdee8741",
+      "session_key": 9928,
+      "rcm_lap": 67,
+      "date": "2025-08-03 14:34:14+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 10 (GAS) - CAUSING A COLLISION",
+      "car_numbers": [
+        10
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "47d02b1e1913b728",
+      "session_key": 9693,
+      "rcm_lap": 2,
+      "date": "2025-03-16 04:21:22+00:00",
+      "message": "SAFETY CAR THROUGH THE PIT LANE",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "unknown",
+      "forced_entry": true
+    },
+    {
+      "evidence_id": "47eb8f24d5e6f15a",
+      "session_key": 10022,
+      "rcm_lap": 35,
+      "date": "2025-04-20 18:00:29+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 5 (BOR) AND 14 (ALO) REVIEWED NO FURTHER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "4a62faada1f8333c",
+      "session_key": 9955,
+      "rcm_lap": 33,
+      "date": "2025-06-29 13:58:27+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - CAUSING A COLLISION",
+      "car_numbers": [
+        22
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "4ed5c69ce9a789c5",
+      "session_key": 9693,
+      "rcm_lap": 56,
+      "date": "2025-03-16 05:59:02+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 12 (ANT) UNDER INVESTIGATION - UNSAFE RELEASE",
+      "car_numbers": [
+        12
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "4f7d2286731dae20",
+      "session_key": 9850,
+      "rcm_lap": 19,
+      "date": "2025-11-30 16:33:01+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 5 (BOR) REVIEWED NO FURTHER INVESTIGATION - YELLOW FLAG INFRINGEMENT",
+      "car_numbers": [
+        5
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "51461d5f21d8d2b5",
+      "session_key": 9877,
+      "rcm_lap": 16,
+      "date": "2025-10-26 20:24:03+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 44 (HAM) - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [
+        44
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "517a9f792352599c",
+      "session_key": 9920,
+      "rcm_lap": 10,
+      "date": "2025-08-31 13:15:44+00:00",
+      "message": "FIA STEWARDS: TURN 11 INCIDENT INVOLVING CARS 18 (STR) AND 5 (BOR) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "5536d0ff3a2944f5",
+      "session_key": 10014,
+      "rcm_lap": 41,
+      "date": "2025-04-13 16:13:05+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 30 (LAW) - CAUSING A COLLISION",
+      "car_numbers": [
+        30
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "5790c1e3adf2db83",
+      "session_key": 9877,
+      "rcm_lap": 53,
+      "date": "2025-10-26 21:14:57+00:00",
+      "message": "INCIDENT INVOLVING CAR 55 (SAI) NOTED - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        55
+      ],
+      "penalty_type": "unknown",
+      "phase": "noted",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "599bd61491aa19c0",
+      "session_key": 9928,
+      "rcm_lap": 64,
+      "date": "2025-08-03 14:30:14+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 16 (LEC) AND 63 (RUS) UNDER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "5ba4a3e8826d6c55",
+      "session_key": 9839,
+      "rcm_lap": 29,
+      "date": "2025-12-07 13:46:38+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 22 (TSU) - MORE THAN ONE CHANGE OF DIRECTION",
+      "car_numbers": [
+        22
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "5ba57fae49814391",
+      "session_key": 9839,
+      "rcm_lap": 27,
+      "date": "2025-12-07 13:42:34+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 30 (LAW) - DRIVING ERRATICALLY",
+      "car_numbers": [
+        30
+      ],
+      "penalty_type": "5s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "5e50d0f83dc1c9ce",
+      "session_key": 9920,
+      "rcm_lap": 56,
+      "date": "2025-08-31 14:17:34+00:00",
+      "message": "CORRECTION:: TURN 3 INCIDENT INVOLVING CARS 12 (ANT) AND 16 (LEC) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "61138098caf9a4d2",
+      "session_key": 9955,
+      "rcm_lap": 20,
+      "date": "2025-06-29 13:42:40+00:00",
+      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 22 (TSU) AND 18 (STR) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "628daa15477a39fb",
+      "session_key": 10022,
+      "rcm_lap": 3,
+      "date": "2025-04-20 17:09:12+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 1 (VER) AND 81 (PIA) UNDER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "6325a313f0977869",
+      "session_key": 9904,
+      "rcm_lap": 5,
+      "date": "2025-09-21 11:15:23+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 14 (ALO) - FALSE START - MOVING BEFORE SIGNAL",
+      "car_numbers": [
+        14
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "63ae60ae8342caf1",
+      "session_key": 9839,
+      "rcm_lap": 7,
+      "date": "2025-12-07 13:12:53+00:00",
+      "message": "FIA STEWARDS: TURN 7 INCIDENT INVOLVING CARS 44 (HAM) AND 23 (ALB) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "64f2eba4b931233b",
+      "session_key": 9839,
+      "rcm_lap": 5,
+      "date": "2025-12-07 13:09:29+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 43 (COL) REVIEWED NO FURTHER INVESTIGATION - STARTING PROCEDURE INFRINGEMENT",
+      "car_numbers": [
+        43
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "65427b61c5b86e70",
+      "session_key": 9904,
+      "rcm_lap": 5,
+      "date": "2025-09-21 11:14:58+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 81 (PIA) - FALSE START - MOVING BEFORE SIGNAL",
+      "car_numbers": [
+        81
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "6687430f68e2e9d8",
+      "session_key": 10014,
+      "rcm_lap": 44,
+      "date": "2025-04-13 16:17:16+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 55 (SAI) - FORCING ANOTHER DRIVER OFF THE TRACK",
+      "car_numbers": [
+        55
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "67904ddc8a94c5c0",
+      "session_key": 10006,
+      "rcm_lap": 21,
+      "date": "2025-04-06 05:35:26+00:00",
+      "message": "FIA STEWARDS: TURN 17 INCIDENT INVOLVING CAR 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [
+        55
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "68f07931a6aa8a4c",
+      "session_key": 9920,
+      "rcm_lap": 17,
+      "date": "2025-08-31 13:23:40+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 5 (BOR) UNDER INVESTIGATION - UNSAFE CONDITION",
+      "car_numbers": [
+        5
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "6b1415d817ff9cbd",
+      "session_key": 9850,
+      "rcm_lap": 12,
+      "date": "2025-11-30 16:22:38+00:00",
+      "message": "INCIDENT INVOLVING CAR 31 (OCO) NOTED - FAILING TO SERVE TIME PENALTY CORRECTLY",
+      "car_numbers": [
+        31
+      ],
+      "penalty_type": "other",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "6bb1612fa97a85f8",
+      "session_key": 9971,
+      "rcm_lap": 16,
+      "date": "2025-06-01 13:24:25+00:00",
+      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CAR 14 (ALO) REVIEWED NO FURTHER INVESTIGATION - REJOINING UNSAFELY",
+      "car_numbers": [
+        14
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "6c8fe51abc162779",
+      "session_key": 9955,
+      "rcm_lap": 9,
+      "date": "2025-06-29 13:29:32+00:00",
+      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 43 (COL) AND 87 (BEA) UNDER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "6d8cfc0a88d7c4b1",
+      "session_key": 9850,
+      "rcm_lap": 8,
+      "date": "2025-11-30 16:15:12+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 31 (OCO) - FALSE START - MOVING BEFORE SIGNAL",
+      "car_numbers": [
+        31
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "6da65325418388e9",
+      "session_key": 10033,
+      "rcm_lap": 32,
+      "date": "2025-05-04 20:53:15+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 22 (TSU) - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        22
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "6e89dc15ea19cda2",
+      "session_key": 9928,
+      "rcm_lap": 8,
+      "date": "2025-08-03 13:12:57+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 5 (BOR) REVIEWED NO FURTHER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
+      "car_numbers": [
+        5
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "6ea6257bbb4716b4",
+      "session_key": 9877,
+      "rcm_lap": 22,
+      "date": "2025-10-26 20:32:55+00:00",
+      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CAR 1 (VER) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [
+        1
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "6ee53743ff9c2456",
+      "session_key": 10033,
+      "rcm_lap": 21,
+      "date": "2025-05-04 20:35:30+00:00",
+      "message": "FIA STEWARDS: TURN 11 INCIDENT INVOLVING CARS 4 (NOR) AND 1 (VER) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "6f8ada341d4b7373",
+      "session_key": 9850,
+      "rcm_lap": 19,
+      "date": "2025-11-30 16:33:37+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 23 (ALB) REVIEWED NO FURTHER INVESTIGATION - YELLOW FLAG INFRINGEMENT",
+      "car_numbers": [
+        23
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "703da2fc33f3c846",
+      "session_key": 9947,
+      "rcm_lap": 41,
+      "date": "2025-07-06 15:23:21+00:00",
+      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 16 (LEC) AND 55 (SAI) REVIEWED NO FURTHER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "70795fe7846c991d",
+      "session_key": 9850,
+      "rcm_lap": 13,
+      "date": "2025-11-30 16:24:04+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 31 (OCO) REVIEWED NO FURTHER INVESTIGATION - FAILING TO SERVE TIME PENALTY CORRECTLY",
+      "car_numbers": [
+        31
+      ],
+      "penalty_type": "other",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "70e9d3d57475d1ca",
+      "session_key": 9858,
+      "rcm_lap": 20,
+      "date": "2025-11-23 04:36:49+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 23 (ALB) - CAUSING A COLLISION",
+      "car_numbers": [
+        23
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "73c8e039145351b0",
+      "session_key": 9971,
+      "rcm_lap": 7,
+      "date": "2025-06-01 13:12:04+00:00",
+      "message": "FIA STEWARDS: LAP 1 TURN 1 INCIDENT INVOLVING CAR 27 (HUL) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [
+        27
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "7555c12b657a34a5",
+      "session_key": 9693,
+      "rcm_lap": 19,
+      "date": "2025-03-16 04:52:52+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 23 (ALB) UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT",
+      "car_numbers": [
+        23
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "7570a184e99c5dd5",
+      "session_key": 9839,
+      "rcm_lap": 21,
+      "date": "2025-12-07 13:34:41+00:00",
+      "message": "FIA STEWARDS: TURN 6 INCIDENT INVOLVING CARS 30 (LAW) AND 18 (STR) REVIEWED NO FURTHER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "757319c0cf0d105a",
+      "session_key": 9971,
+      "rcm_lap": 54,
+      "date": "2025-06-01 14:15:57+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 87 (BEA) AND 30 (LAW) UNDER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "761faa24b3794510",
+      "session_key": 9693,
+      "rcm_lap": 41,
+      "date": "2025-03-16 05:31:01+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CARS 5 (BOR) AND 30 (LAW) UNDER INVESTIGATION - UNSAFE RELEASE",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "77a524692f4b6fb3",
+      "session_key": 9850,
+      "rcm_lap": 8,
+      "date": "2025-11-30 16:14:24+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 31 (OCO) UNDER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
+      "car_numbers": [
+        31
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "78406c561ff12e98",
+      "session_key": 10014,
+      "rcm_lap": 36,
+      "date": "2025-04-13 16:04:43+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 22 (TSU) AND 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "785e5cdd73b82eb3",
+      "session_key": 9877,
+      "rcm_lap": 53,
+      "date": "2025-10-26 21:15:13+00:00",
+      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 81 (PIA) AND 31 (OCO) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "790dc3830b72bee0",
+      "session_key": 9896,
+      "rcm_lap": 48,
+      "date": "2025-10-05 13:21:23+00:00",
+      "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 27 (HUL) AND 43 (COL) REVIEWED NO FURTHER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "7b8d14e3b6d7c723",
+      "session_key": 9979,
+      "rcm_lap": 10,
+      "date": "2025-05-25 13:16:58+00:00",
+      "message": "PIT LANE ENTRY CLOSED",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "unknown",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "7be3f3b8b1e096ee",
+      "session_key": 9839,
+      "rcm_lap": 31,
+      "date": "2025-12-07 13:49:23+00:00",
+      "message": "FIA STEWARDS: TURN 9 INCIDENT INVOLVING CARS 16 (LEC) AND 63 (RUS) REVIEWED NO FURTHER INVESTIGATION - MOVING UNDER BRAKING",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "7cd3ef8c67f66860",
+      "session_key": 9888,
+      "rcm_lap": 3,
+      "date": "2025-10-19 19:08:26+00:00",
+      "message": "FIA STEWARDS: TURN 12 INCIDENT INVOLVING CARS 23 (ALB) AND 5 (BOR) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "81797ddd68e80827",
+      "session_key": 9877,
+      "rcm_lap": 14,
+      "date": "2025-10-26 20:21:48+00:00",
+      "message": "FIA STEWARDS: LAP 1 TURN 2 INCIDENT INVOLVING CARS 55 (SAI) AND 14 (ALO) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "8237f456aee1ea8f",
+      "session_key": 10014,
+      "rcm_lap": 17,
+      "date": "2025-04-13 15:30:36+00:00",
+      "message": "PIT LANE INCIDENT INVOLVING CAR 87 (BEA) NOTED - UNSAFE RELEASE",
+      "car_numbers": [
+        87
+      ],
+      "penalty_type": "unknown",
+      "phase": "noted",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "824b604c9363f85b",
+      "session_key": 9912,
+      "rcm_lap": 42,
+      "date": "2025-09-07 14:01:49+00:00",
+      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 87 (BEA) AND 55 (SAI) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "84d507f7d4ccb5e0",
+      "session_key": 9839,
+      "rcm_lap": 38,
+      "date": "2025-12-07 14:00:05+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 23 (ALB) - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        23
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "85ae6bc7d748ecb8",
+      "session_key": 9971,
+      "rcm_lap": 62,
+      "date": "2025-06-01 14:30:59+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 1 (VER) AND 63 (RUS) UNDER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "87e7ffeb8201af13",
+      "session_key": 9858,
+      "rcm_lap": 19,
+      "date": "2025-11-23 04:34:45+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 23 (ALB) UNDER INVESTIGATION - STARTING PROCEDURE INFRINGEMENT",
+      "car_numbers": [
+        23
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "8a1cea70c8994db1",
+      "session_key": 9858,
+      "rcm_lap": 5,
+      "date": "2025-11-23 04:11:51+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 5 (BOR) AND 18 (STR) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "8a9bfc6e6edff083",
+      "session_key": 9858,
+      "rcm_lap": 3,
+      "date": "2025-11-23 04:09:36+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 81 (PIA) AND 30 (LAW) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "8b22a5ca981e1721",
+      "session_key": 9839,
+      "rcm_lap": 46,
+      "date": "2025-12-07 14:11:15+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 10 (GAS) UNDER INVESTIGATION - TRACK LIMITS",
+      "car_numbers": [
+        10
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "8c19307b6ce96ad9",
+      "session_key": 9850,
+      "rcm_lap": 52,
+      "date": "2025-11-30 17:20:41+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 18 (STR) - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        18
+      ],
+      "penalty_type": "5s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "8c2bc5923bc6d51c",
+      "session_key": 9869,
+      "rcm_lap": 26,
+      "date": "2025-11-09 17:38:51+00:00",
+      "message": "INCIDENT INVOLVING CAR 22 (TSU) NOTED - FAILING TO SERVE TIME PENALTY CORRECTLY",
+      "car_numbers": [
+        22
+      ],
+      "penalty_type": "other",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "8dc1d7895b2a63dc",
+      "session_key": 9963,
+      "rcm_lap": 67,
+      "date": "2025-06-15 19:27:49+00:00",
+      "message": "ALL CARS TO FOLLOW THE SAFETY CAR THROUGH THE PIT LANE",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "unknown",
+      "forced_entry": true
+    },
+    {
+      "evidence_id": "8e0ca841169f21c0",
+      "session_key": 9920,
+      "rcm_lap": 57,
+      "date": "2025-08-31 14:19:53+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 55 (SAI)",
+      "car_numbers": [
+        55
+      ],
+      "penalty_type": "10s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "8f40dc4b4a1d7760",
+      "session_key": 9920,
+      "rcm_lap": 55,
+      "date": "2025-08-31 14:16:37+00:00",
+      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 63 (RUS) AND 16 (LEC) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "8f6c0a68f9e37666",
+      "session_key": 9693,
+      "rcm_lap": 43,
+      "date": "2025-03-16 05:35:17+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 5 (BOR) - UNSAFE RELEASE",
+      "car_numbers": [
+        5
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "905b2da35cd40a6c",
+      "session_key": 9877,
+      "rcm_lap": 9,
+      "date": "2025-10-26 20:14:21+00:00",
+      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CAR 44 (HAM) UNDER INVESTIGATION - FAILING TO FOLLOW RACE DIRECTORS INSTRUCTIONS – ESCAPE ROAD INSTRUCTIONS",
+      "car_numbers": [
+        44
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "9246b058cdcc0eb7",
+      "session_key": 10033,
+      "rcm_lap": 6,
+      "date": "2025-05-04 20:12:34+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 7 (DOO) AND 30 (LAW) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "9386c2a30f1965c9",
+      "session_key": 9839,
+      "rcm_lap": 26,
+      "date": "2025-12-07 13:41:25+00:00",
+      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 4 (NOR) AND 22 (TSU) UNDER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "96d4ef6e7c3bd8db",
+      "session_key": 9869,
+      "rcm_lap": 50,
+      "date": "2025-11-09 18:08:36+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - FAILING TO SERVE TIME PENALTY CORRECTLY",
+      "car_numbers": [
+        22
+      ],
+      "penalty_type": "10s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "96f83cec72d576f8",
+      "session_key": 9955,
+      "rcm_lap": 55,
+      "date": "2025-06-29 14:23:54+00:00",
+      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 43 (COL) AND 81 (PIA) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "97b66eb506a3b1d6",
+      "session_key": 9839,
+      "rcm_lap": 46,
+      "date": "2025-12-07 14:11:25+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 10 (GAS) - TRACK LIMITS",
+      "car_numbers": [
+        10
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "97fc0a1c00171985",
+      "session_key": 9979,
+      "rcm_lap": 11,
+      "date": "2025-05-25 13:18:48+00:00",
+      "message": "PIT LANE ENTRY OPEN",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "unknown",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "994613d687102579",
+      "session_key": 9928,
+      "rcm_lap": 69,
+      "date": "2025-08-03 14:37:01+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 16 (LEC) - DRIVING ERRATICALLY",
+      "car_numbers": [
+        16
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "9aa622ea21378cbf",
+      "session_key": 9877,
+      "rcm_lap": 20,
+      "date": "2025-10-26 20:29:31+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 1 (VER) AND 44 (HAM) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "9b01412b9f7e2b18",
+      "session_key": 9912,
+      "rcm_lap": 2,
+      "date": "2025-09-07 13:05:38+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 1 (VER) AND 4 (NOR) REVIEWED NO FURTHER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "9d7502dbf1a5528e",
+      "session_key": 9869,
+      "rcm_lap": 12,
+      "date": "2025-11-09 17:21:01+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - CAUSING A COLLISION",
+      "car_numbers": [
+        22
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "9dd4d1d7d0d5635e",
+      "session_key": 9877,
+      "rcm_lap": 56,
+      "date": "2025-10-26 21:19:55+00:00",
+      "message": "FIA STEWARDS: DRIVE THROUGH PENALTY FOR CAR 55 (SAI) - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        55
+      ],
+      "penalty_type": "drive_through",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "9ea501bc07110a1a",
+      "session_key": 9912,
+      "rcm_lap": 47,
+      "date": "2025-09-07 14:07:27+00:00",
+      "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 12 (ANT) AND 23 (ALB) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "9f5a7fb3851115bc",
+      "session_key": 9955,
+      "rcm_lap": 57,
+      "date": "2025-06-29 14:26:00+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 43 (COL) - FORCING ANOTHER DRIVER OFF THE TRACK",
+      "car_numbers": [
+        43
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "9fe4f69c2f2ebb6d",
+      "session_key": 9869,
+      "rcm_lap": 18,
+      "date": "2025-11-09 17:28:16+00:00",
+      "message": "FIA STEWARDS: TURN 15 INCIDENT INVOLVING CARS 44 (HAM) AND 43 (COL) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "a0435eb8df8c99b1",
+      "session_key": 9987,
+      "rcm_lap": 62,
+      "date": "2025-05-18 14:33:47+00:00",
+      "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 16 (LEC) AND 23 (ALB) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "a076d1e9f3ac0b44",
+      "session_key": 9839,
+      "rcm_lap": 10,
+      "date": "2025-12-07 13:18:25+00:00",
+      "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 30 (LAW) AND 87 (BEA) UNDER INVESTIGATION - DRIVING ERRATICALLY",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "a0980f7a72c6dae3",
+      "session_key": 10014,
+      "rcm_lap": 45,
+      "date": "2025-04-13 16:18:50+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 22 (TSU) AND 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "a3f346034406ab1f",
+      "session_key": 9971,
+      "rcm_lap": 30,
+      "date": "2025-06-01 13:43:02+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 23 (ALB)",
+      "car_numbers": [
+        23
+      ],
+      "penalty_type": "10s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "a7b1ee67293f65d2",
+      "session_key": 9912,
+      "rcm_lap": 7,
+      "date": "2025-09-07 13:12:23+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 22 (TSU) AND 44 (HAM) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "ac7f992a4cb14541",
+      "session_key": 9693,
+      "rcm_lap": 10,
+      "date": "2025-03-16 04:38:41+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 22 (TSU) UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT",
+      "car_numbers": [
+        22
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "ad2cd387a791e1df",
+      "session_key": 9850,
+      "rcm_lap": 27,
+      "date": "2025-11-30 16:44:48+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 18 (STR) - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        18
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "b03d163b579ad390",
+      "session_key": 10033,
+      "rcm_lap": 20,
+      "date": "2025-05-04 20:35:09+00:00",
+      "message": "FIA STEWARDS: TURN 15 INCIDENT INVOLVING CAR 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [
+        55
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "b16eb5079197f235",
+      "session_key": 9920,
+      "rcm_lap": 56,
+      "date": "2025-08-31 14:17:56+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 12 (ANT) - CAUSING A COLLISION",
+      "car_numbers": [
+        12
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "b4963590e6110352",
+      "session_key": 9850,
+      "rcm_lap": 35,
+      "date": "2025-11-30 16:56:32+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 87 (BEA) UNDER INVESTIGATION - UNSAFE CONDITION",
+      "car_numbers": [
+        87
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "b4ecf236833cf27d",
+      "session_key": 10022,
+      "rcm_lap": 23,
+      "date": "2025-04-20 17:42:04+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 1 (VER)",
+      "car_numbers": [
+        1
+      ],
+      "penalty_type": "5s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "b5e18a4f2c1e90e1",
       "session_key": 9693,
       "rcm_lap": 49,
       "date": "2025-03-16 05:45:02+00:00",
@@ -2469,7 +1759,94 @@
       "forced_entry": false
     },
     {
-      "evidence_id": "fafc915c03b07012",
+      "evidence_id": "b85cb105ea63c9c8",
+      "session_key": 9850,
+      "rcm_lap": 19,
+      "date": "2025-11-30 16:32:47+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 18 (STR) REVIEWED NO FURTHER INVESTIGATION - YELLOW FLAG INFRINGEMENT",
+      "car_numbers": [
+        18
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "b889e98d71576bf4",
+      "session_key": 9850,
+      "rcm_lap": 27,
+      "date": "2025-11-30 16:43:59+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 18 (STR) UNDER INVESTIGATION - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        18
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "b9b3d7171e107701",
+      "session_key": 9947,
+      "rcm_lap": 23,
+      "date": "2025-07-06 14:51:57+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 81 (PIA) UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT",
+      "car_numbers": [
+        81
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "b9ffc85c8178ba7d",
+      "session_key": 9947,
+      "rcm_lap": 25,
+      "date": "2025-07-06 14:56:10+00:00",
+      "message": "FIA STEWARDS: TURN 6 INCIDENT INVOLVING CARS 22 (TSU) AND 87 (BEA) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "bc27f3566c592272",
+      "session_key": 9979,
+      "rcm_lap": 53,
+      "date": "2025-05-25 14:11:10+00:00",
+      "message": "FIA STEWARDS: DRIVE THROUGH PENALTY FOR CAR 63 (RUS) - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [
+        63
+      ],
+      "penalty_type": "drive_through",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "bd5c2e5fbb0ba10e",
+      "session_key": 10014,
+      "rcm_lap": 14,
+      "date": "2025-04-13 15:26:17+00:00",
+      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 55 (SAI) AND 1 (VER) REVIEWED NO FURTHER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "bdfdca3f333b0494",
+      "session_key": 9869,
+      "rcm_lap": 28,
+      "date": "2025-11-09 17:40:50+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 22 (TSU) UNDER INVESTIGATION - FAILING TO SERVE TIME PENALTY CORRECTLY",
+      "car_numbers": [
+        22
+      ],
+      "penalty_type": "other",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "be3b5fdca249720a",
       "session_key": 9839,
       "rcm_lap": 26,
       "date": "2025-12-07 13:41:21+00:00",
@@ -2480,14 +1857,637 @@
       "forced_entry": false
     },
     {
-      "evidence_id": "ff48303dfaf64584",
-      "session_key": 10022,
-      "rcm_lap": 37,
-      "date": "2025-04-20 18:04:41+00:00",
-      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 30 (LAW) AND 7 (DOO) UNDER INVESTIGATION",
+      "evidence_id": "c09a9e70cb3b741f",
+      "session_key": 9877,
+      "rcm_lap": 53,
+      "date": "2025-10-26 21:15:03+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 55 (SAI) UNDER INVESTIGATION - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        55
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "c13beda007132e54",
+      "session_key": 9693,
+      "rcm_lap": 9,
+      "date": "2025-03-16 04:37:41+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 14 (ALO) UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT",
+      "car_numbers": [
+        14
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "c206ce3dea93adfb",
+      "session_key": 9850,
+      "rcm_lap": 46,
+      "date": "2025-11-30 17:11:52+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND STOP/GO PENALTY FOR CAR 87 (BEA) - UNSAFE CONDITION",
+      "car_numbers": [
+        87
+      ],
+      "penalty_type": "10s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "c2e6d0209aeaa089",
+      "session_key": 9928,
+      "rcm_lap": 66,
+      "date": "2025-08-03 14:32:16+00:00",
+      "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 10 (GAS) AND 55 (SAI) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
       "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "c594a2bf27ddb7da",
+      "session_key": 9987,
+      "rcm_lap": 35,
+      "date": "2025-05-18 13:51:21+00:00",
+      "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 22 (TSU) AND 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "c741bacbea70a9de",
+      "session_key": 9869,
+      "rcm_lap": 10,
+      "date": "2025-11-09 17:18:44+00:00",
+      "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 22 (TSU) AND 18 (STR) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "c7556dd91ddaf01e",
+      "session_key": 9850,
+      "rcm_lap": 40,
+      "date": "2025-11-30 17:03:08+00:00",
+      "message": "FIA STEWARDS: 10 SECOND STOP/GO PENALTY FOR CAR 87 (BEA) - UNSAFE CONDITION",
+      "car_numbers": [
+        87
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "c76b83ae8c37edf5",
+      "session_key": 9858,
+      "rcm_lap": 11,
+      "date": "2025-11-23 04:22:21+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 12 (ANT) UNDER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
+      "car_numbers": [
+        12
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "c84236e9e1d3f5d4",
+      "session_key": 9869,
+      "rcm_lap": 16,
+      "date": "2025-11-09 17:25:37+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 81 (PIA) AND 12 (ANT) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "c915fb6b43631f8a",
+      "session_key": 9888,
+      "rcm_lap": 9,
+      "date": "2025-10-19 19:18:38+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 31 (OCO) REVIEWED NO FURTHER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
+      "car_numbers": [
+        31
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "ca90b3a16f4ab044",
+      "session_key": 9920,
+      "rcm_lap": 36,
+      "date": "2025-08-31 13:50:24+00:00",
+      "message": "FIA STEWARDS: TURN 12 INCIDENT INVOLVING CARS 16 (LEC) AND 63 (RUS) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "cc9eec241bbd7356",
+      "session_key": 9904,
+      "rcm_lap": 19,
+      "date": "2025-09-21 11:40:29+00:00",
+      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 23 (ALB) AND 43 (COL) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "ccd2b0532686cfc8",
+      "session_key": 10022,
+      "rcm_lap": 43,
+      "date": "2025-04-20 18:14:11+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 4 (NOR) REVIEWED NO FURTHER INVESTIGATION - FAILING TO FOLLOW RACE DIRECTORS INSTRUCTIONS – CROSSING THE LINE AT PIT EXIT",
+      "car_numbers": [
+        4
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "ce4be90151b40307",
+      "session_key": 10014,
+      "rcm_lap": 51,
+      "date": "2025-04-13 16:29:27+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 30 (LAW) AND 27 (HUL) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "d000b8f6d9ad59b8",
+      "session_key": 9839,
+      "rcm_lap": 36,
+      "date": "2025-12-07 13:56:54+00:00",
+      "message": "INCIDENT INVOLVING CAR 23 (ALB) NOTED - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        23
+      ],
+      "penalty_type": "unknown",
+      "phase": "noted",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "d2b241d79d62990f",
+      "session_key": 9920,
+      "rcm_lap": 59,
+      "date": "2025-08-31 14:22:51+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 12 (ANT) UNDER INVESTIGATION - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        12
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "d2ee3a3e0285f6e9",
+      "session_key": 9858,
+      "rcm_lap": 16,
+      "date": "2025-11-23 04:30:49+00:00",
+      "message": "FIA STEWARDS: TURN 14 INCIDENT INVOLVING CARS 23 (ALB) AND 44 (HAM) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "d4a39a84e85e8fdc",
+      "session_key": 9928,
+      "rcm_lap": 44,
+      "date": "2025-08-03 14:02:27+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 27 (HUL) - FALSE START - MOVING BEFORE SIGNAL",
+      "car_numbers": [
+        27
+      ],
+      "penalty_type": "5s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "d52b580cf327978d",
+      "session_key": 9920,
+      "rcm_lap": 56,
+      "date": "2025-08-31 14:18:54+00:00",
+      "message": "INCIDENT INVOLVING CAR 12 (ANT) NOTED - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        12
+      ],
+      "penalty_type": "unknown",
+      "phase": "noted",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "d622d45de2dc0ac3",
+      "session_key": 9896,
+      "rcm_lap": 3,
+      "date": "2025-10-05 12:07:07+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 6 (HAD) AND 87 (BEA) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "d6dfed6be1a9f8ec",
+      "session_key": 9971,
+      "rcm_lap": 26,
+      "date": "2025-06-01 13:37:25+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 23 (ALB) AND 30 (LAW) UNDER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "d78fae2ddbf88352",
+      "session_key": 9920,
+      "rcm_lap": 31,
+      "date": "2025-08-31 13:44:12+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 55 (SAI) AND 30 (LAW) UNDER INVESTIGATION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "d901aa67e08269b5",
+      "session_key": 9839,
+      "rcm_lap": 8,
+      "date": "2025-12-07 13:14:33+00:00",
+      "message": "FIA STEWARDS: TURN 6 INCIDENT INVOLVING CARS 12 (ANT) AND 18 (STR) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "d9210d2f78a93b4a",
+      "session_key": 9928,
+      "rcm_lap": 8,
+      "date": "2025-08-03 13:13:05+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 27 (HUL) UNDER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
+      "car_numbers": [
+        27
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "d96b9673ed1c61cc",
+      "session_key": 9947,
+      "rcm_lap": 48,
+      "date": "2025-07-06 15:33:41+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 81 (PIA) - SAFETY CAR INFRINGEMENT",
+      "car_numbers": [
+        81
+      ],
+      "penalty_type": "10s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "d99e72b08349418a",
+      "session_key": 10014,
+      "rcm_lap": 54,
+      "date": "2025-04-13 16:33:55+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 30 (LAW) - CAUSING A COLLISION",
+      "car_numbers": [
+        30
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "da8a4c1b37a959f0",
+      "session_key": 9850,
+      "rcm_lap": 37,
+      "date": "2025-11-30 16:59:35+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 22 (TSU) REVIEWED NO FURTHER INVESTIGATION - UNSAFE RELEASE",
+      "car_numbers": [
+        22
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "dc80ecfede69b1e9",
+      "session_key": 9904,
+      "rcm_lap": 4,
+      "date": "2025-09-21 11:13:24+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 81 (PIA) UNDER INVESTIGATION - FALSE START - MOVING BEFORE SIGNAL",
+      "car_numbers": [
+        81
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "dc8a50ceaf988789",
+      "session_key": 9877,
+      "rcm_lap": 26,
+      "date": "2025-10-26 20:38:58+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 55 (SAI) UNDER INVESTIGATION - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        55
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "de0ae9937a837cb8",
+      "session_key": 9869,
+      "rcm_lap": 40,
+      "date": "2025-11-09 17:56:23+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 81 (PIA) - CAUSING A COLLISION",
+      "car_numbers": [
+        81
+      ],
+      "penalty_type": "10s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "de2a2161359d0750",
+      "session_key": 9928,
+      "rcm_lap": 9,
+      "date": "2025-08-03 13:15:06+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 27 (HUL) - FALSE START - MOVING BEFORE SIGNAL",
+      "car_numbers": [
+        27
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "def3a467b5807074",
+      "session_key": 9839,
+      "rcm_lap": 36,
+      "date": "2025-12-07 13:56:37+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 22 (TSU) - MORE THAN ONE CHANGE OF DIRECTION",
+      "car_numbers": [
+        22
+      ],
+      "penalty_type": "5s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "dfd855e44316c55a",
+      "session_key": 9971,
+      "rcm_lap": 33,
+      "date": "2025-06-01 13:46:45+00:00",
+      "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 30 (LAW) AND 87 (BEA) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "e566a75600b0b8f2",
+      "session_key": 9877,
+      "rcm_lap": 26,
+      "date": "2025-10-26 20:38:19+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 44 (HAM) - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [
+        44
+      ],
+      "penalty_type": "10s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "e5e3eb59512493b9",
+      "session_key": 9896,
+      "rcm_lap": 61,
+      "date": "2025-10-05 13:41:44+00:00",
+      "message": "FIA STEWARDS: TURN 7 INCIDENT INVOLVING CAR 18 (STR) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [
+        18
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "e6cce1abee585024",
+      "session_key": 9877,
+      "rcm_lap": 27,
+      "date": "2025-10-26 20:40:03+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 55 (SAI) - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        55
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "eeaef3332ff91f0b",
+      "session_key": 9963,
+      "rcm_lap": 47,
+      "date": "2025-06-15 19:02:33+00:00",
+      "message": "FIA STEWARDS: TURN 13 INCIDENT INVOLVING CARS 18 (STR) AND 10 (GAS) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "ef0394711eac2706",
+      "session_key": 9947,
+      "rcm_lap": 48,
+      "date": "2025-07-06 15:34:12+00:00",
+      "message": "FIA STEWARDS: TURN 15 INCIDENT INVOLVING CARS 55 (SAI) AND 16 (LEC) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "f487b4c2f9004e2c",
+      "session_key": 9971,
+      "rcm_lap": 62,
+      "date": "2025-06-01 14:30:10+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 87 (BEA) - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
+      "car_numbers": [
+        87
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "f662c250ca9e2ec9",
+      "session_key": 10014,
+      "rcm_lap": 40,
+      "date": "2025-04-13 16:10:59+00:00",
+      "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 30 (LAW) AND 18 (STR) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "f7e559785c5e8062",
+      "session_key": 9904,
+      "rcm_lap": 24,
+      "date": "2025-09-21 11:48:32+00:00",
+      "message": "FIA STEWARDS: PENALTY SERVED - 5 SECOND TIME PENALTY FOR CAR 14 (ALO) - FALSE START - MOVING BEFORE SIGNAL",
+      "car_numbers": [
+        14
+      ],
+      "penalty_type": "5s",
+      "phase": "served",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "f851567dfb1ca8fc",
+      "session_key": 9858,
+      "rcm_lap": 15,
+      "date": "2025-11-23 04:28:12+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 12 (ANT) - FALSE START - MOVING BEFORE SIGNAL",
+      "car_numbers": [
+        12
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "f9e7e59a946a0d8e",
+      "session_key": 9955,
+      "rcm_lap": 33,
+      "date": "2025-06-29 13:57:44+00:00",
+      "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 22 (TSU) AND 43 (COL) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "faa4c05063c65a5b",
+      "session_key": 10014,
+      "rcm_lap": 5,
+      "date": "2025-04-13 15:10:28+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 4 (NOR) UNDER INVESTIGATION - FALSE START - OUT OF POSITION",
+      "car_numbers": [
+        4
+      ],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "fabc2f901ec29976",
+      "session_key": 9869,
+      "rcm_lap": 16,
+      "date": "2025-11-09 17:26:07+00:00",
+      "message": "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 81 (PIA) - CAUSING A COLLISION",
+      "car_numbers": [
+        81
+      ],
+      "penalty_type": "10s",
+      "phase": "awarded",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "fc47dfdf0690c4f1",
+      "session_key": 10014,
+      "rcm_lap": 44,
+      "date": "2025-04-13 16:17:04+00:00",
+      "message": "FIA STEWARDS: TURN 10 INCIDENT INVOLVING CARS 55 (SAI) AND 12 (ANT) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "fcbc25732e11aee4",
+      "session_key": 9998,
+      "rcm_lap": 48,
+      "date": "2025-03-23 08:21:24+00:00",
+      "message": "FIA STEWARDS: TURN 14 INCIDENT INVOLVING CARS 7 (DOO) AND 6 (HAD) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "fd78d02ea006e104",
+      "session_key": 9850,
+      "rcm_lap": 26,
+      "date": "2025-11-30 16:43:53+00:00",
+      "message": "INCIDENT INVOLVING CAR 18 (STR) NOTED - SPEEDING IN THE PIT LANE",
+      "car_numbers": [
+        18
+      ],
+      "penalty_type": "unknown",
+      "phase": "noted",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "fd8eceb0432f171a",
+      "session_key": 9947,
+      "rcm_lap": 5,
+      "date": "2025-07-06 14:12:35+00:00",
+      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 31 (OCO) AND 30 (LAW) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "fdfff3408c7ad9f1",
+      "session_key": 9963,
+      "rcm_lap": 60,
+      "date": "2025-06-15 19:19:22+00:00",
+      "message": "FIA STEWARDS: INCIDENT INVOLVING CAR 30 (LAW) REVIEWED NO FURTHER INVESTIGATION - IGNORING BLUE FLAGS",
+      "car_numbers": [
+        30
+      ],
+      "penalty_type": "unknown",
+      "phase": "no_further_action",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "fe1249e328136937",
+      "session_key": 9839,
+      "rcm_lap": 9,
+      "date": "2025-12-07 13:16:30+00:00",
+      "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 10 (GAS) AND 27 (HUL) UNDER INVESTIGATION - CAUSING A COLLISION",
+      "car_numbers": [],
+      "penalty_type": "unknown",
+      "phase": "under_investigation",
+      "forced_entry": false
+    },
+    {
+      "evidence_id": "fef64dea1a12edb3",
+      "session_key": 9839,
+      "rcm_lap": 14,
+      "date": "2025-12-07 13:23:13+00:00",
+      "message": "FIA STEWARDS: 5 SECOND TIME PENALTY FOR CAR 30 (LAW) - DRIVING ERRATICALLY",
+      "car_numbers": [
+        30
+      ],
+      "penalty_type": "5s",
+      "phase": "awarded",
       "forced_entry": false
     }
   ],
@@ -3569,7 +3569,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "f9842a620b7bd75a"
+        "289f720feb291dd2"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -3618,7 +3618,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "8ff272c6962ccae3"
+        "f7e559785c5e8062"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -4560,8 +4560,8 @@
       "evidence_level": "insufficient",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "cf2b89df81e00a8c",
-        "beb9074ecb152e00"
+        "1bc4978f93f7c20c",
+        "a3f346034406ab1f"
       ],
       "in_715_sample": true,
       "comparison_cohort": "unknown",
@@ -4610,8 +4610,8 @@
       "evidence_level": "corroborated",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "cf2b89df81e00a8c",
-        "beb9074ecb152e00"
+        "1bc4978f93f7c20c",
+        "a3f346034406ab1f"
       ],
       "in_715_sample": true,
       "comparison_cohort": "unknown",
@@ -4660,7 +4660,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "b762bf29dda44b60"
+        "6bb1612fa97a85f8"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -4991,7 +4991,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "899b4be0bff16b8c"
+        "f487b4c2f9004e2c"
       ],
       "in_715_sample": false,
       "comparison_cohort": "strategic_candidate",
@@ -5698,7 +5698,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "pre_entry",
       "evidence_refs": [
-        "0c3fba0874838a05"
+        "73c8e039145351b0"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -7674,8 +7674,8 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "93a8a041d879c568",
-        "bfa3cc03fad35448"
+        "d9210d2f78a93b4a",
+        "de2a2161359d0750"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -7724,7 +7724,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "d8cd90673555df2e"
+        "d4a39a84e85e8fdc"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -8572,7 +8572,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "pre_entry",
       "evidence_refs": [
-        "cfc1b3a2952d8574"
+        "0832fea1310987a9"
       ],
       "in_715_sample": false,
       "comparison_cohort": "strategic_candidate",
@@ -11159,7 +11159,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "ac6261d8871a797e"
+        "b4ecf236833cf27d"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -11208,8 +11208,8 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "f927dd98ae636534",
-        "0277c49bbc2bbe9b"
+        "87e7ffeb8201af13",
+        "70e9d3d57475d1ca"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -11258,8 +11258,8 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "f927dd98ae636534",
-        "0277c49bbc2bbe9b"
+        "87e7ffeb8201af13",
+        "70e9d3d57475d1ca"
       ],
       "in_715_sample": false,
       "comparison_cohort": "strategic_candidate",
@@ -11308,7 +11308,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "11e4d43ffb309cc4"
+        "1b84f983b4d2780c"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -11357,7 +11357,7 @@
       "evidence_level": "insufficient",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "11e4d43ffb309cc4"
+        "1b84f983b4d2780c"
       ],
       "in_715_sample": true,
       "comparison_cohort": "unknown",
@@ -12722,8 +12722,8 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "3f839cb65b1fcd34",
-        "6cc59140f4ab4ca1"
+        "b4963590e6110352",
+        "c7556dd91ddaf01e"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -12772,9 +12772,9 @@
       "evidence_level": "corroborated",
       "evidence_timing": "both",
       "evidence_refs": [
-        "3f839cb65b1fcd34",
-        "6cc59140f4ab4ca1",
-        "a769f832456f6a86"
+        "b4963590e6110352",
+        "c7556dd91ddaf01e",
+        "c206ce3dea93adfb"
       ],
       "in_715_sample": true,
       "comparison_cohort": "unknown",
@@ -12823,9 +12823,9 @@
       "evidence_level": "corroborated",
       "evidence_timing": "both",
       "evidence_refs": [
-        "3f839cb65b1fcd34",
-        "6cc59140f4ab4ca1",
-        "a769f832456f6a86"
+        "b4963590e6110352",
+        "c7556dd91ddaf01e",
+        "c206ce3dea93adfb"
       ],
       "in_715_sample": true,
       "comparison_cohort": "unknown",
@@ -13673,10 +13673,10 @@
       "evidence_level": "corroborated",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "2acb338537289d9a",
-        "a609520591352f7b",
-        "bc060ad39bb13242",
-        "77233488cd9c4f13"
+        "77a524692f4b6fb3",
+        "6d8cfc0a88d7c4b1",
+        "6b1415d817ff9cbd",
+        "70795fe7846c991d"
       ],
       "in_715_sample": false,
       "comparison_cohort": "mixed",
@@ -13725,10 +13725,10 @@
       "evidence_level": "corroborated",
       "evidence_timing": "both",
       "evidence_refs": [
-        "2acb338537289d9a",
-        "a609520591352f7b",
-        "bc060ad39bb13242",
-        "77233488cd9c4f13"
+        "77a524692f4b6fb3",
+        "6d8cfc0a88d7c4b1",
+        "6b1415d817ff9cbd",
+        "70795fe7846c991d"
       ],
       "in_715_sample": false,
       "comparison_cohort": "mixed",
@@ -14153,10 +14153,10 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "both",
       "evidence_refs": [
-        "00cd4db99c81e765",
-        "f172d10650d47764",
-        "8467fd314a795211",
-        "df3aa394bb8dfa11"
+        "b85cb105ea63c9c8",
+        "fd78d02ea006e104",
+        "b889e98d71576bf4",
+        "ad2cd387a791e1df"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -14205,7 +14205,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "863a5525655fa74a"
+        "8c19307b6ce96ad9"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -14254,7 +14254,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "pre_entry",
       "evidence_refs": [
-        "863a5525655fa74a"
+        "8c19307b6ce96ad9"
       ],
       "in_715_sample": true,
       "comparison_cohort": "unknown",
@@ -14350,7 +14350,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "798fadd011e0d74f"
+        "da8a4c1b37a959f0"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -15574,7 +15574,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -15811,8 +15811,8 @@
       "evidence_level": "corroborated",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "99c03946e5ee3daf",
-        "75d35b81ed28dd3b"
+        "47d02b1e1913b728",
+        "c13beda007132e54"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -15861,7 +15861,7 @@
       "evidence_level": "insufficient",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "75d35b81ed28dd3b"
+        "c13beda007132e54"
       ],
       "in_715_sample": false,
       "comparison_cohort": "unknown",
@@ -15910,7 +15910,7 @@
       "evidence_level": "insufficient",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "75d35b81ed28dd3b"
+        "c13beda007132e54"
       ],
       "in_715_sample": false,
       "comparison_cohort": "unknown",
@@ -15959,7 +15959,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -16196,7 +16196,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -16433,7 +16433,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -16623,8 +16623,8 @@
       "evidence_level": "corroborated",
       "evidence_timing": "both",
       "evidence_refs": [
-        "349344f3ef831a1d",
-        "faf9ad00a56dcfa6"
+        "8f6c0a68f9e37666",
+        "b5e18a4f2c1e90e1"
       ],
       "in_715_sample": true,
       "comparison_cohort": "mixed",
@@ -16673,7 +16673,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -16910,7 +16910,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -17147,7 +17147,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -17384,7 +17384,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -17574,7 +17574,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -17811,7 +17811,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -18048,7 +18048,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -18285,7 +18285,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -18522,7 +18522,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -18759,7 +18759,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -18996,8 +18996,8 @@
       "evidence_level": "corroborated",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "99c03946e5ee3daf",
-        "5b2da46e7c57aef2"
+        "47d02b1e1913b728",
+        "ac7f992a4cb14541"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -19046,7 +19046,7 @@
       "evidence_level": "insufficient",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "5b2da46e7c57aef2"
+        "ac7f992a4cb14541"
       ],
       "in_715_sample": false,
       "comparison_cohort": "unknown",
@@ -19095,7 +19095,7 @@
       "evidence_level": "insufficient",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "5b2da46e7c57aef2"
+        "ac7f992a4cb14541"
       ],
       "in_715_sample": false,
       "comparison_cohort": "unknown",
@@ -19238,7 +19238,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "99c03946e5ee3daf"
+        "47d02b1e1913b728"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -19992,9 +19992,9 @@
       "evidence_level": "corroborated",
       "evidence_timing": "both",
       "evidence_refs": [
-        "c1e79576c355b929",
-        "dd4b0ff4e2b76fd0",
-        "af2a2a4b8fc61181"
+        "089a1547c1784e2f",
+        "51461d5f21d8d2b5",
+        "e566a75600b0b8f2"
       ],
       "in_715_sample": true,
       "comparison_cohort": "mixed",
@@ -20607,9 +20607,9 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "11a18fe6d7fcffa8",
-        "5365a8b4c02d2924",
-        "7b6bda3ac1f719ca"
+        "00cc6041ae31a5fd",
+        "5790c1e3adf2db83",
+        "c09a9e70cb3b741f"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -20658,11 +20658,11 @@
       "evidence_level": "corroborated",
       "evidence_timing": "both",
       "evidence_refs": [
-        "11a18fe6d7fcffa8",
-        "5365a8b4c02d2924",
-        "7b6bda3ac1f719ca",
-        "037e5401b965ff77",
-        "89684134b4239f66"
+        "00cc6041ae31a5fd",
+        "5790c1e3adf2db83",
+        "c09a9e70cb3b741f",
+        "9dd4d1d7d0d5635e",
+        "1351f22e41aa89cd"
       ],
       "in_715_sample": true,
       "comparison_cohort": "penalty_only",
@@ -21604,7 +21604,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "pre_entry",
       "evidence_refs": [
-        "7d593d822203899e"
+        "b03d163b579ad390"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -21700,9 +21700,9 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "da1407bcbff9907c",
-        "22b5b3d472dd2542",
-        "eeb7afc65ff028b0"
+        "20d8425aaa35d5be",
+        "02ae42d9ed7c93a1",
+        "6da65325418388e9"
       ],
       "in_715_sample": false,
       "comparison_cohort": "strategic_candidate",
@@ -23208,8 +23208,8 @@
       "evidence_level": "corroborated",
       "evidence_timing": "pre_entry",
       "evidence_refs": [
-        "ec165b2125a6703f",
-        "9f2a745f3fd22103"
+        "0fffc5fd3f6c90c0",
+        "bc27f3566c592272"
       ],
       "in_715_sample": true,
       "comparison_cohort": "penalty_only",
@@ -23916,7 +23916,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -24153,7 +24153,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -24390,7 +24390,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -24580,7 +24580,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -24770,7 +24770,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -24960,7 +24960,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -25150,7 +25150,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -25340,7 +25340,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -25577,7 +25577,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -25767,7 +25767,7 @@
       "evidence_level": "insufficient",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "1b4c03bc4ce75f91"
+        "fdfff3408c7ad9f1"
       ],
       "in_715_sample": true,
       "comparison_cohort": "unknown",
@@ -25910,7 +25910,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -26241,7 +26241,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -26431,7 +26431,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "mixed",
@@ -26668,7 +26668,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -26905,7 +26905,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -27048,8 +27048,8 @@
       "evidence_level": "corroborated",
       "evidence_timing": "both",
       "evidence_refs": [
-        "a3747e5e12694c3c",
-        "f699142862b2dbc5"
+        "3434ada371f57318",
+        "2ae7e3fcfbaa6c9b"
       ],
       "in_715_sample": true,
       "comparison_cohort": "mixed",
@@ -27098,7 +27098,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "pre_entry",
       "evidence_refs": [
-        "f699142862b2dbc5"
+        "2ae7e3fcfbaa6c9b"
       ],
       "in_715_sample": false,
       "comparison_cohort": "mixed",
@@ -27147,8 +27147,8 @@
       "evidence_level": "corroborated",
       "evidence_timing": "pre_entry",
       "evidence_refs": [
-        "f699142862b2dbc5",
-        "ca87d736a58136fc"
+        "2ae7e3fcfbaa6c9b",
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -27338,7 +27338,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -27528,7 +27528,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "ca87d736a58136fc"
+        "8dc1d7895b2a63dc"
       ],
       "in_715_sample": false,
       "comparison_cohort": "regulation_forced",
@@ -28423,7 +28423,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "pre_entry",
       "evidence_refs": [
-        "3a8c9332fd04d2a0"
+        "0817e09d4a315130"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -28942,8 +28942,8 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "5092c02297c1d6db",
-        "d7b498d4b2a184c5"
+        "8237f456aee1ea8f",
+        "42fa72fb74954c07"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -29791,9 +29791,9 @@
       "evidence_level": "corroborated",
       "evidence_timing": "both",
       "evidence_refs": [
-        "e859abf251444f67",
-        "2ab8c3c4d9607bb8",
-        "67af5d87af32ca66"
+        "faa4c05063c65a5b",
+        "01afed769ab2de77",
+        "1fd695173a94e31b"
       ],
       "in_715_sample": true,
       "comparison_cohort": "mixed",
@@ -30265,7 +30265,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "unknown",
       "evidence_refs": [
-        "f8cec22d78b28ac0"
+        "6687430f68e2e9d8"
       ],
       "in_715_sample": true,
       "comparison_cohort": "mixed",
@@ -30314,7 +30314,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "pre_entry",
       "evidence_refs": [
-        "f8cec22d78b28ac0"
+        "6687430f68e2e9d8"
       ],
       "in_715_sample": true,
       "comparison_cohort": "unknown",
@@ -32995,7 +32995,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "41b93960eb4a2e0e"
+        "d96b9673ed1c61cc"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -36240,7 +36240,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "8de702f290013df3"
+        "4a62faada1f8333c"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -36289,7 +36289,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "853e9fe2eca5d66c"
+        "31cdcc153a0c7422"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -37090,7 +37090,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "pre_entry",
       "evidence_refs": [
-        "6f28c5b3d2400a3a"
+        "0920effd7a9cb72f"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -38079,8 +38079,8 @@
       "evidence_level": "corroborated",
       "evidence_timing": "both",
       "evidence_refs": [
-        "cd192e61239d0cea",
-        "1c11c5a50ceb9ee2"
+        "32003d4b3323df86",
+        "28b4727993318427"
       ],
       "in_715_sample": true,
       "comparison_cohort": "mixed",
@@ -38129,7 +38129,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "pre_entry",
       "evidence_refs": [
-        "1c11c5a50ceb9ee2"
+        "28b4727993318427"
       ],
       "in_715_sample": true,
       "comparison_cohort": "unknown",
@@ -38460,7 +38460,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "18517aa52284e2dc"
+        "de0ae9937a837cb8"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -38885,8 +38885,8 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "7149311cdc09e82a",
-        "a5149de2f4f8f3f1"
+        "8c2bc5923bc6d51c",
+        "bdfdca3f333b0494"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -38935,7 +38935,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "b46056fd16a9a32a"
+        "96d4ef6e7c3bd8db"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -39172,9 +39172,9 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "870086546e05191e",
-        "0e0960f2558103cd",
-        "b5c715c669c4d6f6"
+        "d000b8f6d9ad59b8",
+        "28dff7e848272934",
+        "84d507f7d4ccb5e0"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -39552,8 +39552,8 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "2a2e1f8279476959",
-        "4e40a16ad86a1f26"
+        "8b22a5ca981e1721",
+        "97b66eb506a3b1d6"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -39837,8 +39837,8 @@
       "evidence_level": "corroborated",
       "evidence_timing": "both",
       "evidence_refs": [
-        "9e8a542625c3feaa",
-        "ed5583f424cb4588"
+        "fef64dea1a12edb3",
+        "5ba57fae49814391"
       ],
       "in_715_sample": true,
       "comparison_cohort": "mixed",
@@ -40310,8 +40310,8 @@
       "evidence_level": "corroborated",
       "evidence_timing": "both",
       "evidence_refs": [
-        "8cd67f3317a43217",
-        "b4762455df3bcc58"
+        "5ba4a3e8826d6c55",
+        "def3a467b5807074"
       ],
       "in_715_sample": true,
       "comparison_cohort": "mixed",
@@ -40642,9 +40642,9 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "6beed9ffc0a426f5",
-        "c2528fe33d5cafc7",
-        "75cd4995ebc11bfe"
+        "b16eb5079197f235",
+        "d52b580cf327978d",
+        "d2b241d79d62990f"
       ],
       "in_715_sample": false,
       "comparison_cohort": "strategic_candidate",
@@ -40693,9 +40693,9 @@
       "evidence_level": "insufficient",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "6beed9ffc0a426f5",
-        "c2528fe33d5cafc7",
-        "75cd4995ebc11bfe"
+        "b16eb5079197f235",
+        "d52b580cf327978d",
+        "d2b241d79d62990f"
       ],
       "in_715_sample": false,
       "comparison_cohort": "unknown",
@@ -40791,7 +40791,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "pre_entry",
       "evidence_refs": [
-        "3b90dc248872e3e5"
+        "68f07931a6aa8a4c"
       ],
       "in_715_sample": false,
       "comparison_cohort": "strategic_candidate",
@@ -41874,7 +41874,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "123e805eac724dd4"
+        "31dc062264414f48"
       ],
       "in_715_sample": true,
       "comparison_cohort": "strategic_candidate",
@@ -41923,7 +41923,7 @@
       "evidence_level": "telemetry_only",
       "evidence_timing": "post_entry_only",
       "evidence_refs": [
-        "7e58ac74655c5870"
+        "8e0ca841169f21c0"
       ],
       "in_715_sample": false,
       "comparison_cohort": "strategic_candidate",
@@ -41972,7 +41972,7 @@
       "evidence_level": "corroborated",
       "evidence_timing": "pre_entry",
       "evidence_refs": [
-        "7e58ac74655c5870"
+        "8e0ca841169f21c0"
       ],
       "in_715_sample": false,
       "comparison_cohort": "mixed",
