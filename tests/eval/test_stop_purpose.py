@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from scripts.measure_stop_purpose import _manifest_entry
 from src.strategy.eval.stop_purpose import (
     PENALTY_SERVICE,
     STRATEGIC_TYRE_CHANGE,
@@ -59,6 +60,26 @@ def test_penalty_parser_extracts_car_and_distinguishes_investigation() -> None:
     assert investigation.phase == "under_investigation"
 
 
+def test_openf1_manifest_pins_payload_and_date_range() -> None:
+    entry = _manifest_entry(
+        "race_control",
+        9979,
+        [
+            {"date": "2025-05-25T14:00:00Z"},
+            {"date": "2025-05-25T14:45:00Z"},
+        ],
+        retrieved_at="2025-05-25T15:00:00+00:00",
+        http_status=200,
+        cache_status="fetched",
+    )
+
+    assert entry["endpoint"] == "/v1/race_control"
+    assert entry["row_count"] == 2
+    assert len(entry["sha256"]) == 64
+    assert entry["date_min_utc"] == "2025-05-25T14:00:00+00:00"
+    assert entry["date_max_utc"] == "2025-05-25T14:45:00+00:00"
+
+
 def test_fastf1_pit_time_uses_the_openf1_driver_lap_anchor() -> None:
     laps = _laps(
         DriverNumber=["44", "44"],
@@ -95,7 +116,11 @@ def test_fastf1_pit_time_uses_the_openf1_driver_lap_anchor() -> None:
     )
 
     assert record.pit_in_utc == "2025-01-01T00:00:10+00:00"
-    assert record.timestamp_alignment == "exact_openf1_lap"
+    assert record.openf1_lap_date_start_utc == "2025-01-01T00:00:00+00:00"
+    assert record.intra_lap_offset_s == 10.0
+    assert record.anchor_source == "openf1_v1_laps"
+    assert record.anchor_precision == "approximate"
+    assert record.timestamp_alignment == "anchored_openf1_lap_approximate"
 
 
 def test_late_penalty_confirmation_is_not_attached_to_a_later_stop() -> None:

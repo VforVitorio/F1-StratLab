@@ -7,6 +7,8 @@ entries visible instead of turning them into strategic-stop ground truth.
 
 from __future__ import annotations
 
+import argparse
+import hashlib
 import json
 from collections import Counter
 from datetime import datetime, timezone
@@ -28,13 +30,64 @@ OUTPUT_JSON = ROOT / "documents" / "audits" / "MEASURE_724_stop_purpose.json"
 OUTPUT_MD = ROOT / "documents" / "audits" / "MEASURE_724_stop_purpose.md"
 ANCHOR_ROOT = ROOT / "data" / "processed" / "stop_purpose" / "2025" / "openf1_laps"
 RCM_ANCHOR_ROOT = ROOT / "data" / "processed" / "stop_purpose" / "2025" / "openf1_rcm"
+MANIFEST_PATH = ROOT / "data" / "processed" / "stop_purpose" / "2025" / "manifest.json"
 
 
-def _openf1_laps(session: Any, session_key: int) -> pd.DataFrame:
+def _manifest_entry(
+    endpoint: str,
+    session_key: int,
+    payload: list[dict[str, Any]],
+    *,
+    retrieved_at: str | None,
+    http_status: int | None,
+    cache_status: str,
+) -> dict[str, Any]:
+    """Describe one immutable cached response without storing secrets."""
+    raw = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    date_field = "date_start" if endpoint == "laps" else "date"
+    dates = pd.to_datetime(
+        [row.get(date_field) for row in payload], utc=True, errors="coerce"
+    ).dropna()
+    return {
+        "endpoint": f"/v1/{endpoint}",
+        "query_parameters": {"session_key": session_key},
+        "session_key": session_key,
+        "retrieved_at_utc": retrieved_at,
+        "http_status": http_status,
+        "schema_version": f"openf1-{endpoint}-v1",
+        "row_count": len(payload),
+        "sha256": hashlib.sha256(raw).hexdigest(),
+        "date_min_utc": None if dates.empty else dates.min().isoformat(),
+        "date_max_utc": None if dates.empty else dates.max().isoformat(),
+        "cache_status": cache_status,
+    }
+
+
+def _write_manifest(entry: dict[str, Any]) -> None:
+    """Persist cache provenance beside the ignored response payloads."""
+    manifest = {"schema_version": "stop-purpose-cache-v1", "entries": {}}
+    if MANIFEST_PATH.exists():
+        manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    manifest.setdefault("entries", {})[
+        f"{entry['endpoint']}?session_key={entry['session_key']}"
+    ] = entry
+    MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
+    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+
+
+def _openf1_laps(session: Any, session_key: int, *, refresh: bool = False) -> pd.DataFrame:
     """Read one cached OpenF1 lap index, fetching it once when absent."""
     path = ANCHOR_ROOT / f"{session_key}.json"
-    if path.exists():
+    if path.exists() and not refresh:
         payload = json.loads(path.read_text(encoding="utf-8"))
+        entry = _manifest_entry(
+            "laps",
+            session_key,
+            payload,
+            retrieved_at=None,
+            http_status=None,
+            cache_status="legacy_cache",
+        )
     else:
         response = session.get(
             f"{OPENF1_BASE}/laps",
@@ -43,16 +96,35 @@ def _openf1_laps(session: Any, session_key: int) -> pd.DataFrame:
         )
         response.raise_for_status()
         payload = response.json()
+        if not isinstance(payload, list) or not payload:
+            raise ValueError(f"OpenF1 /laps returned no rows for session {session_key}")
         ANCHOR_ROOT.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(payload), encoding="utf-8")
+        entry = _manifest_entry(
+            "laps",
+            session_key,
+            payload,
+            retrieved_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            http_status=response.status_code,
+            cache_status="fetched",
+        )
+    _write_manifest(entry)
     return pd.DataFrame(payload)
 
 
-def _openf1_rcm(session: Any, session_key: int) -> pd.DataFrame:
+def _openf1_rcm(session: Any, session_key: int, *, refresh: bool = False) -> pd.DataFrame:
     """Read one complete OpenF1 race-control index, fetching it when absent."""
     path = RCM_ANCHOR_ROOT / f"{session_key}.json"
-    if path.exists():
+    if path.exists() and not refresh:
         payload = json.loads(path.read_text(encoding="utf-8"))
+        entry = _manifest_entry(
+            "race_control",
+            session_key,
+            payload,
+            retrieved_at=None,
+            http_status=None,
+            cache_status="legacy_cache",
+        )
     else:
         response = session.get(
             f"{OPENF1_BASE}/race_control",
@@ -61,8 +133,19 @@ def _openf1_rcm(session: Any, session_key: int) -> pd.DataFrame:
         )
         response.raise_for_status()
         payload = response.json()
+        if not isinstance(payload, list) or not payload:
+            raise ValueError(f"OpenF1 /race_control returned no rows for session {session_key}")
         RCM_ANCHOR_ROOT.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(payload), encoding="utf-8")
+        entry = _manifest_entry(
+            "race_control",
+            session_key,
+            payload,
+            retrieved_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            http_status=response.status_code,
+            cache_status="fetched",
+        )
+    _write_manifest(entry)
     return pd.DataFrame(payload)
 
 
@@ -131,12 +214,15 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         f"- complete OpenF1 RCM rows: {payload['rcm_rows']}",
         f"- filtered local RCM rows: {payload['local_rcm_rows']}",
         f"- messages containing `PENALTY`: {payload['penalty_messages']}",
+        f"- penalty announcements / served confirmations: {payload['penalty_messages']} / "
+        f"{payload['penalty_served_messages']}",
         f"- penalty-text messages classified as generic collisions: {payload['penalty_as_collision']}",
         f"- non-null `LapStartDate` rows: {payload['lap_start_date_nonnull']}",
         f"- tyre metadata repair: {payload['repair']['races_changed']} races, "
         f"{payload['repair']['tyre_life_nulled']} ages made unknown",
         f"- OpenF1 lap-anchor sessions: {payload['anchor_sessions']} "
         f"({payload['anchor_rows']} rows, cached)",
+        f"- cache manifest: `{payload['cache_manifest']}`",
         "- LLM and private telemetry calls: none",
         "",
         "## What the local evidence says",
@@ -176,10 +262,11 @@ def _render_markdown(payload: dict[str, Any]) -> str:
             "- The local RCM parquet is the filtered runtime mirror; the complete pass uses",
             "  cached OpenF1 race-control rows and keeps the local mirror only for coverage",
             "  comparison.",
-            "- RAW `LapStartDate` is empty. OpenF1 lap starts reconstruct UTC for the",
-            f"  {summary['timestamp_alignment'].get('exact_openf1_lap', 0)}/{summary['pit_entries']} entries;",
-            "  the remaining entries stay explicitly unanchored and are not silently",
-            "  approximated.",
+            "- RAW `LapStartDate` is empty. OpenF1 lap starts reconstruct approximate UTC for the",
+            f"  {summary['timestamp_alignment'].get('anchored_openf1_lap_approximate', 0)}"
+            f"/{summary['pit_entries']} entries;",
+            "  entries. OpenF1 documents `date_start` as approximate; the remaining entries",
+            "  stay explicitly unanchored and are not silently approximated.",
             "- Absence of a local message means no evidence in this corpus, not no penalty.",
             "- The classifier's generic event category is not a sanction ledger; a future",
             "  parser must preserve awarded, served, cancelled, investigated, and unresolved",
@@ -209,7 +296,7 @@ def _render_markdown(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def main() -> None:
+def main(*, refresh: bool = False) -> None:
     if not RAW_ROOT.is_dir():
         raise FileNotFoundError(f"2025 raw data is missing: {RAW_ROOT}")
 
@@ -231,8 +318,8 @@ def main() -> None:
         laps, repair_report = repair_tyre_stints(raw_laps)
         metadata = json.loads((race_dir / "metadata.json").read_text(encoding="utf-8"))
         session_key = int(metadata["session_key_openf1"])
-        rcm = _openf1_rcm(http, session_key)
-        openf1_laps = _openf1_laps(http, session_key)
+        rcm = _openf1_rcm(http, session_key, refresh=refresh)
+        openf1_laps = _openf1_laps(http, session_key, refresh=refresh)
         complete_rcm_by_session[session_key] = rcm
         anchor_sessions.add(session_key)
         anchor_rows += len(openf1_laps)
@@ -307,7 +394,14 @@ def main() -> None:
         "local_rcm_rows": local_rcm_rows,
         "anchor_sessions": len(anchor_sessions),
         "anchor_rows": anchor_rows,
+        "cache_manifest": str(MANIFEST_PATH.relative_to(ROOT)),
         "penalty_messages": penalty_messages,
+        "penalty_served_messages": sum(
+            1
+            for frame in complete_rcm_by_session.values()
+            for row in frame.to_dict("records")
+            if "PENALTY SERVED" in str(row.get("message", "")).upper()
+        ),
         "penalty_as_collision": penalty_as_collision,
         "lap_start_date_nonnull": lap_start_date_nonnull,
         "repair": dict(repair_counts),
@@ -326,4 +420,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="refetch the two public OpenF1 endpoints instead of using cached responses",
+    )
+    main(refresh=parser.parse_args().refresh)

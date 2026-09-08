@@ -69,6 +69,10 @@ class StopPurposeRecord:
     pit_out_session_s: float | None
     pit_in_utc: str | None
     pit_out_utc: str | None
+    openf1_lap_date_start_utc: str | None
+    intra_lap_offset_s: float | None
+    anchor_source: str | None
+    anchor_precision: str | None
     timestamp_alignment: str
     pit_out_pair_status: str
     neutralisation_state: str
@@ -154,16 +158,21 @@ def _openf1_lap_starts(openf1_laps: pd.DataFrame | None) -> dict[tuple[int, int]
 
 def _event_utc(
     row: Any, column: str, lap_starts: dict[tuple[int, int], pd.Timestamp]
-) -> str | None:
-    """Convert a FastF1 session-relative event into the driver's OpenF1 UTC clock."""
+) -> tuple[str | None, str | None, float | None]:
+    """Convert a session-relative event and retain its approximate anchor."""
     driver = _driver_number(row.get("DriverNumber"))
     lap = _lap(row.get("LapNumber"))
     event_s = _seconds(row.get(column))
     lap_start_s = _seconds(row.get("LapStartTime"))
     lap_start = None if driver is None or lap is None else lap_starts.get((driver, lap))
     if lap_start is None or event_s is None or lap_start_s is None:
-        return None
-    return (lap_start + pd.to_timedelta(event_s - lap_start_s, unit="s")).isoformat()
+        return None, None, None
+    offset_s = round(event_s - lap_start_s, 6)
+    return (
+        (lap_start + pd.to_timedelta(offset_s, unit="s")).isoformat(),
+        lap_start.isoformat(),
+        offset_s,
+    )
 
 
 def _same_text(value: Any) -> str | None:
@@ -503,8 +512,12 @@ def build_stop_purpose_records(
             raw_pit_rows = raw_group[raw_group["LapNumber"].map(_lap).fillna(-1) == pit_lap]
             raw_pit_row = raw_pit_rows.iloc[0] if not raw_pit_rows.empty else pit_row
             raw_out_row = _next_out_row(raw_group, pit_lap)
-            pit_in_utc = _event_utc(pit_row, "PitInTime", lap_starts)
-            pit_out_utc = None if out_row is None else _event_utc(out_row, "PitOutTime", lap_starts)
+            pit_in_utc, openf1_lap_start, intra_lap_offset_s = _event_utc(
+                pit_row, "PitInTime", lap_starts
+            )
+            pit_out_utc = (
+                None if out_row is None else _event_utc(out_row, "PitOutTime", lap_starts)[0]
+            )
             telemetry_change, tyre_change = _telemetry_change(pit_row, out_row)
             linked = _linked_evidence(parsed, driver_number, pit_lap, pit_in_utc)
             penalty = _penalty_link(linked, pit_lap, pit_in_utc)
@@ -540,8 +553,12 @@ def build_stop_purpose_records(
                     else _seconds(out_row.get("PitOutTime")),
                     pit_in_utc=pit_in_utc,
                     pit_out_utc=pit_out_utc,
+                    openf1_lap_date_start_utc=openf1_lap_start,
+                    intra_lap_offset_s=intra_lap_offset_s,
+                    anchor_source="openf1_v1_laps" if pit_in_utc is not None else None,
+                    anchor_precision="approximate" if pit_in_utc is not None else None,
                     timestamp_alignment=(
-                        "exact_openf1_lap"
+                        "anchored_openf1_lap_approximate"
                         if pit_in_utc is not None
                         else "missing_fastf1_time"
                         if _seconds(pit_row.get("PitInTime")) is None
