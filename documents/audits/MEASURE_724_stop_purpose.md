@@ -4,7 +4,7 @@ This is a retrospective evidence inventory for the decision-layer work.
 It does not change the scorer and it does not treat the team's observed
 pit entry as proof that the team's decision was optimal.
 
-- generated `2026-09-08T12:59:07+00:00`
+- generated `2026-09-08T13:20:07+00:00`
 - races: 24
 - RAW lap rows: 26692
 - PitInTime entries: 841
@@ -12,7 +12,7 @@ pit entry as proof that the team's decision was optimal.
 - complete OpenF1 RCM rows: 2216
 - filtered local RCM rows: 1534
 - messages containing `PENALTY`: 77
-- penalty announcements / served confirmations: 77 / 23
+- penalty-text messages / served confirmations: 77 / 23
 - penalty-text messages classified as generic collisions: 22
 - non-null `LapStartDate` rows: 0
 - tyre metadata repair: 2 races, 308 ages made unknown
@@ -24,10 +24,10 @@ pit entry as proof that the team's decision was optimal.
 
 | primary label | entries |
 | --- | ---: |
-| `PENALTY_SERVICE` | 2 |
+| `PENALTY_SERVICE` | 4 |
 | `REGULATION_REQUIRED_STOP` | 34 |
 | `STRATEGIC_TYRE_CHANGE` | 707 |
-| `UNKNOWN` | 98 |
+| `UNKNOWN` | 96 |
 
 | telemetry set-change signal | entries |
 | --- | ---: |
@@ -40,6 +40,21 @@ telemetry set-change signal (compound change or age reset) after the pit
 entry, but that is only telemetry evidence. It does not prove the entry was
 strategic. Same-compound entries can mount a used set, and a drive-through
 can leave contradictory stint metadata.
+
+## Penalty lifecycle
+
+| status | penalties |
+| --- | ---: |
+| `ambiguous` | 1 |
+| `resolved` | 1 |
+| `resolved_with_conflict` | 1 |
+| `served_without_pit_assignment` | 20 |
+| `unresolved` | 29 |
+
+A served confirmation is retained as historical evidence. It is only linked
+to a pit entry when the award, car, temporal window, and service constraints
+leave a compatible candidate. Otherwise the lifecycle remains unresolved or
+ambiguous and cannot affect the comparable no-call denominator.
 
 ## Measurement contract
 
@@ -55,13 +70,13 @@ review, not confirmed ground truth.
 - The local RCM parquet is the filtered runtime mirror; the complete pass uses
   cached OpenF1 race-control rows and keeps the local mirror only for coverage
   comparison.
-- RAW `LapStartDate` is empty. OpenF1 lap starts reconstruct approximate UTC for the
-  835/841 entries;
-  entries. OpenF1 documents `date_start` as approximate; the remaining entries
-  stay explicitly unanchored and are not silently approximated.
+- RAW `LapStartDate` is empty. OpenF1 lap starts reconstruct approximate UTC for
+  835/841 entries; OpenF1 documents `date_start` as approximate.
+  The remaining entries stay explicitly unanchored and are not silently
+  approximated.
 - Absence of a local message means no evidence in this corpus, not no penalty.
-- The classifier's generic event category is not a sanction ledger; a future
-  parser must preserve awarded, served, cancelled, investigated, and unresolved
+- The generic event category is not a sanction ledger; the lifecycle output
+  preserves awarded, served, investigated, no-further-action, and unresolved
   states separately.
 
 ## Adjudication check

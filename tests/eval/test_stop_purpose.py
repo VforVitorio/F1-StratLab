@@ -13,6 +13,7 @@ from src.strategy.eval.stop_purpose import (
     PENALTY_SERVICE,
     STRATEGIC_TYRE_CHANGE,
     UNKNOWN,
+    build_penalty_lifecycle,
     build_stop_purpose_records,
     parse_rcm_message,
 )
@@ -55,9 +56,19 @@ def test_penalty_parser_extracts_car_and_distinguishes_investigation() -> None:
     assert penalty.car_numbers == (63,)
     assert penalty.penalty_type == "drive_through"
     assert penalty.phase == "awarded"
+    stop_go = parse_rcm_message(
+        {
+            "session_key": 1,
+            "lap_number": 40,
+            "date": "2025-04-01T12:00:00Z",
+            "message": "10 SECOND STOP/GO PENALTY FOR CAR 87 (BEA)",
+        }
+    )
     assert investigation is not None
     assert investigation.penalty_type == "unknown"
     assert investigation.phase == "under_investigation"
+    assert stop_go is not None
+    assert stop_go.penalty_type == "stop_go"
 
 
 def test_openf1_manifest_pins_payload_and_date_range() -> None:
@@ -171,6 +182,61 @@ def test_late_penalty_confirmation_is_not_attached_to_a_later_stop() -> None:
         (68, STRATEGIC_TYRE_CHANGE),
     ]
     assert all(record.penalty_type == "none" for record in records)
+
+
+def test_penalty_lifecycle_resolves_russell_to_the_compatible_entry_only() -> None:
+    laps = _laps(
+        DriverNumber=["63"] * 6,
+        Driver=["RUS"] * 6,
+        LapNumber=[53, 54, 62, 63, 68, 69],
+        LapStartTime=[100, 200, 300, 400, 500, 600],
+        PitInTime=[210, None, 1310, None, 1510, None],
+        PitOutTime=[None, 230, None, 1330, None, 1530],
+        Compound=["HARD", "MEDIUM", "MEDIUM", "MEDIUM", "MEDIUM", "HARD"],
+        TyreLife=[53, 1, 9, 10, 15, 1],
+        Stint=[1, 2, 2, 2, 2, 3],
+        TrackStatus=["1"] * 6,
+    )
+    rcm = _rcm(
+        session_key=[9979, 9979],
+        lap_number=[53, 78],
+        date=["2025-05-25T14:11:10Z", "2025-05-25T14:45:40Z"],
+        message=[
+            "FIA STEWARDS: DRIVE THROUGH PENALTY FOR CAR 63 (RUS)",
+            "PENALTY SERVED - DRIVE THROUGH PENALTY FOR CAR 63 (RUS)",
+        ],
+    )
+    openf1_laps = pd.DataFrame(
+        {
+            "driver_number": [63] * 6,
+            "lap_number": [53, 54, 62, 63, 68, 69],
+            "date_start": [
+                "2025-05-25T14:13:00Z",
+                "2025-05-25T14:14:00Z",
+                "2025-05-25T14:25:00Z",
+                "2025-05-25T14:26:00Z",
+                "2025-05-25T14:33:00Z",
+                "2025-05-25T14:34:00Z",
+            ],
+        }
+    )
+    records = build_stop_purpose_records(
+        laps,
+        rcm,
+        year=2025,
+        race="Monaco",
+        session_key=9979,
+        meeting_key=1261,
+        sample_stops=set(),
+        openf1_laps=openf1_laps,
+    )
+    evidence = [parse_rcm_message(row) for _, row in rcm.iterrows()]
+
+    [lifecycle] = build_penalty_lifecycle(records, [item for item in evidence if item is not None])
+
+    assert lifecycle.status == "resolved_with_conflict"
+    assert lifecycle.candidate_event_ids == ("2025:9979:63:53:1",)
+    assert lifecycle.served_evidence_id is not None
 
 
 def test_drive_through_evidence_wins_over_conflicting_telemetry() -> None:
