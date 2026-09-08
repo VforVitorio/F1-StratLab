@@ -524,7 +524,7 @@ class PaceAgent:
         # `circuit_cluster` is keyed by the parquet slug; the replay path queries with the
         # metadata name. Miami 2025 missed and took the default, which happens to be its
         # real cluster - a coincidence, not correctness (PR3_GP_KEYSPACE_SWEEP.md).
-        cluster = self.circuit_cluster.get(resolve_gp_key(self.circuit_cluster, gp_name), 1)
+        cluster = self.circuit_cluster.get(resolve_gp_key(self.circuit_cluster, gp_name), -1)
         return c_id, t_id, cluster
 
     def _compute_derived(
