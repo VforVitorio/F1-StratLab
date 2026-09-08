@@ -3,7 +3,7 @@
 This export is a review queue for the strategy-evidence phase of #724, the epic to make the deterministic decision layer able to prefer a stop.
 It keeps the existing #715 sample, the missed-pit-call diagnostic population, unchanged and does not feed any field into the scorer.
 
-- generated `2026-09-08T18:29:01+00:00`
+- generated `2026-09-08T18:31:34+00:00`
 - source: `documents\audits\MEASURE_724_stop_purpose.json`
 - `WINDOW_LAPS`: `5`
 - `DECISION_WINDOW_LAPS`: `5`

@@ -31,6 +31,10 @@ def test_strategy_evidence_export_surfaces_unlinked_penalty_history() -> None:
 
     verstappen = rows[("Jeddah", "VER", 21)]
     piastri = rows[("Silverstone", "PIA", 43)]
+    assert verstappen["session_key"] == 10022
+    assert piastri["session_key"] == 9947
+    assert verstappen["pit_in_utc"] is not None
+    assert piastri["pit_in_utc"] is not None
     assert verstappen["penalty_history"]["unlinked_ids"]
     assert piastri["penalty_history"]["unlinked_ids"]
     assert verstappen["review_status"] == "unreviewed"
