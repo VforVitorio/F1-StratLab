@@ -67,6 +67,8 @@ class StopPurposeRecord:
     pit_out_lap: int | None
     pit_in_session_s: float | None
     pit_out_session_s: float | None
+    pit_in_utc: str | None
+    pit_out_utc: str | None
     timestamp_alignment: str
     pit_out_pair_status: str
     neutralisation_state: str
@@ -132,6 +134,36 @@ def _seconds(value: Any) -> float | None:
     if isinstance(value, pd.Timedelta):
         return round(value.total_seconds(), 6)
     return _number(value)
+
+
+def _openf1_lap_starts(openf1_laps: pd.DataFrame | None) -> dict[tuple[int, int], pd.Timestamp]:
+    """Index OpenF1 lap starts by car and lap for temporal event anchoring."""
+    if openf1_laps is None or openf1_laps.empty:
+        return {}
+    starts: dict[tuple[int, int], pd.Timestamp] = {}
+    for _, row in openf1_laps.iterrows():
+        driver = _driver_number(row.get("driver_number"))
+        lap = _lap(row.get("lap_number"))
+        if driver is None or lap is None:
+            continue
+        start = pd.to_datetime(row.get("date_start"), utc=True, errors="coerce")
+        if pd.notna(start):
+            starts[(driver, lap)] = start
+    return starts
+
+
+def _event_utc(
+    row: Any, column: str, lap_starts: dict[tuple[int, int], pd.Timestamp]
+) -> str | None:
+    """Convert a FastF1 session-relative event into the driver's OpenF1 UTC clock."""
+    driver = _driver_number(row.get("DriverNumber"))
+    lap = _lap(row.get("LapNumber"))
+    event_s = _seconds(row.get(column))
+    lap_start_s = _seconds(row.get("LapStartTime"))
+    lap_start = None if driver is None or lap is None else lap_starts.get((driver, lap))
+    if lap_start is None or event_s is None or lap_start_s is None:
+        return None
+    return (lap_start + pd.to_timedelta(event_s - lap_start_s, unit="s")).isoformat()
 
 
 def _same_text(value: Any) -> str | None:
@@ -260,8 +292,12 @@ def _telemetry_change(pit_row: Any, out_row: Any | None) -> tuple[str, str]:
 
 
 def _linked_evidence(
-    evidence: Iterable[RCMEvidence], driver_number: int | None, pit_lap: int
+    evidence: Iterable[RCMEvidence],
+    driver_number: int | None,
+    pit_lap: int,
+    pit_in_utc: str | None,
 ) -> list[RCMEvidence]:
+    pit_timestamp = pd.to_datetime(pit_in_utc, utc=True, errors="coerce")
     linked: list[RCMEvidence] = []
     for item in evidence:
         targeted = driver_number is not None and driver_number in item.car_numbers
@@ -269,21 +305,54 @@ def _linked_evidence(
             not item.car_numbers and item.forced_entry and item.rcm_lap == pit_lap
         ):
             continue
-        if item.rcm_lap is None or abs(item.rcm_lap - pit_lap) <= 8:
+        if item.phase == "served":
+            if item.rcm_lap == pit_lap:
+                linked.append(item)
+            elif pit_timestamp is not None:
+                evidence_timestamp = pd.to_datetime(item.date, utc=True, errors="coerce")
+                if (
+                    pd.notna(evidence_timestamp)
+                    and abs((evidence_timestamp - pit_timestamp).total_seconds()) <= 60
+                ):
+                    linked.append(item)
+            continue
+        evidence_timestamp = pd.to_datetime(item.date, utc=True, errors="coerce")
+        if pd.notna(pit_timestamp) and pd.notna(evidence_timestamp):
+            delta_s = abs((evidence_timestamp - pit_timestamp).total_seconds())
+            if delta_s <= 900:
+                linked.append(item)
+        elif item.rcm_lap is None or abs(item.rcm_lap - pit_lap) <= 8:
             linked.append(item)
     return linked
 
 
-def _penalty_link(evidence: Iterable[RCMEvidence], pit_lap: int) -> RCMEvidence | None:
+def _penalty_link(
+    evidence: Iterable[RCMEvidence], pit_lap: int, pit_in_utc: str | None
+) -> RCMEvidence | None:
+    pit_timestamp = pd.to_datetime(pit_in_utc, utc=True, errors="coerce")
     candidates = []
     for item in evidence:
         if item.penalty_type == "unknown" or item.rcm_lap is None:
             continue
-        if item.phase == "served" and 0 <= pit_lap - item.rcm_lap <= 8:
+        evidence_timestamp = pd.to_datetime(item.date, utc=True, errors="coerce")
+        if pd.notna(pit_timestamp) and pd.notna(evidence_timestamp):
+            delta_s = (pit_timestamp - evidence_timestamp).total_seconds()
+            matches = -900 <= delta_s <= 900 if item.phase == "served" else 0 <= delta_s <= 900
+        elif item.phase == "served":
+            matches = item.rcm_lap == pit_lap
+        else:
+            matches = False
+        if matches:
             candidates.append(item)
-        elif item.phase == "awarded" and (
-            (item.penalty_type in {"drive_through", "stop_go"} and item.rcm_lap == pit_lap)
-            or (item.penalty_type in {"5s", "10s", "other"} and 0 <= pit_lap - item.rcm_lap <= 8)
+        elif (
+            pd.isna(pit_timestamp)
+            and item.phase == "awarded"
+            and (
+                (item.penalty_type in {"drive_through", "stop_go"} and item.rcm_lap == pit_lap)
+                or (
+                    item.penalty_type in {"5s", "10s", "other"} and 0 <= pit_lap - item.rcm_lap <= 8
+                )
+            )
         ):
             candidates.append(item)
     return min(candidates, key=lambda item: abs((item.rcm_lap or pit_lap) - pit_lap), default=None)
@@ -299,9 +368,22 @@ def _has_damage(evidence: Iterable[RCMEvidence], pit_lap: int) -> bool:
     )
 
 
-def _evidence_timing(evidence: Iterable[RCMEvidence], pit_lap: int) -> str:
-    before = any(item.rcm_lap is not None and item.rcm_lap < pit_lap for item in evidence)
-    after = any(item.rcm_lap is not None and item.rcm_lap > pit_lap for item in evidence)
+def _evidence_timing(evidence: Iterable[RCMEvidence], pit_lap: int, pit_in_utc: str | None) -> str:
+    pit_timestamp = pd.to_datetime(pit_in_utc, utc=True, errors="coerce")
+    if pd.notna(pit_timestamp):
+        before = any(
+            pd.notna(pd.to_datetime(item.date, utc=True, errors="coerce"))
+            and pd.to_datetime(item.date, utc=True) < pit_timestamp
+            for item in evidence
+        )
+        after = any(
+            pd.notna(pd.to_datetime(item.date, utc=True, errors="coerce"))
+            and pd.to_datetime(item.date, utc=True) > pit_timestamp
+            for item in evidence
+        )
+    else:
+        before = any(item.rcm_lap is not None and item.rcm_lap < pit_lap for item in evidence)
+        after = any(item.rcm_lap is not None and item.rcm_lap > pit_lap for item in evidence)
     if before and after:
         return "both"
     if after:
@@ -393,6 +475,7 @@ def build_stop_purpose_records(
     sample_stops: set[tuple[str, int]],
     raw_laps: pd.DataFrame | None = None,
     repair_applied: bool = False,
+    openf1_laps: pd.DataFrame | None = None,
 ) -> list[StopPurposeRecord]:
     """Build one conservative evidence record per ``PitInTime`` row."""
     if "PitInTime" not in laps.columns:
@@ -401,6 +484,7 @@ def build_stop_purpose_records(
     parsed = [item for _, row in rcm.iterrows() if (item := parse_rcm_message(row)) is not None]
     records: list[StopPurposeRecord] = []
     source_laps = laps if raw_laps is None else raw_laps
+    lap_starts = _openf1_lap_starts(openf1_laps)
     raw_by_driver = {
         str(driver): group.sort_values("LapNumber")
         for driver, group in source_laps.groupby("Driver", dropna=False)
@@ -419,9 +503,11 @@ def build_stop_purpose_records(
             raw_pit_rows = raw_group[raw_group["LapNumber"].map(_lap).fillna(-1) == pit_lap]
             raw_pit_row = raw_pit_rows.iloc[0] if not raw_pit_rows.empty else pit_row
             raw_out_row = _next_out_row(raw_group, pit_lap)
+            pit_in_utc = _event_utc(pit_row, "PitInTime", lap_starts)
+            pit_out_utc = None if out_row is None else _event_utc(out_row, "PitOutTime", lap_starts)
             telemetry_change, tyre_change = _telemetry_change(pit_row, out_row)
-            linked = _linked_evidence(parsed, driver_number, pit_lap)
-            penalty = _penalty_link(linked, pit_lap)
+            linked = _linked_evidence(parsed, driver_number, pit_lap, pit_in_utc)
+            penalty = _penalty_link(linked, pit_lap, pit_in_utc)
             forced = any(item.forced_entry and item.rcm_lap == pit_lap for item in linked)
             damage = _has_damage(linked, pit_lap)
             (
@@ -452,11 +538,14 @@ def build_stop_purpose_records(
                     pit_out_session_s=None
                     if out_row is None
                     else _seconds(out_row.get("PitOutTime")),
+                    pit_in_utc=pit_in_utc,
+                    pit_out_utc=pit_out_utc,
                     timestamp_alignment=(
-                        "missing_openf1_lap"
-                        if "LapStartDate" not in laps.columns
-                        or pd.isna(pit_row.get("LapStartDate"))
-                        else "exact_openf1_lap"
+                        "exact_openf1_lap"
+                        if pit_in_utc is not None
+                        else "missing_fastf1_time"
+                        if _seconds(pit_row.get("PitInTime")) is None
+                        else "missing_openf1_lap"
                     ),
                     pit_out_pair_status=(
                         "missing"
@@ -507,7 +596,7 @@ def build_stop_purpose_records(
                         if telemetry_change == "confirmed"
                         else "insufficient"
                     ),
-                    evidence_timing=_evidence_timing(linked, pit_lap),
+                    evidence_timing=_evidence_timing(linked, pit_lap, pit_in_utc),
                     evidence_refs=tuple(item.evidence_id for item in linked),
                     in_715_sample=(driver, pit_lap) in sample_stops,
                     comparison_cohort=(

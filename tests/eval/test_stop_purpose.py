@@ -59,6 +59,95 @@ def test_penalty_parser_extracts_car_and_distinguishes_investigation() -> None:
     assert investigation.phase == "under_investigation"
 
 
+def test_fastf1_pit_time_uses_the_openf1_driver_lap_anchor() -> None:
+    laps = _laps(
+        DriverNumber=["44", "44"],
+        Driver=["HAM", "HAM"],
+        LapNumber=[18, 19],
+        LapStartTime=[100, 200],
+        PitInTime=[110, None],
+        PitOutTime=[None, 230],
+        Compound=["HARD", "MEDIUM"],
+        TyreLife=[18, 1],
+        Stint=[1, 2],
+        TrackStatus=["1", "1"],
+    )
+    openf1_laps = pd.DataFrame(
+        {
+            "driver_number": [44, 44],
+            "lap_number": [18, 19],
+            "date_start": [
+                "2025-01-01T00:00:00Z",
+                "2025-01-01T00:01:00Z",
+            ],
+        }
+    )
+
+    [record] = build_stop_purpose_records(
+        laps,
+        _rcm(),
+        year=2025,
+        race="Monaco",
+        session_key=1,
+        meeting_key=2,
+        sample_stops=set(),
+        openf1_laps=openf1_laps,
+    )
+
+    assert record.pit_in_utc == "2025-01-01T00:00:10+00:00"
+    assert record.timestamp_alignment == "exact_openf1_lap"
+
+
+def test_late_penalty_confirmation_is_not_attached_to_a_later_stop() -> None:
+    laps = _laps(
+        DriverNumber=["63", "63", "63", "63"],
+        Driver=["RUS", "RUS", "RUS", "RUS"],
+        LapNumber=[53, 54, 68, 69],
+        LapStartTime=[100, 200, 300, 400],
+        PitInTime=[210, None, 410, None],
+        PitOutTime=[None, 230, None, 430],
+        Compound=["HARD", "MEDIUM", "MEDIUM", "HARD"],
+        TyreLife=[53, 1, 15, 1],
+        Stint=[1, 2, 2, 3],
+        TrackStatus=["1", "1", "1", "1"],
+    )
+    rcm = _rcm(
+        session_key=[9979],
+        lap_number=[78],
+        date=["2025-05-25T14:45:40Z"],
+        message=["PENALTY SERVED - DRIVE THROUGH PENALTY FOR CAR 63 (RUS)"],
+    )
+    openf1_laps = pd.DataFrame(
+        {
+            "driver_number": [63, 63, 63, 63],
+            "lap_number": [53, 54, 68, 69],
+            "date_start": [
+                "2025-05-25T14:13:00Z",
+                "2025-05-25T14:14:00Z",
+                "2025-05-25T14:33:00Z",
+                "2025-05-25T14:34:00Z",
+            ],
+        }
+    )
+
+    records = build_stop_purpose_records(
+        laps,
+        rcm,
+        year=2025,
+        race="Monaco",
+        session_key=9979,
+        meeting_key=1261,
+        sample_stops=set(),
+        openf1_laps=openf1_laps,
+    )
+
+    assert [(record.pit_in_lap, record.primary_label) for record in records] == [
+        (53, STRATEGIC_TYRE_CHANGE),
+        (68, STRATEGIC_TYRE_CHANGE),
+    ]
+    assert all(record.penalty_type == "none" for record in records)
+
+
 def test_drive_through_evidence_wins_over_conflicting_telemetry() -> None:
     laps = _laps(
         DriverNumber=["63", "63"],
