@@ -17,9 +17,9 @@ introduce:
   ``bool_`` alias). Grows whenever an upstream bump breaks something
   real.
 
-Every test uses ``pytest.importorskip`` so a missing optional extra
-(voice, ffmpeg-python, dev tools) does not turn the suite red on minimal
-environments — it just skips. The CI ``test`` job installs
+Every test uses ``pytest.importorskip`` so a missing optional dependency
+(ffmpeg-python or a development tool) does not turn the suite red on minimal
+environments; it just skips. The CI ``test`` job installs
 ``--all-extras`` so all of these run there.
 """
 
@@ -369,7 +369,8 @@ def test_dependency_imports(module_name):
 
     Captures install-time breakage (missing wheels, ABI mismatches,
     binary conflicts) that a behavioural test would never reach. Skips
-    cleanly when an optional extra (voice, computer vision) is absent
+    cleanly when an optional dependency (for example, a computer-vision
+    package) is absent
     from the environment, or when an upstream package is installable
     but raises at import time on the current Python (the setfit /
     frozendict / Python 3.10 trio is a recurring offender).
