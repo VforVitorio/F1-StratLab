@@ -8,6 +8,7 @@ separate and deliberately leaves unresolved cases visible for review.
 from __future__ import annotations
 
 import hashlib
+import re
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from typing import Any
@@ -401,6 +402,13 @@ def _timestamp(value: str | None) -> pd.Timestamp:
     return pd.to_datetime(value, utc=True, errors="coerce")
 
 
+def _penalty_reason(message: str) -> str:
+    """Return the official reason suffix used to distinguish repeated penalties."""
+    normalised = " ".join(message.upper().split())
+    match = re.search(r"\bFOR CAR\s+\d+\s*(?:\([^)]+\))?\s*-\s*(.+)$", normalised)
+    return "" if match is None else match.group(1).strip(" .")
+
+
 def build_penalty_lifecycle(
     records: Iterable[StopPurposeRecord], evidence: Iterable[RCMEvidence]
 ) -> list[PenaltyLifecycle]:
@@ -429,19 +437,38 @@ def build_penalty_lifecycle(
         driver_records = records_by_driver.get((session_key, driver_number), [])
         for sequence, award in enumerate(awards, start=1):
             award_timestamp = _timestamp(award.date)
-            served_item = next(
-                (
+            eligible_served = [
+                item
+                for item in served
+                if item.evidence_id not in used_served
+                and (
+                    pd.isna(award_timestamp)
+                    or pd.isna(_timestamp(item.date))
+                    or _timestamp(item.date) >= award_timestamp
+                )
+            ]
+            award_reason = _penalty_reason(award.message)
+            if award_reason:
+                contextual_served = [
                     item
-                    for item in served
-                    if item.evidence_id not in used_served
-                    and (
-                        pd.isna(award_timestamp)
-                        or pd.isna(_timestamp(item.date))
-                        or _timestamp(item.date) >= award_timestamp
-                    )
-                ),
-                None,
-            )
+                    for item in eligible_served
+                    if _penalty_reason(item.message) == award_reason
+                ]
+                if len(contextual_served) == 1:
+                    served_item = contextual_served[0]
+                elif (
+                    not contextual_served
+                    and len(eligible_served) == 1
+                    and not _penalty_reason(eligible_served[0].message)
+                ):
+                    # Some official confirmations omit the reason. A sole
+                    # reason-less confirmation is still safe to pair; multiple
+                    # candidates remain unresolved rather than guessed.
+                    served_item = eligible_served[0]
+                else:
+                    served_item = None
+            else:
+                served_item = eligible_served[0] if len(eligible_served) == 1 else None
             if served_item is not None:
                 used_served.add(served_item.evidence_id)
 

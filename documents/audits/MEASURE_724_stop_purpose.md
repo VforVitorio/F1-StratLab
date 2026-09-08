@@ -4,7 +4,7 @@ This is a retrospective evidence inventory for the decision-layer work.
 It does not change the scorer and it does not treat the team's observed
 pit entry as proof that the team's decision was optimal.
 
-- generated `2026-09-08T17:15:26+00:00`
+- generated `2026-09-08T18:12:34+00:00`
 - races: 24
 - RAW lap rows: 26692
 - PitInTime entries: 841

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T17:15:26+00:00",
+  "generated_at": "2026-09-08T18:12:34+00:00",
   "year": 2025,
   "races": 24,
   "raw_lap_rows": 26692,
@@ -226,9 +226,9 @@
       "driver_number": 22,
       "penalty_type": "10s",
       "awarded_evidence_id": "66a1f7149ca8bd96",
-      "served_evidence_id": "6eaa1fe7e490776a",
+      "served_evidence_id": null,
       "candidate_event_ids": [],
-      "status": "served_without_pit_assignment",
+      "status": "unresolved",
       "review_note": "time penalty may be served during a tyre stop or added to the result"
     },
     {
@@ -237,9 +237,9 @@
       "driver_number": 22,
       "penalty_type": "10s",
       "awarded_evidence_id": "4d49a49de1d8cec1",
-      "served_evidence_id": null,
+      "served_evidence_id": "6eaa1fe7e490776a",
       "candidate_event_ids": [],
-      "status": "unresolved",
+      "status": "served_without_pit_assignment",
       "review_note": "time penalty may be served during a tyre stop or added to the result"
     },
     {
