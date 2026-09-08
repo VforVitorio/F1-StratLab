@@ -239,6 +239,61 @@ def test_penalty_lifecycle_resolves_russell_to_the_compatible_entry_only() -> No
     assert lifecycle.served_evidence_id is not None
 
 
+def test_repeated_same_type_penalties_keep_their_lifecycle_context() -> None:
+    rcm = _rcm(
+        session_key=[9869, 9869, 9869],
+        lap_number=[12, 33, 50],
+        date=[
+            "2025-11-09T17:21:01Z",
+            "2025-11-09T17:47:45Z",
+            "2025-11-09T18:08:36Z",
+        ],
+        message=[
+            "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - CAUSING A COLLISION",
+            "FIA STEWARDS: 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - "
+            "FAILING TO SERVE TIME PENALTY CORRECTLY",
+            "FIA STEWARDS: PENALTY SERVED - 10 SECOND TIME PENALTY FOR CAR 22 (TSU) - "
+            "FAILING TO SERVE TIME PENALTY CORRECTLY",
+        ],
+    )
+    evidence = [parse_rcm_message(row) for _, row in rcm.iterrows()]
+    evidence = [item for item in evidence if item is not None]
+
+    lifecycles = build_penalty_lifecycle([], evidence)
+
+    assert len(lifecycles) == 2
+    assert lifecycles[0].served_evidence_id is None
+    assert lifecycles[1].served_evidence_id == evidence[2].evidence_id
+
+
+@pytest.mark.data
+@pytest.mark.skipif(
+    not (
+        ROOT / "data" / "processed" / "stop_purpose" / "2025" / "openf1_rcm" / "9869.json"
+    ).is_file(),
+    reason="São Paulo RCM cache absent",
+)
+def test_sao_paulo_repeated_tsunoda_penalties_keep_distinct_lifecycles() -> None:
+    cache = ROOT / "data" / "processed" / "stop_purpose" / "2025" / "openf1_rcm" / "9869.json"
+    rows = json.loads(cache.read_text(encoding="utf-8"))
+    evidence = [parse_rcm_message(row) for row in rows]
+    evidence = [item for item in evidence if item is not None]
+    lifecycles = build_penalty_lifecycle([], evidence)
+    tsunoda = [
+        item for item in lifecycles if item.driver_number == 22 and item.penalty_type == "10s"
+    ]
+    messages = {item.evidence_id: item.message for item in evidence}
+
+    assert len(tsunoda) == 2
+    collision, service_failure = tsunoda
+    assert "CAUSING A COLLISION" in messages[collision.awarded_evidence_id]
+    assert collision.served_evidence_id is None
+    assert (
+        "FAILING TO SERVE TIME PENALTY CORRECTLY" in messages[service_failure.awarded_evidence_id]
+    )
+    assert service_failure.served_evidence_id is not None
+
+
 def test_drive_through_evidence_wins_over_conflicting_telemetry() -> None:
     laps = _laps(
         DriverNumber=["63", "63"],
