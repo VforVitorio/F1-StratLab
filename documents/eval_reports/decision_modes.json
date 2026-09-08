@@ -1,12 +1,12 @@
 {
   "header": {
-    "harness_sha": "83c59629",
+    "harness_sha": "2c0b0a91",
     "dataset": "data/raw laps, every 2025 race (RAW, not featured)",
     "seed_policy": "deterministic",
     "era_tag": "2022-2025",
     "llm": "none",
     "schema_version": "1",
-    "generated_at": "2026-08-30T17:54:11+00:00",
+    "generated_at": "2026-09-08T10:05:27+00:00",
     "artifacts": {}
   },
   "status": "masked",
@@ -110,15 +110,16 @@
     }
   ],
   "agreement": {
-    "sample_size": 204,
+    "sample_size": 203,
     "eligible": 573,
-    "scored_share": 0.35602094240837695,
+    "scored_share": 0.3542757417102967,
     "races": 24,
-    "exact": 0.18627450980392157,
-    "within_one": 0.3431372549019608,
-    "within_two": 0.5,
-    "mean_signed_error": -2.2058823529411766,
-    "mean_absolute_error": 2.480392156862745
+    "exact": 0.18719211822660098,
+    "within_one": 0.3399014778325123,
+    "within_two": 0.4975369458128079,
+    "mean_signed_error": -2.2118226600985222,
+    "mean_absolute_error": 2.4876847290640396,
+    "overlap": 1
   },
   "buckets": {
     "closing_laps": 4,
@@ -126,7 +127,8 @@
     "no_boundary_in_window": 121,
     "no_call_in_window": 224,
     "opening_laps": 4,
-    "scored": 204
+    "overlap_in_window": 1,
+    "scored": 203
   },
   "verdicts": [
     {
@@ -3365,9 +3367,9 @@
       "race": "Sakhir",
       "driver": "SAI",
       "actual_lap": 45,
-      "chosen_lap": 44,
-      "offset_laps": -1,
-      "bucket": "scored"
+      "chosen_lap": null,
+      "offset_laps": null,
+      "bucket": "overlap_in_window"
     },
     {
       "year": 2025,
