@@ -10,8 +10,9 @@ Generated 2026-09-08. Sources checked were the local 2025 evidence JSON, officia
 
 | disposition | entries | meaning |
 | --- | ---: | --- |
-| `exclude_non_comparable` | 19 | Damage, retirement, a late pit-lane return, or a local row that is not an independent tyre stop. |
-| `exclude_mixed_penalty` | 11 | A real tyre stop is mixed with a penalty or a forced service, so its strategic meaning cannot be isolated. |
+| `exclude_non_comparable` | 18 | Damage, retirement, a late pit-lane return, or a local row that is not an independent tyre stop. |
+| `exclude_penalty_only` | 3 | The row is a penalty service with no evidence of a strategic tyre decision. |
+| `exclude_mixed_penalty` | 9 | A real tyre stop is mixed with a penalty or a forced service, so its strategic meaning cannot be isolated. |
 | `retain_regulation_constrained` | 2 | Real tyre stops at Monaco, but the 2025 two-stop rule constrained the event. Timing remains a separate question. |
 | `retain_external_candidate` | 4 | The official record confirms a real stop and there is no identified sanction or failure, but timing discretion is not proven. |
 | **Total reviewed** | **36** | No entry is promoted to the clean comparable cohort. |
@@ -27,7 +28,7 @@ The lap numbers below are the local `PitInTime` rows. A pair such as `26/27` mea
 | Barcelona | ALB 26/27 | 10-second penalty; consecutive entry; no tyre-set change resolved | F1 reports front-wing damage, a 10-second penalty, a return to the track, and a later retirement. The official pit summary lists the tyre stop on lap 26. | `exclude_non_comparable`; keep 26 as damage/penalty and 27 as the retirement sequence. |
 | Budapest | BEA 48 | No paired out-lap | F1 records Bearman as the only DNF after floor damage. The official pit summary has no Bearman stop at lap 48. | `exclude_non_comparable`. |
 | Las Vegas | ALB 35 | 5-second penalty already served; no paired out-lap | The local evidence links the row to a penalty. The race report describes Albon's damage and penalty, not an elective tyre decision. | `exclude_non_comparable`. |
-| Lusail | BEA 40/41 | Stop-and-go penalty; consecutive entry | FIA race control records the unsafe-condition investigation, the 10-second stop-and-go award, and service. F1 reports the unsafe release and Bearman's later retirement. | `exclude_mixed_penalty`; do not count either row as strategy. |
+| Lusail | BEA 40/41 | Stop-and-go penalty; consecutive entry | FIA race control records the unsafe-condition investigation, the 10-second stop-and-go award, and service. F1 reports the unsafe release and Bearman's later retirement. | `exclude_penalty_only`; do not count either row as strategy. |
 | Lusail | HAD 55 | No paired out-lap | F1 reports a late puncture and damaged car after the front-wheel deflector broke. | `exclude_non_comparable`. |
 | Lusail | STR 55 | No paired out-lap | The official pit summary records Stroll's stops on laps 7, 24, and 49, not lap 55. The F1 team report describes an offset strategy and a pit-lane penalty. | `exclude_non_comparable`; retain the source row as a late or non-independent pit event. |
 | Melbourne | BOR 44 | Intermediate-tyre change mixed with a 5-second penalty | The official pit summary confirms a lap-44 stop. FIA race control records the unsafe-release penalty and its service. | `exclude_mixed_penalty`. |
@@ -35,7 +36,7 @@ The lap numbers below are the local `PitInTime` rows. A pair such as `26/27` mea
 | Mexico City | HAM 23 | Tyre change mixed with a 10-second penalty | F1 reports Hamilton's lap-23 stop and the 10-second penalty being served during the stop. | `exclude_mixed_penalty`. |
 | Mexico City | HUL 25 | No paired out-lap | F1 reports Hulkenberg retiring in the pits with a power-unit issue on lap 28. The official pit summary records the earlier tyre stop on lap 24, not this row. | `exclude_non_comparable`. |
 | Mexico City | LAW 5 | No paired out-lap | F1 reports Lawson pitting for a new front wing after lap-1 contact and retiring because the damage was too extensive. The official pit summary records lap 2. | `exclude_non_comparable`. |
-| Mexico City | SAI 56 | Drive-through penalty | F1 reports a second pit-lane-speeding penalty escalated to a drive-through, followed by Sainz's late retirement. | `exclude_mixed_penalty`; this is a penalty service, not a tyre decision. |
+| Mexico City | SAI 56 | Drive-through penalty | F1 reports a second pit-lane-speeding penalty escalated to a drive-through, followed by Sainz's late retirement. | `exclude_penalty_only`; this is a penalty service, not a tyre decision. |
 | Miami | BOR 19 | No tyre metadata in the local row | The official pit summary confirms Bortoleto's lap-19 stop. F1's DHL pit-stop video identifies a medium-to-hard change. | `retain_external_candidate`; do not call it clean until timing discretion is adjudicated. |
 | Miami | HAD 22 | No tyre metadata in the local row | The official pit summary confirms Hadjar's lap-22 stop. No race-control penalty or damage is attached to this entry. | `retain_external_candidate`. |
 | Miami | LAW 36 | No paired out-lap | F1 reports Lawson retiring after lap-1 contact and damage. The official race result records a 36-lap DNF. | `exclude_non_comparable`. |
@@ -63,8 +64,9 @@ The lap numbers below are the local `PitInTime` rows. A pair such as `26/27` mea
 
 The doubtful queue was not a hidden group of 36 missed strategic calls.
 
-- 19 rows have a documented damage, retirement, late-return, or row-alignment explanation.
-- 11 rows are real entries but include a sanction or forced service.
+- 18 rows have a documented damage, retirement, late-return, or row-alignment explanation.
+- 3 rows are penalty services with no strategic tyre evidence.
+- 9 rows are real entries but mix a tyre stop with a sanction or forced service.
 - 2 Monaco rows are real tyre stops under the event's mandatory two-stop rule.
 - 4 rows are credible strategic candidates, but the available evidence does not establish that the exact lap was discretionary.
 
