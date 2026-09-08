@@ -20,6 +20,7 @@ and is read-only; if it and this file disagree, THIS file is what runs.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Optional
 
@@ -92,6 +93,72 @@ class RCMEvent:
     lap: int
     racing_number: Optional[str] = None
     scope: str = ""
+
+
+@dataclass(frozen=True)
+class PenaltyEvent:
+    """Structured sanction context kept alongside the generic event category."""
+
+    message: str
+    car_numbers: tuple[int, ...]
+    penalty_type: str
+    phase: str
+    incident_context: bool
+    forced_entry: bool
+
+
+def extract_car_numbers(event: RCMEvent) -> tuple[int, ...]:
+    """Extract every referenced car while retaining the structured field when present."""
+    numbers = {int(number) for number in re.findall(r"\bCAR\s+(\d+)\b", event.message.upper())}
+    if event.racing_number and str(event.racing_number).isdigit():
+        numbers.add(int(event.racing_number))
+    return tuple(sorted(numbers))
+
+
+def parse_penalty_event(event: RCMEvent) -> PenaltyEvent | None:
+    """Extract penalty lifecycle without losing incident context.
+
+    The legacy ``classify_rcm_event`` function remains single-label for its
+    existing consumers. This additive channel prevents a collision keyword
+    from erasing a sanction that the same official message also carries.
+    """
+    message = event.message.strip()
+    upper = message.upper()
+    if "PENALTY" not in upper:
+        return None
+
+    normalised = upper.replace("-", " ").replace("/", " ")
+    if "DRIVE THROUGH" in normalised:
+        penalty_type = "drive_through"
+    elif "STOP AND GO" in normalised or "STOP & GO" in normalised or "STOP GO" in normalised:
+        penalty_type = "stop_go"
+    else:
+        seconds = re.search(r"\b(5|10)\s*SECOND(?:S)?\b", normalised)
+        penalty_type = f"{seconds.group(1)}s" if seconds else "other"
+
+    if "NO FURTHER INVESTIGATION" in upper:
+        phase = "no_further_action"
+    elif "CANCELLED" in upper or "CANCELED" in upper or "OVERTURNED" in upper:
+        phase = "cancelled"
+    elif "PENALTY SERVED" in upper:
+        phase = "served"
+    elif "UNDER INVESTIGATION" in upper:
+        phase = "under_investigation"
+    elif "NOTED" in upper:
+        phase = "noted"
+    else:
+        phase = "awarded"
+    if phase != "awarded" and penalty_type == "other":
+        penalty_type = "unknown"
+
+    return PenaltyEvent(
+        message=message,
+        car_numbers=extract_car_numbers(event),
+        penalty_type=penalty_type,
+        phase=phase,
+        incident_context=any(term in upper for term in ("COLLISION", "CONTACT", "INCIDENT")),
+        forced_entry="THROUGH THE PIT" in upper or "MUST ENTER THE PIT LANE" in upper,
+    )
 
 
 def classify_rcm_event(event: "RCMEvent") -> str:
