@@ -31,12 +31,14 @@ from src.strategy.eval.decision_modes import (
     DecisionAgreement,
     StopVerdict,
     _asks_to_stop,
+    _claim_decision,
     _pit_decision_lap,
     _render_table,
     _replay_span,
     coverage_verdict,
     guard_rail_block,
     lap_inputs,
+    measure_decision_agreement,
 )
 from src.strategy.inference.guard_rails import _NO_PIT_BEFORE_LAP
 
@@ -45,7 +47,7 @@ _HAS_RAW = (ROOT / "data" / "raw" / "2024").is_dir()
 
 
 def _agreement(
-    offsets, guard_railed=0, no_call=0, races=6, no_data=0, no_boundary=0
+    offsets, guard_railed=0, no_call=0, races=6, no_data=0, no_boundary=0, overlap=0
 ) -> DecisionAgreement:
     return DecisionAgreement(
         offsets=np.array(offsets, dtype=int),
@@ -54,6 +56,7 @@ def _agreement(
         races=races,
         no_data=no_data,
         no_boundary=no_boundary,
+        overlap=overlap,
     )
 
 
@@ -198,6 +201,15 @@ def test_a_stack_already_committed_has_no_decision_lap():
     actions = {lap: "PIT_NOW" for lap in range(26, 33)}
     assert _pit_decision_lap(actions, 27, 32) is None
     assert _asks_to_stop(actions, 27, 32) is True
+
+
+def test_one_transition_is_not_scored_against_two_stops():
+    """A repeated real stop is kept, but one model transition earns one score."""
+    claimed = set()
+
+    assert _claim_decision(claimed, 2025, "Sakhir", "SAI", 44) is True
+    assert _claim_decision(claimed, 2025, "Sakhir", "SAI", 44) is False
+    assert _claim_decision(claimed, 2025, "Sakhir", "SAI", 45) is True
 
 
 def test_an_unevaluated_predecessor_cannot_witness_a_transition():
@@ -346,6 +358,15 @@ def test_retired_cars_are_counted_apart_from_declined_calls():
     assert agreement.no_data == 5
 
 
+def test_overlapping_transition_stays_in_the_denominator():
+    """An ambiguous repeated stop is visible without inflating agreement."""
+    agreement = _agreement([0, 1], overlap=1)
+
+    assert agreement.eligible == 3
+    assert agreement.sample_size == 2
+    assert agreement.scored_share == pytest.approx(2 / 3)
+
+
 def test_no_data_counts_against_coverage():
     """Stops the tier could not look at still shrink the share it can vouch for."""
     assert coverage_verdict(_agreement([0] * 5, no_data=5)) == "masked"
@@ -490,3 +511,24 @@ def test_measured_sample_is_non_empty_before_any_figure_is_believed():
     assert agreement.eligible == len(verdicts)
     assert agreement.races == 1
     assert all(v.offset_laps is None for v in verdicts if v.bucket != "scored")
+
+
+@pytest.mark.data
+@pytest.mark.skipif(
+    not (ROOT / "data" / "raw" / "2025" / "Sakhir").is_dir(),
+    reason="2025 Sakhir data absent (CI runner without the dataset)",
+)
+def test_sakhir_sai_repeated_stop_gets_one_unique_transition():
+    """The real consecutive stops exercise the metric's overlap bucket."""
+    agreement, verdicts = measure_decision_agreement(races=((2025, "Sakhir"),))
+    sai = [
+        verdict
+        for verdict in verdicts
+        if verdict.driver == "SAI" and verdict.actual_lap in {44, 45}
+    ]
+
+    assert [(verdict.actual_lap, verdict.bucket) for verdict in sai] == [
+        (44, "scored"),
+        (45, "overlap_in_window"),
+    ]
+    assert agreement.overlap == 1
