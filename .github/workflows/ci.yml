@@ -38,12 +38,11 @@ env:
 #   - `lint` does NOT call `uv sync`. Ruff is the only tool it needs, so
 #     `uvx ruff` runs it as an ephemeral tool — skips installing the full
 #     ML/torch stack just to lint Python style.
-#   - `typecheck` calls `uv sync --extra dev` (mypy lives in the dev extra)
-#     but skips `--all-extras` since the `voice` extra is irrelevant to
-#     `src/rag/`. It also caches `.mypy_cache/` so incremental runs only
+#   - `typecheck` calls `uv sync --extra dev` (mypy lives in the only declared
+#     extra). It also caches `.mypy_cache/` so incremental runs only
 #     re-check files whose hash actually changed.
-#   - `test` keeps `uv sync --all-extras` because the test suite touches
-#     voice / streamlit / arcade paths that need every extra installed.
+#   - `test` keeps `uv sync --all-extras` so the full optional test surface is
+#     installed, including the arcade and compatibility probes.
 
 jobs:
   test:
