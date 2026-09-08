@@ -184,6 +184,7 @@ def test_the_loader_fills_every_column_exactly_once() -> None:
     real argument from a mention of one.
     """
     import ast
+
     source_path = Path(__file__).resolve().parents[2] / "src" / "arcade" / "data.py"
     tree = ast.parse(source_path.read_text(encoding="utf-8"))
     method = next(
