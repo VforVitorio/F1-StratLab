@@ -48,7 +48,7 @@ def test_penalty_parser_extracts_car_and_distinguishes_investigation() -> None:
             "session_key": 1,
             "lap_number": 51,
             "date": "2025-05-25T14:09:00Z",
-            "message": "CAR 63 (RUS) UNDER INVESTIGATION",
+            "message": "FIA STEWARDS: TIME PENALTY UNDER INVESTIGATION FOR CAR 63 (RUS)",
         }
     )
 

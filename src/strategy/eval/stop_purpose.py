@@ -8,12 +8,13 @@ separate and deliberately leaves unresolved cases visible for review.
 from __future__ import annotations
 
 import hashlib
-import re
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from typing import Any
 
 import pandas as pd
+
+from src.f1_strat_manager.rcm_events import RCMEvent, extract_car_numbers, parse_penalty_event
 
 PENALTY_SERVICE = "PENALTY_SERVICE"
 REGULATION_REQUIRED_STOP = "REGULATION_REQUIRED_STOP"
@@ -21,8 +22,6 @@ STRATEGIC_TYRE_CHANGE = "STRATEGIC_TYRE_CHANGE"
 DAMAGE_MECHANICAL_OTHER = "DAMAGE_MECHANICAL_OTHER"
 UNKNOWN = "UNKNOWN"
 
-_CAR_PATTERN = re.compile(r"\bCAR\s+(\d+)\b", re.IGNORECASE)
-_SECONDS_PATTERN = re.compile(r"\b(5|10)\s*SECOND(?:S)?\b", re.IGNORECASE)
 _RELEVANT_TERMS = (
     "PENALTY",
     "PIT LANE",
@@ -205,35 +204,6 @@ def _message_id(session_key: int | None, date: Any, message: str) -> str:
     return hashlib.sha256(raw).hexdigest()[:16]
 
 
-def _penalty_type(message: str) -> str:
-    upper = message.upper().replace("-", " ").replace("/", " ")
-    if "DRIVE THROUGH" in upper:
-        return "drive_through"
-    if "STOP AND GO" in upper or "STOP & GO" in upper or "STOP GO" in upper:
-        return "stop_go"
-    match = _SECONDS_PATTERN.search(upper)
-    if match:
-        return f"{match.group(1)}s"
-    if "PENALTY" in upper:
-        return "other"
-    return "unknown"
-
-
-def _phase(message: str, penalty_type: str) -> str:
-    upper = message.upper()
-    if "NO FURTHER INVESTIGATION" in upper:
-        return "no_further_action"
-    if "PENALTY SERVED" in upper:
-        return "served"
-    if "UNDER INVESTIGATION" in upper:
-        return "under_investigation"
-    if "NOTED" in upper and "PENALTY" not in upper:
-        return "noted"
-    if penalty_type != "unknown":
-        return "awarded"
-    return "unknown"
-
-
 def parse_rcm_message(row: Any) -> RCMEvidence | None:
     """Parse one RCM row when it can inform stop-purpose classification."""
     message = _text(row.get("message"))
@@ -242,8 +212,18 @@ def parse_rcm_message(row: Any) -> RCMEvidence | None:
         return None
     session_key = _driver_number(row.get("session_key"))
     rcm_lap = _lap(row.get("lap_number"))
-    penalty_type = _penalty_type(message)
-    phase = _phase(message, penalty_type)
+    event = RCMEvent(
+        message=message,
+        flag=_text(row.get("flag")),
+        category=_text(row.get("category")),
+        lap=rcm_lap or 0,
+        racing_number=_text(row.get("driver_number")) or None,
+        scope=_text(row.get("scope")),
+    )
+    penalty = parse_penalty_event(event)
+    penalty_type = "unknown" if penalty is None else penalty.penalty_type
+    phase = "unknown" if penalty is None else penalty.phase
+    car_numbers = extract_car_numbers(event)
     forced_entry = "THROUGH THE PIT" in upper or "MUST ENTER THE PIT LANE" in upper
     return RCMEvidence(
         evidence_id=_message_id(session_key, row.get("date"), message),
@@ -251,7 +231,7 @@ def parse_rcm_message(row: Any) -> RCMEvidence | None:
         rcm_lap=rcm_lap,
         date=None if pd.isna(row.get("date")) else str(row.get("date")),
         message=message,
-        car_numbers=tuple(sorted({int(number) for number in _CAR_PATTERN.findall(message)})),
+        car_numbers=car_numbers,
         penalty_type=penalty_type,
         phase=phase,
         forced_entry=forced_entry,

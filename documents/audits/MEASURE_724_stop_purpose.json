@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T13:20:07+00:00",
+  "generated_at": "2026-09-08T17:15:26+00:00",
   "year": 2025,
   "races": 24,
   "raw_lap_rows": 26692,
@@ -71,7 +71,7 @@
     "resolved": 1,
     "resolved_with_conflict": 1,
     "served_without_pit_assignment": 20,
-    "unresolved": 29
+    "unresolved": 27
   },
   "penalty_lifecycle": [
     {
@@ -185,17 +185,6 @@
       "review_note": "time penalty may be served during a tyre stop or added to the result"
     },
     {
-      "penalty_id": "9850:31:other:1",
-      "session_key": 9850,
-      "driver_number": 31,
-      "penalty_type": "other",
-      "awarded_evidence_id": "3ed4254dcf2ab099",
-      "served_evidence_id": null,
-      "candidate_event_ids": [],
-      "status": "unresolved",
-      "review_note": "time penalty may be served during a tyre stop or added to the result"
-    },
-    {
       "penalty_id": "9850:87:stop_go:1",
       "session_key": 9850,
       "driver_number": 87,
@@ -248,17 +237,6 @@
       "driver_number": 22,
       "penalty_type": "10s",
       "awarded_evidence_id": "4d49a49de1d8cec1",
-      "served_evidence_id": null,
-      "candidate_event_ids": [],
-      "status": "unresolved",
-      "review_note": "time penalty may be served during a tyre stop or added to the result"
-    },
-    {
-      "penalty_id": "9869:22:other:1",
-      "session_key": 9869,
-      "driver_number": 22,
-      "penalty_type": "other",
-      "awarded_evidence_id": "11608e09b24395d5",
       "served_evidence_id": null,
       "candidate_event_ids": [],
       "status": "unresolved",
@@ -665,7 +643,7 @@
         31
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -678,7 +656,7 @@
         22
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -689,7 +667,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 30 (LAW) AND 7 (DOO) UNDER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -702,7 +680,7 @@
         1
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -713,7 +691,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 81 (PIA) AND 12 (ANT) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -726,7 +704,7 @@
         87
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -737,7 +715,7 @@
       "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 43 (COL) AND 87 (BEA) UNDER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -748,7 +726,7 @@
       "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 23 (ALB) AND 43 (COL) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -774,7 +752,7 @@
         55
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -785,7 +763,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 22 (TSU) AND 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -809,7 +787,7 @@
       "message": "FIA STEWARDS: TURN 11 INCIDENT INVOLVING CARS 22 (TSU) AND 10 (GAS) REVIEWED NO FURTHER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -822,7 +800,7 @@
         55
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -848,7 +826,7 @@
         55
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -861,7 +839,7 @@
         55
       ],
       "penalty_type": "unknown",
-      "phase": "noted",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -885,7 +863,7 @@
       "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 30 (LAW) AND 18 (STR) REVIEWED NO FURTHER INVESTIGATION - SAFETY CAR INFRINGEMENT",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -896,7 +874,7 @@
       "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 31 (OCO) AND 18 (STR) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -921,8 +899,8 @@
       "car_numbers": [
         22
       ],
-      "penalty_type": "other",
-      "phase": "awarded",
+      "penalty_type": "unknown",
+      "phase": "noted",
       "forced_entry": false
     },
     {
@@ -946,7 +924,7 @@
       "message": "FIA STEWARDS: TURN 10 INCIDENT INVOLVING CARS 27 (HUL) AND 18 (STR) REVIEWED NO FURTHER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -957,7 +935,7 @@
       "message": "FIA STEWARDS: TURN 6 INCIDENT INVOLVING CARS 27 (HUL) AND 31 (OCO) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -983,7 +961,7 @@
         43
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -994,7 +972,7 @@
       "message": "FIA STEWARDS: LAP 1 TURN 1 INCIDENT INVOLVING CARS 55 (SAI) AND 44 (HAM) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1007,7 +985,7 @@
         81
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1018,7 +996,7 @@
       "message": "FIA STEWARDS: TURN 15 INCIDENT INVOLVING CARS 44 (HAM) AND 43 (COL) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1044,7 +1022,7 @@
         87
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1057,7 +1035,7 @@
         18
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1070,7 +1048,7 @@
         5
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1081,7 +1059,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 1 (VER) AND 4 (NOR) REVIEWED NO FURTHER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1092,7 +1070,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 6 (HAD) AND 30 (LAW) REVIEWED NO FURTHER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1103,7 +1081,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 55 (SAI) AND 30 (LAW) UNDER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1116,7 +1094,7 @@
         23
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1129,7 +1107,7 @@
         5
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1140,7 +1118,7 @@
       "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 43 (COL) AND 31 (OCO) REVIEWED NO FURTHER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1177,7 +1155,7 @@
       "message": "FIA STEWARDS: LAP 1 TURN 3 INCIDENT INVOLVING CARS 4 (NOR) AND 81 (PIA) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1214,7 +1192,7 @@
       "message": "FIA STEWARDS: TURN 11 INCIDENT INVOLVING CARS 18 (STR) AND 5 (BOR) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1275,7 +1253,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 81 (PIA) AND 30 (LAW) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1312,7 +1290,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 16 (LEC) AND 63 (RUS) UNDER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1338,7 +1316,7 @@
         18
       ],
       "penalty_type": "unknown",
-      "phase": "noted",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1364,7 +1342,7 @@
         14
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1375,7 +1353,7 @@
       "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 1 (VER) AND 63 (RUS) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1399,7 +1377,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 1 (VER) AND 81 (PIA) UNDER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1412,7 +1390,7 @@
         27
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1425,7 +1403,7 @@
         31
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1463,8 +1441,8 @@
       "car_numbers": [
         31
       ],
-      "penalty_type": "other",
-      "phase": "awarded",
+      "penalty_type": "unknown",
+      "phase": "noted",
       "forced_entry": false
     },
     {
@@ -1475,7 +1453,7 @@
       "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 81 (PIA) AND 31 (OCO) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1486,7 +1464,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 5 (BOR) AND 18 (STR) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1508,7 +1486,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 30 (LAW) AND 27 (HUL) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1532,7 +1510,7 @@
         14
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1556,7 +1534,7 @@
       "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 1 (VER) AND 44 (HAM) UNDER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1567,7 +1545,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 27 (HUL) AND 22 (TSU) UNDER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1578,7 +1556,7 @@
       "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 87 (BEA) AND 55 (SAI) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1589,7 +1567,7 @@
       "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 43 (COL) AND 81 (PIA) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1615,7 +1593,7 @@
         4
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1626,7 +1604,7 @@
       "message": "FIA STEWARDS: TURN 15 INCIDENT INVOLVING CARS 55 (SAI) AND 16 (LEC) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1638,7 +1616,7 @@
       "car_numbers": [
         22
       ],
-      "penalty_type": "other",
+      "penalty_type": "unknown",
       "phase": "under_investigation",
       "forced_entry": false
     },
@@ -1650,7 +1628,7 @@
       "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 27 (HUL) AND 43 (COL) REVIEWED NO FURTHER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1663,7 +1641,7 @@
         7
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1674,7 +1652,7 @@
       "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 22 (TSU) AND 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1709,7 +1687,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 5 (BOR) AND 14 (ALO) REVIEWED NO FURTHER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1746,7 +1724,7 @@
       "message": "FIA STEWARDS: TURN 6 INCIDENT INVOLVING CARS 12 (ANT) AND 18 (STR) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1757,7 +1735,7 @@
       "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 12 (ANT) AND 23 (ALB) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1783,7 +1761,7 @@
         5
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1820,7 +1798,7 @@
       "message": "FIA STEWARDS: TURN 13 INCIDENT INVOLVING CARS 87 (BEA) AND 6 (HAD) REVIEWED NO FURTHER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1831,7 +1809,7 @@
       "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 1 (VER) AND 4 (NOR) REVIEWED NO FURTHER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1842,7 +1820,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 23 (ALB) AND 30 (LAW) UNDER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1853,7 +1831,7 @@
       "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 30 (LAW) AND 87 (BEA) UNDER INVESTIGATION - DRIVING ERRATICALLY",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1878,7 +1856,7 @@
       "car_numbers": [
         31
       ],
-      "penalty_type": "other",
+      "penalty_type": "unknown",
       "phase": "no_further_action",
       "forced_entry": false
     },
@@ -1890,7 +1868,7 @@
       "message": "FIA STEWARDS: TURN 14 INCIDENT INVOLVING CARS 23 (ALB) AND 44 (HAM) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1901,7 +1879,7 @@
       "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 30 (LAW) AND 18 (STR) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1925,7 +1903,7 @@
         23
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1938,7 +1916,7 @@
         63
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1964,7 +1942,7 @@
         44
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -1975,7 +1953,7 @@
       "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 12 (ANT) AND 5 (BOR) REVIEWED NO FURTHER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2049,7 +2027,7 @@
       "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 16 (LEC) AND 23 (ALB) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2060,7 +2038,7 @@
       "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 31 (OCO) AND 30 (LAW) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2071,7 +2049,7 @@
       "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 16 (LEC) AND 55 (SAI) REVIEWED NO FURTHER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2082,7 +2060,7 @@
       "message": "FIA STEWARDS: TURN 14 INCIDENT INVOLVING CARS 7 (DOO) AND 6 (HAD) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2104,7 +2082,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 7 (DOO) AND 30 (LAW) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2128,7 +2106,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 23 (ALB) AND 30 (LAW) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2165,7 +2143,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 30 (LAW) AND 87 (BEA) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2191,7 +2169,7 @@
         12
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2202,7 +2180,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 22 (TSU) AND 55 (SAI) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2215,7 +2193,7 @@
         12
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2252,7 +2230,7 @@
       "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 22 (TSU) AND 18 (STR) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2265,7 +2243,7 @@
         10
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2302,7 +2280,7 @@
       "message": "FIA STEWARDS: TURN 7 INCIDENT INVOLVING CARS 44 (HAM) AND 23 (ALB) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2339,7 +2317,7 @@
       "message": "FIA STEWARDS: TURN 9 INCIDENT INVOLVING CARS 16 (LEC) AND 63 (RUS) REVIEWED NO FURTHER INVESTIGATION - MOVING UNDER BRAKING",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2352,7 +2330,7 @@
         55
       ],
       "penalty_type": "unknown",
-      "phase": "noted",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2363,7 +2341,7 @@
       "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 10 (GAS) AND 27 (HUL) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2402,7 +2380,7 @@
         55
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2413,7 +2391,7 @@
       "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 10 (GAS) AND 55 (SAI) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2435,7 +2413,7 @@
       "message": "FIA STEWARDS: TURN 13 INCIDENT INVOLVING CARS 18 (STR) AND 10 (GAS) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2448,7 +2426,7 @@
         27
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2472,7 +2450,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 6 (HAD) AND 87 (BEA) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2496,7 +2474,7 @@
         22
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2507,7 +2485,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 1 (VER) AND 44 (HAM) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2533,7 +2511,7 @@
         22
       ],
       "penalty_type": "unknown",
-      "phase": "noted",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2570,7 +2548,7 @@
       "message": "FIA STEWARDS: TURN 11 INCIDENT INVOLVING CARS 4 (NOR) AND 1 (VER) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2581,7 +2559,7 @@
       "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 18 (STR) AND 55 (SAI) UNDER INVESTIGATION - MORE THAN ONE CHANGE OF DIRECTION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2618,7 +2596,7 @@
         81
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2629,7 +2607,7 @@
       "message": "FIA STEWARDS: TURN 3 INCIDENT INVOLVING CARS 63 (RUS) AND 16 (LEC) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2640,7 +2618,7 @@
       "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 22 (TSU) AND 43 (COL) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2703,7 +2681,7 @@
         87
       ],
       "penalty_type": "unknown",
-      "phase": "noted",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2714,7 +2692,7 @@
       "message": "CORRECTION:: TURN 3 INCIDENT INVOLVING CARS 12 (ANT) AND 16 (LEC) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2727,7 +2705,7 @@
         23
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2764,7 +2742,7 @@
         4
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2775,7 +2753,7 @@
       "message": "FIA STEWARDS: PIT EXIT INCIDENT INVOLVING CARS 1 (VER) AND 4 (NOR) REVIEWED NO FURTHER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2786,7 +2764,7 @@
       "message": "FIA STEWARDS: TURN 4 INCIDENT INVOLVING CARS 55 (SAI) AND 1 (VER) REVIEWED NO FURTHER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2810,7 +2788,7 @@
       "message": "FIA STEWARDS: TURN 10 INCIDENT INVOLVING CARS 55 (SAI) AND 12 (ANT) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2823,7 +2801,7 @@
         7
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2836,7 +2814,7 @@
         44
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2849,7 +2827,7 @@
         18
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2860,7 +2838,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 22 (TSU) AND 44 (HAM) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2899,7 +2877,7 @@
         18
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -2973,7 +2951,7 @@
         14
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3034,7 +3012,7 @@
         22
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3060,7 +3038,7 @@
         23
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3073,7 +3051,7 @@
         30
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3097,7 +3075,7 @@
       "message": "FIA STEWARDS: TURN 6 INCIDENT INVOLVING CARS 30 (LAW) AND 18 (STR) REVIEWED NO FURTHER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3123,7 +3101,7 @@
         23
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3136,7 +3114,7 @@
         44
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3147,7 +3125,7 @@
       "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 22 (TSU) AND 4 (NOR) UNDER INVESTIGATION - FORCING ANOTHER DRIVER OFF THE TRACK",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3158,7 +3136,7 @@
       "message": "FIA STEWARDS: LAP 1 TURN 2 INCIDENT INVOLVING CARS 55 (SAI) AND 14 (ALO) REVIEWED NO FURTHER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3182,7 +3160,7 @@
       "message": "FIA STEWARDS: TURN 6 INCIDENT INVOLVING CARS 22 (TSU) AND 87 (BEA) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3204,7 +3182,7 @@
       "message": "FIA STEWARDS: TURN 2 INCIDENT INVOLVING CARS 10 (GAS) AND 27 (HUL) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3215,7 +3193,7 @@
       "message": "FIA STEWARDS: INCIDENT INVOLVING CARS 4 (NOR) AND 23 (ALB) REVIEWED NO FURTHER INVESTIGATION - SAFETY CAR INFRINGEMENT",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3226,7 +3204,7 @@
       "message": "FIA STEWARDS: INCIDENT INVOLVING CARS 5 (BOR) AND 30 (LAW) UNDER INVESTIGATION - UNSAFE RELEASE",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3239,7 +3217,7 @@
         23
       ],
       "penalty_type": "unknown",
-      "phase": "noted",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3252,7 +3230,7 @@
         81
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3263,7 +3241,7 @@
       "message": "FIA STEWARDS: TURN 12 INCIDENT INVOLVING CARS 16 (LEC) AND 63 (RUS) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3276,7 +3254,7 @@
         55
       ],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3289,7 +3267,7 @@
         12
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3324,7 +3302,7 @@
       "message": "FIA STEWARDS: TURN 5 INCIDENT INVOLVING CARS 4 (NOR) AND 22 (TSU) UNDER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3346,7 +3324,7 @@
       "message": "FIA STEWARDS: TURN 12 INCIDENT INVOLVING CARS 23 (ALB) AND 5 (BOR) REVIEWED NO FURTHER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "no_further_action",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3383,7 +3361,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 1 (VER) AND 63 (RUS) UNDER INVESTIGATION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3407,7 +3385,7 @@
       "message": "FIA STEWARDS: TURN 1 INCIDENT INVOLVING CARS 87 (BEA) AND 30 (LAW) UNDER INVESTIGATION - LEAVING THE TRACK AND GAINING AN ADVANTAGE",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3420,7 +3398,7 @@
         55
       ],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3431,7 +3409,7 @@
       "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 87 (BEA) AND 18 (STR) UNDER INVESTIGATION - MORE THAN ONE CHANGE OF DIRECTION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3442,7 +3420,7 @@
       "message": "FIA STEWARDS: TURN 8 INCIDENT INVOLVING CARS 22 (TSU) AND 18 (STR) UNDER INVESTIGATION - CAUSING A COLLISION",
       "car_numbers": [],
       "penalty_type": "unknown",
-      "phase": "under_investigation",
+      "phase": "unknown",
       "forced_entry": false
     },
     {
@@ -3455,7 +3433,7 @@
         12
       ],
       "penalty_type": "unknown",
-      "phase": "noted",
+      "phase": "unknown",
       "forced_entry": false
     }
   ],
