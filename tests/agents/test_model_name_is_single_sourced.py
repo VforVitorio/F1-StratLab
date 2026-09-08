@@ -77,6 +77,17 @@ def test_the_resolvers_read_their_environment_variable(monkeypatch: pytest.Monke
     assert orchestrator_model() == "sentinel-orchestrator"
 
 
+def test_lm_studio_url_reads_the_shared_host_at_call_time(monkeypatch: pytest.MonkeyPatch):
+    """Compose's host override reaches clients built after the environment changes."""
+    from src.agents._shared_defaults import lm_studio_base_url
+
+    monkeypatch.setenv("LM_STUDIO_HOST", "host.docker.internal")
+    assert lm_studio_base_url() == "http://host.docker.internal:1234/v1"
+
+    monkeypatch.setenv("LM_STUDIO_HOST", "127.0.0.1")
+    assert lm_studio_base_url() == "http://127.0.0.1:1234/v1"
+
+
 @pytest.mark.parametrize("module", _LLM_MODULES)
 def test_the_module_never_hardcodes_its_model(module: str):
     """Both provider branches pass a name; neither restates a model id."""
@@ -93,6 +104,41 @@ def test_the_module_never_hardcodes_its_model(module: str):
             f"it through subagent_model() / orchestrator_model() in "
             f"src.agents._shared_defaults, so the policy moves in one place."
         )
+
+
+def test_lm_studio_clients_never_hardcode_their_base_url():
+    """Every local client resolves its host instead of freezing localhost."""
+    modules = (*_LLM_MODULES,)
+    for module in modules:
+        tree = ast.parse((AGENTS / module).read_text(encoding="utf-8"))
+        values = [
+            kw.value
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "ChatOpenAI"
+            for kw in node.keywords
+            if kw.arg == "base_url"
+        ]
+        assert values, f"{module} has no explicit LM Studio base_url"
+        assert all(not isinstance(value, ast.Constant) for value in values), (
+            f"{module} freezes a literal LM Studio base_url; use "
+            "lm_studio_base_url() so compose can reach the host"
+        )
+
+    alert_tree = ast.parse(
+        (ROOT / "src" / "strategy" / "eval" / "alert_llm.py").read_text(encoding="utf-8")
+    )
+    alert_values = [
+        kw.value
+        for node in ast.walk(alert_tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "ChatOpenAI"
+        for kw in node.keywords
+        if kw.arg == "base_url"
+    ]
+    assert alert_values and all(not isinstance(value, ast.Constant) for value in alert_values)
 
 
 @pytest.mark.data
@@ -114,10 +160,13 @@ def test_every_layer_sends_the_model_the_resolver_returns(monkeypatch: pytest.Mo
     import langchain_openai
 
     sent: list[str] = []
+    urls: list[str] = []
 
     class _Recorder:
         def __init__(self, **kwargs):
             sent.append(kwargs.get("model"))
+            if "base_url" in kwargs:
+                urls.append(kwargs["base_url"])
 
         def with_structured_output(self, *args, **kwargs):
             return self
@@ -128,6 +177,7 @@ def test_every_layer_sends_the_model_the_resolver_returns(monkeypatch: pytest.Mo
     monkeypatch.setattr(langchain_openai, "ChatOpenAI", _Recorder)
     monkeypatch.setattr(langchain.agents, "create_agent", lambda *a, **k: object())
     monkeypatch.setenv("F1_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("LM_STUDIO_HOST", "host.docker.internal")
     monkeypatch.setenv("F1_LLM_MODEL_AGENTS", "sentinel-agents")
     monkeypatch.setenv("F1_LLM_MODEL_ORCHESTRATOR", "sentinel-orchestrator")
 
@@ -154,15 +204,21 @@ def test_every_layer_sends_the_model_the_resolver_returns(monkeypatch: pytest.Mo
         ("rag", lambda: (setattr(rag_agent, "_rag_agent", None), rag_agent.get_rag_react_agent())),
     ):
         sent.clear()
+        urls.clear()
         build()
         assert sent and set(sent) == {"sentinel-agents"}, (
             f"{name} sent {sorted(set(sent))}, not the sub-agent resolver's value. A "
             f"model_name that is declared but never read is exactly the #264 defect."
         )
+        assert set(urls) == {"http://host.docker.internal:1234/v1"}, (
+            f"{name} sent {sorted(set(urls))}, not the compose host"
+        )
 
     sent.clear()
+    urls.clear()
     monkeypatch.setattr(strategy_orchestrator, "_orchestrator_llm", None)
     strategy_orchestrator._get_orchestrator_llm()
     assert set(sent) == {"sentinel-orchestrator"}, (
         f"the orchestrator sent {sorted(set(sent))}, not the Layer 3 resolver's value"
     )
+    assert set(urls) == {"http://host.docker.internal:1234/v1"}

@@ -48,7 +48,7 @@ from src.rag.retriever import (  # noqa: E402
     query_rag_tool,
 )
 
-from src.agents._shared_defaults import LLM_MAX_RETRIES, subagent_model
+from src.agents._shared_defaults import LLM_MAX_RETRIES, lm_studio_base_url, subagent_model
 
 # ── Optional LangChain / LangGraph imports ─────────────────────────────
 # Probed, not imported. `import langchain_openai` costs 14.3 s measured: it drags
@@ -190,7 +190,7 @@ def get_rag_react_agent():
         else:
             llm = ChatOpenAI(
                 model=model_name,
-                base_url="http://localhost:1234/v1",
+                base_url=lm_studio_base_url(),
                 api_key="lm-studio",
                 temperature=0,
                 model_kwargs={"parallel_tool_calls": False},

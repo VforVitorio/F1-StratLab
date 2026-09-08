@@ -129,6 +129,8 @@ DEFAULT_TRACK_TEMP_C: float = 34.7
 # synthesis and runs a stronger one.
 _DEFAULT_SUBAGENT_MODEL: str = "gpt-4.1-mini"
 _DEFAULT_ORCHESTRATOR_MODEL: str = "gpt-5.4-mini"
+_DEFAULT_LM_STUDIO_HOST: str = "localhost"
+_LM_STUDIO_PORT: int = 1234
 
 
 def subagent_model() -> str:
@@ -151,3 +153,13 @@ def orchestrator_model() -> str:
         prose and the sub-agents only fill a small structured output.
     """
     return os.environ.get("F1_LLM_MODEL_ORCHESTRATOR", _DEFAULT_ORCHESTRATOR_MODEL)
+
+
+def lm_studio_base_url() -> str:
+    """Return the LM Studio URL shared by every local LLM client.
+
+    ``LM_STUDIO_HOST`` is read at call time so compose can point container clients
+    at the host without changing the Python modules.
+    """
+    host = os.environ.get("LM_STUDIO_HOST") or _DEFAULT_LM_STUDIO_HOST
+    return f"http://{host}:{_LM_STUDIO_PORT}/v1"

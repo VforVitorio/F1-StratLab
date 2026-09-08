@@ -143,7 +143,7 @@ from src.f1_strat_manager.rcm_events import (  # noqa: E402
     classify_rcm_event as _classify_rcm_event,
 )
 
-from src.agents._shared_defaults import LLM_MAX_RETRIES, subagent_model
+from src.agents._shared_defaults import LLM_MAX_RETRIES, lm_studio_base_url, subagent_model
 
 
 
@@ -819,7 +819,7 @@ def _get_radio_llm():
         else:
             base_llm = ChatOpenAI(
                 model=model_name,
-                base_url="http://localhost:1234/v1",
+                base_url=lm_studio_base_url(),
                 api_key="lm-studio",
                 temperature=0.0,
                 model_kwargs={"parallel_tool_calls": False},
