@@ -19,6 +19,7 @@ frame that went in at index `i`, field by field.
 from __future__ import annotations
 
 import pickle
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -183,15 +184,17 @@ def test_the_loader_fills_every_column_exactly_once() -> None:
     real argument from a mention of one.
     """
     import ast
-    import inspect
-    import textwrap
 
-    from src.arcade.data import SessionLoader
-
-    source = textwrap.dedent(inspect.getsource(SessionLoader._resample_driver))
+    source_path = Path(__file__).resolve().parents[2] / "src" / "arcade" / "data.py"
+    tree = ast.parse(source_path.read_text(encoding="utf-8"))
+    method = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "_resample_driver"
+    )
     calls = [
         node
-        for node in ast.walk(ast.parse(source))
+        for node in ast.walk(method)
         if isinstance(node, ast.Call)
         and isinstance(node.func, ast.Name)
         and node.func.id == "DriverFrames"
