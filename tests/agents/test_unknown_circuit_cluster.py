@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+from tests.conftest import HAS_TIRE_MODELS
+
 ROOT = Path(__file__).parent.parent.parent
 
 
@@ -19,6 +23,8 @@ def test_pace_unknown_circuit_does_not_become_a_real_cluster():
     assert agent._encode_categorical("SOFT", "McLaren", "Unknown GP")[2] == -1
 
 
+@pytest.mark.data
+@pytest.mark.skipif(not HAS_TIRE_MODELS, reason="tire model artefacts absent")
 def test_tire_unknown_circuit_preserves_the_explicit_fallback():
     """N26's resolver lets its caller choose the non-trained fallback."""
     from src.agents.tire_agent import TireAgentConfig
