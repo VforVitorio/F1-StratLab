@@ -15,6 +15,7 @@ from typing import Any
 
 import pandas as pd
 
+from src.data_extraction.openf1.radio_dataset_builder import OPENF1_BASE, build_retry_session
 from src.f1_strat_manager.rcm_events import RCMEvent, classify_rcm_event
 from src.f1_strat_manager.tyre_stint_repair import repair_tyre_stints
 from src.strategy.eval.decision_modes import SAMPLED_RACES
@@ -25,6 +26,44 @@ RAW_ROOT = ROOT / "data" / "raw" / "2025"
 RCM_ROOT = ROOT / "data" / "processed" / "race_radios" / "2025"
 OUTPUT_JSON = ROOT / "documents" / "audits" / "MEASURE_724_stop_purpose.json"
 OUTPUT_MD = ROOT / "documents" / "audits" / "MEASURE_724_stop_purpose.md"
+ANCHOR_ROOT = ROOT / "data" / "processed" / "stop_purpose" / "2025" / "openf1_laps"
+RCM_ANCHOR_ROOT = ROOT / "data" / "processed" / "stop_purpose" / "2025" / "openf1_rcm"
+
+
+def _openf1_laps(session: Any, session_key: int) -> pd.DataFrame:
+    """Read one cached OpenF1 lap index, fetching it once when absent."""
+    path = ANCHOR_ROOT / f"{session_key}.json"
+    if path.exists():
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    else:
+        response = session.get(
+            f"{OPENF1_BASE}/laps",
+            params={"session_key": session_key},
+            timeout=30,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        ANCHOR_ROOT.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload), encoding="utf-8")
+    return pd.DataFrame(payload)
+
+
+def _openf1_rcm(session: Any, session_key: int) -> pd.DataFrame:
+    """Read one complete OpenF1 race-control index, fetching it when absent."""
+    path = RCM_ANCHOR_ROOT / f"{session_key}.json"
+    if path.exists():
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    else:
+        response = session.get(
+            f"{OPENF1_BASE}/race_control",
+            params={"session_key": session_key},
+            timeout=30,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        RCM_ANCHOR_ROOT.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload), encoding="utf-8")
+    return pd.DataFrame(payload)
 
 
 def _sample_stops(laps: pd.DataFrame) -> set[tuple[str, int]]:
@@ -89,13 +128,16 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         f"- RAW lap rows: {payload['raw_lap_rows']}",
         f"- PitInTime entries: {summary['pit_entries']}",
         f"- entries in the current missed-pit-call green sample: {summary['in_715_sample']}",
-        f"- local RCM rows: {payload['rcm_rows']}",
+        f"- complete OpenF1 RCM rows: {payload['rcm_rows']}",
+        f"- filtered local RCM rows: {payload['local_rcm_rows']}",
         f"- messages containing `PENALTY`: {payload['penalty_messages']}",
         f"- penalty-text messages classified as generic collisions: {payload['penalty_as_collision']}",
         f"- non-null `LapStartDate` rows: {payload['lap_start_date_nonnull']}",
         f"- tyre metadata repair: {payload['repair']['races_changed']} races, "
         f"{payload['repair']['tyre_life_nulled']} ages made unknown",
-        "- external API, LLM and private telemetry calls: none",
+        f"- OpenF1 lap-anchor sessions: {payload['anchor_sessions']} "
+        f"({payload['anchor_rows']} rows, cached)",
+        "- LLM and private telemetry calls: none",
         "",
         "## What the local evidence says",
         "",
@@ -131,12 +173,13 @@ def _render_markdown(payload: dict[str, Any]) -> str:
             "",
             "## Limitations that remain visible",
             "",
-            "- The local RCM parquet is the filtered runtime mirror; it removes unmapped",
-            "  messages, laps 0-1, and the final lap, so it is not the complete retrospective",
-            "  official record.",
-            "- RAW `LapStartDate` is empty, so this pass does not claim a global UTC join.",
-            "  Evidence links use session key, car number extracted from message text, and",
-            "  mapped lap as a provisional association.",
+            "- The local RCM parquet is the filtered runtime mirror; the complete pass uses",
+            "  cached OpenF1 race-control rows and keeps the local mirror only for coverage",
+            "  comparison.",
+            "- RAW `LapStartDate` is empty. OpenF1 lap starts reconstruct UTC for the",
+            f"  {summary['timestamp_alignment'].get('exact_openf1_lap', 0)}/{summary['pit_entries']} entries;",
+            "  the remaining entries stay explicitly unanchored and are not silently",
+            "  approximated.",
             "- Absence of a local message means no evidence in this corpus, not no penalty.",
             "- The classifier's generic event category is not a sanction ledger; a future",
             "  parser must preserve awarded, served, cancelled, investigated, and unresolved",
@@ -155,10 +198,11 @@ def _render_markdown(payload: dict[str, Any]) -> str:
             "",
             "## Decision",
             "",
-            "Do not connect these labels to the production scorer yet. The next required",
-            "step is to recover or reconcile the complete 2025 race-control record and",
-            "manually review penalties, conflicts, mixed-purpose entries, and a stratified",
-            "sample of strategic candidates before recalculating the no-call denominator.",
+            "Do not connect these labels to the production scorer yet. The complete",
+            "2025 OpenF1 race-control pass is now cached. The next required step is",
+            "manual adjudication of penalties, conflicts, mixed-purpose entries, and a",
+            "stratified sample of strategic candidates before recalculating the no-call",
+            "denominator.",
             "",
         ]
     )
@@ -169,12 +213,16 @@ def main() -> None:
     if not RAW_ROOT.is_dir():
         raise FileNotFoundError(f"2025 raw data is missing: {RAW_ROOT}")
 
-    rcm_by_session, rcm_rows = _rcm_by_session()
+    _local_rcm_by_session, local_rcm_rows = _rcm_by_session()
+    http = build_retry_session()
+    complete_rcm_by_session: dict[int, pd.DataFrame] = {}
     records = []
     raw_lap_rows = 0
     lap_start_date_nonnull = 0
     races = 0
     repair_counts: Counter[str] = Counter()
+    anchor_sessions: set[int] = set()
+    anchor_rows = 0
     for year, race in SAMPLED_RACES:
         if year != 2025:
             continue
@@ -183,7 +231,11 @@ def main() -> None:
         laps, repair_report = repair_tyre_stints(raw_laps)
         metadata = json.loads((race_dir / "metadata.json").read_text(encoding="utf-8"))
         session_key = int(metadata["session_key_openf1"])
-        rcm = rcm_by_session.get(session_key, pd.DataFrame())
+        rcm = _openf1_rcm(http, session_key)
+        openf1_laps = _openf1_laps(http, session_key)
+        complete_rcm_by_session[session_key] = rcm
+        anchor_sessions.add(session_key)
+        anchor_rows += len(openf1_laps)
         meeting_key = None if rcm.empty else int(rcm["meeting_key"].iloc[0])
         sample = _sample_stops(raw_laps)
         records.extend(
@@ -197,6 +249,7 @@ def main() -> None:
                 sample_stops=sample,
                 raw_laps=raw_laps,
                 repair_applied=repair_report.changed_anything,
+                openf1_laps=openf1_laps,
             )
         )
         races += 1
@@ -212,7 +265,7 @@ def main() -> None:
     penalty_messages = 0
     penalty_as_collision = 0
     evidence: dict[str, dict[str, Any]] = {}
-    for frame in rcm_by_session.values():
+    for frame in complete_rcm_by_session.values():
         penalty_messages += int(
             frame["message"].astype(str).str.contains("PENALTY", case=False).sum()
         )
@@ -250,7 +303,10 @@ def main() -> None:
         "year": 2025,
         "races": races,
         "raw_lap_rows": raw_lap_rows,
-        "rcm_rows": rcm_rows,
+        "rcm_rows": sum(len(frame) for frame in complete_rcm_by_session.values()),
+        "local_rcm_rows": local_rcm_rows,
+        "anchor_sessions": len(anchor_sessions),
+        "anchor_rows": anchor_rows,
         "penalty_messages": penalty_messages,
         "penalty_as_collision": penalty_as_collision,
         "lap_start_date_nonnull": lap_start_date_nonnull,

@@ -4,17 +4,19 @@ This is a retrospective evidence inventory for the decision-layer work.
 It does not change the scorer and it does not treat the team's observed
 pit entry as proof that the team's decision was optimal.
 
-- generated `2026-09-08T12:20:53+00:00`
+- generated `2026-09-08T12:45:26+00:00`
 - races: 24
 - RAW lap rows: 26692
 - PitInTime entries: 841
 - entries in the current missed-pit-call green sample: 573
-- local RCM rows: 1534
-- messages containing `PENALTY`: 69
-- penalty-text messages classified as generic collisions: 21
+- complete OpenF1 RCM rows: 2216
+- filtered local RCM rows: 1534
+- messages containing `PENALTY`: 77
+- penalty-text messages classified as generic collisions: 22
 - non-null `LapStartDate` rows: 0
 - tyre metadata repair: 2 races, 308 ages made unknown
-- external API, LLM and private telemetry calls: none
+- OpenF1 lap-anchor sessions: 24 (26265 rows, cached)
+- LLM and private telemetry calls: none
 
 ## What the local evidence says
 
@@ -48,12 +50,13 @@ review, not confirmed ground truth.
 
 ## Limitations that remain visible
 
-- The local RCM parquet is the filtered runtime mirror; it removes unmapped
-  messages, laps 0-1, and the final lap, so it is not the complete retrospective
-  official record.
-- RAW `LapStartDate` is empty, so this pass does not claim a global UTC join.
-  Evidence links use session key, car number extracted from message text, and
-  mapped lap as a provisional association.
+- The local RCM parquet is the filtered runtime mirror; the complete pass uses
+  cached OpenF1 race-control rows and keeps the local mirror only for coverage
+  comparison.
+- RAW `LapStartDate` is empty. OpenF1 lap starts reconstruct UTC for the
+  835/841 entries;
+  the remaining entries stay explicitly unanchored and are not silently
+  approximated.
 - Absence of a local message means no evidence in this corpus, not no penalty.
 - The classifier's generic event category is not a sanction ledger; a future
   parser must preserve awarded, served, cancelled, investigated, and unresolved
@@ -72,7 +75,8 @@ and [pit-stop summary](https://www.fia.com/sites/default/files/2025_08_mon_f1_r0
 
 ## Decision
 
-Do not connect these labels to the production scorer yet. The next required
-step is to recover or reconcile the complete 2025 race-control record and
-manually review penalties, conflicts, mixed-purpose entries, and a stratified
-sample of strategic candidates before recalculating the no-call denominator.
+Do not connect these labels to the production scorer yet. The complete
+2025 OpenF1 race-control pass is now cached. The next required step is
+manual adjudication of penalties, conflicts, mixed-purpose entries, and a
+stratified sample of strategic candidates before recalculating the no-call
+denominator.
