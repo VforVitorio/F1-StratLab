@@ -52,6 +52,21 @@ class RCMEvidence:
 
 
 @dataclass(frozen=True)
+class PenaltyLifecycle:
+    """One penalty state sequence and its conservative pit-entry candidates."""
+
+    penalty_id: str
+    session_key: int | None
+    driver_number: int
+    penalty_type: str
+    awarded_evidence_id: str
+    served_evidence_id: str | None
+    candidate_event_ids: tuple[str, ...]
+    status: str
+    review_note: str
+
+
+@dataclass(frozen=True)
 class StopPurposeRecord:
     """One observed pit entry and the evidence currently attached to it."""
 
@@ -191,10 +206,10 @@ def _message_id(session_key: int | None, date: Any, message: str) -> str:
 
 
 def _penalty_type(message: str) -> str:
-    upper = message.upper().replace("-", " ")
+    upper = message.upper().replace("-", " ").replace("/", " ")
     if "DRIVE THROUGH" in upper:
         return "drive_through"
-    if "STOP AND GO" in upper or "STOP & GO" in upper:
+    if "STOP AND GO" in upper or "STOP & GO" in upper or "STOP GO" in upper:
         return "stop_go"
     match = _SECONDS_PATTERN.search(upper)
     if match:
@@ -400,6 +415,107 @@ def _evidence_timing(evidence: Iterable[RCMEvidence], pit_lap: int, pit_in_utc: 
     if before:
         return "pre_entry"
     return "unknown"
+
+
+def _timestamp(value: str | None) -> pd.Timestamp:
+    return pd.to_datetime(value, utc=True, errors="coerce")
+
+
+def build_penalty_lifecycle(
+    records: Iterable[StopPurposeRecord], evidence: Iterable[RCMEvidence]
+) -> list[PenaltyLifecycle]:
+    """Pair penalty announcements with confirmations without guessing a stop."""
+    records_by_driver: dict[tuple[int | None, int], list[StopPurposeRecord]] = {}
+    for record in records:
+        records_by_driver.setdefault((record.session_key, record.driver_number), []).append(record)
+
+    grouped: dict[tuple[int | None, int, str], dict[str, list[RCMEvidence]]] = {}
+    for item in evidence:
+        if item.penalty_type == "unknown" or not item.car_numbers:
+            continue
+        for driver_number in item.car_numbers:
+            key = (item.session_key, driver_number, item.penalty_type)
+            grouped.setdefault(key, {"awarded": [], "served": []})
+            if item.phase == "awarded":
+                grouped[key]["awarded"].append(item)
+            elif item.phase == "served":
+                grouped[key]["served"].append(item)
+
+    lifecycles: list[PenaltyLifecycle] = []
+    for (session_key, driver_number, penalty_type), phases in sorted(grouped.items()):
+        awards = sorted(phases["awarded"], key=lambda item: (item.rcm_lap or 0, item.date or ""))
+        served = sorted(phases["served"], key=lambda item: (item.rcm_lap or 0, item.date or ""))
+        used_served: set[str] = set()
+        driver_records = records_by_driver.get((session_key, driver_number), [])
+        for sequence, award in enumerate(awards, start=1):
+            award_timestamp = _timestamp(award.date)
+            served_item = next(
+                (
+                    item
+                    for item in served
+                    if item.evidence_id not in used_served
+                    and (
+                        pd.isna(award_timestamp)
+                        or pd.isna(_timestamp(item.date))
+                        or _timestamp(item.date) >= award_timestamp
+                    )
+                ),
+                None,
+            )
+            if served_item is not None:
+                used_served.add(served_item.evidence_id)
+
+            candidates = []
+            for record in driver_records:
+                if penalty_type not in {"drive_through", "stop_go"}:
+                    continue
+                if (
+                    award.rcm_lap is not None
+                    and not award.rcm_lap <= record.pit_in_lap <= award.rcm_lap + 3
+                ):
+                    continue
+                pit_timestamp = _timestamp(record.pit_in_utc)
+                if pd.notna(award_timestamp) and pd.notna(pit_timestamp):
+                    if pit_timestamp < award_timestamp - pd.Timedelta(seconds=60):
+                        continue
+                    if served_item is not None:
+                        served_timestamp = _timestamp(served_item.date)
+                        if pd.notna(
+                            served_timestamp
+                        ) and pit_timestamp > served_timestamp + pd.Timedelta(seconds=60):
+                            continue
+                candidates.append(record)
+
+            if penalty_type not in {"drive_through", "stop_go"}:
+                status = "served_without_pit_assignment" if served_item else "unresolved"
+                note = "time penalty may be served during a tyre stop or added to the result"
+            elif len(candidates) == 1 and served_item is not None:
+                status = "resolved_with_conflict" if candidates[0].source_conflict else "resolved"
+                note = "one compatible entry between award and served confirmation"
+            elif len(candidates) > 1:
+                status = "ambiguous"
+                note = "multiple compatible entries; no nearest-entry guess"
+            elif len(candidates) == 1:
+                status = "candidate_without_confirmation"
+                note = "compatible entry found but no served confirmation in the feed"
+            else:
+                status = "unresolved"
+                note = "no compatible entry can be established from the available evidence"
+
+            lifecycles.append(
+                PenaltyLifecycle(
+                    penalty_id=f"{session_key}:{driver_number}:{penalty_type}:{sequence}",
+                    session_key=session_key,
+                    driver_number=driver_number,
+                    penalty_type=penalty_type,
+                    awarded_evidence_id=award.evidence_id,
+                    served_evidence_id=None if served_item is None else served_item.evidence_id,
+                    candidate_event_ids=tuple(record.event_id for record in candidates),
+                    status=status,
+                    review_note=note,
+                )
+            )
+    return lifecycles
 
 
 def _labels(

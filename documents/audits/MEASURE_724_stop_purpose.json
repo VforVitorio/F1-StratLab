@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T12:59:07+00:00",
+  "generated_at": "2026-09-08T13:20:07+00:00",
   "year": 2025,
   "races": 24,
   "raw_lap_rows": 26692,
@@ -20,17 +20,17 @@
     "pit_entries": 841,
     "in_715_sample": 573,
     "labels": {
-      "PENALTY_SERVICE": 2,
+      "PENALTY_SERVICE": 4,
       "REGULATION_REQUIRED_STOP": 34,
       "STRATEGIC_TYRE_CHANGE": 707,
-      "UNKNOWN": 98
+      "UNKNOWN": 96
     },
     "cohorts": {
       "mixed": 11,
-      "penalty_only": 2,
+      "penalty_only": 4,
       "regulation_forced": 33,
       "strategic_candidate": 697,
-      "unknown": 98
+      "unknown": 96
     },
     "telemetry_set_change": {
       "confirmed": 709,
@@ -66,6 +66,594 @@
     "source_conflicts": 1,
     "decision_comparable": 0
   },
+  "penalty_lifecycle_summary": {
+    "ambiguous": 1,
+    "resolved": 1,
+    "resolved_with_conflict": 1,
+    "served_without_pit_assignment": 20,
+    "unresolved": 29
+  },
+  "penalty_lifecycle": [
+    {
+      "penalty_id": "9693:5:5s:1",
+      "session_key": 9693,
+      "driver_number": 5,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "bfc12eea5c6b03dd",
+      "served_evidence_id": "ef96419ec2647d3c",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9693:12:5s:1",
+      "session_key": 9693,
+      "driver_number": 12,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "09931726a765fb0c",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9839:10:5s:1",
+      "session_key": 9839,
+      "driver_number": 10,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "c4ab5cfeb583a8f2",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9839:18:5s:1",
+      "session_key": 9839,
+      "driver_number": 18,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "dd64c317d62986c3",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9839:22:5s:1",
+      "session_key": 9839,
+      "driver_number": 22,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "0d4f2ef78c1ce0cf",
+      "served_evidence_id": "04953257922c3ec3",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9839:23:5s:1",
+      "session_key": 9839,
+      "driver_number": 23,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "3359e5d3e18cfc25",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9839:30:5s:1",
+      "session_key": 9839,
+      "driver_number": 30,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "6220c2f89779185e",
+      "served_evidence_id": "712a6ced685d854d",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9839:87:5s:1",
+      "session_key": 9839,
+      "driver_number": 87,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "a904ef2b7aa04dcc",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9850:18:5s:1",
+      "session_key": 9850,
+      "driver_number": 18,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "47199a513b61c597",
+      "served_evidence_id": "c92fe25261200466",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9850:31:5s:1",
+      "session_key": 9850,
+      "driver_number": 31,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "93316ee732fda71a",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9850:31:other:1",
+      "session_key": 9850,
+      "driver_number": 31,
+      "penalty_type": "other",
+      "awarded_evidence_id": "3ed4254dcf2ab099",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9850:87:stop_go:1",
+      "session_key": 9850,
+      "driver_number": 87,
+      "penalty_type": "stop_go",
+      "awarded_evidence_id": "85a32a1061ad8467",
+      "served_evidence_id": "827af7d7abf9046c",
+      "candidate_event_ids": [
+        "2025:9850:87:40:3",
+        "2025:9850:87:41:4"
+      ],
+      "status": "ambiguous",
+      "review_note": "multiple compatible entries; no nearest-entry guess"
+    },
+    {
+      "penalty_id": "9858:12:5s:1",
+      "session_key": 9858,
+      "driver_number": 12,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "627c4b5a3c3e480f",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9858:23:5s:1",
+      "session_key": 9858,
+      "driver_number": 23,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "ae432305596bb32f",
+      "served_evidence_id": "cf64e15e36d4b686",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9869:22:10s:1",
+      "session_key": 9869,
+      "driver_number": 22,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "66a1f7149ca8bd96",
+      "served_evidence_id": "6eaa1fe7e490776a",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9869:22:10s:2",
+      "session_key": 9869,
+      "driver_number": 22,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "4d49a49de1d8cec1",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9869:22:other:1",
+      "session_key": 9869,
+      "driver_number": 22,
+      "penalty_type": "other",
+      "awarded_evidence_id": "11608e09b24395d5",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9869:44:5s:1",
+      "session_key": 9869,
+      "driver_number": 44,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "b30be86d95d91d37",
+      "served_evidence_id": "6261ae6d9bad4979",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9869:81:10s:1",
+      "session_key": 9869,
+      "driver_number": 81,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "10242d065d090f91",
+      "served_evidence_id": "5ad7a710429d7433",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9877:44:10s:1",
+      "session_key": 9877,
+      "driver_number": 44,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "8c1cee3fac61036c",
+      "served_evidence_id": "d13197f3808589f0",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9877:55:5s:1",
+      "session_key": 9877,
+      "driver_number": 55,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "f7f9b57c72b56eab",
+      "served_evidence_id": "97c234f9cc178d82",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9877:55:drive_through:1",
+      "session_key": 9877,
+      "driver_number": 55,
+      "penalty_type": "drive_through",
+      "awarded_evidence_id": "d71e8cf3d9451da8",
+      "served_evidence_id": "74c2ee01d180a8d7",
+      "candidate_event_ids": [
+        "2025:9877:55:56:3"
+      ],
+      "status": "resolved",
+      "review_note": "one compatible entry between award and served confirmation"
+    },
+    {
+      "penalty_id": "9904:14:5s:1",
+      "session_key": 9904,
+      "driver_number": 14,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "ac1ba4e9065fc4de",
+      "served_evidence_id": "3702f89bf3980030",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9904:23:10s:1",
+      "session_key": 9904,
+      "driver_number": 23,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "15de0f17aeb73f60",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9904:81:5s:1",
+      "session_key": 9904,
+      "driver_number": 81,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "24efcc297d0497ae",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9912:12:5s:1",
+      "session_key": 9912,
+      "driver_number": 12,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "3d9617d476edaa45",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9912:31:5s:1",
+      "session_key": 9912,
+      "driver_number": 31,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "73d38704ff4dac2d",
+      "served_evidence_id": "d35fabe337d955a2",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9912:87:10s:1",
+      "session_key": 9912,
+      "driver_number": 87,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "c39823fa3794c964",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9920:12:10s:1",
+      "session_key": 9920,
+      "driver_number": 12,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "f4b62a399fd18fcd",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9920:12:5s:1",
+      "session_key": 9920,
+      "driver_number": 12,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "811bf40e1f4589a4",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9920:55:10s:1",
+      "session_key": 9920,
+      "driver_number": 55,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "5e2160d4fc43f720",
+      "served_evidence_id": "3dd1637a04e85780",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9928:10:10s:1",
+      "session_key": 9928,
+      "driver_number": 10,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "29efad2a25fc33d3",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9928:16:5s:1",
+      "session_key": 9928,
+      "driver_number": 16,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "a0efc7f3cf43c126",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9928:27:5s:1",
+      "session_key": 9928,
+      "driver_number": 27,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "f4aaca16d13cceb0",
+      "served_evidence_id": "82d8afa308a65bb1",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9947:22:10s:1",
+      "session_key": 9947,
+      "driver_number": 22,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "323db645b60932b8",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9947:81:10s:1",
+      "session_key": 9947,
+      "driver_number": 81,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "e2b9b9f68fe72ebc",
+      "served_evidence_id": "36268d113c2ce625",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9955:22:10s:1",
+      "session_key": 9955,
+      "driver_number": 22,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "249ac3fe2199a01d",
+      "served_evidence_id": "8d8fdf4f274918de",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9955:43:5s:1",
+      "session_key": 9955,
+      "driver_number": 43,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "bb3fb371c7ab7c5a",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9963:18:10s:1",
+      "session_key": 9963,
+      "driver_number": 18,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "2b40a556518856a4",
+      "served_evidence_id": "23eda2d7adf7961d",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9971:1:10s:1",
+      "session_key": 9971,
+      "driver_number": 1,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "9a2bb3e3dc7d728f",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9971:23:10s:1",
+      "session_key": 9971,
+      "driver_number": 23,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "90f97c965c57262e",
+      "served_evidence_id": "0e9343c1e1ea1d3a",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9971:87:10s:1",
+      "session_key": 9971,
+      "driver_number": 87,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "96eb3693cb308df9",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "9979:63:drive_through:1",
+      "session_key": 9979,
+      "driver_number": 63,
+      "penalty_type": "drive_through",
+      "awarded_evidence_id": "9baaa9f4bba1ed46",
+      "served_evidence_id": "a76f84a2a64e51da",
+      "candidate_event_ids": [
+        "2025:9979:63:53:1"
+      ],
+      "status": "resolved_with_conflict",
+      "review_note": "one compatible entry between award and served confirmation"
+    },
+    {
+      "penalty_id": "9998:7:10s:1",
+      "session_key": 9998,
+      "driver_number": 7,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "d8b56dd958f4f863",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "10014:4:5s:1",
+      "session_key": 10014,
+      "driver_number": 4,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "598153d126dcf362",
+      "served_evidence_id": "cfc17cb136d753c2",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "10014:7:5s:1",
+      "session_key": 10014,
+      "driver_number": 7,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "75293b420b7aaac1",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "10014:30:10s:1",
+      "session_key": 10014,
+      "driver_number": 30,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "b2fe028d795a86dd",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "10014:30:5s:1",
+      "session_key": 10014,
+      "driver_number": 30,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "3438c265b472468e",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "10014:55:10s:1",
+      "session_key": 10014,
+      "driver_number": 55,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "b282f5cecff3b8d5",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "10022:1:5s:1",
+      "session_key": 10022,
+      "driver_number": 1,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "198f9f3eeb53449c",
+      "served_evidence_id": "13a840e0db86180b",
+      "candidate_event_ids": [],
+      "status": "served_without_pit_assignment",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "10022:30:10s:1",
+      "session_key": 10022,
+      "driver_number": 30,
+      "penalty_type": "10s",
+      "awarded_evidence_id": "2e132d26cf6b671f",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    },
+    {
+      "penalty_id": "10033:22:5s:1",
+      "session_key": 10033,
+      "driver_number": 22,
+      "penalty_type": "5s",
+      "awarded_evidence_id": "2342c54bf289c547",
+      "served_evidence_id": null,
+      "candidate_event_ids": [],
+      "status": "unresolved",
+      "review_note": "time penalty may be served during a tyre stop or added to the result"
+    }
+  ],
   "evidence": [
     {
       "evidence_id": "008c99ddbe543ade",
@@ -1552,7 +2140,7 @@
       "car_numbers": [
         87
       ],
-      "penalty_type": "10s",
+      "penalty_type": "stop_go",
       "phase": "served",
       "forced_entry": false
     },
@@ -1589,7 +2177,7 @@
       "car_numbers": [
         87
       ],
-      "penalty_type": "10s",
+      "penalty_type": "stop_go",
       "phase": "awarded",
       "forced_entry": false
     },
@@ -14445,12 +15033,12 @@
       "telemetry_set_change": "unknown",
       "tyre_change_resolved": "unknown",
       "source_conflict": false,
-      "primary_label": "UNKNOWN",
+      "primary_label": "PENALTY_SERVICE",
       "secondary_label": null,
-      "penalty_type": "10s",
+      "penalty_type": "stop_go",
       "penalty_served": "unknown",
       "regulation_constraint": "none",
-      "timing_discretion": "unknown",
+      "timing_discretion": "forced_window",
       "decision_comparable": false,
       "mixed_purpose": false,
       "evidence_level": "corroborated",
@@ -14460,8 +15048,8 @@
         "85a32a1061ad8467"
       ],
       "in_715_sample": true,
-      "comparison_cohort": "unknown",
-      "review_note": "manual review required"
+      "comparison_cohort": "penalty_only",
+      "review_note": ""
     },
     {
       "event_id": "2025:9850:87:41:4",
@@ -14501,12 +15089,12 @@
       "telemetry_set_change": "unknown",
       "tyre_change_resolved": "unknown",
       "source_conflict": false,
-      "primary_label": "UNKNOWN",
+      "primary_label": "PENALTY_SERVICE",
       "secondary_label": null,
-      "penalty_type": "10s",
+      "penalty_type": "stop_go",
       "penalty_served": "unknown",
       "regulation_constraint": "none",
-      "timing_discretion": "unknown",
+      "timing_discretion": "forced_window",
       "decision_comparable": false,
       "mixed_purpose": false,
       "evidence_level": "corroborated",
@@ -14516,8 +15104,8 @@
         "85a32a1061ad8467"
       ],
       "in_715_sample": true,
-      "comparison_cohort": "unknown",
-      "review_note": "manual review required"
+      "comparison_cohort": "penalty_only",
+      "review_note": ""
     },
     {
       "event_id": "2025:9850:5:7:1",

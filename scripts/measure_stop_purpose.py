@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import json
 from collections import Counter
+from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -21,7 +22,11 @@ from src.data_extraction.openf1.radio_dataset_builder import OPENF1_BASE, build_
 from src.f1_strat_manager.rcm_events import RCMEvent, classify_rcm_event
 from src.f1_strat_manager.tyre_stint_repair import repair_tyre_stints
 from src.strategy.eval.decision_modes import SAMPLED_RACES
-from src.strategy.eval.stop_purpose import build_stop_purpose_records, parse_rcm_message
+from src.strategy.eval.stop_purpose import (
+    build_penalty_lifecycle,
+    build_stop_purpose_records,
+    parse_rcm_message,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW_ROOT = ROOT / "data" / "raw" / "2025"
@@ -214,7 +219,7 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         f"- complete OpenF1 RCM rows: {payload['rcm_rows']}",
         f"- filtered local RCM rows: {payload['local_rcm_rows']}",
         f"- messages containing `PENALTY`: {payload['penalty_messages']}",
-        f"- penalty announcements / served confirmations: {payload['penalty_messages']} / "
+        f"- penalty-text messages / served confirmations: {payload['penalty_messages']} / "
         f"{payload['penalty_served_messages']}",
         f"- penalty-text messages classified as generic collisions: {payload['penalty_as_collision']}",
         f"- non-null `LapStartDate` rows: {payload['lap_start_date_nonnull']}",
@@ -248,6 +253,24 @@ def _render_markdown(payload: dict[str, Any]) -> str:
             "strategic. Same-compound entries can mount a used set, and a drive-through",
             "can leave contradictory stint metadata.",
             "",
+            "## Penalty lifecycle",
+            "",
+            "| status | penalties |",
+            "| --- | ---: |",
+        ]
+    )
+    lines.extend(
+        f"| `{status}` | {count} |"
+        for status, count in payload["penalty_lifecycle_summary"].items()
+    )
+    lines.extend(
+        [
+            "",
+            "A served confirmation is retained as historical evidence. It is only linked",
+            "to a pit entry when the award, car, temporal window, and service constraints",
+            "leave a compatible candidate. Otherwise the lifecycle remains unresolved or",
+            "ambiguous and cannot affect the comparable no-call denominator.",
+            "",
             "## Measurement contract",
             "",
             "Each entry receives one primary label and keeps secondary causes, evidence IDs,",
@@ -262,14 +285,14 @@ def _render_markdown(payload: dict[str, Any]) -> str:
             "- The local RCM parquet is the filtered runtime mirror; the complete pass uses",
             "  cached OpenF1 race-control rows and keeps the local mirror only for coverage",
             "  comparison.",
-            "- RAW `LapStartDate` is empty. OpenF1 lap starts reconstruct approximate UTC for the",
+            "- RAW `LapStartDate` is empty. OpenF1 lap starts reconstruct approximate UTC for",
             f"  {summary['timestamp_alignment'].get('anchored_openf1_lap_approximate', 0)}"
-            f"/{summary['pit_entries']} entries;",
-            "  entries. OpenF1 documents `date_start` as approximate; the remaining entries",
-            "  stay explicitly unanchored and are not silently approximated.",
+            f"/{summary['pit_entries']} entries; OpenF1 documents `date_start` as approximate.",
+            "  The remaining entries stay explicitly unanchored and are not silently",
+            "  approximated.",
             "- Absence of a local message means no evidence in this corpus, not no penalty.",
-            "- The classifier's generic event category is not a sanction ledger; a future",
-            "  parser must preserve awarded, served, cancelled, investigated, and unresolved",
+            "- The generic event category is not a sanction ledger; the lifecycle output",
+            "  preserves awarded, served, investigated, no-further-action, and unresolved",
             "  states separately.",
             "",
             "## Adjudication check",
@@ -352,6 +375,7 @@ def main(*, refresh: bool = False) -> None:
     penalty_messages = 0
     penalty_as_collision = 0
     evidence: dict[str, dict[str, Any]] = {}
+    evidence_objects = {}
     for frame in complete_rcm_by_session.values():
         penalty_messages += int(
             frame["message"].astype(str).str.contains("PENALTY", case=False).sum()
@@ -373,6 +397,7 @@ def main(*, refresh: bool = False) -> None:
                 penalty_as_collision += classified == "CAR_COLLISION"
             parsed = parse_rcm_message(row)
             if parsed is not None:
+                evidence_objects[parsed.evidence_id] = parsed
                 evidence[parsed.evidence_id] = {
                     "evidence_id": parsed.evidence_id,
                     "session_key": parsed.session_key,
@@ -384,6 +409,8 @@ def main(*, refresh: bool = False) -> None:
                     "phase": parsed.phase,
                     "forced_entry": parsed.forced_entry,
                 }
+
+    penalty_lifecycles = build_penalty_lifecycle(records, evidence_objects.values())
 
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -406,6 +433,10 @@ def main(*, refresh: bool = False) -> None:
         "lap_start_date_nonnull": lap_start_date_nonnull,
         "repair": dict(repair_counts),
         "summary": summary,
+        "penalty_lifecycle_summary": dict(
+            sorted(Counter(item.status for item in penalty_lifecycles).items())
+        ),
+        "penalty_lifecycle": [asdict(item) for item in penalty_lifecycles],
         "evidence": sorted(evidence.values(), key=lambda item: item["evidence_id"]),
         "records": [record.as_dict() for record in records],
     }
