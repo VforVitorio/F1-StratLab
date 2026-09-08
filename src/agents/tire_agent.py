@@ -1567,10 +1567,10 @@ class TireAgent:
             # within a cluster), and a race's own mean is a per-race number that
             # happens to have the same units.
             "cluster_mean_lap_s": TireAgentConfig._TRAINED_CLUSTER_MEAN_LAP_S.get(
-                self.cfg.cluster_for(gp_name, 0), 0.0
+                self.cfg.cluster_for(gp_name, -1), 0.0
             ),
             "total_laps": int(session.total_laps),
-            "cluster_id": self.cfg.cluster_for(gp_name, 0),
+            "cluster_id": self.cfg.cluster_for(gp_name, -1),
             "team_id": _encode_team_id(self.cfg.team_id_map, stint_state.get("team", "Unknown")),
             "year": stint_state.get("year", 2025),
             "AirTemp": float(_weather.get("AirTemp", DEFAULT_AIR_TEMP_C)),
@@ -1650,10 +1650,10 @@ class TireAgent:
             # above: this race's own mean lap time is a different quantity wearing the
             # same units.
             "cluster_mean_lap_s": TireAgentConfig._TRAINED_CLUSTER_MEAN_LAP_S.get(
-                self.cfg.cluster_for(gp_name, 0), 0.0
+                self.cfg.cluster_for(gp_name, -1), 0.0
             ),
             "total_laps": total_laps,
-            "cluster_id": self.cfg.cluster_for(gp_name, 0),
+            "cluster_id": self.cfg.cluster_for(gp_name, -1),
             "team_id": _encode_team_id(self.cfg.team_id_map, team),
             "year": year,
             # reading_or_default, not .get(key, default): the producers report an
