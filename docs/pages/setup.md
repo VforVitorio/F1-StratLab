@@ -150,19 +150,27 @@ Same two services, with paths relative to `src/telemetry/` instead of the repo r
 
 The webapp Dockerfile has two stages:
 
-1. **node-builder**: `npm ci && npm run build` of the Vite + React SPA
+1. **bun-builder**: `bun install --frozen-lockfile && bun run build` of the Vite + React SPA
 2. **nginx**: serves the built assets and reverse-proxies `/api` to the backend service
 
 ### Backend Dockerfile
 
-The backend Dockerfile installs `setuptools` and `wheel` first (needed by `openai-whisper` for `pkg_resources`), then installs all requirements with `--no-build-isolation`.
+The backend image uses Python 3.11 and copies the pinned `uv` binary from the
+official uv image. It copies `pyproject.toml` and `uv.lock` before the backend
+source so Docker can reuse the dependency layer. The dependency layer runs
+`uv sync --frozen --no-dev --no-install-project` and uses CPU PyTorch wheels on
+Linux. The container puts `/app/.venv/bin` on `PATH`, so the Compose command
+and the image command execute the locked `uvicorn` installation.
+
+The host data directory remains read-only, except for the nested
+`data/cache/fastf1` mount used by FastF1. The RAG directory remains writable.
 
 ## Building the RAG index
 
 Before using the RAG Agent (N30), build the Qdrant vector index:
 
 ```bash
-python scripts/build_rag_index.py
+uv run python scripts/build_rag_index.py
 ```
 
 This processes FIA Sporting Regulations PDFs and stores embeddings in `data/rag/`.
