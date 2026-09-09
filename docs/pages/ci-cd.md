@@ -46,14 +46,23 @@ Eight workflows live under `.github/workflows/`. They run independently, on diff
 
 ### `.github/workflows/ci.yml`
 
-Triggered on push to `main`, `dev`, `test`, `feat/**`, `fix/**`, `docs/**`, and on pull request targeting `main` or `dev`. Four jobs run in parallel on `ubuntu-latest`:
+Triggered on push to `main`, `dev`, `test`, `feat/**`, `fix/**`, `docs/**`, and on pull request targeting `main` or `dev`. Five jobs run in parallel on `ubuntu-latest`:
 
 - `test`, path-filter gated on `src/**`, `tests/**`, `pyproject.toml`, `uv.lock` (via `dorny/paths-filter@v4`; skips entirely on a docs-only or unrelated diff). When triggered: `uv sync --all-extras --frozen` (Python 3.12), a "collected-count floor" check (`pytest --co -q` must collect at least 40 nodes, guarding against a refactor silently gutting the suite), then `uv run pytest -v --cov=src --cov-report=term-missing`.
 - `lint`, always runs, no `uv sync` needed. `uvx ruff@$RUFF_VERSION check .` and `uvx ruff@$RUFF_VERSION format --check .` as ephemeral tools, so it skips installing the whole ML/torch stack just to lint style. The version comes from the `RUFF_VERSION` variable at the top of the workflow, pinned because an unpinned `uvx ruff` resolves the newest release at run time and can turn every branch red without a commit.
 - `typecheck`, same path-filter gate as `test`. `uv sync --extra dev --frozen` then `uv run mypy src/rag/`. Narrow scope: only production-ready typed modules are checked. Caches `.mypy_cache/` keyed on `pyproject.toml` + `src/rag/**`.
-- `pip-audit`, always runs, no path filter. Exports the locked dependency set (`uv export --frozen --all-extras`) and runs `pip-audit` against it for same-day CVE alerts, independent of whether the diff touches `uv.lock`. Advisory (`continue-on-error: true`) while baselining.
+- `pip-audit`, always runs, no path filter. Exports the locked dependency set with `uv export --frozen --no-emit-project --all-extras --no-hashes` and runs the pinned `pip-audit` tool against it for same-day CVE alerts, independent of whether the diff touches `uv.lock`. Advisory (`continue-on-error: true`) while baselining.
 
 The jobs are deliberately decoupled. A red `lint` does not stop `test` from running. `test` and `typecheck` both checkout with `fetch-depth: 0` **before** the paths-filter step, because the filter falls back to `git diff` on `push` events and needs full history.
+
+### `src/telemetry/.github/workflows/ci.yml`
+
+The telemetry submodule has its own CI in the `F1_Telemetry_Manager` repository.
+It uses `astral-sh/setup-uv@v7` with Python 3.11, pins uv to `0.9.13`, and
+caches the submodule `uv.lock`. The lint and test jobs install only the
+lightweight `ci` dependency group with `uv sync --frozen --only-group ci --no-install-project`, then run Ruff and pytest through `uv run --frozen --no-sync`. The full runtime is reserved for Docker, where the backend image
+syncs the project dependencies from the same lockfile. The parent CI checks the
+gitlink but does not replace the submodule workflow.
 
 ### `.github/workflows/release-please.yml`
 
