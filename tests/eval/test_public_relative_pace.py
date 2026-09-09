@@ -63,3 +63,51 @@ def test_relative_pace_keeps_missing_anchor_out() -> None:
     result = measure_candidate(candidate, pd.DataFrame(), pd.DataFrame())
 
     assert result["status"] == "no_anchor"
+
+
+def test_relative_pace_rejects_a_pair_with_a_pit_transition() -> None:
+    laps = pd.DataFrame(
+        {
+            "LapNumber": [2, 2],
+            "DriverNumber": [44, 1],
+            "Position": [2, 1],
+            "LapTime": pd.to_timedelta([90.0, 91.0], unit="s"),
+            "PitOutTime": [pd.NaT, pd.Timedelta(seconds=1)],
+        }
+    )
+
+    result = measure_candidate(_candidate(), laps, pd.DataFrame())
+
+    assert result["status"] == "pre_lap_pair_has_pit_transition"
+
+
+def test_relative_pace_rejects_a_public_gap_discontinuity() -> None:
+    laps = pd.DataFrame(
+        {
+            "LapNumber": [2, 2],
+            "DriverNumber": [44, 1],
+            "Position": [2, 1],
+            "LapTime": pd.to_timedelta([90.0, 91.0], unit="s"),
+        }
+    )
+    intervals = pd.DataFrame(
+        {
+            "session_key": [1, 1, 1, 1],
+            "driver_number": [44, 1, 44, 1],
+            "date": pd.to_datetime(
+                [
+                    "2025-01-01T00:01:20Z",
+                    "2025-01-01T00:01:21Z",
+                    "2025-01-01T00:02:50Z",
+                    "2025-01-01T00:02:51Z",
+                ],
+                utc=True,
+            ),
+            "gap_to_leader_seconds": [14.0, 0.0, 3.0, 0.0],
+        }
+    )
+
+    result = measure_candidate(_candidate(), laps, intervals)
+
+    assert result["status"] == "public_gap_discontinuity"
+    assert result["public_gap_change_s"] == -11.0
