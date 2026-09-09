@@ -8,6 +8,7 @@ It is a review aid, not a new ground-truth label and not a scorer input.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
@@ -90,6 +91,20 @@ def _parse_time(value: str | None) -> datetime | None:
         return None
 
 
+def _stable_order_key(row: dict[str, Any]) -> str:
+    """Give an event a deterministic order that does not follow driver or lap names."""
+    return hashlib.sha256(str(row["event_id"]).encode("utf-8")).hexdigest()
+
+
+def _lap_phase(lap: int) -> str:
+    """Group controls into broad race phases without introducing a new model field."""
+    if lap <= 20:
+        return "early"
+    if lap <= 40:
+        return "middle"
+    return "late"
+
+
 def _penalty_history(
     record: dict[str, Any], evidence_by_driver: dict[tuple[int, int], list[dict[str, Any]]]
 ) -> dict[str, Any]:
@@ -149,20 +164,42 @@ def _review_row(
 
 
 def _stratified_sample(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Select one deterministic row per race/cohort/status stratum plus flags."""
+    """Select priority events plus up to 44 balanced controls, all unique by event_id."""
     unreviewed = [row for row in rows if row["review_status"] == "unreviewed"]
-    ordered = sorted(unreviewed, key=lambda row: str(row["event_id"]))
-    selected: dict[str, dict[str, Any]] = {}
-    for row in ordered:
-        stratum = "|".join(
-            str(row[field]) for field in ("race", "comparison_cohort", "neutralisation_state")
-        )
-        selected.setdefault(stratum, row)
+    priority = [
+        row
+        for row in unreviewed
+        if row["penalty_history"]["unlinked_ids"]
+        or row["race"] in {"Monaco", "Lusail"}
+        or not row["pit_in_utc"]
+    ]
+    selected: dict[str, dict[str, Any]] = {row["event_id"]: row for row in priority}
 
-    for row in ordered:
-        if row["penalty_history"]["unlinked_ids"]:
-            selected.setdefault("unlinked|" + str(row["event_id"]), row)
-    return sorted(selected.values(), key=lambda row: str(row["event_id"]))
+    controls = [row for row in unreviewed if row["event_id"] not in selected]
+    control_strata: dict[tuple[str, ...], list[dict[str, Any]]] = defaultdict(list)
+    for row in controls:
+        stratum = (
+            str(row["race"]),
+            str(row["comparison_cohort"]),
+            str(row["neutralisation_state"]),
+            str(row["pit_sequence"]),
+            _lap_phase(int(row["pit_in_lap"])),
+        )
+        control_strata[stratum].append(row)
+
+    chosen_controls: list[dict[str, Any]] = []
+    for stratum in sorted(control_strata):
+        row = min(control_strata[stratum], key=_stable_order_key)
+        chosen_controls.append(row)
+    if len(chosen_controls) < 44:
+        for row in sorted(controls, key=_stable_order_key):
+            if row not in chosen_controls:
+                chosen_controls.append(row)
+            if len(chosen_controls) == 44:
+                break
+    for row in chosen_controls[:44]:
+        selected[row["event_id"]] = row
+    return sorted(selected.values(), key=_stable_order_key)
 
 
 def build_export(source: dict[str, Any]) -> dict[str, Any]:
@@ -187,6 +224,7 @@ def build_export(source: dict[str, Any]) -> dict[str, Any]:
         )
         for record in records
     ]
+    assert len({row["event_id"] for row in rows}) == len(rows)
     status_counts = Counter(row["review_disposition"] for row in rows)
     assert sum(status_counts.values()) == 573
     assert status_counts["unreviewed"] == 537
@@ -204,6 +242,26 @@ def build_export(source: dict[str, Any]) -> dict[str, Any]:
         "disposition_counts": dict(sorted(status_counts.items())),
         "unlinked_penalty_rows": len(unlinked),
         "stratified_sample_entries": len(sample),
+        "stratified_unique_event_ids": len({row["event_id"] for row in sample}),
+        "priority_review_entries": len(
+            [
+                row
+                for row in sample
+                if row["penalty_history"]["unlinked_ids"]
+                or row["race"] in {"Monaco", "Lusail"}
+                or not row["pit_in_utc"]
+            ]
+        ),
+        "control_review_entries": len(sample)
+        - len(
+            [
+                row
+                for row in sample
+                if row["penalty_history"]["unlinked_ids"]
+                or row["race"] in {"Monaco", "Lusail"}
+                or not row["pit_in_utc"]
+            ]
+        ),
         "rows": rows,
         "stratified_sample": sample,
     }
@@ -225,6 +283,9 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         f"- unreviewed entries: **{payload['unreviewed_entries']}**",
         f"- rows with unlinked penalty history: **{payload['unlinked_penalty_rows']}**",
         f"- deterministic stratified sample: **{payload['stratified_sample_entries']}**",
+        f"- unique event IDs in review sample: **{payload['stratified_unique_event_ids']}**",
+        f"- priority events: **{payload['priority_review_entries']}**",
+        f"- control events: **{payload['control_review_entries']}**",
         "",
         "## Review dispositions",
         "",
@@ -243,7 +304,7 @@ def _render_markdown(payload: dict[str, Any]) -> str:
             "## How to use the export",
             "",
             "The JSON contains one row per source event with its stable `event_id`, current evidence fields, all penalty evidence for the same car and session, and the IDs that were not attached by the current stop join.",
-            "The stratified sample selects one deterministic row per race, comparison cohort, and neutralisation state, then adds every row with unlinked penalty history.",
+            "The review sample first includes every unreviewed event with unlinked penalty history, a Monaco or Lusail entry, or no UTC anchor. It then adds up to 44 deterministic controls from the other races, balancing cohort, neutralisation, stop sequence, and race phase. Event IDs are unique and selection uses a stable hash rather than lexical driver or lap order.",
             "",
             "Penalty timestamps use the existing approximate OpenF1 lap anchor when available. A pre-entry timestamp is evidence that race control had published the message before the reconstructed entry, not proof that the team had chosen that stop.",
             "",

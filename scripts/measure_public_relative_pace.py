@@ -22,6 +22,8 @@ OUTPUT_MD = ROOT / "documents" / "audits" / "MEASURE_724_public_relative_pace.md
 
 MAX_SNAPSHOT_AGE_S = 10.0
 MAX_PAIR_SKEW_S = 5.0
+MAX_GAP_CHANGE_S = 5.0
+ANCHOR_SENSITIVITY_SHIFT_S = 2.0
 
 
 def _timestamp(value: Any) -> pd.Timestamp:
@@ -38,6 +40,34 @@ def _seconds(value: Any) -> float | None:
     except (TypeError, ValueError):
         return None
     return number if number > 0 else None
+
+
+def _has_pit_transition(row: pd.Series) -> bool:
+    """Whether a raw lap row is an in-lap or out-lap transition."""
+    return any(pd.notna(row.get(field)) for field in ("PitInTime", "PitOutTime"))
+
+
+def _measure_candidates(
+    candidates: list[dict[str, Any]], intervals: pd.DataFrame
+) -> list[dict[str, Any]]:
+    """Measure candidates while loading each race's raw laps only once."""
+    laps_by_race: dict[str, pd.DataFrame] = {}
+    rows = []
+    for candidate in candidates:
+        laps = laps_by_race.setdefault(candidate["race"], load_laps(candidate["race"]))
+        rows.append(measure_candidate(candidate, laps, intervals))
+    return rows
+
+
+def _shift_candidate_anchor(candidate: dict[str, Any], seconds: float) -> dict[str, Any]:
+    """Return a candidate with its approximate cutoff moved earlier for sensitivity checks."""
+    shifted = dict(candidate)
+    key = "pit_in_utc" if candidate.get("pit_in_utc") else "cutoff_utc"
+    cutoff = _timestamp(candidate.get(key))
+    if pd.isna(cutoff):
+        return shifted
+    shifted[key] = (cutoff - pd.Timedelta(seconds=seconds)).isoformat()
+    return shifted
 
 
 def _driver_row(laps: pd.DataFrame, driver_number: int, lap: int) -> pd.Series | None:
@@ -105,6 +135,7 @@ def measure_candidate(
         "public_relative_pace_s": None,
         "public_current_gap_s": None,
         "public_previous_gap_s": None,
+        "public_gap_change_s": None,
         "public_current_freshness_s": None,
         "public_previous_freshness_s": None,
         "public_current_skew_s": None,
@@ -129,6 +160,9 @@ def measure_candidate(
     ahead_time = _seconds(ahead.get("LapTime"))
     if subject_time is None or ahead_time is None:
         result["status"] = "no_raw_pace"
+        return result
+    if _has_pit_transition(subject) or _has_pit_transition(ahead):
+        result["status"] = "pre_lap_pair_has_pit_transition"
         return result
 
     driver_number = int(candidate["driver_number"])
@@ -172,6 +206,15 @@ def measure_candidate(
     )
     if previous["freshness_s"] > MAX_SNAPSHOT_AGE_S or previous["skew_s"] > MAX_PAIR_SKEW_S:
         result["status"] = "public_previous_stale_or_skewed"
+        return result
+
+    gap_change_s = current["gap_s"] - previous["gap_s"]
+    result["public_gap_change_s"] = round(gap_change_s, 4)
+    if current["gap_s"] < 0 or previous["gap_s"] < 0:
+        result["status"] = "public_pair_order_changed"
+        return result
+    if abs(gap_change_s) > MAX_GAP_CHANGE_S:
+        result["status"] = "public_gap_discontinuity"
         return result
 
     current_midpoint = current["driver_date"] + (current["ahead_date"] - current["driver_date"]) / 2
@@ -222,11 +265,20 @@ def load_intervals() -> pd.DataFrame:
 
 def build_measurement(source: dict[str, Any]) -> dict[str, Any]:
     intervals = load_intervals()
-    rows = []
+    candidates: dict[str, dict[str, Any]] = {}
     for candidate in source["rows"]:
         if candidate["status"] != "precut_snapshot":
             continue
-        rows.append(measure_candidate(candidate, load_laps(candidate["race"]), intervals))
+        candidates.setdefault(str(candidate["event_id"]), candidate)
+    ordered_candidates = sorted(candidates.values(), key=lambda row: str(row["event_id"]))
+    rows = _measure_candidates(ordered_candidates, intervals)
+    shifted_rows = _measure_candidates(
+        [
+            _shift_candidate_anchor(candidate, ANCHOR_SENSITIVITY_SHIFT_S)
+            for candidate in ordered_candidates
+        ],
+        intervals,
+    )
     counts = Counter(row["status"] for row in rows)
     comparable = pd.DataFrame(
         [row for row in rows if row["status"] == "comparable_pre_cutoff_pair"]
@@ -251,6 +303,18 @@ def build_measurement(source: dict[str, Any]) -> dict[str, Any]:
             "spearman_correlation": round(float(raw.rank().corr(public.rank())), 4),
             "nonzero_sign_agreement": round(float(same_sign.mean()), 4),
         }
+    shifted_by_event = {row["event_id"]: row for row in shifted_rows}
+    anchor_pairs = [
+        (row, shifted_by_event[row["event_id"]])
+        for row in rows
+        if row["status"] == "comparable_pre_cutoff_pair"
+        and shifted_by_event[row["event_id"]]["status"] == "comparable_pre_cutoff_pair"
+    ]
+    anchor_sign_changes = sum(
+        (base["public_relative_pace_s"] > 0) != (shifted["public_relative_pace_s"] > 0)
+        for base, shifted in anchor_pairs
+        if base["public_relative_pace_s"] != 0 and shifted["public_relative_pace_s"] != 0
+    )
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "year": 2025,
@@ -259,10 +323,23 @@ def build_measurement(source: dict[str, Any]) -> dict[str, Any]:
         "completed_lap_rule": "pit_in_lap - 1",
         "max_snapshot_age_s": MAX_SNAPSHOT_AGE_S,
         "max_pair_skew_s": MAX_PAIR_SKEW_S,
+        "max_gap_change_s": MAX_GAP_CHANGE_S,
         "input_entries": len(source["rows"]),
+        "unique_input_entries": len(candidates),
         "measured_entries": len(rows),
         "status_counts": dict(sorted(counts.items())),
         "agreement": agreement,
+        "anchor_sensitivity": {
+            "shift_earlier_s": ANCHOR_SENSITIVITY_SHIFT_S,
+            "baseline_comparable_entries": sum(
+                row["status"] == "comparable_pre_cutoff_pair" for row in rows
+            ),
+            "shifted_comparable_entries": sum(
+                row["status"] == "comparable_pre_cutoff_pair" for row in shifted_rows
+            ),
+            "paired_comparable_entries": len(anchor_pairs),
+            "nonzero_sign_changes": anchor_sign_changes,
+        },
         "rows": rows,
     }
 
@@ -282,7 +359,9 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         f"- completed lap: `{payload['completed_lap_rule']}`",
         f"- maximum snapshot age: **{payload['max_snapshot_age_s']:.0f} seconds**",
         f"- maximum pair timestamp skew: **{payload['max_pair_skew_s']:.0f} seconds**",
+        f"- maximum absolute pair-gap change: **{payload['max_gap_change_s']:.0f} seconds**",
         f"- input entries: **{payload['input_entries']}**",
+        f"- unique input events: **{payload['unique_input_entries']}**",
         f"- measured entries: **{payload['measured_entries']}**",
         "",
         "## Status",
@@ -305,9 +384,14 @@ def _render_markdown(payload: dict[str, Any]) -> str:
             f"- Spearman correlation: **{payload['agreement']['spearman_correlation']}**",
             f"- same non-zero sign: **{sign_agreement_text}**",
             "",
+            "## Anchor sensitivity",
+            "",
+            f"Moving the approximate cutoff {payload['anchor_sensitivity']['shift_earlier_s']:.0f} seconds earlier leaves **{payload['anchor_sensitivity']['paired_comparable_entries']}** paired comparable entries and changes the non-zero public-sign result on **{payload['anchor_sensitivity']['nonzero_sign_changes']}** of them.",
+            "This is a stability check, not a correction to the OpenF1 anchor. It limits how strongly this shadow signal can be interpreted.",
+            "",
             "## Decision",
             "",
-            "Keep the two signals as a shadow comparison until their sign and agreement are measured on the comparable rows. Do not add a traffic or rejoin cost to the scorer from this export alone. The retrospective rejoin benchmark remains a separate measure.",
+            "Rows involving an in-lap or out-lap transition, a public order change, or a pair-gap discontinuity stay out of the agreement calculation. Keep the two signals as shadow evidence and do not add a traffic or rejoin cost to the scorer from this export alone. The retrospective rejoin benchmark remains a separate measure.",
             "",
         ]
     )
@@ -324,6 +408,7 @@ def main() -> None:
         json.dumps(
             {
                 "measured_entries": payload["measured_entries"],
+                "unique_input_entries": payload["unique_input_entries"],
                 "status_counts": payload["status_counts"],
             },
             indent=2,

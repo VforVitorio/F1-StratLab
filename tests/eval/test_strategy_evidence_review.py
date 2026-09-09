@@ -15,6 +15,10 @@ def test_strategy_evidence_export_keeps_the_715_population_and_review_map() -> N
     assert payload["sample_entries"] == 573
     assert payload["reviewed_entries"] == 36
     assert payload["unreviewed_entries"] == 537
+    assert payload["stratified_sample_entries"] == 150
+    assert payload["stratified_unique_event_ids"] == 150
+    assert payload["priority_review_entries"] == 106
+    assert payload["control_review_entries"] == 44
     assert payload["disposition_counts"] == {
         "exclude_mixed_penalty": 9,
         "exclude_non_comparable": 18,
@@ -39,3 +43,17 @@ def test_strategy_evidence_export_surfaces_unlinked_penalty_history() -> None:
     assert piastri["penalty_history"]["unlinked_ids"]
     assert verstappen["review_status"] == "unreviewed"
     assert piastri["review_status"] == "unreviewed"
+
+
+def test_strategy_evidence_sample_is_unique_and_not_lexically_driver_selected() -> None:
+    payload = build_export(json.loads(SOURCE.read_text(encoding="utf-8")))
+    sample = payload["stratified_sample"]
+
+    assert len({row["event_id"] for row in sample}) == len(sample)
+    assert (
+        max(
+            sum(row["driver"] == driver for row in sample)
+            for driver in {row["driver"] for row in sample}
+        )
+        < 25
+    )

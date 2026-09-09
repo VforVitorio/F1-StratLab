@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T18:31:34+00:00",
+  "generated_at": "2026-09-09T07:30:11+00:00",
   "year": 2025,
   "source": "documents\\audits\\MEASURE_724_stop_purpose.json",
   "window_laps": 5,
@@ -16,7 +16,10 @@
     "unreviewed": 537
   },
   "unlinked_penalty_rows": 70,
-  "stratified_sample_entries": 77,
+  "stratified_sample_entries": 150,
+  "stratified_unique_event_ids": 150,
+  "priority_review_entries": 106,
+  "control_review_entries": 44,
   "rows": [
     {
       "event_id": "2025:9888:23:36:2",
@@ -16094,16 +16097,16 @@
   ],
   "stratified_sample": [
     {
-      "event_id": "2025:10006:10:24:1",
-      "race": "Suzuka",
-      "session_key": 10006,
-      "meeting_key": 1256,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 24,
+      "event_id": "2025:9987:5:12:1",
+      "race": "Imola",
+      "session_key": 9987,
+      "meeting_key": 1260,
+      "driver": "BOR",
+      "driver_number": 5,
+      "pit_in_lap": 12,
       "pit_sequence": 1,
-      "pit_in_session_s": 5648.327,
-      "pit_in_utc": "2025-04-06T05:41:48.909000+00:00",
+      "pit_in_session_s": 4355.493,
+      "pit_in_utc": "2025-05-18T13:20:09.607000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -16121,16 +16124,16 @@
       }
     },
     {
-      "event_id": "2025:10014:10:10:1",
-      "race": "Sakhir",
-      "session_key": 10014,
-      "meeting_key": 1257,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 10,
+      "event_id": "2025:9904:44:36:1",
+      "race": "Baku",
+      "session_key": 9904,
+      "meeting_key": 1269,
+      "driver": "HAM",
+      "driver_number": 44,
+      "pit_in_lap": 36,
       "pit_sequence": 1,
-      "pit_in_session_s": 4330.485,
-      "pit_in_utc": "2025-04-13T15:20:24.879000+00:00",
+      "pit_in_session_s": 7504.31,
+      "pit_in_utc": "2025-09-21T12:11:30.678000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -16148,16 +16151,16 @@
       }
     },
     {
-      "event_id": "2025:10014:30:14:1",
-      "race": "Sakhir",
-      "session_key": 10014,
-      "meeting_key": 1257,
-      "driver": "LAW",
-      "driver_number": 30,
-      "pit_in_lap": 14,
+      "event_id": "2025:9971:22:8:1",
+      "race": "Barcelona",
+      "session_key": 9971,
+      "meeting_key": 1262,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 8,
       "pit_sequence": 1,
-      "pit_in_session_s": 4745.384,
-      "pit_in_utc": "2025-04-13T15:27:19.840000+00:00",
+      "pit_in_session_s": 4228.681,
+      "pit_in_utc": "2025-06-01T13:14:33.143000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -16168,19 +16171,91 @@
       "timing_discretion": "unknown",
       "timestamp_alignment": "anchored_openf1_lap_approximate",
       "penalty_history": {
-        "all_ids": [
-          "3438c265b472468e",
-          "b2fe028d795a86dd"
-        ],
+        "all_ids": [],
         "pre_entry_ids": [],
-        "post_entry_ids": [
-          "3438c265b472468e",
-          "b2fe028d795a86dd"
-        ],
-        "unlinked_ids": [
-          "3438c265b472468e",
-          "b2fe028d795a86dd"
-        ]
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9971:43:39:2",
+      "race": "Barcelona",
+      "session_key": 9971,
+      "meeting_key": 1262,
+      "driver": "COL",
+      "driver_number": 43,
+      "pit_in_lap": 39,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6819.561,
+      "pit_in_utc": "2025-06-01T13:57:43.900000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9896:18:38:1",
+      "race": "Marina_Bay",
+      "session_key": 9896,
+      "meeting_key": 1270,
+      "driver": "STR",
+      "driver_number": 18,
+      "pit_in_lap": 38,
+      "pit_sequence": 1,
+      "pit_in_session_s": 7072.398,
+      "pit_in_utc": "2025-10-05T13:06:27.101000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:4:50:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "NOR",
+      "driver_number": 4,
+      "pit_in_lap": 50,
+      "pit_sequence": 2,
+      "pit_in_session_s": 7263.269,
+      "pit_in_utc": "2025-05-25T14:08:04.011000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
       }
     },
     {
@@ -16217,16 +16292,16 @@
       }
     },
     {
-      "event_id": "2025:10014:7:28:2",
-      "race": "Sakhir",
-      "session_key": 10014,
-      "meeting_key": 1257,
-      "driver": "DOO",
-      "driver_number": 7,
-      "pit_in_lap": 28,
-      "pit_sequence": 2,
-      "pit_in_session_s": 6136.778,
-      "pit_in_utc": "2025-04-13T15:50:31.174000+00:00",
+      "event_id": "2025:9912:87:18:1",
+      "race": "Monza",
+      "session_key": 9912,
+      "meeting_key": 1268,
+      "driver": "BEA",
+      "driver_number": 87,
+      "pit_in_lap": 18,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5002.731,
+      "pit_in_utc": "2025-09-07T13:29:07.839000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -16238,88 +16313,28 @@
       "timestamp_alignment": "anchored_openf1_lap_approximate",
       "penalty_history": {
         "all_ids": [
-          "75293b420b7aaac1"
+          "c39823fa3794c964"
         ],
         "pre_entry_ids": [],
         "post_entry_ids": [
-          "75293b420b7aaac1"
+          "c39823fa3794c964"
         ],
         "unlinked_ids": [
-          "75293b420b7aaac1"
+          "c39823fa3794c964"
         ]
       }
     },
     {
-      "event_id": "2025:10014:7:9:1",
+      "event_id": "2025:10014:1:10:1",
       "race": "Sakhir",
       "session_key": 10014,
       "meeting_key": 1257,
-      "driver": "DOO",
-      "driver_number": 7,
-      "pit_in_lap": 9,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4236.604,
-      "pit_in_utc": "2025-04-13T15:18:51.062000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "75293b420b7aaac1"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "75293b420b7aaac1"
-        ],
-        "unlinked_ids": [
-          "75293b420b7aaac1"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:10022:12:19:1",
-      "race": "Jeddah",
-      "session_key": 10022,
-      "meeting_key": 1258,
-      "driver": "ANT",
-      "driver_number": 12,
-      "pit_in_lap": 19,
-      "pit_sequence": 1,
-      "pit_in_session_s": 5401.263,
-      "pit_in_utc": "2025-04-20T17:37:00.008000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [],
-        "pre_entry_ids": [],
-        "post_entry_ids": [],
-        "unlinked_ids": []
-      }
-    },
-    {
-      "event_id": "2025:10022:1:21:1",
-      "race": "Jeddah",
-      "session_key": 10022,
-      "meeting_key": 1258,
       "driver": "VER",
       "driver_number": 1,
-      "pit_in_lap": 21,
+      "pit_in_lap": 10,
       "pit_sequence": 1,
-      "pit_in_session_s": 5571.477,
-      "pit_in_utc": "2025-04-20T17:39:50.173000+00:00",
+      "pit_in_session_s": 4331.433,
+      "pit_in_utc": "2025-04-13T15:20:25.823000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -16329,76 +16344,6 @@
       "source_conflict": false,
       "timing_discretion": "unknown",
       "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "13a840e0db86180b",
-          "198f9f3eeb53449c"
-        ],
-        "pre_entry_ids": [
-          "198f9f3eeb53449c"
-        ],
-        "post_entry_ids": [
-          "13a840e0db86180b"
-        ],
-        "unlinked_ids": [
-          "13a840e0db86180b",
-          "198f9f3eeb53449c"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:10022:30:20:1",
-      "race": "Jeddah",
-      "session_key": 10022,
-      "meeting_key": 1258,
-      "driver": "LAW",
-      "driver_number": 30,
-      "pit_in_lap": 20,
-      "pit_sequence": 1,
-      "pit_in_session_s": 5511.235,
-      "pit_in_utc": "2025-04-20T17:38:49.928000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "2e132d26cf6b671f"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "2e132d26cf6b671f"
-        ],
-        "unlinked_ids": [
-          "2e132d26cf6b671f"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:10033:12:25:1",
-      "race": "Miami_Gardens",
-      "session_key": 10033,
-      "meeting_key": 1259,
-      "driver": "ANT",
-      "driver_number": 12,
-      "pit_in_lap": 25,
-      "pit_sequence": 1,
-      "pit_in_session_s": 5811.811,
-      "pit_in_utc": null,
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "missing_openf1_lap",
       "penalty_history": {
         "all_ids": [],
         "pre_entry_ids": [],
@@ -16407,247 +16352,16 @@
       }
     },
     {
-      "event_id": "2025:9693:12:44:5",
-      "race": "Melbourne",
-      "session_key": 9693,
-      "meeting_key": 1254,
-      "driver": "ANT",
-      "driver_number": 12,
-      "pit_in_lap": 44,
-      "pit_sequence": 5,
-      "pit_in_session_s": 8984.044,
-      "pit_in_utc": "2025-03-16T05:37:06.901000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "09931726a765fb0c"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "09931726a765fb0c"
-        ],
-        "unlinked_ids": [
-          "09931726a765fb0c"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9693:12:44:5",
-      "race": "Melbourne",
-      "session_key": 9693,
-      "meeting_key": 1254,
-      "driver": "ANT",
-      "driver_number": 12,
-      "pit_in_lap": 44,
-      "pit_sequence": 5,
-      "pit_in_session_s": 8984.044,
-      "pit_in_utc": "2025-03-16T05:37:06.901000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "09931726a765fb0c"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "09931726a765fb0c"
-        ],
-        "unlinked_ids": [
-          "09931726a765fb0c"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9839:10:13:1",
-      "race": "Yas_Island",
-      "session_key": 9839,
-      "meeting_key": 1276,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 13,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4695.061,
-      "pit_in_utc": "2025-12-07T13:23:22.371000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "c4ab5cfeb583a8f2"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "c4ab5cfeb583a8f2"
-        ],
-        "unlinked_ids": [
-          "c4ab5cfeb583a8f2"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9839:10:13:1",
-      "race": "Yas_Island",
-      "session_key": 9839,
-      "meeting_key": 1276,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 13,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4695.061,
-      "pit_in_utc": "2025-12-07T13:23:22.371000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "c4ab5cfeb583a8f2"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "c4ab5cfeb583a8f2"
-        ],
-        "unlinked_ids": [
-          "c4ab5cfeb583a8f2"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9839:18:42:1",
-      "race": "Yas_Island",
-      "session_key": 9839,
-      "meeting_key": 1276,
-      "driver": "STR",
-      "driver_number": 18,
-      "pit_in_lap": 42,
-      "pit_sequence": 1,
-      "pit_in_session_s": 7310.262,
-      "pit_in_utc": "2025-12-07T14:06:57.571000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "dd64c317d62986c3"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "dd64c317d62986c3"
-        ],
-        "unlinked_ids": [
-          "dd64c317d62986c3"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9839:23:8:1",
-      "race": "Yas_Island",
-      "session_key": 9839,
-      "meeting_key": 1276,
+      "event_id": "2025:9928:23:14:1",
+      "race": "Budapest",
+      "session_key": 9928,
+      "meeting_key": 1266,
       "driver": "ALB",
       "driver_number": 23,
-      "pit_in_lap": 8,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4235.232,
-      "pit_in_utc": "2025-12-07T13:15:42.432000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "3359e5d3e18cfc25"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "3359e5d3e18cfc25"
-        ],
-        "unlinked_ids": [
-          "3359e5d3e18cfc25"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9839:87:14:1",
-      "race": "Yas_Island",
-      "session_key": 9839,
-      "meeting_key": 1276,
-      "driver": "BEA",
-      "driver_number": 87,
       "pit_in_lap": 14,
       "pit_sequence": 1,
-      "pit_in_session_s": 4778.498,
-      "pit_in_utc": "2025-12-07T13:24:45.799000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "a904ef2b7aa04dcc"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "a904ef2b7aa04dcc"
-        ],
-        "unlinked_ids": [
-          "a904ef2b7aa04dcc"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9850:10:32:2",
-      "race": "Lusail",
-      "session_key": 9850,
-      "meeting_key": 1275,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 32,
-      "pit_sequence": 2,
-      "pit_in_session_s": 6518.061,
-      "pit_in_utc": "2025-11-30T16:53:23.906000+00:00",
+      "pit_in_session_s": 4655.258,
+      "pit_in_utc": "2025-08-03T13:22:53.463000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -16665,183 +16379,43 @@
       }
     },
     {
-      "event_id": "2025:9850:18:24:2",
-      "race": "Lusail",
-      "session_key": 9850,
-      "meeting_key": 1275,
-      "driver": "STR",
-      "driver_number": 18,
-      "pit_in_lap": 24,
-      "pit_sequence": 2,
-      "pit_in_session_s": 5812.019,
-      "pit_in_utc": "2025-11-30T16:41:37.993000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "47199a513b61c597",
-          "c92fe25261200466"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "47199a513b61c597",
-          "c92fe25261200466"
-        ],
-        "unlinked_ids": [
-          "c92fe25261200466"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9850:18:49:3",
-      "race": "Lusail",
-      "session_key": 9850,
-      "meeting_key": 1275,
-      "driver": "STR",
-      "driver_number": 18,
-      "pit_in_lap": 49,
-      "pit_sequence": 3,
-      "pit_in_session_s": 7986.081,
-      "pit_in_utc": "2025-11-30T17:17:51.860000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "47199a513b61c597",
-          "c92fe25261200466"
-        ],
-        "pre_entry_ids": [
-          "47199a513b61c597"
-        ],
-        "post_entry_ids": [
-          "c92fe25261200466"
-        ],
-        "unlinked_ids": [
-          "47199a513b61c597",
-          "c92fe25261200466"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9850:31:34:3",
-      "race": "Lusail",
-      "session_key": 9850,
-      "meeting_key": 1275,
-      "driver": "OCO",
-      "driver_number": 31,
-      "pit_in_lap": 34,
-      "pit_sequence": 3,
-      "pit_in_session_s": 6688.451,
-      "pit_in_utc": "2025-11-30T16:56:14.363000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "93316ee732fda71a"
-        ],
-        "pre_entry_ids": [
-          "93316ee732fda71a"
-        ],
-        "post_entry_ids": [],
-        "unlinked_ids": [
-          "93316ee732fda71a"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9850:87:32:2",
-      "race": "Lusail",
-      "session_key": 9850,
-      "meeting_key": 1275,
-      "driver": "BEA",
-      "driver_number": 87,
-      "pit_in_lap": 32,
-      "pit_sequence": 2,
-      "pit_in_session_s": 6502.932,
-      "pit_in_utc": "2025-11-30T16:53:08.776000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "827af7d7abf9046c",
-          "85a32a1061ad8467"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "827af7d7abf9046c",
-          "85a32a1061ad8467"
-        ],
-        "unlinked_ids": [
-          "827af7d7abf9046c"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9858:16:24:1",
-      "race": "Las_Vegas",
-      "session_key": 9858,
-      "meeting_key": 1274,
-      "driver": "LEC",
-      "driver_number": 16,
-      "pit_in_lap": 24,
-      "pit_sequence": 1,
-      "pit_in_session_s": 5875.729,
-      "pit_in_utc": "2025-11-23T04:44:22.713000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [],
-        "pre_entry_ids": [],
-        "post_entry_ids": [],
-        "unlinked_ids": []
-      }
-    },
-    {
-      "event_id": "2025:9858:23:13:1",
-      "race": "Las_Vegas",
-      "session_key": 9858,
-      "meeting_key": 1274,
-      "driver": "ALB",
-      "driver_number": 23,
+      "event_id": "2025:9896:22:13:1",
+      "race": "Marina_Bay",
+      "session_key": 9896,
+      "meeting_key": 1270,
+      "driver": "TSU",
+      "driver_number": 22,
       "pit_in_lap": 13,
       "pit_sequence": 1,
-      "pit_in_session_s": 4802.964,
-      "pit_in_utc": "2025-11-23T04:26:29.981000+00:00",
+      "pit_in_session_s": 4607.243,
+      "pit_in_utc": "2025-10-05T12:25:21.803000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9839:10:13:1",
+      "race": "Yas_Island",
+      "session_key": 9839,
+      "meeting_key": 1276,
+      "driver": "GAS",
+      "driver_number": 10,
+      "pit_in_lap": 13,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4695.061,
+      "pit_in_utc": "2025-12-07T13:23:22.371000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -16853,17 +16427,150 @@
       "timestamp_alignment": "anchored_openf1_lap_approximate",
       "penalty_history": {
         "all_ids": [
-          "ae432305596bb32f",
-          "cf64e15e36d4b686"
+          "c4ab5cfeb583a8f2"
         ],
         "pre_entry_ids": [],
         "post_entry_ids": [
-          "ae432305596bb32f",
-          "cf64e15e36d4b686"
+          "c4ab5cfeb583a8f2"
         ],
         "unlinked_ids": [
-          "cf64e15e36d4b686"
+          "c4ab5cfeb583a8f2"
         ]
+      }
+    },
+    {
+      "event_id": "2025:9979:31:16:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "OCO",
+      "driver_number": 31,
+      "pit_in_lap": 16,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4713.961,
+      "pit_in_utc": "2025-05-25T13:25:34.580000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9971:14:42:2",
+      "race": "Barcelona",
+      "session_key": 9971,
+      "meeting_key": 1262,
+      "driver": "ALO",
+      "driver_number": 14,
+      "pit_in_lap": 42,
+      "pit_sequence": 2,
+      "pit_in_session_s": 7033.431,
+      "pit_in_utc": "2025-06-01T14:01:17.769000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9850:4:25:1",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "NOR",
+      "driver_number": 4,
+      "pit_in_lap": 25,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5862.504,
+      "pit_in_utc": "2025-11-30T16:42:28.289000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9963:30:38:1",
+      "race": "Montréal",
+      "session_key": 9963,
+      "meeting_key": 1263,
+      "driver": "LAW",
+      "driver_number": 30,
+      "pit_in_lap": 38,
+      "pit_sequence": 1,
+      "pit_in_session_s": 6451.321,
+      "pit_in_utc": "2025-06-15T18:52:36.592000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9877:16:31:1",
+      "race": "Mexico_City",
+      "session_key": 9877,
+      "meeting_key": 1272,
+      "driver": "LEC",
+      "driver_number": 16,
+      "pit_in_lap": 31,
+      "pit_sequence": 1,
+      "pit_in_session_s": 6006.174,
+      "pit_in_utc": "2025-10-26T20:46:15.244000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
       }
     },
     {
@@ -16904,16 +16611,16 @@
       }
     },
     {
-      "event_id": "2025:9869:10:18:1",
-      "race": "São_Paulo",
-      "session_key": 9869,
-      "meeting_key": 1273,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 18,
+      "event_id": "2025:9904:30:20:1",
+      "race": "Baku",
+      "session_key": 9904,
+      "meeting_key": 1269,
+      "driver": "LAW",
+      "driver_number": 30,
+      "pit_in_lap": 20,
       "pit_sequence": 1,
-      "pit_in_session_s": 4982.441,
-      "pit_in_utc": "2025-11-09T17:29:22.175000+00:00",
+      "pit_in_session_s": 5803.539,
+      "pit_in_utc": "2025-09-21T11:43:09.837000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -16928,298 +16635,6 @@
         "pre_entry_ids": [],
         "post_entry_ids": [],
         "unlinked_ids": []
-      }
-    },
-    {
-      "event_id": "2025:9869:22:24:2",
-      "race": "São_Paulo",
-      "session_key": 9869,
-      "meeting_key": 1273,
-      "driver": "TSU",
-      "driver_number": 22,
-      "pit_in_lap": 24,
-      "pit_sequence": 2,
-      "pit_in_session_s": 5442.91,
-      "pit_in_utc": "2025-11-09T17:37:02.762000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "4d49a49de1d8cec1",
-          "66a1f7149ca8bd96",
-          "6eaa1fe7e490776a"
-        ],
-        "pre_entry_ids": [
-          "66a1f7149ca8bd96"
-        ],
-        "post_entry_ids": [
-          "4d49a49de1d8cec1",
-          "6eaa1fe7e490776a"
-        ],
-        "unlinked_ids": [
-          "66a1f7149ca8bd96",
-          "6eaa1fe7e490776a"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9869:22:47:3",
-      "race": "São_Paulo",
-      "session_key": 9869,
-      "meeting_key": 1273,
-      "driver": "TSU",
-      "driver_number": 22,
-      "pit_in_lap": 47,
-      "pit_sequence": 3,
-      "pit_in_session_s": 7201.56,
-      "pit_in_utc": "2025-11-09T18:06:21.355000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "4d49a49de1d8cec1",
-          "66a1f7149ca8bd96",
-          "6eaa1fe7e490776a"
-        ],
-        "pre_entry_ids": [
-          "4d49a49de1d8cec1",
-          "66a1f7149ca8bd96"
-        ],
-        "post_entry_ids": [
-          "6eaa1fe7e490776a"
-        ],
-        "unlinked_ids": [
-          "4d49a49de1d8cec1",
-          "66a1f7149ca8bd96",
-          "6eaa1fe7e490776a"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9869:44:14:2",
-      "race": "São_Paulo",
-      "session_key": 9869,
-      "meeting_key": 1273,
-      "driver": "HAM",
-      "driver_number": 44,
-      "pit_in_lap": 14,
-      "pit_sequence": 2,
-      "pit_in_session_s": 4684.58,
-      "pit_in_utc": "2025-11-09T17:24:24.445000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "6261ae6d9bad4979",
-          "b30be86d95d91d37"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "6261ae6d9bad4979",
-          "b30be86d95d91d37"
-        ],
-        "unlinked_ids": [
-          "6261ae6d9bad4979",
-          "b30be86d95d91d37"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9869:81:38:1",
-      "race": "São_Paulo",
-      "session_key": 9869,
-      "meeting_key": 1273,
-      "driver": "PIA",
-      "driver_number": 81,
-      "pit_in_lap": 38,
-      "pit_sequence": 1,
-      "pit_in_session_s": 6473.215,
-      "pit_in_utc": "2025-11-09T17:54:13.032000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "10242d065d090f91",
-          "5ad7a710429d7433"
-        ],
-        "pre_entry_ids": [
-          "10242d065d090f91"
-        ],
-        "post_entry_ids": [
-          "5ad7a710429d7433"
-        ],
-        "unlinked_ids": [
-          "10242d065d090f91",
-          "5ad7a710429d7433"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9869:81:51:2",
-      "race": "São_Paulo",
-      "session_key": 9869,
-      "meeting_key": 1273,
-      "driver": "PIA",
-      "driver_number": 81,
-      "pit_in_lap": 51,
-      "pit_sequence": 2,
-      "pit_in_session_s": 7464.42,
-      "pit_in_utc": "2025-11-09T18:10:44.195000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "10242d065d090f91",
-          "5ad7a710429d7433"
-        ],
-        "pre_entry_ids": [
-          "10242d065d090f91",
-          "5ad7a710429d7433"
-        ],
-        "post_entry_ids": [],
-        "unlinked_ids": [
-          "10242d065d090f91",
-          "5ad7a710429d7433"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9877:10:33:1",
-      "race": "Mexico_City",
-      "session_key": 9877,
-      "meeting_key": 1272,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 33,
-      "pit_sequence": 1,
-      "pit_in_session_s": 6234.452,
-      "pit_in_utc": "2025-10-26T20:50:03.451000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [],
-        "pre_entry_ids": [],
-        "post_entry_ids": [],
-        "unlinked_ids": []
-      }
-    },
-    {
-      "event_id": "2025:9877:44:47:2",
-      "race": "Mexico_City",
-      "session_key": 9877,
-      "meeting_key": 1272,
-      "driver": "HAM",
-      "driver_number": 44,
-      "pit_in_lap": 47,
-      "pit_sequence": 2,
-      "pit_in_session_s": 7357.399,
-      "pit_in_utc": "2025-10-26T21:08:46.428000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "8c1cee3fac61036c",
-          "d13197f3808589f0"
-        ],
-        "pre_entry_ids": [
-          "8c1cee3fac61036c",
-          "d13197f3808589f0"
-        ],
-        "post_entry_ids": [],
-        "unlinked_ids": [
-          "8c1cee3fac61036c",
-          "d13197f3808589f0"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9877:55:17:1",
-      "race": "Mexico_City",
-      "session_key": 9877,
-      "meeting_key": 1272,
-      "driver": "SAI",
-      "driver_number": 55,
-      "pit_in_lap": 17,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4865.899,
-      "pit_in_utc": "2025-10-26T20:27:14.788000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "74c2ee01d180a8d7",
-          "97c234f9cc178d82",
-          "d71e8cf3d9451da8",
-          "f7f9b57c72b56eab"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "74c2ee01d180a8d7",
-          "97c234f9cc178d82",
-          "d71e8cf3d9451da8",
-          "f7f9b57c72b56eab"
-        ],
-        "unlinked_ids": [
-          "74c2ee01d180a8d7",
-          "97c234f9cc178d82",
-          "d71e8cf3d9451da8"
-        ]
       }
     },
     {
@@ -17265,16 +16680,165 @@
       }
     },
     {
-      "event_id": "2025:9888:10:27:1",
+      "event_id": "2025:9979:31:28:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "OCO",
+      "driver_number": 31,
+      "pit_in_lap": 28,
+      "pit_sequence": 2,
+      "pit_in_session_s": 5659.654,
+      "pit_in_utc": "2025-05-25T13:41:20.173000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:12:69:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "ANT",
+      "driver_number": 12,
+      "pit_in_lap": 69,
+      "pit_sequence": 1,
+      "pit_in_session_s": 8915.673,
+      "pit_in_utc": "2025-05-25T14:35:36.363000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9963:81:16:1",
+      "race": "Montréal",
+      "session_key": 9963,
+      "meeting_key": 1263,
+      "driver": "PIA",
+      "driver_number": 81,
+      "pit_in_lap": 16,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4709.425,
+      "pit_in_utc": "2025-06-15T18:23:34.671000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9850:23:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "ALB",
+      "driver_number": 23,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6507.379,
+      "pit_in_utc": "2025-11-30T16:53:13.237000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9877:55:17:1",
+      "race": "Mexico_City",
+      "session_key": 9877,
+      "meeting_key": 1272,
+      "driver": "SAI",
+      "driver_number": 55,
+      "pit_in_lap": 17,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4865.899,
+      "pit_in_utc": "2025-10-26T20:27:14.788000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "74c2ee01d180a8d7",
+          "97c234f9cc178d82",
+          "d71e8cf3d9451da8",
+          "f7f9b57c72b56eab"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "74c2ee01d180a8d7",
+          "97c234f9cc178d82",
+          "d71e8cf3d9451da8",
+          "f7f9b57c72b56eab"
+        ],
+        "unlinked_ids": [
+          "74c2ee01d180a8d7",
+          "97c234f9cc178d82",
+          "d71e8cf3d9451da8"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9888:1:33:1",
       "race": "Austin",
       "session_key": 9888,
       "meeting_key": 1271,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 27,
+      "driver": "VER",
+      "driver_number": 1,
+      "pit_in_lap": 33,
       "pit_sequence": 1,
-      "pit_in_session_s": 6211.489,
-      "pit_in_utc": "2025-10-19T19:50:27.292000+00:00",
+      "pit_in_session_s": 6759.562,
+      "pit_in_utc": "2025-10-19T19:59:35.456000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -17292,16 +16856,238 @@
       }
     },
     {
-      "event_id": "2025:9896:10:24:1",
+      "event_id": "2025:10022:81:19:1",
+      "race": "Jeddah",
+      "session_key": 10022,
+      "meeting_key": 1258,
+      "driver": "PIA",
+      "driver_number": 81,
+      "pit_in_lap": 19,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5386.222,
+      "pit_in_utc": "2025-04-20T17:36:44.743000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9877:12:47:2",
+      "race": "Mexico_City",
+      "session_key": 9877,
+      "meeting_key": 1272,
+      "driver": "ANT",
+      "driver_number": 12,
+      "pit_in_lap": 47,
+      "pit_sequence": 2,
+      "pit_in_session_s": 7353.545,
+      "pit_in_utc": "2025-10-26T21:08:42.469000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9971:22:44:3",
+      "race": "Barcelona",
+      "session_key": 9971,
+      "meeting_key": 1262,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 44,
+      "pit_sequence": 3,
+      "pit_in_session_s": 7206.313,
+      "pit_in_utc": "2025-06-01T14:04:10.609000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:10014:6:28:2",
+      "race": "Sakhir",
+      "session_key": 10014,
+      "meeting_key": 1257,
+      "driver": "HAD",
+      "driver_number": 6,
+      "pit_in_lap": 28,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6148.733,
+      "pit_in_utc": "2025-04-13T15:50:43.229000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9877:43:48:1",
+      "race": "Mexico_City",
+      "session_key": 9877,
+      "meeting_key": 1272,
+      "driver": "COL",
+      "driver_number": 43,
+      "pit_in_lap": 48,
+      "pit_sequence": 1,
+      "pit_in_session_s": 7497.095,
+      "pit_in_utc": "2025-10-26T21:11:05.961000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9693:81:44:5",
+      "race": "Melbourne",
+      "session_key": 9693,
+      "meeting_key": 1254,
+      "driver": "PIA",
+      "driver_number": 81,
+      "pit_in_lap": 44,
+      "pit_sequence": 5,
+      "pit_in_session_s": 9059.848,
+      "pit_in_utc": "2025-03-16T05:38:22.605000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9839:87:14:1",
+      "race": "Yas_Island",
+      "session_key": 9839,
+      "meeting_key": 1276,
+      "driver": "BEA",
+      "driver_number": 87,
+      "pit_in_lap": 14,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4778.498,
+      "pit_in_utc": "2025-12-07T13:24:45.799000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "a904ef2b7aa04dcc"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "a904ef2b7aa04dcc"
+        ],
+        "unlinked_ids": [
+          "a904ef2b7aa04dcc"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9979:18:64:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "STR",
+      "driver_number": 18,
+      "pit_in_lap": 64,
+      "pit_sequence": 2,
+      "pit_in_session_s": 8534.083,
+      "pit_in_utc": "2025-05-25T14:29:14.645000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9896:30:48:1",
       "race": "Marina_Bay",
       "session_key": 9896,
       "meeting_key": 1270,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 24,
+      "driver": "LAW",
+      "driver_number": 30,
+      "pit_in_lap": 48,
       "pit_sequence": 1,
-      "pit_in_session_s": 5696.421,
-      "pit_in_utc": "2025-10-05T12:43:31.128000+00:00",
+      "pit_in_session_s": 8059.56,
+      "pit_in_utc": "2025-10-05T13:22:54.184000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -17319,16 +17105,16 @@
       }
     },
     {
-      "event_id": "2025:9904:10:35:1",
-      "race": "Baku",
-      "session_key": 9904,
-      "meeting_key": 1269,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 35,
+      "event_id": "2025:9979:18:17:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "STR",
+      "driver_number": 18,
+      "pit_in_lap": 17,
       "pit_sequence": 1,
-      "pit_in_session_s": 7444.673,
-      "pit_in_utc": "2025-09-21T12:10:31.072000+00:00",
+      "pit_in_session_s": 4822.01,
+      "pit_in_utc": "2025-05-25T13:27:22.582000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -17346,53 +17132,16 @@
       }
     },
     {
-      "event_id": "2025:9904:14:21:1",
-      "race": "Baku",
-      "session_key": 9904,
-      "meeting_key": 1269,
-      "driver": "ALO",
-      "driver_number": 14,
-      "pit_in_lap": 21,
-      "pit_sequence": 1,
-      "pit_in_session_s": 5927.667,
-      "pit_in_utc": "2025-09-21T11:45:13.962000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "3702f89bf3980030",
-          "ac1ba4e9065fc4de"
-        ],
-        "pre_entry_ids": [
-          "ac1ba4e9065fc4de"
-        ],
-        "post_entry_ids": [
-          "3702f89bf3980030"
-        ],
-        "unlinked_ids": [
-          "3702f89bf3980030",
-          "ac1ba4e9065fc4de"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9912:10:49:1",
+      "event_id": "2025:9912:18:49:1",
       "race": "Monza",
       "session_key": 9912,
       "meeting_key": 1268,
-      "driver": "GAS",
-      "driver_number": 10,
+      "driver": "STR",
+      "driver_number": 18,
       "pit_in_lap": 49,
       "pit_sequence": 1,
-      "pit_in_session_s": 7608.509,
-      "pit_in_utc": "2025-09-07T14:12:33.560000+00:00",
+      "pit_in_session_s": 7598.46,
+      "pit_in_utc": "2025-09-07T14:12:23.563000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -17410,16 +17159,16 @@
       }
     },
     {
-      "event_id": "2025:9912:12:28:1",
-      "race": "Monza",
-      "session_key": 9912,
-      "meeting_key": 1268,
-      "driver": "ANT",
-      "driver_number": 12,
-      "pit_in_lap": 28,
-      "pit_sequence": 1,
-      "pit_in_session_s": 5838.023,
-      "pit_in_utc": "2025-09-07T13:43:03.144000+00:00",
+      "event_id": "2025:9869:81:51:2",
+      "race": "São_Paulo",
+      "session_key": 9869,
+      "meeting_key": 1273,
+      "driver": "PIA",
+      "driver_number": 81,
+      "pit_in_lap": 51,
+      "pit_sequence": 2,
+      "pit_in_session_s": 7464.42,
+      "pit_in_utc": "2025-11-09T18:10:44.195000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -17431,15 +17180,126 @@
       "timestamp_alignment": "anchored_openf1_lap_approximate",
       "penalty_history": {
         "all_ids": [
-          "3d9617d476edaa45"
+          "10242d065d090f91",
+          "5ad7a710429d7433"
         ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "3d9617d476edaa45"
+        "pre_entry_ids": [
+          "10242d065d090f91",
+          "5ad7a710429d7433"
         ],
+        "post_entry_ids": [],
         "unlinked_ids": [
-          "3d9617d476edaa45"
+          "10242d065d090f91",
+          "5ad7a710429d7433"
         ]
+      }
+    },
+    {
+      "event_id": "2025:9979:6:19:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "HAD",
+      "driver_number": 6,
+      "pit_in_lap": 19,
+      "pit_sequence": 2,
+      "pit_in_session_s": 4958.206,
+      "pit_in_utc": "2025-05-25T13:29:38.783000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:22:73:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 73,
+      "pit_sequence": 2,
+      "pit_in_session_s": 9221.231,
+      "pit_in_utc": "2025-05-25T14:40:41.819000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9858:22:27:2",
+      "race": "Las_Vegas",
+      "session_key": 9858,
+      "meeting_key": 1274,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 27,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6201.053,
+      "pit_in_utc": "2025-11-23T04:49:48.073000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9928:18:36:1",
+      "race": "Budapest",
+      "session_key": 9928,
+      "meeting_key": 1266,
+      "driver": "STR",
+      "driver_number": 18,
+      "pit_in_lap": 36,
+      "pit_sequence": 1,
+      "pit_in_session_s": 6478.78,
+      "pit_in_utc": "2025-08-03T13:53:16.965000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
       }
     },
     {
@@ -17480,643 +17340,70 @@
       }
     },
     {
-      "event_id": "2025:9912:87:18:1",
+      "event_id": "2025:9963:22:56:1",
+      "race": "Montréal",
+      "session_key": 9963,
+      "meeting_key": 1263,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 56,
+      "pit_sequence": 1,
+      "pit_in_session_s": 7827.4,
+      "pit_in_utc": "2025-06-15T19:15:32.694000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9858:81:21:1",
+      "race": "Las_Vegas",
+      "session_key": 9858,
+      "meeting_key": 1274,
+      "driver": "PIA",
+      "driver_number": 81,
+      "pit_in_lap": 21,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5586.17,
+      "pit_in_utc": "2025-11-23T04:39:33.235000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9912:43:33:1",
       "race": "Monza",
       "session_key": 9912,
       "meeting_key": 1268,
-      "driver": "BEA",
-      "driver_number": 87,
-      "pit_in_lap": 18,
-      "pit_sequence": 1,
-      "pit_in_session_s": 5002.731,
-      "pit_in_utc": "2025-09-07T13:29:07.839000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "c39823fa3794c964"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "c39823fa3794c964"
-        ],
-        "unlinked_ids": [
-          "c39823fa3794c964"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9920:14:18:1",
-      "race": "Zandvoort",
-      "session_key": 9920,
-      "meeting_key": 1267,
-      "driver": "ALO",
-      "driver_number": 14,
-      "pit_in_lap": 18,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4789.704,
-      "pit_in_utc": "2025-08-31T13:26:36.908000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [],
-        "pre_entry_ids": [],
-        "post_entry_ids": [],
-        "unlinked_ids": []
-      }
-    },
-    {
-      "event_id": "2025:9920:55:27:2",
-      "race": "Zandvoort",
-      "session_key": 9920,
-      "meeting_key": 1267,
-      "driver": "SAI",
-      "driver_number": 55,
-      "pit_in_lap": 27,
-      "pit_sequence": 2,
-      "pit_in_session_s": 5633.829,
-      "pit_in_utc": "2025-08-31T13:40:41.085000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "3dd1637a04e85780",
-          "5e2160d4fc43f720"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "3dd1637a04e85780",
-          "5e2160d4fc43f720"
-        ],
-        "unlinked_ids": [
-          "3dd1637a04e85780"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9928:10:32:1",
-      "race": "Budapest",
-      "session_key": 9928,
-      "meeting_key": 1266,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 32,
-      "pit_sequence": 1,
-      "pit_in_session_s": 6163.804,
-      "pit_in_utc": "2025-08-03T13:48:02.029000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "29efad2a25fc33d3"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "29efad2a25fc33d3"
-        ],
-        "unlinked_ids": [
-          "29efad2a25fc33d3"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9928:10:32:1",
-      "race": "Budapest",
-      "session_key": 9928,
-      "meeting_key": 1266,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 32,
-      "pit_sequence": 1,
-      "pit_in_session_s": 6163.804,
-      "pit_in_utc": "2025-08-03T13:48:02.029000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "29efad2a25fc33d3"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "29efad2a25fc33d3"
-        ],
-        "unlinked_ids": [
-          "29efad2a25fc33d3"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9928:16:19:1",
-      "race": "Budapest",
-      "session_key": 9928,
-      "meeting_key": 1266,
-      "driver": "LEC",
-      "driver_number": 16,
-      "pit_in_lap": 19,
-      "pit_sequence": 1,
-      "pit_in_session_s": 5035.108,
-      "pit_in_utc": "2025-08-03T13:29:13.320000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "a0efc7f3cf43c126"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "a0efc7f3cf43c126"
-        ],
-        "unlinked_ids": [
-          "a0efc7f3cf43c126"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9928:16:40:2",
-      "race": "Budapest",
-      "session_key": 9928,
-      "meeting_key": 1266,
-      "driver": "LEC",
-      "driver_number": 16,
-      "pit_in_lap": 40,
-      "pit_sequence": 2,
-      "pit_in_session_s": 6763.334,
-      "pit_in_utc": "2025-08-03T13:58:01.639000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "a0efc7f3cf43c126"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "a0efc7f3cf43c126"
-        ],
-        "unlinked_ids": [
-          "a0efc7f3cf43c126"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9928:27:41:2",
-      "race": "Budapest",
-      "session_key": 9928,
-      "meeting_key": 1266,
-      "driver": "HUL",
-      "driver_number": 27,
-      "pit_in_lap": 41,
-      "pit_sequence": 2,
-      "pit_in_session_s": 6909.502,
-      "pit_in_utc": "2025-08-03T14:00:27.725000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "82d8afa308a65bb1",
-          "f4aaca16d13cceb0"
-        ],
-        "pre_entry_ids": [
-          "f4aaca16d13cceb0"
-        ],
-        "post_entry_ids": [
-          "82d8afa308a65bb1"
-        ],
-        "unlinked_ids": [
-          "82d8afa308a65bb1",
-          "f4aaca16d13cceb0"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9928:27:5:1",
-      "race": "Budapest",
-      "session_key": 9928,
-      "meeting_key": 1266,
-      "driver": "HUL",
-      "driver_number": 27,
-      "pit_in_lap": 5,
-      "pit_sequence": 1,
-      "pit_in_session_s": 3902.803,
-      "pit_in_utc": "2025-08-03T13:10:21.051000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "82d8afa308a65bb1",
-          "f4aaca16d13cceb0"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "82d8afa308a65bb1",
-          "f4aaca16d13cceb0"
-        ],
-        "unlinked_ids": [
-          "82d8afa308a65bb1"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9939:10:11:1",
-      "race": "Spa-Francorchamps",
-      "session_key": 9939,
-      "meeting_key": 1265,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 11,
-      "pit_sequence": 1,
-      "pit_in_session_s": 9662.999,
-      "pit_in_utc": "2025-07-27T14:46:31.160000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [],
-        "pre_entry_ids": [],
-        "post_entry_ids": [],
-        "unlinked_ids": []
-      }
-    },
-    {
-      "event_id": "2025:9947:10:11:1",
-      "race": "Silverstone",
-      "session_key": 9947,
-      "meeting_key": 1277,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 11,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4654.025,
-      "pit_in_utc": "2025-07-06T14:25:14.921000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [],
-        "pre_entry_ids": [],
-        "post_entry_ids": [],
-        "unlinked_ids": []
-      }
-    },
-    {
-      "event_id": "2025:9947:22:11:1",
-      "race": "Silverstone",
-      "session_key": 9947,
-      "meeting_key": 1277,
-      "driver": "TSU",
-      "driver_number": 22,
-      "pit_in_lap": 11,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4663.967,
-      "pit_in_utc": "2025-07-06T14:25:24.686000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "323db645b60932b8"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "323db645b60932b8"
-        ],
-        "unlinked_ids": [
-          "323db645b60932b8"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9947:22:41:2",
-      "race": "Silverstone",
-      "session_key": 9947,
-      "meeting_key": 1277,
-      "driver": "TSU",
-      "driver_number": 22,
-      "pit_in_lap": 41,
-      "pit_sequence": 2,
-      "pit_in_session_s": 8238.191,
-      "pit_in_utc": "2025-07-06T15:24:59.025000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "323db645b60932b8"
-        ],
-        "pre_entry_ids": [
-          "323db645b60932b8"
-        ],
-        "post_entry_ids": [],
-        "unlinked_ids": [
-          "323db645b60932b8"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9947:81:11:1",
-      "race": "Silverstone",
-      "session_key": 9947,
-      "meeting_key": 1277,
-      "driver": "PIA",
-      "driver_number": 81,
-      "pit_in_lap": 11,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4634.916,
-      "pit_in_utc": "2025-07-06T14:24:55.662000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "36268d113c2ce625",
-          "e2b9b9f68fe72ebc"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "36268d113c2ce625",
-          "e2b9b9f68fe72ebc"
-        ],
-        "unlinked_ids": [
-          "36268d113c2ce625",
-          "e2b9b9f68fe72ebc"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9947:81:43:2",
-      "race": "Silverstone",
-      "session_key": 9947,
-      "meeting_key": 1277,
-      "driver": "PIA",
-      "driver_number": 81,
-      "pit_in_lap": 43,
-      "pit_sequence": 2,
-      "pit_in_session_s": 8346.693,
-      "pit_in_utc": "2025-07-06T15:26:47.572000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "36268d113c2ce625",
-          "e2b9b9f68fe72ebc"
-        ],
-        "pre_entry_ids": [
-          "e2b9b9f68fe72ebc"
-        ],
-        "post_entry_ids": [
-          "36268d113c2ce625"
-        ],
-        "unlinked_ids": [
-          "36268d113c2ce625",
-          "e2b9b9f68fe72ebc"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9955:10:12:1",
-      "race": "Spielberg",
-      "session_key": 9955,
-      "meeting_key": 1264,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 12,
-      "pit_sequence": 1,
-      "pit_in_session_s": 5230.734,
-      "pit_in_utc": "2025-06-29T13:34:03.690000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [],
-        "pre_entry_ids": [],
-        "post_entry_ids": [],
-        "unlinked_ids": []
-      }
-    },
-    {
-      "event_id": "2025:9955:22:18:1",
-      "race": "Spielberg",
-      "session_key": 9955,
-      "meeting_key": 1264,
-      "driver": "TSU",
-      "driver_number": 22,
-      "pit_in_lap": 18,
-      "pit_sequence": 1,
-      "pit_in_session_s": 5668.493,
-      "pit_in_utc": "2025-06-29T13:41:21.417000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "249ac3fe2199a01d",
-          "8d8fdf4f274918de"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "249ac3fe2199a01d",
-          "8d8fdf4f274918de"
-        ],
-        "unlinked_ids": [
-          "249ac3fe2199a01d",
-          "8d8fdf4f274918de"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9955:22:30:2",
-      "race": "Spielberg",
-      "session_key": 9955,
-      "meeting_key": 1264,
-      "driver": "TSU",
-      "driver_number": 22,
-      "pit_in_lap": 30,
-      "pit_sequence": 2,
-      "pit_in_session_s": 6545.703,
-      "pit_in_utc": "2025-06-29T13:55:58.521000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "249ac3fe2199a01d",
-          "8d8fdf4f274918de"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "249ac3fe2199a01d",
-          "8d8fdf4f274918de"
-        ],
-        "unlinked_ids": [
-          "8d8fdf4f274918de"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9955:22:60:3",
-      "race": "Spielberg",
-      "session_key": 9955,
-      "meeting_key": 1264,
-      "driver": "TSU",
-      "driver_number": 22,
-      "pit_in_lap": 60,
-      "pit_sequence": 3,
-      "pit_in_session_s": 8698.946,
-      "pit_in_utc": "2025-06-29T14:31:51.982000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "249ac3fe2199a01d",
-          "8d8fdf4f274918de"
-        ],
-        "pre_entry_ids": [
-          "249ac3fe2199a01d"
-        ],
-        "post_entry_ids": [
-          "8d8fdf4f274918de"
-        ],
-        "unlinked_ids": [
-          "249ac3fe2199a01d",
-          "8d8fdf4f274918de"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9955:43:13:1",
-      "race": "Spielberg",
-      "session_key": 9955,
-      "meeting_key": 1264,
       "driver": "COL",
       "driver_number": 43,
-      "pit_in_lap": 13,
+      "pit_in_lap": 33,
       "pit_sequence": 1,
-      "pit_in_session_s": 5306.973,
-      "pit_in_utc": "2025-06-29T13:35:19.849000+00:00",
+      "pit_in_session_s": 6275.886,
+      "pit_in_utc": "2025-09-07T13:50:21.023000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -18127,287 +17414,23 @@
       "timing_discretion": "unknown",
       "timestamp_alignment": "anchored_openf1_lap_approximate",
       "penalty_history": {
-        "all_ids": [
-          "bb3fb371c7ab7c5a"
-        ],
+        "all_ids": [],
         "pre_entry_ids": [],
-        "post_entry_ids": [
-          "bb3fb371c7ab7c5a"
-        ],
-        "unlinked_ids": [
-          "bb3fb371c7ab7c5a"
-        ]
+        "post_entry_ids": [],
+        "unlinked_ids": []
       }
     },
     {
-      "event_id": "2025:9955:43:39:2",
-      "race": "Spielberg",
-      "session_key": 9955,
-      "meeting_key": 1264,
-      "driver": "COL",
-      "driver_number": 43,
-      "pit_in_lap": 39,
-      "pit_sequence": 2,
-      "pit_in_session_s": 7194.939,
-      "pit_in_utc": "2025-06-29T14:06:48.021000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "bb3fb371c7ab7c5a"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "bb3fb371c7ab7c5a"
-        ],
-        "unlinked_ids": [
-          "bb3fb371c7ab7c5a"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9963:10:53:1",
+      "event_id": "2025:9963:4:47:2",
       "race": "Montréal",
       "session_key": 9963,
       "meeting_key": 1263,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 53,
-      "pit_sequence": 1,
-      "pit_in_session_s": 7609.789,
-      "pit_in_utc": "2025-06-15T19:11:55.013000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [],
-        "pre_entry_ids": [],
-        "post_entry_ids": [],
-        "unlinked_ids": []
-      }
-    },
-    {
-      "event_id": "2025:9963:18:24:1",
-      "race": "Montréal",
-      "session_key": 9963,
-      "meeting_key": 1263,
-      "driver": "STR",
-      "driver_number": 18,
-      "pit_in_lap": 24,
-      "pit_sequence": 1,
-      "pit_in_session_s": 5362.003,
-      "pit_in_utc": "2025-06-15T18:34:27.190000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "23eda2d7adf7961d",
-          "2b40a556518856a4"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "23eda2d7adf7961d",
-          "2b40a556518856a4"
-        ],
-        "unlinked_ids": [
-          "23eda2d7adf7961d",
-          "2b40a556518856a4"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9971:10:10:1",
-      "race": "Barcelona",
-      "session_key": 9971,
-      "meeting_key": 1262,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 10,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4380.614,
-      "pit_in_utc": "2025-06-01T13:17:05.106000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [],
-        "pre_entry_ids": [],
-        "post_entry_ids": [],
-        "unlinked_ids": []
-      }
-    },
-    {
-      "event_id": "2025:9971:1:13:1",
-      "race": "Barcelona",
-      "session_key": 9971,
-      "meeting_key": 1262,
-      "driver": "VER",
-      "driver_number": 1,
-      "pit_in_lap": 13,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4610.998,
-      "pit_in_utc": "2025-06-01T13:20:55.426000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "9a2bb3e3dc7d728f"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "9a2bb3e3dc7d728f"
-        ],
-        "unlinked_ids": [
-          "9a2bb3e3dc7d728f"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9971:1:29:2",
-      "race": "Barcelona",
-      "session_key": 9971,
-      "meeting_key": 1262,
-      "driver": "VER",
-      "driver_number": 1,
-      "pit_in_lap": 29,
-      "pit_sequence": 2,
-      "pit_in_session_s": 5913.05,
-      "pit_in_utc": "2025-06-01T13:42:37.387000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "9a2bb3e3dc7d728f"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "9a2bb3e3dc7d728f"
-        ],
-        "unlinked_ids": [
-          "9a2bb3e3dc7d728f"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9971:1:47:3",
-      "race": "Barcelona",
-      "session_key": 9971,
-      "meeting_key": 1262,
-      "driver": "VER",
-      "driver_number": 1,
+      "driver": "NOR",
+      "driver_number": 4,
       "pit_in_lap": 47,
-      "pit_sequence": 3,
-      "pit_in_session_s": 7364.158,
-      "pit_in_utc": "2025-06-01T14:06:48.610000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "9a2bb3e3dc7d728f"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "9a2bb3e3dc7d728f"
-        ],
-        "unlinked_ids": [
-          "9a2bb3e3dc7d728f"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9971:23:6:1",
-      "race": "Barcelona",
-      "session_key": 9971,
-      "meeting_key": 1262,
-      "driver": "ALB",
-      "driver_number": 23,
-      "pit_in_lap": 6,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4058.535,
-      "pit_in_utc": "2025-06-01T13:11:42.816000+00:00",
-      "review_disposition": "unreviewed",
-      "review_status": "unreviewed",
-      "primary_label": "STRATEGIC_TYRE_CHANGE",
-      "comparison_cohort": "strategic_candidate",
-      "neutralisation_state": "green",
-      "telemetry_set_change": "confirmed",
-      "source_conflict": false,
-      "timing_discretion": "unknown",
-      "timestamp_alignment": "anchored_openf1_lap_approximate",
-      "penalty_history": {
-        "all_ids": [
-          "0e9343c1e1ea1d3a",
-          "90f97c965c57262e"
-        ],
-        "pre_entry_ids": [],
-        "post_entry_ids": [
-          "0e9343c1e1ea1d3a",
-          "90f97c965c57262e"
-        ],
-        "unlinked_ids": [
-          "0e9343c1e1ea1d3a",
-          "90f97c965c57262e"
-        ]
-      }
-    },
-    {
-      "event_id": "2025:9971:87:35:2",
-      "race": "Barcelona",
-      "session_key": 9971,
-      "meeting_key": 1262,
-      "driver": "BEA",
-      "driver_number": 87,
-      "pit_in_lap": 35,
       "pit_sequence": 2,
-      "pit_in_session_s": 6461.016,
-      "pit_in_utc": "2025-06-01T13:51:45.396000+00:00",
+      "pit_in_session_s": 7077.048,
+      "pit_in_utc": "2025-06-15T19:03:02.352000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -18418,29 +17441,23 @@
       "timing_discretion": "unknown",
       "timestamp_alignment": "anchored_openf1_lap_approximate",
       "penalty_history": {
-        "all_ids": [
-          "96eb3693cb308df9"
-        ],
+        "all_ids": [],
         "pre_entry_ids": [],
-        "post_entry_ids": [
-          "96eb3693cb308df9"
-        ],
-        "unlinked_ids": [
-          "96eb3693cb308df9"
-        ]
+        "post_entry_ids": [],
+        "unlinked_ids": []
       }
     },
     {
-      "event_id": "2025:9971:87:8:1",
-      "race": "Barcelona",
-      "session_key": 9971,
-      "meeting_key": 1262,
-      "driver": "BEA",
-      "driver_number": 87,
-      "pit_in_lap": 8,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4223.615,
-      "pit_in_utc": "2025-06-01T13:14:28.014000+00:00",
+      "event_id": "2025:9850:44:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "HAM",
+      "driver_number": 44,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6508.784,
+      "pit_in_utc": "2025-11-30T16:53:14.675000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -18451,29 +17468,77 @@
       "timing_discretion": "unknown",
       "timestamp_alignment": "anchored_openf1_lap_approximate",
       "penalty_history": {
-        "all_ids": [
-          "96eb3693cb308df9"
-        ],
+        "all_ids": [],
         "pre_entry_ids": [],
-        "post_entry_ids": [
-          "96eb3693cb308df9"
-        ],
-        "unlinked_ids": [
-          "96eb3693cb308df9"
-        ]
+        "post_entry_ids": [],
+        "unlinked_ids": []
       }
     },
     {
-      "event_id": "2025:9979:12:69:1",
+      "event_id": "2025:9850:1:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "VER",
+      "driver_number": 1,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6464.071,
+      "pit_in_utc": "2025-11-30T16:52:29.912000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:16:49:2",
       "race": "Monaco",
       "session_key": 9979,
       "meeting_key": 1261,
-      "driver": "ANT",
-      "driver_number": 12,
-      "pit_in_lap": 69,
+      "driver": "LEC",
+      "driver_number": 16,
+      "pit_in_lap": 49,
+      "pit_sequence": 2,
+      "pit_in_session_s": 7192.894,
+      "pit_in_utc": "2025-05-25T14:06:53.522000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9971:81:22:1",
+      "race": "Barcelona",
+      "session_key": 9971,
+      "meeting_key": 1262,
+      "driver": "PIA",
+      "driver_number": 81,
+      "pit_in_lap": 22,
       "pit_sequence": 1,
-      "pit_in_session_s": 8915.673,
-      "pit_in_utc": "2025-05-25T14:35:36.363000+00:00",
+      "pit_in_session_s": 5333.993,
+      "pit_in_utc": "2025-06-01T13:32:58.392000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -18528,16 +17593,47 @@
       }
     },
     {
-      "event_id": "2025:9987:10:9:1",
-      "race": "Imola",
-      "session_key": 9987,
-      "meeting_key": 1260,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 9,
-      "pit_sequence": 1,
-      "pit_in_session_s": 4107.487,
-      "pit_in_utc": "2025-05-18T13:16:01.561000+00:00",
+      "event_id": "2025:9904:23:15:2",
+      "race": "Baku",
+      "session_key": 9904,
+      "meeting_key": 1269,
+      "driver": "ALB",
+      "driver_number": 23,
+      "pit_in_lap": 15,
+      "pit_sequence": 2,
+      "pit_in_session_s": 5294.747,
+      "pit_in_utc": "2025-09-21T11:34:41.198000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "15de0f17aeb73f60"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "15de0f17aeb73f60"
+        ],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:5:35:3",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "BOR",
+      "driver_number": 5,
+      "pit_in_lap": 35,
+      "pit_sequence": 3,
+      "pit_in_session_s": 6247.465,
+      "pit_in_utc": "2025-05-25T13:51:08.009000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -18555,16 +17651,1360 @@
       }
     },
     {
-      "event_id": "2025:9998:10:10:1",
-      "race": "Shanghai",
-      "session_key": 9998,
-      "meeting_key": 1255,
-      "driver": "GAS",
-      "driver_number": 10,
-      "pit_in_lap": 10,
+      "event_id": "2025:9850:6:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "HAD",
+      "driver_number": 6,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6496.338,
+      "pit_in_utc": "2025-11-30T16:53:02.163000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9971:1:47:3",
+      "race": "Barcelona",
+      "session_key": 9971,
+      "meeting_key": 1262,
+      "driver": "VER",
+      "driver_number": 1,
+      "pit_in_lap": 47,
+      "pit_sequence": 3,
+      "pit_in_session_s": 7364.158,
+      "pit_in_utc": "2025-06-01T14:06:48.610000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "9a2bb3e3dc7d728f"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "9a2bb3e3dc7d728f"
+        ],
+        "unlinked_ids": [
+          "9a2bb3e3dc7d728f"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9947:22:41:2",
+      "race": "Silverstone",
+      "session_key": 9947,
+      "meeting_key": 1277,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 41,
+      "pit_sequence": 2,
+      "pit_in_session_s": 8238.191,
+      "pit_in_utc": "2025-07-06T15:24:59.025000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "323db645b60932b8"
+        ],
+        "pre_entry_ids": [
+          "323db645b60932b8"
+        ],
+        "post_entry_ids": [],
+        "unlinked_ids": [
+          "323db645b60932b8"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9979:43:13:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "COL",
+      "driver_number": 43,
+      "pit_in_lap": 13,
       "pit_sequence": 1,
-      "pit_in_session_s": 4544.821,
-      "pit_in_utc": "2025-03-23T07:20:20.918000+00:00",
+      "pit_in_session_s": 4501.421,
+      "pit_in_utc": "2025-05-25T13:22:01.968000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:6:14:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "HAD",
+      "driver_number": 6,
+      "pit_in_lap": 14,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4555.354,
+      "pit_in_utc": "2025-05-25T13:22:55.969000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9928:22:37:2",
+      "race": "Budapest",
+      "session_key": 9928,
+      "meeting_key": 1266,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 37,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6586.58,
+      "pit_in_utc": "2025-08-03T13:55:04.837000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9912:12:28:1",
+      "race": "Monza",
+      "session_key": 9912,
+      "meeting_key": 1268,
+      "driver": "ANT",
+      "driver_number": 12,
+      "pit_in_lap": 28,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5838.023,
+      "pit_in_utc": "2025-09-07T13:43:03.144000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "3d9617d476edaa45"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "3d9617d476edaa45"
+        ],
+        "unlinked_ids": [
+          "3d9617d476edaa45"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9979:30:40:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "LAW",
+      "driver_number": 30,
+      "pit_in_lap": 40,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6612.953,
+      "pit_in_utc": "2025-05-25T13:57:13.459000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:44:18:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "HAM",
+      "driver_number": 44,
+      "pit_in_lap": 18,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4861.299,
+      "pit_in_utc": "2025-05-25T13:28:01.960000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9971:1:13:1",
+      "race": "Barcelona",
+      "session_key": 9971,
+      "meeting_key": 1262,
+      "driver": "VER",
+      "driver_number": 1,
+      "pit_in_lap": 13,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4610.998,
+      "pit_in_utc": "2025-06-01T13:20:55.426000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "9a2bb3e3dc7d728f"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "9a2bb3e3dc7d728f"
+        ],
+        "unlinked_ids": [
+          "9a2bb3e3dc7d728f"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9850:14:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "ALO",
+      "driver_number": 14,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6492.733,
+      "pit_in_utc": "2025-11-30T16:52:58.595000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:30:31:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "LAW",
+      "driver_number": 30,
+      "pit_in_lap": 31,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5902.83,
+      "pit_in_utc": "2025-05-25T13:45:23.375000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9877:14:20:1",
+      "race": "Mexico_City",
+      "session_key": 9877,
+      "meeting_key": 1272,
+      "driver": "ALO",
+      "driver_number": 14,
+      "pit_in_lap": 20,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5120.882,
+      "pit_in_utc": "2025-10-26T20:31:29.770000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:1:28:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "VER",
+      "driver_number": 1,
+      "pit_in_lap": 28,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5609.565,
+      "pit_in_utc": "2025-05-25T13:40:30.093000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9850:63:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "RUS",
+      "driver_number": 63,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6498.671,
+      "pit_in_utc": "2025-11-30T16:53:04.535000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:10022:55:21:1",
+      "race": "Jeddah",
+      "session_key": 10022,
+      "meeting_key": 1258,
+      "driver": "SAI",
+      "driver_number": 55,
+      "pit_in_lap": 21,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5599.262,
+      "pit_in_utc": "2025-04-20T17:40:17.848000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9928:44:42:1",
+      "race": "Budapest",
+      "session_key": 9928,
+      "meeting_key": 1266,
+      "driver": "HAM",
+      "driver_number": 44,
+      "pit_in_lap": 42,
+      "pit_sequence": 1,
+      "pit_in_session_s": 6987.717,
+      "pit_in_utc": "2025-08-03T14:01:45.878000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9928:1:48:2",
+      "race": "Budapest",
+      "session_key": 9928,
+      "meeting_key": 1266,
+      "driver": "VER",
+      "driver_number": 1,
+      "pit_in_lap": 48,
+      "pit_sequence": 2,
+      "pit_in_session_s": 7465.971,
+      "pit_in_utc": "2025-08-03T14:09:44.211000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:44:56:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "HAM",
+      "driver_number": 44,
+      "pit_in_lap": 56,
+      "pit_sequence": 2,
+      "pit_in_session_s": 7756.665,
+      "pit_in_utc": "2025-05-25T14:16:17.386000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:81:20:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "PIA",
+      "driver_number": 81,
+      "pit_in_lap": 20,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5002.299,
+      "pit_in_utc": "2025-05-25T13:30:22.827000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:12:71:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "ANT",
+      "driver_number": 12,
+      "pit_in_lap": 71,
+      "pit_sequence": 2,
+      "pit_in_session_s": 9086.292,
+      "pit_in_utc": "2025-05-25T14:38:26.877000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:10022:30:20:1",
+      "race": "Jeddah",
+      "session_key": 10022,
+      "meeting_key": 1258,
+      "driver": "LAW",
+      "driver_number": 30,
+      "pit_in_lap": 20,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5511.235,
+      "pit_in_utc": "2025-04-20T17:38:49.928000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "2e132d26cf6b671f"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "2e132d26cf6b671f"
+        ],
+        "unlinked_ids": [
+          "2e132d26cf6b671f"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9869:22:24:2",
+      "race": "São_Paulo",
+      "session_key": 9869,
+      "meeting_key": 1273,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 24,
+      "pit_sequence": 2,
+      "pit_in_session_s": 5442.91,
+      "pit_in_utc": "2025-11-09T17:37:02.762000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "4d49a49de1d8cec1",
+          "66a1f7149ca8bd96",
+          "6eaa1fe7e490776a"
+        ],
+        "pre_entry_ids": [
+          "66a1f7149ca8bd96"
+        ],
+        "post_entry_ids": [
+          "4d49a49de1d8cec1",
+          "6eaa1fe7e490776a"
+        ],
+        "unlinked_ids": [
+          "66a1f7149ca8bd96",
+          "6eaa1fe7e490776a"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9971:87:35:2",
+      "race": "Barcelona",
+      "session_key": 9971,
+      "meeting_key": 1262,
+      "driver": "BEA",
+      "driver_number": 87,
+      "pit_in_lap": 35,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6461.016,
+      "pit_in_utc": "2025-06-01T13:51:45.396000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "96eb3693cb308df9"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "96eb3693cb308df9"
+        ],
+        "unlinked_ids": [
+          "96eb3693cb308df9"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9850:81:42:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "PIA",
+      "driver_number": 81,
+      "pit_in_lap": 42,
+      "pit_sequence": 2,
+      "pit_in_session_s": 7328.747,
+      "pit_in_utc": "2025-11-30T17:06:54.622000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9963:18:24:1",
+      "race": "Montréal",
+      "session_key": 9963,
+      "meeting_key": 1263,
+      "driver": "STR",
+      "driver_number": 18,
+      "pit_in_lap": 24,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5362.003,
+      "pit_in_utc": "2025-06-15T18:34:27.190000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "23eda2d7adf7961d",
+          "2b40a556518856a4"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "23eda2d7adf7961d",
+          "2b40a556518856a4"
+        ],
+        "unlinked_ids": [
+          "23eda2d7adf7961d",
+          "2b40a556518856a4"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9858:6:20:1",
+      "race": "Las_Vegas",
+      "session_key": 9858,
+      "meeting_key": 1274,
+      "driver": "HAD",
+      "driver_number": 6,
+      "pit_in_lap": 20,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5494.518,
+      "pit_in_utc": "2025-11-23T04:38:01.547000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:10014:7:28:2",
+      "race": "Sakhir",
+      "session_key": 10014,
+      "meeting_key": 1257,
+      "driver": "DOO",
+      "driver_number": 7,
+      "pit_in_lap": 28,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6136.778,
+      "pit_in_utc": "2025-04-13T15:50:31.174000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "75293b420b7aaac1"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "75293b420b7aaac1"
+        ],
+        "unlinked_ids": [
+          "75293b420b7aaac1"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9928:16:19:1",
+      "race": "Budapest",
+      "session_key": 9928,
+      "meeting_key": 1266,
+      "driver": "LEC",
+      "driver_number": 16,
+      "pit_in_lap": 19,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5035.108,
+      "pit_in_utc": "2025-08-03T13:29:13.320000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "a0efc7f3cf43c126"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "a0efc7f3cf43c126"
+        ],
+        "unlinked_ids": [
+          "a0efc7f3cf43c126"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9979:27:12:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "HUL",
+      "driver_number": 27,
+      "pit_in_lap": 12,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4420.488,
+      "pit_in_utc": "2025-05-25T13:20:41.066000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9850:30:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "LAW",
+      "driver_number": 30,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6504.531,
+      "pit_in_utc": "2025-11-30T16:53:10.402000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:1:77:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "VER",
+      "driver_number": 1,
+      "pit_in_lap": 77,
+      "pit_sequence": 2,
+      "pit_in_session_s": 9322.869,
+      "pit_in_utc": "2025-05-25T14:42:23.481000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9839:18:42:1",
+      "race": "Yas_Island",
+      "session_key": 9839,
+      "meeting_key": 1276,
+      "driver": "STR",
+      "driver_number": 18,
+      "pit_in_lap": 42,
+      "pit_sequence": 1,
+      "pit_in_session_s": 7310.262,
+      "pit_in_utc": "2025-12-07T14:06:57.571000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "dd64c317d62986c3"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "dd64c317d62986c3"
+        ],
+        "unlinked_ids": [
+          "dd64c317d62986c3"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9850:55:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "SAI",
+      "driver_number": 55,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6482.621,
+      "pit_in_utc": "2025-11-30T16:52:48.444000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9920:55:27:2",
+      "race": "Zandvoort",
+      "session_key": 9920,
+      "meeting_key": 1267,
+      "driver": "SAI",
+      "driver_number": 55,
+      "pit_in_lap": 27,
+      "pit_sequence": 2,
+      "pit_in_session_s": 5633.829,
+      "pit_in_utc": "2025-08-31T13:40:41.085000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "3dd1637a04e85780",
+          "5e2160d4fc43f720"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "3dd1637a04e85780",
+          "5e2160d4fc43f720"
+        ],
+        "unlinked_ids": [
+          "3dd1637a04e85780"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9928:27:5:1",
+      "race": "Budapest",
+      "session_key": 9928,
+      "meeting_key": 1266,
+      "driver": "HUL",
+      "driver_number": 27,
+      "pit_in_lap": 5,
+      "pit_sequence": 1,
+      "pit_in_session_s": 3902.803,
+      "pit_in_utc": "2025-08-03T13:10:21.051000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "82d8afa308a65bb1",
+          "f4aaca16d13cceb0"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "82d8afa308a65bb1",
+          "f4aaca16d13cceb0"
+        ],
+        "unlinked_ids": [
+          "82d8afa308a65bb1"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:10022:1:21:1",
+      "race": "Jeddah",
+      "session_key": 10022,
+      "meeting_key": 1258,
+      "driver": "VER",
+      "driver_number": 1,
+      "pit_in_lap": 21,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5571.477,
+      "pit_in_utc": "2025-04-20T17:39:50.173000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "13a840e0db86180b",
+          "198f9f3eeb53449c"
+        ],
+        "pre_entry_ids": [
+          "198f9f3eeb53449c"
+        ],
+        "post_entry_ids": [
+          "13a840e0db86180b"
+        ],
+        "unlinked_ids": [
+          "13a840e0db86180b",
+          "198f9f3eeb53449c"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9850:81:24:1",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "PIA",
+      "driver_number": 81,
+      "pit_in_lap": 24,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5773.079,
+      "pit_in_utc": "2025-11-30T16:40:58.970000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:4:19:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "NOR",
+      "driver_number": 4,
+      "pit_in_lap": 19,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4920.706,
+      "pit_in_utc": "2025-05-25T13:29:01.350000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9858:23:13:1",
+      "race": "Las_Vegas",
+      "session_key": 9858,
+      "meeting_key": 1274,
+      "driver": "ALB",
+      "driver_number": 23,
+      "pit_in_lap": 13,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4802.964,
+      "pit_in_utc": "2025-11-23T04:26:29.981000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "ae432305596bb32f",
+          "cf64e15e36d4b686"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "ae432305596bb32f",
+          "cf64e15e36d4b686"
+        ],
+        "unlinked_ids": [
+          "cf64e15e36d4b686"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9955:43:39:2",
+      "race": "Spielberg",
+      "session_key": 9955,
+      "meeting_key": 1264,
+      "driver": "COL",
+      "driver_number": 43,
+      "pit_in_lap": 39,
+      "pit_sequence": 2,
+      "pit_in_session_s": 7194.939,
+      "pit_in_utc": "2025-06-29T14:06:48.021000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "bb3fb371c7ab7c5a"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "bb3fb371c7ab7c5a"
+        ],
+        "unlinked_ids": [
+          "bb3fb371c7ab7c5a"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9850:12:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "ANT",
+      "driver_number": 12,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6486.705,
+      "pit_in_utc": "2025-11-30T16:52:52.477000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9693:12:44:5",
+      "race": "Melbourne",
+      "session_key": 9693,
+      "meeting_key": 1254,
+      "driver": "ANT",
+      "driver_number": 12,
+      "pit_in_lap": 44,
+      "pit_sequence": 5,
+      "pit_in_session_s": 8984.044,
+      "pit_in_utc": "2025-03-16T05:37:06.901000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "09931726a765fb0c"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "09931726a765fb0c"
+        ],
+        "unlinked_ids": [
+          "09931726a765fb0c"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9955:22:30:2",
+      "race": "Spielberg",
+      "session_key": 9955,
+      "meeting_key": 1264,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 30,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6545.703,
+      "pit_in_utc": "2025-06-29T13:55:58.521000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "249ac3fe2199a01d",
+          "8d8fdf4f274918de"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "249ac3fe2199a01d",
+          "8d8fdf4f274918de"
+        ],
+        "unlinked_ids": [
+          "8d8fdf4f274918de"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:10033:1:26:1",
+      "race": "Miami_Gardens",
+      "session_key": 10033,
+      "meeting_key": 1259,
+      "driver": "VER",
+      "driver_number": 1,
+      "pit_in_lap": 26,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5901.934,
+      "pit_in_utc": "2025-05-04T20:44:48.880000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:5:26:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "BOR",
+      "driver_number": 5,
+      "pit_in_lap": 26,
+      "pit_sequence": 2,
+      "pit_in_session_s": 5528.977,
+      "pit_in_utc": "2025-05-25T13:39:09.530000+00:00",
       "review_disposition": "unreviewed",
       "review_status": "unreviewed",
       "primary_label": "STRATEGIC_TYRE_CHANGE",
@@ -18611,6 +19051,1526 @@
         ],
         "unlinked_ids": [
           "d8b56dd958f4f863"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9955:22:60:3",
+      "race": "Spielberg",
+      "session_key": 9955,
+      "meeting_key": 1264,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 60,
+      "pit_sequence": 3,
+      "pit_in_session_s": 8698.946,
+      "pit_in_utc": "2025-06-29T14:31:51.982000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "249ac3fe2199a01d",
+          "8d8fdf4f274918de"
+        ],
+        "pre_entry_ids": [
+          "249ac3fe2199a01d"
+        ],
+        "post_entry_ids": [
+          "8d8fdf4f274918de"
+        ],
+        "unlinked_ids": [
+          "249ac3fe2199a01d",
+          "8d8fdf4f274918de"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9979:14:16:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "ALO",
+      "driver_number": 14,
+      "pit_in_lap": 16,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4709.008,
+      "pit_in_utc": "2025-05-25T13:25:29.602000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9912:5:20:1",
+      "race": "Monza",
+      "session_key": 9912,
+      "meeting_key": 1268,
+      "driver": "BOR",
+      "driver_number": 5,
+      "pit_in_lap": 20,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5167.116,
+      "pit_in_utc": "2025-09-07T13:31:52.187000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:10033:31:23:1",
+      "race": "Miami_Gardens",
+      "session_key": 10033,
+      "meeting_key": 1259,
+      "driver": "OCO",
+      "driver_number": 31,
+      "pit_in_lap": 23,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5643.409,
+      "pit_in_utc": null,
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "missing_openf1_lap",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:10022:7:32:2",
+      "race": "Jeddah",
+      "session_key": 10022,
+      "meeting_key": 1258,
+      "driver": "DOO",
+      "driver_number": 7,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6678.017,
+      "pit_in_utc": "2025-04-20T17:58:16.757000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9839:23:8:1",
+      "race": "Yas_Island",
+      "session_key": 9839,
+      "meeting_key": 1276,
+      "driver": "ALB",
+      "driver_number": 23,
+      "pit_in_lap": 8,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4235.232,
+      "pit_in_utc": "2025-12-07T13:15:42.432000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "3359e5d3e18cfc25"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "3359e5d3e18cfc25"
+        ],
+        "unlinked_ids": [
+          "3359e5d3e18cfc25"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9979:23:32:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "ALB",
+      "driver_number": 23,
+      "pit_in_lap": 32,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5980.82,
+      "pit_in_utc": "2025-05-25T13:46:41.250000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:10033:12:25:1",
+      "race": "Miami_Gardens",
+      "session_key": 10033,
+      "meeting_key": 1259,
+      "driver": "ANT",
+      "driver_number": 12,
+      "pit_in_lap": 25,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5811.811,
+      "pit_in_utc": null,
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "missing_openf1_lap",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9850:22:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6505.993,
+      "pit_in_utc": "2025-11-30T16:53:11.836000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9955:22:18:1",
+      "race": "Spielberg",
+      "session_key": 9955,
+      "meeting_key": 1264,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 18,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5668.493,
+      "pit_in_utc": "2025-06-29T13:41:21.417000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "249ac3fe2199a01d",
+          "8d8fdf4f274918de"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "249ac3fe2199a01d",
+          "8d8fdf4f274918de"
+        ],
+        "unlinked_ids": [
+          "249ac3fe2199a01d",
+          "8d8fdf4f274918de"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9850:18:24:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "STR",
+      "driver_number": 18,
+      "pit_in_lap": 24,
+      "pit_sequence": 2,
+      "pit_in_session_s": 5812.019,
+      "pit_in_utc": "2025-11-30T16:41:37.993000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "47199a513b61c597",
+          "c92fe25261200466"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "47199a513b61c597",
+          "c92fe25261200466"
+        ],
+        "unlinked_ids": [
+          "c92fe25261200466"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9979:81:48:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "PIA",
+      "driver_number": 81,
+      "pit_in_lap": 48,
+      "pit_sequence": 2,
+      "pit_in_session_s": 7126.12,
+      "pit_in_utc": "2025-05-25T14:05:46.714000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:10033:55:25:1",
+      "race": "Miami_Gardens",
+      "session_key": 10033,
+      "meeting_key": 1259,
+      "driver": "SAI",
+      "driver_number": 55,
+      "pit_in_lap": 25,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5817.932,
+      "pit_in_utc": null,
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "missing_openf1_lap",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9850:43:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "COL",
+      "driver_number": 43,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6512.659,
+      "pit_in_utc": "2025-11-30T16:53:18.588000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9971:1:29:2",
+      "race": "Barcelona",
+      "session_key": 9971,
+      "meeting_key": 1262,
+      "driver": "VER",
+      "driver_number": 1,
+      "pit_in_lap": 29,
+      "pit_sequence": 2,
+      "pit_in_session_s": 5913.05,
+      "pit_in_utc": "2025-06-01T13:42:37.387000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "9a2bb3e3dc7d728f"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "9a2bb3e3dc7d728f"
+        ],
+        "unlinked_ids": [
+          "9a2bb3e3dc7d728f"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9850:10:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "GAS",
+      "driver_number": 10,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6518.061,
+      "pit_in_utc": "2025-11-30T16:53:23.906000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9850:31:34:3",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "OCO",
+      "driver_number": 31,
+      "pit_in_lap": 34,
+      "pit_sequence": 3,
+      "pit_in_session_s": 6688.451,
+      "pit_in_utc": "2025-11-30T16:56:14.363000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "93316ee732fda71a"
+        ],
+        "pre_entry_ids": [
+          "93316ee732fda71a"
+        ],
+        "post_entry_ids": [],
+        "unlinked_ids": [
+          "93316ee732fda71a"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9888:23:36:2",
+      "race": "Austin",
+      "session_key": 9888,
+      "meeting_key": 1271,
+      "driver": "ALB",
+      "driver_number": 23,
+      "pit_in_lap": 36,
+      "pit_sequence": 2,
+      "pit_in_session_s": 7120.075,
+      "pit_in_utc": "2025-10-19T20:05:35.856000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9928:10:32:1",
+      "race": "Budapest",
+      "session_key": 9928,
+      "meeting_key": 1266,
+      "driver": "GAS",
+      "driver_number": 10,
+      "pit_in_lap": 32,
+      "pit_sequence": 1,
+      "pit_in_session_s": 6163.804,
+      "pit_in_utc": "2025-08-03T13:48:02.029000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "29efad2a25fc33d3"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "29efad2a25fc33d3"
+        ],
+        "unlinked_ids": [
+          "29efad2a25fc33d3"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9979:16:22:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "LEC",
+      "driver_number": 16,
+      "pit_in_lap": 22,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5150.97,
+      "pit_in_utc": "2025-05-25T13:32:51.656000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9850:18:49:3",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "STR",
+      "driver_number": 18,
+      "pit_in_lap": 49,
+      "pit_sequence": 3,
+      "pit_in_session_s": 7986.081,
+      "pit_in_utc": "2025-11-30T17:17:51.860000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "47199a513b61c597",
+          "c92fe25261200466"
+        ],
+        "pre_entry_ids": [
+          "47199a513b61c597"
+        ],
+        "post_entry_ids": [
+          "c92fe25261200466"
+        ],
+        "unlinked_ids": [
+          "47199a513b61c597",
+          "c92fe25261200466"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9987:43:22:1",
+      "race": "Imola",
+      "session_key": 9987,
+      "meeting_key": 1260,
+      "driver": "COL",
+      "driver_number": 43,
+      "pit_in_lap": 22,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5187.062,
+      "pit_in_utc": "2025-05-18T13:34:01.163000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9963:1:37:2",
+      "race": "Montréal",
+      "session_key": 9963,
+      "meeting_key": 1263,
+      "driver": "VER",
+      "driver_number": 1,
+      "pit_in_lap": 37,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6315.788,
+      "pit_in_utc": "2025-06-15T18:50:21.084000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9971:23:6:1",
+      "race": "Barcelona",
+      "session_key": 9971,
+      "meeting_key": 1262,
+      "driver": "ALB",
+      "driver_number": 23,
+      "pit_in_lap": 6,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4058.535,
+      "pit_in_utc": "2025-06-01T13:11:42.816000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "0e9343c1e1ea1d3a",
+          "90f97c965c57262e"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "0e9343c1e1ea1d3a",
+          "90f97c965c57262e"
+        ],
+        "unlinked_ids": [
+          "0e9343c1e1ea1d3a",
+          "90f97c965c57262e"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9904:14:21:1",
+      "race": "Baku",
+      "session_key": 9904,
+      "meeting_key": 1269,
+      "driver": "ALO",
+      "driver_number": 14,
+      "pit_in_lap": 21,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5927.667,
+      "pit_in_utc": "2025-09-21T11:45:13.962000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "3702f89bf3980030",
+          "ac1ba4e9065fc4de"
+        ],
+        "pre_entry_ids": [
+          "ac1ba4e9065fc4de"
+        ],
+        "post_entry_ids": [
+          "3702f89bf3980030"
+        ],
+        "unlinked_ids": [
+          "3702f89bf3980030",
+          "ac1ba4e9065fc4de"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9869:44:14:2",
+      "race": "São_Paulo",
+      "session_key": 9869,
+      "meeting_key": 1273,
+      "driver": "HAM",
+      "driver_number": 44,
+      "pit_in_lap": 14,
+      "pit_sequence": 2,
+      "pit_in_session_s": 4684.58,
+      "pit_in_utc": "2025-11-09T17:24:24.445000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "6261ae6d9bad4979",
+          "b30be86d95d91d37"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "6261ae6d9bad4979",
+          "b30be86d95d91d37"
+        ],
+        "unlinked_ids": [
+          "6261ae6d9bad4979",
+          "b30be86d95d91d37"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9979:23:40:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "ALB",
+      "driver_number": 23,
+      "pit_in_lap": 40,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6614.937,
+      "pit_in_utc": "2025-05-25T13:57:15.561000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9947:22:11:1",
+      "race": "Silverstone",
+      "session_key": 9947,
+      "meeting_key": 1277,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 11,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4663.967,
+      "pit_in_utc": "2025-07-06T14:25:24.686000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "323db645b60932b8"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "323db645b60932b8"
+        ],
+        "unlinked_ids": [
+          "323db645b60932b8"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9979:27:44:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "HUL",
+      "driver_number": 27,
+      "pit_in_lap": 44,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6951.467,
+      "pit_in_utc": "2025-05-25T14:02:52.094000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9877:44:47:2",
+      "race": "Mexico_City",
+      "session_key": 9877,
+      "meeting_key": 1272,
+      "driver": "HAM",
+      "driver_number": 44,
+      "pit_in_lap": 47,
+      "pit_sequence": 2,
+      "pit_in_session_s": 7357.399,
+      "pit_in_utc": "2025-10-26T21:08:46.428000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "8c1cee3fac61036c",
+          "d13197f3808589f0"
+        ],
+        "pre_entry_ids": [
+          "8c1cee3fac61036c",
+          "d13197f3808589f0"
+        ],
+        "post_entry_ids": [],
+        "unlinked_ids": [
+          "8c1cee3fac61036c",
+          "d13197f3808589f0"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9947:81:11:1",
+      "race": "Silverstone",
+      "session_key": 9947,
+      "meeting_key": 1277,
+      "driver": "PIA",
+      "driver_number": 81,
+      "pit_in_lap": 11,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4634.916,
+      "pit_in_utc": "2025-07-06T14:24:55.662000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "36268d113c2ce625",
+          "e2b9b9f68fe72ebc"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "36268d113c2ce625",
+          "e2b9b9f68fe72ebc"
+        ],
+        "unlinked_ids": [
+          "36268d113c2ce625",
+          "e2b9b9f68fe72ebc"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9888:5:14:1",
+      "race": "Austin",
+      "session_key": 9888,
+      "meeting_key": 1271,
+      "driver": "BOR",
+      "driver_number": 5,
+      "pit_in_lap": 14,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4891.655,
+      "pit_in_utc": "2025-10-19T19:28:27.488000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9850:4:44:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "NOR",
+      "driver_number": 4,
+      "pit_in_lap": 44,
+      "pit_sequence": 2,
+      "pit_in_session_s": 7506.462,
+      "pit_in_utc": "2025-11-30T17:09:52.214000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9850:87:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "BEA",
+      "driver_number": 87,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6502.932,
+      "pit_in_utc": "2025-11-30T16:53:08.776000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "827af7d7abf9046c",
+          "85a32a1061ad8467"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "827af7d7abf9046c",
+          "85a32a1061ad8467"
+        ],
+        "unlinked_ids": [
+          "827af7d7abf9046c"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9979:43:26:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "COL",
+      "driver_number": 43,
+      "pit_in_lap": 26,
+      "pit_sequence": 2,
+      "pit_in_session_s": 5529.986,
+      "pit_in_utc": "2025-05-25T13:39:10.480000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9869:81:38:1",
+      "race": "São_Paulo",
+      "session_key": 9869,
+      "meeting_key": 1273,
+      "driver": "PIA",
+      "driver_number": 81,
+      "pit_in_lap": 38,
+      "pit_sequence": 1,
+      "pit_in_session_s": 6473.215,
+      "pit_in_utc": "2025-11-09T17:54:13.032000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "10242d065d090f91",
+          "5ad7a710429d7433"
+        ],
+        "pre_entry_ids": [
+          "10242d065d090f91"
+        ],
+        "post_entry_ids": [
+          "5ad7a710429d7433"
+        ],
+        "unlinked_ids": [
+          "10242d065d090f91",
+          "5ad7a710429d7433"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9896:10:51:2",
+      "race": "Marina_Bay",
+      "session_key": 9896,
+      "meeting_key": 1270,
+      "driver": "GAS",
+      "driver_number": 10,
+      "pit_in_lap": 51,
+      "pit_sequence": 2,
+      "pit_in_session_s": 8380.595,
+      "pit_in_utc": "2025-10-05T13:28:15.298000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9979:87:17:2",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "BEA",
+      "driver_number": 87,
+      "pit_in_lap": 17,
+      "pit_sequence": 2,
+      "pit_in_session_s": 4823.516,
+      "pit_in_utc": "2025-05-25T13:27:24.162000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9928:27:41:2",
+      "race": "Budapest",
+      "session_key": 9928,
+      "meeting_key": 1266,
+      "driver": "HUL",
+      "driver_number": 27,
+      "pit_in_lap": 41,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6909.502,
+      "pit_in_utc": "2025-08-03T14:00:27.725000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "82d8afa308a65bb1",
+          "f4aaca16d13cceb0"
+        ],
+        "pre_entry_ids": [
+          "f4aaca16d13cceb0"
+        ],
+        "post_entry_ids": [
+          "82d8afa308a65bb1"
+        ],
+        "unlinked_ids": [
+          "82d8afa308a65bb1",
+          "f4aaca16d13cceb0"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9979:55:48:1",
+      "race": "Monaco",
+      "session_key": 9979,
+      "meeting_key": 1261,
+      "driver": "SAI",
+      "driver_number": 55,
+      "pit_in_lap": 48,
+      "pit_sequence": 1,
+      "pit_in_session_s": 7246.035,
+      "pit_in_utc": "2025-05-25T14:07:46.575000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9850:16:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "LEC",
+      "driver_number": 16,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6501.693,
+      "pit_in_utc": "2025-11-30T16:53:07.616000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:10014:7:9:1",
+      "race": "Sakhir",
+      "session_key": 10014,
+      "meeting_key": 1257,
+      "driver": "DOO",
+      "driver_number": 7,
+      "pit_in_lap": 9,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4236.604,
+      "pit_in_utc": "2025-04-13T15:18:51.062000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "75293b420b7aaac1"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "75293b420b7aaac1"
+        ],
+        "unlinked_ids": [
+          "75293b420b7aaac1"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9869:22:47:3",
+      "race": "São_Paulo",
+      "session_key": 9869,
+      "meeting_key": 1273,
+      "driver": "TSU",
+      "driver_number": 22,
+      "pit_in_lap": 47,
+      "pit_sequence": 3,
+      "pit_in_session_s": 7201.56,
+      "pit_in_utc": "2025-11-09T18:06:21.355000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "4d49a49de1d8cec1",
+          "66a1f7149ca8bd96",
+          "6eaa1fe7e490776a"
+        ],
+        "pre_entry_ids": [
+          "4d49a49de1d8cec1",
+          "66a1f7149ca8bd96"
+        ],
+        "post_entry_ids": [
+          "6eaa1fe7e490776a"
+        ],
+        "unlinked_ids": [
+          "4d49a49de1d8cec1",
+          "66a1f7149ca8bd96",
+          "6eaa1fe7e490776a"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9971:87:8:1",
+      "race": "Barcelona",
+      "session_key": 9971,
+      "meeting_key": 1262,
+      "driver": "BEA",
+      "driver_number": 87,
+      "pit_in_lap": 8,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4223.615,
+      "pit_in_utc": "2025-06-01T13:14:28.014000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "96eb3693cb308df9"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "96eb3693cb308df9"
+        ],
+        "unlinked_ids": [
+          "96eb3693cb308df9"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9850:5:32:2",
+      "race": "Lusail",
+      "session_key": 9850,
+      "meeting_key": 1275,
+      "driver": "BOR",
+      "driver_number": 5,
+      "pit_in_lap": 32,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6511.661,
+      "pit_in_utc": "2025-11-30T16:53:17.472000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [],
+        "pre_entry_ids": [],
+        "post_entry_ids": [],
+        "unlinked_ids": []
+      }
+    },
+    {
+      "event_id": "2025:9928:16:40:2",
+      "race": "Budapest",
+      "session_key": 9928,
+      "meeting_key": 1266,
+      "driver": "LEC",
+      "driver_number": 16,
+      "pit_in_lap": 40,
+      "pit_sequence": 2,
+      "pit_in_session_s": 6763.334,
+      "pit_in_utc": "2025-08-03T13:58:01.639000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "a0efc7f3cf43c126"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "a0efc7f3cf43c126"
+        ],
+        "unlinked_ids": [
+          "a0efc7f3cf43c126"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:10014:30:14:1",
+      "race": "Sakhir",
+      "session_key": 10014,
+      "meeting_key": 1257,
+      "driver": "LAW",
+      "driver_number": 30,
+      "pit_in_lap": 14,
+      "pit_sequence": 1,
+      "pit_in_session_s": 4745.384,
+      "pit_in_utc": "2025-04-13T15:27:19.840000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "3438c265b472468e",
+          "b2fe028d795a86dd"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "3438c265b472468e",
+          "b2fe028d795a86dd"
+        ],
+        "unlinked_ids": [
+          "3438c265b472468e",
+          "b2fe028d795a86dd"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9947:81:43:2",
+      "race": "Silverstone",
+      "session_key": 9947,
+      "meeting_key": 1277,
+      "driver": "PIA",
+      "driver_number": 81,
+      "pit_in_lap": 43,
+      "pit_sequence": 2,
+      "pit_in_session_s": 8346.693,
+      "pit_in_utc": "2025-07-06T15:26:47.572000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "36268d113c2ce625",
+          "e2b9b9f68fe72ebc"
+        ],
+        "pre_entry_ids": [
+          "e2b9b9f68fe72ebc"
+        ],
+        "post_entry_ids": [
+          "36268d113c2ce625"
+        ],
+        "unlinked_ids": [
+          "36268d113c2ce625",
+          "e2b9b9f68fe72ebc"
+        ]
+      }
+    },
+    {
+      "event_id": "2025:9955:43:13:1",
+      "race": "Spielberg",
+      "session_key": 9955,
+      "meeting_key": 1264,
+      "driver": "COL",
+      "driver_number": 43,
+      "pit_in_lap": 13,
+      "pit_sequence": 1,
+      "pit_in_session_s": 5306.973,
+      "pit_in_utc": "2025-06-29T13:35:19.849000+00:00",
+      "review_disposition": "unreviewed",
+      "review_status": "unreviewed",
+      "primary_label": "STRATEGIC_TYRE_CHANGE",
+      "comparison_cohort": "strategic_candidate",
+      "neutralisation_state": "green",
+      "telemetry_set_change": "confirmed",
+      "source_conflict": false,
+      "timing_discretion": "unknown",
+      "timestamp_alignment": "anchored_openf1_lap_approximate",
+      "penalty_history": {
+        "all_ids": [
+          "bb3fb371c7ab7c5a"
+        ],
+        "pre_entry_ids": [],
+        "post_entry_ids": [
+          "bb3fb371c7ab7c5a"
+        ],
+        "unlinked_ids": [
+          "bb3fb371c7ab7c5a"
         ]
       }
     }
