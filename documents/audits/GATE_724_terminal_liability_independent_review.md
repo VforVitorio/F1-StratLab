@@ -1,7 +1,7 @@
 # Independent gate for the terminal tyre-liability design
 
-**Date:** 2026-09-14  
-**Reviewed commit:** `b574d785`  
+**Date:** 2026-09-14
+**Reviewed commit:** `b574d785`
 **Verdict:** `NO-GO` for a production scorer change
 
 This was an independent, read-only review of the terminal continuation design
