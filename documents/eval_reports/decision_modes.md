@@ -1,6 +1,6 @@
 # decision_modes
 
-- harness `2c0b0a91` · schema v1 · generated 2026-09-08T10:05:27+00:00
+- harness `b574d785` · schema v1 · generated 2026-09-14T16:03:09+00:00
 - era 2022-2025 · dataset data/raw laps, every 2025 race (RAW, not featured) · seed deterministic · llm none
 - artifacts: none
 
