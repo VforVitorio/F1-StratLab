@@ -1,0 +1,466 @@
+{
+  "generated_by": "scripts/measure_terminal_tyre_liability.py",
+  "training_years": [
+    2023,
+    2024
+  ],
+  "holdout_year": 2025,
+  "fresh_max_tyre_life": 3,
+  "fresh_reference_max_pct_of_fastest": 1.1,
+  "prediction": "current_wear * future_observed_laps",
+  "target": "sum of future same-stint model-target wear",
+  "uses_future_rows_for_observation": false,
+  "continuation_contract": [
+    {
+      "state": "no_known_event_requirement",
+      "run_to_flag": "candidate",
+      "required_stops": 0,
+      "decision": "needs tyre and race-end evidence"
+    },
+    {
+      "state": "one_required_stop",
+      "run_to_flag": "inadmissible",
+      "required_stops": 1,
+      "decision": "model at least one later stop"
+    },
+    {
+      "state": "monaco_2025",
+      "run_to_flag": "inadmissible",
+      "required_stops": 2,
+      "decision": "apply the two-stop and three-set event rule"
+    },
+    {
+      "state": "lusail_2025",
+      "run_to_flag": "inadmissible",
+      "required_stops": 2,
+      "decision": "apply the event stop and tyre-life constraints"
+    },
+    {
+      "state": "unknown_obligation",
+      "run_to_flag": "abstain",
+      "required_stops": null,
+      "decision": "do not invent a continuation"
+    }
+  ],
+  "training": {
+    "n": 11950,
+    "stints": 528,
+    "mean_abs_error_s": 11.396,
+    "median_abs_error_s": 6.0605,
+    "signed_bias_s": -4.0451,
+    "p95_abs_error_s": 40.0856,
+    "p99_abs_error_s": 71.7011,
+    "mean_abs_error_ci95_s": [
+      10.3629,
+      12.3479
+    ],
+    "by_future_laps": {
+      "1-3": {
+        "n": 1576,
+        "mean_abs_error_s": 1.1238,
+        "signed_bias_s": -0.1051
+      },
+      "4-5": {
+        "n": 1041,
+        "mean_abs_error_s": 2.3886,
+        "signed_bias_s": -0.3962
+      },
+      "6-10": {
+        "n": 2557,
+        "mean_abs_error_s": 4.6144,
+        "signed_bias_s": -1.6381
+      },
+      "11-20": {
+        "n": 3915,
+        "mean_abs_error_s": 11.4074,
+        "signed_bias_s": -4.6788
+      },
+      "21-50": {
+        "n": 2858,
+        "mean_abs_error_s": 26.3049,
+        "signed_bias_s": -8.7363
+      },
+      "51+": {
+        "n": 3,
+        "mean_abs_error_s": 95.5795,
+        "signed_bias_s": -95.5795
+      }
+    },
+    "by_race": {
+      "2023:Austin": {
+        "n": 215,
+        "mean_abs_error_s": 4.9476,
+        "signed_bias_s": -4.8219
+      },
+      "2023:Baku": {
+        "n": 217,
+        "mean_abs_error_s": 18.7296,
+        "signed_bias_s": 13.83
+      },
+      "2023:Budapest": {
+        "n": 98,
+        "mean_abs_error_s": 8.9014,
+        "signed_bias_s": -8.7071
+      },
+      "2023:Jeddah": {
+        "n": 334,
+        "mean_abs_error_s": 14.5295,
+        "signed_bias_s": 10.591
+      },
+      "2023:Las Vegas": {
+        "n": 330,
+        "mean_abs_error_s": 12.8926,
+        "signed_bias_s": 9.4256
+      },
+      "2023:Lusail": {
+        "n": 141,
+        "mean_abs_error_s": 2.9601,
+        "signed_bias_s": 0.6936
+      },
+      "2023:Marina Bay": {
+        "n": 332,
+        "mean_abs_error_s": 13.4263,
+        "signed_bias_s": 4.5031
+      },
+      "2023:Melbourne": {
+        "n": 352,
+        "mean_abs_error_s": 23.3665,
+        "signed_bias_s": 23.2925
+      },
+      "2023:Mexico City": {
+        "n": 127,
+        "mean_abs_error_s": 16.1016,
+        "signed_bias_s": -0.9436
+      },
+      "2023:Miami": {
+        "n": 604,
+        "mean_abs_error_s": 9.4425,
+        "signed_bias_s": -8.4422
+      },
+      "2023:Montréal": {
+        "n": 412,
+        "mean_abs_error_s": 9.397,
+        "signed_bias_s": -9.0576
+      },
+      "2023:Monza": {
+        "n": 163,
+        "mean_abs_error_s": 8.4762,
+        "signed_bias_s": -8.2122
+      },
+      "2023:Sakhir": {
+        "n": 225,
+        "mean_abs_error_s": 7.4752,
+        "signed_bias_s": -7.3706
+      },
+      "2023:Silverstone": {
+        "n": 65,
+        "mean_abs_error_s": 4.6045,
+        "signed_bias_s": -4.401
+      },
+      "2023:Spa-Francorchamps": {
+        "n": 244,
+        "mean_abs_error_s": 9.6374,
+        "signed_bias_s": -9.5345
+      },
+      "2023:Spielberg": {
+        "n": 417,
+        "mean_abs_error_s": 10.4402,
+        "signed_bias_s": -10.1544
+      },
+      "2023:Suzuka": {
+        "n": 247,
+        "mean_abs_error_s": 8.2948,
+        "signed_bias_s": -8.1596
+      },
+      "2023:São Paulo": {
+        "n": 100,
+        "mean_abs_error_s": 4.8747,
+        "signed_bias_s": -4.3568
+      },
+      "2023:Yas Island": {
+        "n": 380,
+        "mean_abs_error_s": 7.7551,
+        "signed_bias_s": -6.8568
+      },
+      "2024:Austin": {
+        "n": 404,
+        "mean_abs_error_s": 5.8469,
+        "signed_bias_s": -4.6075
+      },
+      "2024:Baku": {
+        "n": 396,
+        "mean_abs_error_s": 7.3807,
+        "signed_bias_s": -2.729
+      },
+      "2024:Barcelona": {
+        "n": 323,
+        "mean_abs_error_s": 10.7856,
+        "signed_bias_s": -6.3105
+      },
+      "2024:Budapest": {
+        "n": 441,
+        "mean_abs_error_s": 15.9728,
+        "signed_bias_s": -15.5907
+      },
+      "2024:Imola": {
+        "n": 569,
+        "mean_abs_error_s": 17.7652,
+        "signed_bias_s": -17.0991
+      },
+      "2024:Jeddah": {
+        "n": 370,
+        "mean_abs_error_s": 39.0254,
+        "signed_bias_s": 38.7894
+      },
+      "2024:Las Vegas": {
+        "n": 260,
+        "mean_abs_error_s": 3.7144,
+        "signed_bias_s": -1.0531
+      },
+      "2024:Lusail": {
+        "n": 13,
+        "mean_abs_error_s": 6.0788,
+        "signed_bias_s": 6.0788
+      },
+      "2024:Marina Bay": {
+        "n": 454,
+        "mean_abs_error_s": 12.1864,
+        "signed_bias_s": -11.8428
+      },
+      "2024:Melbourne": {
+        "n": 211,
+        "mean_abs_error_s": 4.5619,
+        "signed_bias_s": -3.5674
+      },
+      "2024:Mexico City": {
+        "n": 447,
+        "mean_abs_error_s": 9.2938,
+        "signed_bias_s": -9.0066
+      },
+      "2024:Miami": {
+        "n": 161,
+        "mean_abs_error_s": 6.5272,
+        "signed_bias_s": -6.2328
+      },
+      "2024:Monaco": {
+        "n": 46,
+        "mean_abs_error_s": 5.9936,
+        "signed_bias_s": -4.0077
+      },
+      "2024:Montréal": {
+        "n": 63,
+        "mean_abs_error_s": 12.4316,
+        "signed_bias_s": 12.3345
+      },
+      "2024:Monza": {
+        "n": 379,
+        "mean_abs_error_s": 7.2355,
+        "signed_bias_s": -4.3701
+      },
+      "2024:Sakhir": {
+        "n": 323,
+        "mean_abs_error_s": 7.6214,
+        "signed_bias_s": -7.1186
+      },
+      "2024:Shanghai": {
+        "n": 58,
+        "mean_abs_error_s": 8.1588,
+        "signed_bias_s": -8.1588
+      },
+      "2024:Silverstone": {
+        "n": 121,
+        "mean_abs_error_s": 1.8813,
+        "signed_bias_s": -0.8634
+      },
+      "2024:Spa-Francorchamps": {
+        "n": 302,
+        "mean_abs_error_s": 3.0274,
+        "signed_bias_s": -0.9591
+      },
+      "2024:Spielberg": {
+        "n": 298,
+        "mean_abs_error_s": 10.2677,
+        "signed_bias_s": -10.1561
+      },
+      "2024:Suzuka": {
+        "n": 283,
+        "mean_abs_error_s": 5.9686,
+        "signed_bias_s": -5.7825
+      },
+      "2024:Yas Island": {
+        "n": 414,
+        "mean_abs_error_s": 8.5006,
+        "signed_bias_s": -7.6399
+      },
+      "2024:Zandvoort": {
+        "n": 611,
+        "mean_abs_error_s": 18.9071,
+        "signed_bias_s": -18.6511
+      }
+    }
+  },
+  "holdout_2025": {
+    "n": 6776,
+    "stints": 289,
+    "mean_abs_error_s": 12.8501,
+    "median_abs_error_s": 7.8034,
+    "signed_bias_s": -5.4146,
+    "p95_abs_error_s": 41.5054,
+    "p99_abs_error_s": 77.9155,
+    "mean_abs_error_ci95_s": [
+      11.3372,
+      14.5168
+    ],
+    "by_future_laps": {
+      "1-3": {
+        "n": 867,
+        "mean_abs_error_s": 2.0767,
+        "signed_bias_s": -0.0889
+      },
+      "4-5": {
+        "n": 573,
+        "mean_abs_error_s": 4.4592,
+        "signed_bias_s": -0.3026
+      },
+      "6-10": {
+        "n": 1365,
+        "mean_abs_error_s": 7.2843,
+        "signed_bias_s": -1.4121
+      },
+      "11-20": {
+        "n": 2318,
+        "mean_abs_error_s": 12.6572,
+        "signed_bias_s": -4.4331
+      },
+      "21-50": {
+        "n": 1647,
+        "mean_abs_error_s": 26.0511,
+        "signed_bias_s": -14.3943
+      },
+      "51+": {
+        "n": 6,
+        "mean_abs_error_s": 87.9655,
+        "signed_bias_s": -87.9655
+      }
+    },
+    "by_race": {
+      "2025:Austin": {
+        "n": 181,
+        "mean_abs_error_s": 8.4578,
+        "signed_bias_s": -8.073
+      },
+      "2025:Baku": {
+        "n": 284,
+        "mean_abs_error_s": 8.4486,
+        "signed_bias_s": 4.4563
+      },
+      "2025:Barcelona": {
+        "n": 18,
+        "mean_abs_error_s": 10.6218,
+        "signed_bias_s": -10.5762
+      },
+      "2025:Budapest": {
+        "n": 536,
+        "mean_abs_error_s": 16.1532,
+        "signed_bias_s": -10.2545
+      },
+      "2025:Imola": {
+        "n": 188,
+        "mean_abs_error_s": 8.8929,
+        "signed_bias_s": -7.7361
+      },
+      "2025:Jeddah": {
+        "n": 416,
+        "mean_abs_error_s": 8.4659,
+        "signed_bias_s": 0.8941
+      },
+      "2025:Las Vegas": {
+        "n": 423,
+        "mean_abs_error_s": 11.4916,
+        "signed_bias_s": 10.159
+      },
+      "2025:Lusail": {
+        "n": 304,
+        "mean_abs_error_s": 3.658,
+        "signed_bias_s": -1.4258
+      },
+      "2025:Marina Bay": {
+        "n": 524,
+        "mean_abs_error_s": 20.6301,
+        "signed_bias_s": -18.5496
+      },
+      "2025:Mexico City": {
+        "n": 95,
+        "mean_abs_error_s": 22.7483,
+        "signed_bias_s": -22.6928
+      },
+      "2025:Miami": {
+        "n": 346,
+        "mean_abs_error_s": 8.1192,
+        "signed_bias_s": -8.0422
+      },
+      "2025:Monaco": {
+        "n": 184,
+        "mean_abs_error_s": 35.3955,
+        "signed_bias_s": -34.537
+      },
+      "2025:Montréal": {
+        "n": 356,
+        "mean_abs_error_s": 8.3009,
+        "signed_bias_s": 0.7915
+      },
+      "2025:Monza": {
+        "n": 264,
+        "mean_abs_error_s": 4.1454,
+        "signed_bias_s": -1.4828
+      },
+      "2025:Sakhir": {
+        "n": 124,
+        "mean_abs_error_s": 18.4844,
+        "signed_bias_s": -18.4844
+      },
+      "2025:Shanghai": {
+        "n": 572,
+        "mean_abs_error_s": 12.2287,
+        "signed_bias_s": -11.3039
+      },
+      "2025:Silverstone": {
+        "n": 60,
+        "mean_abs_error_s": 7.3572,
+        "signed_bias_s": 7.2358
+      },
+      "2025:Spa-Francorchamps": {
+        "n": 381,
+        "mean_abs_error_s": 22.6008,
+        "signed_bias_s": 22.2689
+      },
+      "2025:Spielberg": {
+        "n": 329,
+        "mean_abs_error_s": 12.3465,
+        "signed_bias_s": -12.2794
+      },
+      "2025:Suzuka": {
+        "n": 476,
+        "mean_abs_error_s": 7.6578,
+        "signed_bias_s": 4.2501
+      },
+      "2025:São Paulo": {
+        "n": 217,
+        "mean_abs_error_s": 24.0019,
+        "signed_bias_s": -24.0019
+      },
+      "2025:Yas Island": {
+        "n": 475,
+        "mean_abs_error_s": 10.9298,
+        "signed_bias_s": -10.6633
+      },
+      "2025:Zandvoort": {
+        "n": 23,
+        "mean_abs_error_s": 14.6338,
+        "signed_bias_s": -14.5869
+      }
+    }
+  },
+  "training_p99_abs_error_s": 71.7011,
+  "holdout_coverage_under_training_p99": 0.9869
+}
