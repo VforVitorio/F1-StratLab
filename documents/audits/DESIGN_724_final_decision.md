@@ -1,24 +1,23 @@
 # Final design for issue #724, the stop-decision epic
 
-**Status:** design approved for implementation only after the final evidence contrast.
+**Status:** `NO-GO` for a scorer change after the final evidence contrast and
+independent review on 2026-09-14.
 
 ## Decision in plain language
 
 The evidence does not justify adding a traffic or position term to the production
-scorer. It also does not justify changing either five-lap horizon. The current
-system must first finish separating real strategic choices from stops caused by
-rules, penalties, damage, or missing timing evidence.
+scorer. It also does not justify changing either five-lap horizon. The final
+review still cannot separate a clean elective strategy cohort from stops caused
+by rules, penalties, damage, or missing timing evidence.
 
 The safest design is therefore a staged change:
 
 1. Freeze the 2025 evidence boundary and keep the 81 pending sample events out of
    the clean denominator.
-2. Run the final contrast for issue #715, the diagnostic of real pit entries that
-   the decision layer did not recommend, using only the resulting comparable
-   cohort.
-3. If the scorer still needs a change, add the missing terminal tyre liability:
-   compare the best admissible later stop with running to the flag, using the
-   already validated tyre-cost signal only when it is available.
+2. Keep the full 2025 decision-modes run as a reproducible system baseline, not as
+   proof that the observed stops were optimal.
+3. Do not change the scorer until a separate measurement validates the admissible
+   continuation and the tyre model's future-horizon error.
 
 This is a candidate scorer change, not permission to ship it before the contrast.
 
@@ -43,7 +42,7 @@ pre-entry cutoff.
 That uncertainty is not a reason to guess. A tyre transition proves that the set
 changed. It does not prove that the timing was elective or optimal.
 
-## Proposed scorer change after the contrast
+## Candidate scorer change after the missing measurements
 
 The remaining structural gap is terminal tyre value. The current wear term prices
 the laps immediately around the candidate decision, but an elective stop can also
@@ -58,14 +57,41 @@ terminal_cost(plan) = min(
 )
 ```
 
-The later-stop option must use the same tyre-cost units already consumed by the
-scorer. If the tyre reference is unavailable, the existing `FRESH_GAIN` fallback
-remains in force. No new hand-tuned weight is introduced.
+The later-stop option must start from the tyre state at the end of the current
+window and use a forecast validated for the remaining race, not merely the
+current `deg_cost_s` reading. If the required tyre evidence is unavailable, the
+terminal increment stays disabled and the existing `FRESH_GAIN` fallback remains
+in force. No new hand-tuned weight is introduced.
 
 The implementation must apply the terminal comparison at the shared terminal
 layer in both scorer paths. It must not charge a rival's pending stop as a normal
 position loss, and it must not alter the existing cliff, pit-loss, margin-cap, or
 random-number sequence.
+
+## Independent review
+
+An independent high-reasoning review inspected the repository and evidence
+package. The verdict was `NO-GO` for implementation:
+
+- Excluding the 81 pending events does not create a clean elective cohort; the
+  remaining controls still have `timing_discretion=unknown`.
+- `deg_cost_s` is a current differential against an early same-stint reference,
+  not a validated forecast of the next tyre set or of the remaining race.
+- `mandatory_stop_pending=False` only says that the currently modelled
+  two-compound obligation is not pending. It does not prove that running to the
+  flag is legal or strategically admissible at every circuit and race phase.
+- There is no single shared terminal layer today. The projection path applies
+  `_terminal_gaps`, while the legacy path aggregates in
+  `_run_mc_simulation`; they need adapters around one pure residual-cost rule,
+  not a superficial copy of the same formula.
+- A continuation cannot choose the best future outcome after seeing the future.
+  The admissible action and its risk aggregation must be fixed before the
+  simulated outcome is known, including the possibility of more than one later
+  stop.
+
+The independent review also executed 109 focused tests and six real no-LLM
+race-lap checks. Those checks validate the current code paths, not an
+implementation that does not yet exist.
 
 ## Explicit non-goals
 
@@ -79,34 +105,40 @@ random-number sequence.
 - Do not recalculate issue #715 from the old 198-stop or 65% figures. Those are
   retired baselines.
 
-## Verification required before implementation
+## Measurements required before implementation
 
 The next implementation branch must prove all of the following:
 
-1. The 2025 comparison is frozen before scorer edits.
-2. The clean cohort, exclusions, missingness, and uncertainty are reported by
-   reason, not hidden in one aggregate.
-3. A no-residual candidate changes only because the terminal tyre comparison is
-   active.
-4. A mandatory-stop candidate does not receive a second stop obligation through
-   the terminal term.
-5. Missing tyre evidence follows the old fallback exactly.
-6. The legacy and projection paths produce the same terminal decision for the
-   same simplified state.
-7. The real 2025 no-LLM simulation path still runs and its output is inspected.
+1. Measure future-horizon tyre error from the end of a decision window to the
+   chequered flag, with 2025 kept out of calibration.
+2. Define admissible continuation states explicitly: no obligation, one
+   obligation, circuit-required stops, and more than one future stop.
+3. Freeze the action choice before sampling the continuation outcome and preserve
+   the existing E/P10/P90 risk aggregation.
+4. Verify the same residual-cost function through both scorer adapters without
+   demanding equality of their different currencies.
+5. Prove missing tyre evidence, negative readings, and a real zero reading remain
+   distinct.
+6. Run the real 2025 no-LLM path and inspect the output after the measurement,
+   before any production change.
 
-The implementation is medium-high complexity: one shared scoring concept, two
-existing scorer paths, their tests, the frozen evaluation report, and a real
-simulation check. It needs one independent Astra review before the code is
-merged. No new dependency or new abstraction is needed.
+The future implementation is high complexity: a new validated continuation
+measurement, one pure residual-cost rule, two scorer adapters, legality and
+obligation tests, and a real simulation check. No code branch should be opened
+until those measurements pass. No new dependency is needed.
 
-## Next issue
+## Current position
 
-The next actionable item after this evidence gate is issue #376, the audit that
-measures whether the circuit-cluster labels leak test-season information. It is
-offline, does not alter production behaviour, and unblocks a paper claim. The
-stop-decision epic remains open until the final contrast supports either the
-terminal-liability change or a documented no-change decision.
+Issue #376, the circuit-cluster test-season leak measurement, and issue #729, the
+decision-window measurement, are already complete in `dev`. The next work remains
+inside issue #724 and issue #715: measure the missing future-horizon tyre and
+continuation contracts before deciding whether any scorer change is warranted.
+
+The pending evidence decision is recorded in
+`REVIEW_724_pending_evidence.md`. The 2025 run is reproducible in
+`documents/eval_reports/decision_modes.{md,json}` and reproduced the committed
+semantic results: 573 eligible events, 203 scored, 34.0% within one lap, and
+`masked` coverage.
 
 ## Official source set consulted
 
