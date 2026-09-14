@@ -53,6 +53,7 @@ def build_metadata(laps: pd.DataFrame) -> pd.DataFrame:
     source["max_stint"] = source.groupby(["Year", "GP_Name", "DriverNumber"])["Stint"].transform(
         "max"
     )
+    source["future_stops_after_cutoff"] = source["max_stint"] - source["Stint"]
     source["race_last_lap"] = source.groupby(["Year", "GP_Name"])["LapNumber"].transform("max")
     source["fastest_lap_s"] = source.groupby(["Year", "GP_Name"])["LapTime_s"].transform("min")
     stint_last_lap = source.groupby("stint")["LapNumber"].transform("max")
@@ -68,6 +69,9 @@ def build_metadata(laps: pd.DataFrame) -> pd.DataFrame:
             race_last_lap=("race_last_lap", "max"),
             lap_time_s=("LapTime_s", "max"),
             fastest_lap_s=("fastest_lap_s", "max"),
+            stint_number=("Stint", "first"),
+            max_stint_number=("max_stint", "max"),
+            future_stops_after_cutoff=("future_stops_after_cutoff", "max"),
             is_final_stint=("is_final_stint", "all"),
             reaches_race_end=("reaches_race_end", "all"),
             duplicate_tyre_life=("duplicate_tyre_life", "any"),
@@ -234,6 +238,30 @@ def summarise(frame: pd.DataFrame) -> dict[str, Any]:
     }
 
 
+def fit_horizon_residual_curve(frame: pd.DataFrame) -> dict[str, float]:
+    """Learn only a horizon-band residual correction on training data."""
+    horizon = pd.cut(frame["future_observed_laps"], HORIZON_BINS, labels=HORIZON_LABELS)
+    by_horizon = frame.assign(horizon=horizon).groupby("horizon", observed=True)["error_s"]
+    return {str(label): round(float(values.median()), 4) for label, values in by_horizon}
+
+
+def apply_horizon_residual_curve(frame: pd.DataFrame, curve: dict[str, float]) -> pd.DataFrame:
+    """Apply a training-only residual correction without changing the target."""
+    result = frame.copy()
+    horizon = pd.cut(result["future_observed_laps"], HORIZON_BINS, labels=HORIZON_LABELS)
+    correction = horizon.astype(str).map(curve).fillna(0.0)
+    result["error_s"] = result["error_s"] - correction
+    return result
+
+
+def continuation_shapes(metadata: pd.DataFrame) -> dict[str, int]:
+    """Count observed future-stop shapes without claiming they are legal policies."""
+    stints = metadata.drop_duplicates("stint")
+    stops = stints["future_stops_after_cutoff"].round().astype(int)
+    bands = np.select([stops.eq(0), stops.eq(1), stops.ge(2)], ["0", "1", "2+"], default="unknown")
+    return {str(label): int((bands == label).sum()) for label in ("0", "1", "2+", "unknown")}
+
+
 def continuation_contract() -> list[dict[str, Any]]:
     """Return explicit continuation states instead of inferring them from one boolean."""
     return [
@@ -295,12 +323,16 @@ def run_measurement() -> dict[str, Any]:
 
     reference_gate_pct = CFG.fresh_reference_max_pct_of_fastest
     measured: dict[int, pd.DataFrame] = {}
+    metadata_by_year: dict[int, pd.DataFrame] = {}
     for year in (*TRAINING_YEARS, HOLDOUT_YEAR):
         predictions, metadata = _load_predictions(year)
         measured[year] = measure_future_cost(predictions, metadata, reference_gate_pct)
+        metadata_by_year[year] = metadata
 
     training = pd.concat([measured[year] for year in TRAINING_YEARS], ignore_index=True)
     holdout = measured[HOLDOUT_YEAR]
+    horizon_curve = fit_horizon_residual_curve(training)
+    calibrated_holdout = apply_horizon_residual_curve(holdout, horizon_curve)
     training_bound = float(training["error_s"].abs().quantile(0.99)) if not training.empty else None
     holdout_coverage = None
     if training_bound is not None and not holdout.empty:
@@ -316,8 +348,13 @@ def run_measurement() -> dict[str, Any]:
         "target": "sum of future same-stint model-target wear",
         "uses_future_rows_for_observation": False,
         "continuation_contract": continuation_contract(),
+        "observed_future_stop_shapes": {
+            str(year): continuation_shapes(metadata) for year, metadata in metadata_by_year.items()
+        },
+        "training_horizon_residual_curve_s": horizon_curve,
         "training": summarise(training),
         "holdout_2025": summarise(holdout),
+        "holdout_2025_horizon_calibrated": summarise(calibrated_holdout),
         "training_p99_abs_error_s": None if training_bound is None else round(training_bound, 4),
         "holdout_coverage_under_training_p99": None
         if holdout_coverage is None

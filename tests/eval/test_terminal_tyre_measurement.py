@@ -6,8 +6,11 @@ import pandas as pd
 import pytest
 
 from scripts.measure_terminal_tyre_liability import (
+    apply_horizon_residual_curve,
     attach_references,
     continuation_contract,
+    continuation_shapes,
+    fit_horizon_residual_curve,
     measure_future_cost,
 )
 
@@ -88,3 +91,37 @@ def test_contaminated_fresh_reference_is_not_used():
 
     row = measured.loc[measured["tyre_life"] == 4.0].iloc[0]
     assert row["predicted_cost_s"] == pytest.approx(1.5)
+
+
+def test_horizon_curve_is_fit_on_training_rows_and_applied_to_holdout_rows():
+    training = pd.DataFrame(
+        {
+            "stint": ["a", "b", "c"],
+            "future_observed_laps": [2, 3, 4],
+            "error_s": [2.0, 4.0, 10.0],
+        }
+    )
+    holdout = pd.DataFrame(
+        {
+            "stint": ["d", "e"],
+            "future_observed_laps": [2, 4],
+            "error_s": [5.0, 12.0],
+        }
+    )
+
+    curve = fit_horizon_residual_curve(training)
+    calibrated = apply_horizon_residual_curve(holdout, curve)
+
+    assert curve == {"1-3": 3.0, "4-5": 10.0}
+    assert calibrated["error_s"].tolist() == pytest.approx([2.0, 2.0])
+
+
+def test_observed_future_stop_shapes_include_multiple_stops():
+    metadata = pd.DataFrame(
+        {
+            "stint": ["a", "b", "c", "d"],
+            "future_stops_after_cutoff": [0, 1, 2, 3],
+        }
+    )
+
+    assert continuation_shapes(metadata) == {"0": 1, "1": 1, "2+": 2, "unknown": 0}

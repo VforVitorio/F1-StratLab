@@ -54,6 +54,22 @@ The five-lap window is locally measurable. The problem appears when the current
 wear value is carried beyond that local horizon. The 2025 result is not a safe
 future forecast, even though the early bands are smaller.
 
+## Training-only horizon correction
+
+As a diagnostic, the instrument also learned the median prediction residual for
+each future-lap band on 2023-2024 and applied that correction unchanged to 2025.
+This is not a production model and it does not use 2025 targets.
+
+| 2025 result | mean absolute error | p99 absolute error |
+| --- | ---: | ---: |
+| current wear carried forward | 12.850 s | 77.916 s |
+| training-only horizon correction | **11.468 s** | **72.893 s** |
+
+The improvement is real but insufficient. The correction for the `51+` band is
+based on only three training cutoffs, so it is not a defensible general bound.
+The remaining bands still carry 7.284 s MAE at 6-10 laps and 26.051 s at 21-50
+laps on the held-out season. A future model needs more than a per-band offset.
+
 ## Continuation contract
 
 The measurement records the states explicitly instead of inferring legality from
@@ -71,12 +87,25 @@ This is a contract definition, not yet a complete multi-stop simulator. A future
 implementation must choose the continuation before sampling, include every
 required later stop, and evaluate the same terminal horizon for every candidate.
 
+The observed source data contains future-stop shapes for 2025 as follows:
+
+| future observed stops after a stint | stints |
+| ---: | ---: |
+| 0 | 456 |
+| 1 | 435 |
+| 2 or more | 237 |
+
+These counts demonstrate that multiple-stop continuations exist in the source
+data. They do not establish that those historical sequences were the legal or
+optimal continuation available at an earlier decision point.
+
 ## Decision
 
 Do not add terminal tyre liability to either scorer. The current `deg_cost_s`
-value is useful over the short window it was measured for, but the simple
-constant extrapolation is too inaccurate over a race distance. The existing
-five-lap horizons stay unchanged, and the scorer remains untouched.
+value is useful over the short window it was measured for, but even a
+training-only horizon correction remains too inaccurate and too thinly supported
+over a race distance. The existing five-lap horizons stay unchanged, and the
+scorer remains untouched.
 
 Before reopening the design, the project needs a future-horizon model or a
 measured continuation curve, explicit multi-stop legality, and one residual-cost
@@ -90,7 +119,7 @@ the machine-readable record:
 - `uv run pytest -q tests/eval/test_terminal_tyre_measurement.py`
 - `uvx ruff check scripts/measure_terminal_tyre_liability.py tests/eval/test_terminal_tyre_measurement.py`
 - `uvx ruff format --check scripts/measure_terminal_tyre_liability.py tests/eval/test_terminal_tyre_measurement.py`
-- three hermetic tests passed
+- six hermetic tests passed
 
 The real TCN was used for both seasons. No production scorer, model, dependency,
 or five-lap horizon was changed.
