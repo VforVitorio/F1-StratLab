@@ -6,6 +6,7 @@
   ],
   "holdout_year": 2025,
   "fresh_max_tyre_life": 3,
+  "fresh_reference_max_pct_of_fastest": 1.1,
   "prediction": "current_wear * future_observed_laps",
   "target": "sum of future same-stint model-target wear",
   "uses_future_rows_for_observation": false,

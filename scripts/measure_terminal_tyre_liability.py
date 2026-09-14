@@ -91,20 +91,22 @@ def normalise_predictions(predictions: pd.DataFrame) -> pd.DataFrame:
 
 
 def attach_references(
-    predictions: pd.DataFrame, metadata: pd.DataFrame | None = None
+    predictions: pd.DataFrame,
+    metadata: pd.DataFrame | None = None,
+    max_reference_pct: float | None = None,
 ) -> pd.DataFrame:
-    """Attach the production-style live fresh reference per stint."""
+    """Attach the live fresh reference, optionally using production gating."""
     result = predictions.sort_values(["stint", "tyre_life"]).copy()
     if metadata is not None:
         result = result.merge(metadata, on=["stint", "tyre_life"], how="left")
     fresh = result[result["tyre_life"] <= FRESH_MAX_TYRE_LIFE]
-    if metadata is not None:
+    if max_reference_pct is not None:
         required = {"lap_time_s", "fastest_lap_s"}
         if not required <= set(fresh.columns):
             raise ValueError(
                 "metadata must carry lap_time_s and fastest_lap_s for the reference gate"
             )
-        from src.agents.tire_agent import CFG, _reject_contaminated_laps
+        from src.agents.tire_agent import _reject_contaminated_laps
 
         clean_groups = []
         for _, group in fresh.groupby("stint", sort=False):
@@ -112,7 +114,7 @@ def attach_references(
                 _reject_contaminated_laps(
                     group.rename(columns={"lap_time_s": "LapTime_s"}),
                     float(group["fastest_lap_s"].iloc[0]),
-                    CFG.fresh_reference_max_pct_of_fastest,
+                    max_reference_pct,
                 )
             )
         fresh = pd.concat(clean_groups, ignore_index=False) if clean_groups else fresh.iloc[0:0]
@@ -125,9 +127,13 @@ def attach_references(
     return result
 
 
-def measure_future_cost(predictions: pd.DataFrame, metadata: pd.DataFrame) -> pd.DataFrame:
+def measure_future_cost(
+    predictions: pd.DataFrame,
+    metadata: pd.DataFrame,
+    max_reference_pct: float | None = None,
+) -> pd.DataFrame:
     """Measure constant-current-wear cost against future same-set target cost."""
-    frame = attach_references(predictions, metadata)
+    frame = attach_references(predictions, metadata, max_reference_pct)
     final_stint = frame["is_final_stint"].astype("boolean").fillna(False)
     reaches_end = frame["reaches_race_end"].astype("boolean").fillna(False)
     duplicate_life = frame["duplicate_tyre_life"].astype("boolean").fillna(True)
@@ -285,10 +291,13 @@ def _load_predictions(year: int) -> tuple[pd.DataFrame, pd.DataFrame]:
 
 def run_measurement() -> dict[str, Any]:
     """Run training and holdout measurements and derive a training-only p99 bound."""
+    from src.agents.tire_agent import CFG
+
+    reference_gate_pct = CFG.fresh_reference_max_pct_of_fastest
     measured: dict[int, pd.DataFrame] = {}
     for year in (*TRAINING_YEARS, HOLDOUT_YEAR):
         predictions, metadata = _load_predictions(year)
-        measured[year] = measure_future_cost(predictions, metadata)
+        measured[year] = measure_future_cost(predictions, metadata, reference_gate_pct)
 
     training = pd.concat([measured[year] for year in TRAINING_YEARS], ignore_index=True)
     holdout = measured[HOLDOUT_YEAR]
@@ -302,6 +311,7 @@ def run_measurement() -> dict[str, Any]:
         "training_years": list(TRAINING_YEARS),
         "holdout_year": HOLDOUT_YEAR,
         "fresh_max_tyre_life": FRESH_MAX_TYRE_LIFE,
+        "fresh_reference_max_pct_of_fastest": reference_gate_pct,
         "prediction": "current_wear * future_observed_laps",
         "target": "sum of future same-stint model-target wear",
         "uses_future_rows_for_observation": False,

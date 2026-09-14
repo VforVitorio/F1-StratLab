@@ -1,5 +1,7 @@
 """Hermetic checks for the terminal tyre-liability measurement primitives."""
 
+from pathlib import Path
+
 import pandas as pd
 import pytest
 
@@ -8,7 +10,9 @@ from scripts.measure_terminal_tyre_liability import (
     continuation_contract,
     measure_future_cost,
 )
-from tests.conftest import HAS_TIRE_MODELS
+
+ROOT = Path(__file__).resolve().parents[2]
+MODEL_ROUTING = ROOT / "data" / "models" / "tire_degradation" / "routing_config.json"
 
 
 def _predictions() -> pd.DataFrame:
@@ -73,14 +77,14 @@ def test_continuation_contract_does_not_infer_legality_from_one_boolean():
 
 
 @pytest.mark.skipif(
-    not HAS_TIRE_MODELS, reason="the production reference gate imports the TCN bundle"
+    not MODEL_ROUTING.exists(), reason="the production reference gate needs the local TCN bundle"
 )
 def test_contaminated_fresh_reference_is_not_used():
     predictions = _predictions()
     metadata = _metadata()
     metadata.loc[metadata["tyre_life"] == 3.0, "lap_time_s"] = 120.0
 
-    measured = measure_future_cost(predictions, metadata)
+    measured = measure_future_cost(predictions, metadata, max_reference_pct=1.10)
 
     row = measured.loc[measured["tyre_life"] == 4.0].iloc[0]
     assert row["predicted_cost_s"] == pytest.approx(1.5)
