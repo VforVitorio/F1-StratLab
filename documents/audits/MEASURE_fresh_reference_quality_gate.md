@@ -184,6 +184,6 @@ uv run python scripts/measure_fresh_reference_gate_2025.py   # 2025, the held-ou
 ```
 
 Related: `MEASURE_744a_tyre_reference.md` · `MEASURE_763_ship_decision.md`
-(`feat/deferral-tyre-liability`) · `scripts/measure_deg_error_bound.py`
-(same branch, the original bound this note decomposes) ·
+(`feat/deferral-tyre-liability`) · `scripts/measure_fresh_reference_gate.py`
+(the current reproducible bound instrument) ·
 [[feedback_measure_on_the_season_that_ships]] (Claude memory — the general lesson)
