@@ -73,6 +73,7 @@ CLIENT_SEND_TIMEOUT_S = 0.05
 # retry loop is worse than an honest surrender.
 ACCEPT_RETRY_DELAY_S = 0.1
 ACCEPT_ERROR_LIMIT = 20
+ACCEPT_POLL_TIMEOUT_S = 0.5
 
 
 def _json_safe(value):
@@ -186,6 +187,7 @@ class TelemetryStreamServer:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((self.host, self.port))
         sock.listen(5)
+        sock.settimeout(ACCEPT_POLL_TIMEOUT_S)
         self._server_socket = sock
         self._running = True
         threading.Thread(
@@ -353,6 +355,8 @@ class TelemetryStreamServer:
         while self._running and self._server_socket is not None:
             try:
                 client_socket, addr = self._server_socket.accept()
+            except socket.timeout:
+                continue
             except OSError as err:
                 if not self._running:
                     return  # `stop()` closed the socket; this is the exit path
@@ -398,7 +402,10 @@ class TelemetryStreamServer:
         """
         try:
             while self._running:
-                readable, _, errored = select.select([client_socket], [], [client_socket], 1.0)
+                try:
+                    readable, _, errored = select.select([client_socket], [], [client_socket], 1.0)
+                except OSError:
+                    return
                 if errored:
                     return
                 if not readable:

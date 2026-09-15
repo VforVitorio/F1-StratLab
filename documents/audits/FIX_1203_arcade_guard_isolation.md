@@ -2,7 +2,8 @@
 
 Issue #1203 tracks two arcade test guards that were reported to fail in the
 full serial suite while passing in isolation. The issue is about test
-isolation, not a change to the arcade loader or telemetry implementation.
+isolation and clean stream shutdown, not a change to the arcade loader or
+telemetry payload contract.
 
 ## Findings
 
@@ -14,7 +15,9 @@ isolation, not a change to the arcade loader or telemetry implementation.
 - The arcade test suite also imports Pyglet. On Windows, its unused input and
   audio backends can leave process-wide workers active during interpreter
   teardown.
-- No production arcade code needed to change.
+- The stream accept loop now uses a bounded poll timeout so `stop()` can end it
+  on every supported platform. A closed client socket during shutdown is a
+  normal exit path.
 
 ## Change
 

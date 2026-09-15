@@ -436,6 +436,7 @@ def test_a_transient_accept_error_does_not_shut_the_door_forever():
     listening.setsockopt(socket_module.SOL_SOCKET, socket_module.SO_REUSEADDR, 1)
     listening.bind(("127.0.0.1", 0))
     listening.listen(5)
+    listening.settimeout(0.5)
     port = listening.getsockname()[1]
 
     server._server_socket = _FlakyOnce(listening)  # type: ignore[assignment]
