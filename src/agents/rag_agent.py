@@ -206,6 +206,38 @@ def get_rag_react_agent():
 
 
 # ==============================================================================
+def _extract_tool_queries(messages: list[object]) -> list[str]:
+    """Return the regulation questions actually sent to ``query_rag_tool``."""
+    queries: list[str] = []
+    for message in messages:
+        for tool_call in getattr(message, "tool_calls", []) or []:
+            if not isinstance(tool_call, dict) or tool_call.get("name") != "query_rag_tool":
+                continue
+            args = tool_call.get("args") or {}
+            query = args.get("question") if isinstance(args, dict) else None
+            if isinstance(query, str) and query.strip():
+                queries.append(query.strip())
+    return queries
+
+
+def _retrieve_tool_passages(messages: list[object], year: int | None) -> list[RegulationChunk]:
+    """Rehydrate typed passages using the queries N30 actually sent to the tool."""
+    queries = _extract_tool_queries(messages)
+    if not queries:
+        return []
+
+    retriever = get_retriever()
+    chunks: list[RegulationChunk] = []
+    seen: set[tuple[str, int, str]] = set()
+    for query in queries:
+        for chunk in retriever.query(query, year=year):
+            key = (chunk.text, chunk.year, chunk.doc_type)
+            if key not in seen:
+                seen.add(key)
+                chunks.append(chunk)
+    return chunks
+
+
 # Entry points
 # ==============================================================================
 
@@ -213,14 +245,15 @@ def run_rag_agent(question: str, year: int | None = None) -> "RegulationContext"
     """Run the RAG ReAct agent for a single regulation question.
 
     Invokes the LangGraph agent with query_rag_tool, extracts the final answer
-    from the last message, then re-queries the retriever directly to populate
-    the RegulationContext with typed RegulationChunk objects.
+    from the last message, then re-queries the retriever with the exact tool
+    questions to populate typed RegulationChunk objects.
 
     The retriever is called twice: once by the agent (via query_rag_tool) to
     retrieve passages for the LLM, and once here to get typed chunk objects for
     the RegulationContext. This is intentional: the @tool wrapper returns a
     formatted string, not RegulationChunk instances, so a second retrieval is
-    needed to populate ctx.chunks and ctx.articles.
+    needed to populate ctx.chunks and ctx.articles. Reusing the tool's actual
+    questions keeps those sources aligned with what the LLM read.
 
     BOTH calls take the season, and they have to stay in step. The agent's call
     receives it through the RunnableConfig the graph forwards to the tool, the
@@ -252,8 +285,7 @@ def run_rag_agent(question: str, year: int | None = None) -> "RegulationContext"
     )
     answer = result["messages"][-1].content
 
-    retriever = get_retriever()
-    chunks    = retriever.query(question, year=year)
+    chunks = _retrieve_tool_passages(result["messages"], year)
     articles  = list(dict.fromkeys(c.article for c in chunks if c.article))
 
     return RegulationContext(

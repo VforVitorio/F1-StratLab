@@ -58,15 +58,14 @@ class IndexConfig:
         embedding_dim:    Output vector size of the embedding model. BGE-M3 produces
                           1024-dim vectors; changing the model requires updating this
                           value or Qdrant will reject the upsert silently.
-        chunk_size:       Sliding window size in characters. 512 chars is roughly
-                          80-120 words, or 100-170 bge-m3 tokens, so a chunk occupies a
-                          small fraction of the model's 8192-token window (see the
-                          model's own tokenizer_config.json). The size is set for
-                          article-level coherence, not by an encoder limit; widening it
-                          is RAG-06, gated on the RAG eval rather than decided here.
-        chunk_overlap:    Characters repeated at the start of each new window so that
-                          sentences at chunk boundaries appear complete in at least one
-                          chunk and are not truncated mid-article.
+        chunk_size:       Soft target size in characters. Article clauses stay intact
+                          even when one is longer than this target, because splitting a
+                          condition from its rule changes the regulation. 512 chars is
+                          roughly 80-120 words, or 100-170 bge-m3 tokens, so a chunk
+                          occupies a small fraction of the model's 8192-token window.
+        chunk_overlap:    Maximum characters of complete clauses repeated at the start
+                          of a new chunk. A clause larger than this is not split merely
+                          to manufacture overlap.
         embed_batch_size: Number of chunks embedded in a single encoder call. Larger
                           batches saturate the GPU better but consume more VRAM; 64 is
                           a safe default for an 8 GB card with BGE-M3.
@@ -155,10 +154,10 @@ class TextChunk:
         year:          Inherited from the parent ``PDFDocument``. Determines
                        which season's rules apply, critical when regulations
                        changed between years (e.g. cost-cap rules 2023 vs 2025).
-        article:       Article or section reference extracted by regex from the
-                       chunk text (e.g. ``"Article 48.3"``). Empty string when
-                       no reference is found. Stored in the Qdrant payload so
-                       the LLM can cite the exact article without re-parsing.
+        article:       Article reference inherited from the containing heading
+                       (e.g. ``"Article 48.3"``). Empty string when the source
+                       has no identifiable heading. It is never inferred from a
+                       cross-reference inside the clause.
         section_title: Nearest section heading found above this chunk in the
                        document, when available. Provides coarse context about
                        which part of the regulations the chunk belongs to.
@@ -252,7 +251,64 @@ def load_pdf_documents(docs_dir: Path) -> list[PDFDocument]:
 # Text cleaning + chunking
 # ---------------------------------------------------------------------------
 
-_ARTICLE_RE = re.compile(r"Article\s+\d+[\.\d]*", re.IGNORECASE)
+_ARTICLE_HEADING_RE = re.compile(
+    r"(?m)^[ \t]*(?P<number>\d+(?:\.\d+)*)(?:[ \t]+)"
+    r"(?P<title>[A-Za-z0-9][^\n]*?)\s*$"
+)
+_APPENDIX_HEADING_RE = re.compile(r"(?mi)^[ \t]*(?P<title>APPENDIX\s+\d+)\s*$")
+_CLAUSE_START_RE = re.compile(r"(?m)^[ \t]*(?:[a-hj-uw-z][.)])[ \t]+")
+_SENTENCE_BOUNDARY_RE = re.compile(r"(?<=[.!?])(?=\s+[A-Z0-9])")
+_CONDITION_MARKER_RE = re.compile(
+    r"\b(?:if|unless|except|only when|at such times|under such circumstances|provided)\b",
+    re.IGNORECASE,
+)
+_RULE_STARTERS = {
+    "a",
+    "an",
+    "any",
+    "all",
+    "at",
+    "after",
+    "before",
+    "during",
+    "each",
+    "except",
+    "for",
+    "from",
+    "if",
+    "in",
+    "no",
+    "on",
+    "once",
+    "other",
+    "should",
+    "subject",
+    "the",
+    "unless",
+    "upon",
+    "when",
+    "whilst",
+    "with",
+}
+_MONTH_NAMES = {
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+}
+_MAX_ATOMIC_RULE_SIZE = 8192
+_PAGE_METADATA_RE = re.compile(
+    r"(?:formula\s+[12]\s+sporting\s+regulations|©|\d+/\d+)",
+    re.IGNORECASE,
+)
 _SECTION_HEAD_RE = re.compile(r"^\s{0,4}(\d+[\.\d]*\s+[A-Z][A-Z\s]{4,})\s*$", re.MULTILINE)
 
 
@@ -273,36 +329,192 @@ def clean_text(text: str) -> str:
 
 
 def extract_article_reference(text: str) -> str:
-    """Find the first FIA article reference in a chunk of text.
+    """Return the article declared by a heading in ``text``.
 
-    Searches for patterns like ``Article 48``, ``Article 48.3``, or
-    ``ARTICLE 28.6`` (case-insensitive). Returns only the first match because
-    a 512-character chunk rarely spans more than one article, and having a
-    single authoritative reference is more useful for citation than a list.
-    Returns an empty string when no reference is found so the field is always
-    a valid string and never ``None``.
+    A reference inside a clause may point to a different article, so it cannot
+    identify the clause's owner. This helper therefore only accepts a numbered
+    section heading. ``iter_chunks`` passes the containing heading directly and
+    does not fall back to references found in clause text.
 
     Args:
         text: The regulation chunk to search. Typically 512 characters but can
               be shorter for the last chunk of a document section.
     """
-    match = _ARTICLE_RE.search(text)
-    return " ".join(match.group(0).strip().split()) if match else ""
+    for match in _ARTICLE_HEADING_RE.finditer(text):
+        metadata = _article_heading_metadata(match)
+        if metadata is not None:
+            return metadata[0]
+    return ""
 
 
 def extract_section_title(text: str) -> str:
-    """Find the nearest section heading inside a chunk of text.
+    """Return the first valid numbered FIA heading found in ``text``.
 
-    Matches lines that look like numbered section headings in FIA documents:
-    a number followed by all-caps words, e.g. ``"48 SAFETY CAR PROCEDURE"``.
-    Returns the first match found, or an empty string when none is present.
-    This is a best-effort heuristic: not every chunk will have a heading.
+    The heading is preserved as metadata and as a prefix in every chunk from
+    that article, so a retrieved clause remains understandable on its own.
 
     Args:
         text: The regulation chunk to search.
     """
+    for match in _ARTICLE_HEADING_RE.finditer(text):
+        metadata = _article_heading_metadata(match)
+        if metadata is not None:
+            return metadata[1]
     match = _SECTION_HEAD_RE.search(text)
     return match.group(1).strip() if match else ""
+
+
+def _article_heading_metadata(match: re.Match[str]) -> tuple[str, str] | None:
+    """Normalise a numbered rule heading, rejecting repeated PDF page metadata."""
+    number = match.group("number")
+    title = " ".join(match.group("title").split())
+    line = f"{number} {title}"
+    first_word_match = re.match(r"[A-Za-z]+", title)
+    first_word = first_word_match.group(0).casefold() if first_word_match else ""
+    if (
+        int(number.split(".", 1)[0]) >= 1000
+        or len(title) < 3
+        or first_word in _MONTH_NAMES
+        or _PAGE_METADATA_RE.search(line)
+    ):
+        return None
+    return f"Article {number}", line
+
+
+def _is_structural_heading(section_title: str) -> bool:
+    """Tell a short article heading from a numbered rule sentence."""
+    _, _, title = section_title.partition(" ")
+    first_word_match = re.match(r"[A-Za-z]+", title)
+    first_word = first_word_match.group(0).casefold() if first_word_match else ""
+    return (
+        first_word_match is not None
+        and len(title) <= 80
+        and title[-1:] not in ".!?:;"
+        and first_word not in _RULE_STARTERS
+    )
+
+
+def _iter_article_sections(text: str) -> Iterator[tuple[str, str, str]]:
+    """Yield ``(article, heading, body)`` sections from cleaned PDF text."""
+    article_headings = [
+        (match, metadata)
+        for match in _ARTICLE_HEADING_RE.finditer(text)
+        if (metadata := _article_heading_metadata(match)) is not None
+    ]
+    appendix_headings = list(_APPENDIX_HEADING_RE.finditer(text))
+    first_appendix = appendix_headings[0].start() if appendix_headings else len(text)
+    headings = [heading for heading in article_headings if heading[0].start() < first_appendix]
+    headings.extend(
+        (match, ("", " ".join(match.group("title").split()))) for match in appendix_headings
+    )
+    headings.sort(key=lambda item: item[0].start())
+
+    if not headings:
+        yield "", "", text.strip()
+        return
+
+    first_match = headings[0][0]
+    preamble = text[: first_match.start()].strip()
+    if preamble:
+        yield "", "", preamble
+
+    for index, (match, metadata) in enumerate(headings):
+        next_start = headings[index + 1][0].start() if index + 1 < len(headings) else len(text)
+        body = text[match.end() : next_start].strip()
+        yield metadata[0], metadata[1], body
+
+
+def _split_long_block(
+    text: str,
+    chunk_size: int,
+    preserve_condition: bool = True,
+) -> list[str]:
+    """Split oversized non-conditional prose without cutting a word."""
+    text = text.strip()
+    if len(text) <= chunk_size or (preserve_condition and _CONDITION_MARKER_RE.search(text)):
+        return [text] if text else []
+
+    pieces = [part.strip() for part in re.split(r"(?<=[.!?])(?=\s+)|(?=\n)", text) if part.strip()]
+    if len(pieces) == 1:
+        pieces = [part.strip() for part in text.splitlines() if part.strip()]
+    return pieces or [text]
+
+
+def _split_clause_blocks(
+    text: str,
+    chunk_size: int,
+    preserve_condition: bool = True,
+    split_clauses: bool = True,
+) -> list[str]:
+    """Split an article at clause markers without splitting a clause's sentences."""
+    if not split_clauses:
+        if preserve_condition and len(text) <= _MAX_ATOMIC_RULE_SIZE:
+            return [text.strip()] if text.strip() else []
+        return _split_long_block(text, chunk_size, preserve_condition=False)
+
+    markers = list(_CLAUSE_START_RE.finditer(text))
+    if not markers:
+        sentences = [part.strip() for part in _SENTENCE_BOUNDARY_RE.split(text) if part.strip()]
+        return [
+            piece
+            for sentence in sentences
+            for piece in _split_long_block(
+                sentence, chunk_size, preserve_condition=preserve_condition
+            )
+        ]
+
+    blocks: list[str] = []
+    preamble = text[: markers[0].start()].strip()
+    if preamble:
+        blocks.extend(
+            _split_long_block(preamble, chunk_size, preserve_condition=preserve_condition)
+        )
+    for index, marker in enumerate(markers):
+        end = markers[index + 1].start() if index + 1 < len(markers) else len(text)
+        block = text[marker.start() : end].strip()
+        if block:
+            blocks.extend(
+                _split_long_block(block, chunk_size, preserve_condition=preserve_condition)
+            )
+    return blocks
+
+
+def _pack_clause_blocks(
+    blocks: list[str],
+    chunk_size: int,
+    chunk_overlap: int,
+) -> Iterator[str]:
+    """Pack complete clauses into chunks, retaining whole-clause overlap."""
+    start = 0
+    while start < len(blocks):
+        current: list[str] = []
+        current_size = 0
+        end = start
+        while end < len(blocks):
+            block = blocks[end]
+            candidate_size = current_size + len(block) + (2 if current else 0)
+            if current and candidate_size > chunk_size:
+                break
+            current.append(block)
+            current_size = candidate_size
+            end += 1
+
+        yield "\n\n".join(current).strip()
+        if end == len(blocks):
+            return
+
+        next_start = end
+        overlap_size = 0
+        while next_start > start and chunk_overlap:
+            block = blocks[next_start - 1]
+            separator_size = 2 if overlap_size else 0
+            if overlap_size + separator_size + len(block) > chunk_overlap:
+                break
+            overlap_size += separator_size + len(block)
+            next_start -= 1
+        # A first chunk cannot overlap itself. Without this guard a short first
+        # clause would reset ``start`` to zero and repeat forever.
+        start = end if next_start == start else next_start
 
 
 def compute_hash(text: str) -> str:
@@ -327,45 +539,54 @@ def iter_chunks(
     chunk_size: int | None = None,
     chunk_overlap: int | None = None,
 ) -> Iterator[TextChunk]:
-    """Yield overlapping text chunks from a ``PDFDocument``.
+    """Yield article-aware chunks from a ``PDFDocument``.
 
-    Uses a sliding window over the cleaned document text. The overlap ensures
-    that regulation sentences which fall at a chunk boundary appear in full in
-    at least one chunk, preventing the retriever from returning a truncated
-    article mid-sentence. Each chunk carries its own article reference and
-    section title extracted by regex so retrieval results are self-contained.
+    The source is first separated by numbered article headings and then by
+    clause markers such as ``n)`` and ``o)``. Complete clauses are the atomic
+    unit, so a condition and the rule it qualifies cannot be separated by a
+    character window. A clause may exceed ``chunk_size`` when that is necessary
+    to preserve its meaning.
 
     Args:
         document:      The source document to chunk. Its ``doc_type`` and
                        ``year`` are inherited by every produced chunk.
-        chunk_size:    Window size in characters. Smaller windows give more
+        chunk_size:    Soft target size in characters. Smaller targets give more
                        precise retrieval but require more Qdrant storage and
-                       more embedding calls; 512 chars is a good default.
-        chunk_overlap: Number of characters to repeat at the start of each
-                       new window. Must be smaller than ``chunk_size``.
+                       more embedding calls; 512 chars is a useful default.
+        chunk_overlap: Maximum number of characters of complete clauses to repeat
+                       at the start of a new chunk. Must be smaller than
+                       ``chunk_size``.
     """
-    chunk_size = chunk_size or CFG.chunk_size
-    chunk_overlap = chunk_overlap or CFG.chunk_overlap
+    chunk_size = CFG.chunk_size if chunk_size is None else chunk_size
+    chunk_overlap = CFG.chunk_overlap if chunk_overlap is None else chunk_overlap
+    if chunk_size <= 0:
+        raise ValueError("chunk_size must be positive")
+    if chunk_overlap < 0 or chunk_overlap >= chunk_size:
+        raise ValueError("chunk_overlap must be non-negative and smaller than chunk_size")
 
     text = clean_text(document.text)
-    start = 0
-    stride = chunk_size - chunk_overlap
-
-    while start < len(text):
-        end = min(start + chunk_size, len(text))
-        chunk_text = text[start:end].strip()
-
-        if chunk_text:
+    for article, section_title, body in _iter_article_sections(text):
+        blocks = _split_clause_blocks(
+            body,
+            chunk_size,
+            preserve_condition=bool(article),
+            split_clauses=_is_structural_heading(section_title),
+        )
+        if not blocks and section_title:
+            blocks = [""]
+        for chunk_text in _pack_clause_blocks(blocks, chunk_size, chunk_overlap):
+            if not chunk_text and not section_title:
+                continue
+            if section_title:
+                chunk_text = f"{section_title}\n{chunk_text}" if chunk_text else section_title
             yield TextChunk(
                 text=chunk_text,
                 doc_type=document.doc_type,
                 year=document.year,
-                article=extract_article_reference(chunk_text),
-                section_title=extract_section_title(chunk_text),
+                article=article,
+                section_title=section_title,
                 chunk_hash=compute_hash(chunk_text),
             )
-
-        start += stride
 
 
 # ---------------------------------------------------------------------------

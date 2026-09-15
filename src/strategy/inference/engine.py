@@ -27,7 +27,7 @@ Design (per documents/audits/P2B_ENGINE_DESIGN.md, #169 Phases 1.1 + 1.2)
   * ``no-llm`` — the deterministic, zero-LLM-client path (see ``no_llm.py``); fixes
                  #166 by construction (it never calls ``_run_conditional_agents``).
 
-Untouchability: nothing in ``src/agents/`` is modified. Every strategy layer is the
+The engine does not duplicate or own agent internals. Every strategy layer is the
 SAME code object the orchestrator runs (imported, never copied); the only
 engine-owned code is the call sequence itself and the default-lap_state builder.
 
@@ -69,6 +69,7 @@ from src.agents.strategy_orchestrator import (
     StrategyRecommendation,
     _assemble_recommendation,
     _build_orchestrator_prompt,
+    _format_regulation_sources,
     _decide_agents_to_call,
     _get_orchestrator_llm,
     _live_drivers_from,
@@ -263,6 +264,7 @@ def _run_rich(
             pit_out=pit_out,
             radio_out=radio_out,
             regulation_context=regulation_context,
+            regulation_sources=_format_regulation_sources(rag_dict),
             # The one argument in this call the orchestrator deliberately does NOT
             # pass: /recommend and the MCP tool are stateless per request and have no
             # race to accumulate over. tests/engine/test_memory_scope_is_deliberate.py
