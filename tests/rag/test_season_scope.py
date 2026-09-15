@@ -179,12 +179,12 @@ def test_the_tool_passes_the_configured_season_to_the_retriever(monkeypatch):
 
 
 def test_both_retrieval_sites_receive_the_same_season(monkeypatch):
-    """The twin. ``run_rag_agent`` retrieves twice and both calls have to be scoped.
+    """The tool call and its typed-source rehydration must share the season.
 
     One call feeds the LLM through the tool, the other populates ``ctx.chunks`` and
-    ``ctx.articles``, which is what the orchestrator prints as citations. Scoping
-    only the first would have the model reading one season while the recommendation
-    cites another, and no other test in the suite compares them.
+    ``ctx.articles`` from the same query, which is what the orchestrator prints as
+    citations. Scoping only the first would have the model reading one season while
+    the recommendation cites another, and no other test in the suite compares them.
     """
     import src.agents.rag_agent as rag_agent_module
     import src.rag.retriever as retriever_module
@@ -203,7 +203,23 @@ def test_both_retrieval_sites_receive_the_same_season(monkeypatch):
         def invoke(self, payload, config=None):
             query_rag_tool.invoke({"question": "q"}, config=config)
             tool_seasons.append((config or {}).get("configurable", {}).get("season"))
-            return {"messages": [type("M", (), {"content": "answer"})()]}
+            return {
+                "messages": [
+                    type(
+                        "ToolCall",
+                        (),
+                        {
+                            "tool_calls": [
+                                {
+                                    "name": "query_rag_tool",
+                                    "args": {"question": "q"},
+                                }
+                            ]
+                        },
+                    )(),
+                    type("M", (), {"content": "answer"})(),
+                ]
+            }
 
     monkeypatch.setattr(retriever_module, "get_retriever", _Recording)
     monkeypatch.setattr(rag_agent_module, "get_retriever", _Recording)
