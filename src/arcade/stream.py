@@ -404,7 +404,7 @@ class TelemetryStreamServer:
             while self._running:
                 try:
                     readable, _, errored = select.select([client_socket], [], [client_socket], 1.0)
-                except OSError:
+                except (OSError, ValueError):
                     return
                 if errored:
                     return
