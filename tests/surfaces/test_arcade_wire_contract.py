@@ -775,11 +775,15 @@ def _sent_bytes(payload: dict) -> list[bytes]:
     # the wire, because that is the thing under test.
     sender = threading.Thread(target=server._send_loop, daemon=True)
     sender.start()
-    server.broadcast(lambda: payload)
-    deadline = time.perf_counter() + 2.0
-    while not written and time.perf_counter() < deadline:
-        time.sleep(0.01)
-    server._running = False
+    try:
+        server.broadcast(lambda: payload)
+        deadline = time.perf_counter() + 2.0
+        while not written and time.perf_counter() < deadline:
+            time.sleep(0.01)
+    finally:
+        server._running = False
+        sender.join(timeout=2.0)
+        assert not sender.is_alive(), "the wire helper sender crossed the test boundary"
     return written
 
 

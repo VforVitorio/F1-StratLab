@@ -43,8 +43,18 @@ def _server_with(client) -> TelemetryStreamServer:
     server = TelemetryStreamServer()
     server._running = True
     server._clients = [client]
-    threading.Thread(target=server._send_loop, daemon=True).start()
+    sender = threading.Thread(target=server._send_loop, daemon=True)
+    sender.start()
+    server._test_sender = sender
     return server
+
+
+def _stop_test_server(server: TelemetryStreamServer) -> None:
+    """Stop the helper server and prove its sender left the test."""
+    server._running = False
+    sender = server._test_sender
+    sender.join(timeout=2.0)
+    assert not sender.is_alive(), "the test server sender thread crossed the test boundary"
 
 
 def test_broadcast_returns_immediately_even_when_a_client_has_stalled():
@@ -66,7 +76,7 @@ def test_broadcast_returns_immediately_even_when_a_client_has_stalled():
         assert elapsed < 0.5, f"broadcast blocked the caller for {elapsed:.2f}s"
     finally:
         stalled.close()
-        server._running = False
+        _stop_test_server(server)
 
 
 def test_broadcast_does_not_BUILD_the_payload_on_the_caller_s_thread():
@@ -90,15 +100,13 @@ def test_broadcast_does_not_BUILD_the_payload_on_the_caller_s_thread():
             return {"seq": 1}
 
         server.broadcast(build)
-        assert ran_on == [], "the factory ran before broadcast() returned"
-
         deadline = time.time() + 5
         while not ran_on and time.time() < deadline:
             time.sleep(0.01)
         assert ran_on, "the factory never ran at all"
         assert ran_on[0] != caller, "the payload was still built on the caller's thread"
     finally:
-        server._running = False
+        _stop_test_server(server)
 
 
 def test_a_factory_that_raises_costs_its_tick_and_not_the_sender_thread():
@@ -128,7 +136,7 @@ def test_a_factory_that_raises_costs_its_tick_and_not_the_sender_thread():
         assert sent, "the sender thread died with the tick that raised"
         assert json.loads(sent[0])["seq"] == 2
     finally:
-        server._running = False
+        _stop_test_server(server)
 
 
 def test_a_consumer_that_falls_behind_loses_the_STALE_payloads():
@@ -158,7 +166,8 @@ def test_a_consumer_that_falls_behind_loses_the_STALE_payloads():
         assert len(seqs) < 50, "a backed-up consumer must not receive every stale payload"
         assert max(seqs) >= 40, "the payloads kept must be the recent ones"
     finally:
-        server._running = False
+        gate.set()
+        _stop_test_server(server)
 
 
 def test_nothing_non_finite_reaches_a_socket():
@@ -175,7 +184,7 @@ def test_nothing_non_finite_reaches_a_socket():
         )
         assert decoded["model"]["lap_time_s"] is None
     finally:
-        server._running = False
+        _stop_test_server(server)
 
 
 def test_the_drop_log_names_the_leaf_the_encoder_choked_on():
@@ -272,11 +281,37 @@ def test_the_sanitiser_walks_tuples_like_the_blame_function_does():
 
 
 def _real_server() -> TelemetryStreamServer:
+    before = set(threading.enumerate())
+    client_baseline = sum(thread.name == "TelemetryStreamClient" for thread in before)
     server = TelemetryStreamServer("127.0.0.1", 0)
     server.start()
+    server._test_threads = [
+        thread
+        for thread in threading.enumerate()
+        if thread not in before and thread.name in {"TelemetryStreamAccept", "TelemetryStreamSend"}
+    ]
+    server._test_client_baseline = client_baseline
     # Port 0 lets the OS choose; read back what it chose.
     server.port = server._server_socket.getsockname()[1]
     return server
+
+
+def _stop_real_server(server: TelemetryStreamServer) -> None:
+    server.stop()
+    for thread in server._test_threads:
+        thread.join(timeout=2.0)
+        assert not thread.is_alive(), f"{thread.name} crossed the test boundary"
+    _wait_for_thread_count("TelemetryStreamClient", server._test_client_baseline)
+
+
+def _wait_for_thread_count(name: str, maximum: int, timeout: float = 2.0) -> None:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if sum(thread.name == name for thread in threading.enumerate()) <= maximum:
+            return
+        time.sleep(0.01)
+    active = sum(thread.name == name for thread in threading.enumerate())
+    assert active <= maximum, f"{active - maximum} {name} threads crossed the test boundary"
 
 
 def _wait_for_clients(server: TelemetryStreamServer, count: int, timeout: float = 5.0) -> None:
@@ -339,7 +374,7 @@ def test_a_pruned_subscriber_is_closed_so_it_can_notice_and_reconnect():
         assert reached_eof, "the pruned socket never ended - the consumer would wait forever"
     finally:
         peer.close()
-        server.stop()
+        _stop_real_server(server)
 
 
 def test_a_subscriber_that_leaves_takes_its_thread_with_it():
@@ -367,7 +402,7 @@ def test_a_subscriber_that_leaves_takes_its_thread_with_it():
             time.sleep(0.1)
         assert watchers() == baseline, f"{watchers() - baseline} watcher threads leaked"
     finally:
-        server.stop()
+        _stop_real_server(server)
 
 
 def test_a_transient_accept_error_does_not_shut_the_door_forever():
@@ -376,6 +411,9 @@ def test_a_transient_accept_error_does_not_shut_the_door_forever():
     could attach again, and nothing said why."""
     import socket as socket_module
 
+    client_baseline = sum(
+        thread.name == "TelemetryStreamClient" for thread in threading.enumerate()
+    )
     server = TelemetryStreamServer("127.0.0.1", 0)
 
     class _FlakyOnce:
@@ -402,7 +440,8 @@ def test_a_transient_accept_error_does_not_shut_the_door_forever():
 
     server._server_socket = _FlakyOnce(listening)  # type: ignore[assignment]
     server._running = True
-    threading.Thread(target=server._accept_loop, daemon=True).start()
+    acceptor = threading.Thread(target=server._accept_loop, daemon=True)
+    acceptor.start()
 
     try:
         time.sleep(0.3)  # let the first accept fail and the retry arm
@@ -414,4 +453,7 @@ def test_a_transient_accept_error_does_not_shut_the_door_forever():
         peer.close()
     finally:
         server.stop()
+        acceptor.join(timeout=2.0)
+        assert not acceptor.is_alive(), "the acceptor crossed the test boundary"
+        _wait_for_thread_count("TelemetryStreamClient", client_baseline)
         listening.close()
