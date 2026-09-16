@@ -28,13 +28,12 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterator
+from typing import TYPE_CHECKING, Iterator
 
-import numpy as np
-import pypdf
-from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, PointStruct, VectorParams
-from sentence_transformers import SentenceTransformer
+if TYPE_CHECKING:
+    import numpy as np
+    from qdrant_client import QdrantClient
+    from sentence_transformers import SentenceTransformer
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -211,6 +210,8 @@ def extract_text_from_pdf(path: Path) -> str:
         path: Path to the PDF file to read. Raises ``FileNotFoundError`` if
               the file does not exist: callers should validate the path first.
     """
+    import pypdf
+
     reader = pypdf.PdfReader(str(path))
     pages = [page.extract_text() or "" for page in reader.pages]
     return "\n".join(pages)
@@ -610,6 +611,8 @@ def ensure_collection(client: QdrantClient, name: str, dim: int) -> None:
         dim:    Embedding dimension. Must match the output size of the model
                 used during indexing: mismatches cause silent wrong results.
     """
+    from qdrant_client.models import Distance, VectorParams
+
     existing = {c.name for c in client.get_collections().collections}
     if name not in existing:
         client.create_collection(
@@ -716,6 +719,8 @@ def upsert_chunks(
     Returns:
         Number of points successfully upserted.
     """
+    from qdrant_client.models import PointStruct
+
     points = [
         PointStruct(
             id=id_offset + i,
@@ -770,6 +775,9 @@ def build_index(
         sys.exit(1)
 
     qdrant_path.mkdir(parents=True, exist_ok=True)
+    from qdrant_client import QdrantClient
+    from sentence_transformers import SentenceTransformer
+
     client = QdrantClient(path=str(qdrant_path))
     encoder = SentenceTransformer(CFG.embedding_model)
 

@@ -32,6 +32,8 @@ _HAS_TIRE = (ROOT / "data" / "models" / "tire_degradation" / "tiredeg_modelA_v4.
     ROOT / "data" / "processed" / "laps_tiredeg.parquet"
 ).exists()
 
+pytestmark = pytest.mark.slow
+
 
 @pytest.mark.data
 @pytest.mark.skipif(not _HAS_SC, reason="SC model absent (CI runner without weights)")

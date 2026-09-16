@@ -2,13 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [main, dev, test, "feat/**", "fix/**", "docs/**"]
+    branches: [main, dev, test]
   pull_request:
     branches: [main, dev]
 
-# Cancel any in-flight CI for the same ref when a newer push lands.  Keeps
-# the queue from piling up when release-please pushes back-to-back PR
-# refreshes (which previously stranded 3+ runs in "queued" for 20+ min).
+# Cancel any in-flight CI for the same ref when a newer push lands. Feature
+# branches use the pull-request trigger, so a PR does not also run a duplicate
+# push workflow for the same commit.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -63,15 +63,20 @@ jobs:
           filters: |
             backend:
               - 'src/**'
+              - 'scripts/**'
               - 'tests/**'
+              - 'data/**'
+              - 'docs/**'
+              - 'documents/dev_docs/diagrams/**'
+              - '**/*.md'
               - 'pyproject.toml'
               - 'uv.lock'
-              - '.github/workflows/ci.yml'
+              - '.github/workflows/**'
               - 'src/telemetry'
 
-      - name: Skip — no backend/test/dependency changes
+      - name: Skip — no source/test/content changes
         if: steps.changes.outputs.backend != 'true'
-        run: echo "No backend/test/dependency changes; skipping pytest."
+        run: echo "No source/test/content changes; skipping pytest."
 
       - name: Install uv
         if: steps.changes.outputs.backend == 'true'
@@ -93,13 +98,13 @@ jobs:
       - name: Collected-count floor
         if: steps.changes.outputs.backend == 'true'
         run: |
-          n=$(uv run pytest --co -q | grep -c "::" || true)
+          n=$(uv run pytest --co -q -m "not data and not slow and not network" | grep -c "::" || true)
           echo "collected $n test nodes"
           test "$n" -ge 40
 
       - name: Run tests
         if: steps.changes.outputs.backend == 'true'
-        run: uv run pytest -v --cov=src --cov-report=term-missing
+        run: uv run pytest -v -n 4 --dist=loadfile -m "not data and not slow and not network" --cov=src --cov-report=term-missing
 
   lint:
     name: lint
@@ -147,15 +152,20 @@ jobs:
           filters: |
             backend:
               - 'src/**'
+              - 'scripts/**'
               - 'tests/**'
+              - 'data/**'
+              - 'docs/**'
+              - 'documents/dev_docs/diagrams/**'
+              - '**/*.md'
               - 'pyproject.toml'
               - 'uv.lock'
-              - '.github/workflows/ci.yml'
+              - '.github/workflows/**'
               - 'src/telemetry'
 
-      - name: Skip — no backend/test/dependency changes
+      - name: Skip — no source/test/content changes
         if: steps.changes.outputs.backend != 'true'
-        run: echo "No backend/test/dependency changes; skipping mypy."
+        run: echo "No source/test/content changes; skipping mypy."
 
       - name: Install uv
         if: steps.changes.outputs.backend == 'true'
@@ -216,6 +226,8 @@ jobs:
           filters: |
             ui:
               - 'src/pitwall/ui/**'
+              - 'src/pitwall/**'
+              - 'src/arcade/**'
               - '.github/workflows/ci.yml'
 
       - name: Skip — no PITWALL UI changes
@@ -273,5 +285,11 @@ jobs:
         continue-on-error: true
         run: |
           uv export --frozen --no-emit-project --all-extras --no-hashes \
+            --no-emit-package torch --no-emit-package torchvision \
             --format requirements-txt -o requirements.audit.txt
-          uvx pip-audit@${{ env.PIP_AUDIT_VERSION }} -r requirements.audit.txt
+          # The locked PyTorch wheels use a custom index and pip's resolver
+          # cannot resolve those platform-local versions reliably. OSV scans
+          # the full lockfile; pip-audit checks the remaining pinned packages
+          # directly without re-resolving them.
+          uvx pip-audit@${{ env.PIP_AUDIT_VERSION }} \
+            --disable-pip --no-deps -r requirements.audit.txt

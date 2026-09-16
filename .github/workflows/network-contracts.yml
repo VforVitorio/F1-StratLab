@@ -1,0 +1,33 @@
+name: Network contracts
+
+on:
+  schedule:
+    - cron: "30 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: network-contracts
+  cancel-in-progress: true
+
+jobs:
+  huggingface-cards:
+    name: published Hugging Face cards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --extra dev --frozen
+
+      - name: Check published cards
+        run: uv run pytest tests/audit/test_hf_cards_are_published.py -m network -q

@@ -281,4 +281,6 @@ markers = [
     "data: requires the HF dataset/model weights (skipped on CI runners)",
     "gpu: requires CUDA",
     "llm: requires a live or stubbed LLM backend",
+    "slow: expensive measurement or real-path test kept out of the fast gate",
+    "network: requires an external network service or public artifact",
 ]
