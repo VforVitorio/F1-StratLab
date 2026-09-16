@@ -24,11 +24,11 @@ the expensive evidence-producing checks selectable.
 | Scheduling | Nightly complete-suite workflow and Monday network-contract workflow added | `.github/workflows/nightly-tests.yml`, `.github/workflows/network-contracts.yml` |
 
 The pull-request gate is therefore a performance boundary, not a coverage
-claim. GitHub timings after the branch is opened are recorded in the testing
-guide and this audit once the workflow has completed. The local pre-change
-GitHub reference was 194 s for the push test job and 127 s for the PR test job
-on the preceding strategy-wake PR; the branch-trigger change removes that
-duplicate push path for feature branches.
+claim. The preceding strategy-wake PR took 194 s for its duplicate push test
+job and 127 s for its PR test job. This batch took 102 s for its PR test job;
+feature branches no longer trigger the duplicate push path. The resulting
+two-run comparison is 321 to 102 job-seconds, a 68.2% reduction in CI test
+consumption.
 
 Remaining gaps from the original audit are intentionally not hidden by this
 batch: committed mini fixtures, a hermetic LLM stub, backend route contracts,

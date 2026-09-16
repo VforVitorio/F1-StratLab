@@ -21,8 +21,11 @@ The fast gate took **60.05 seconds** on the development machine used for the
 2026-09-16 audit. The complete suite took **276.82 seconds** with four workers,
 down from **383.27 seconds** before the tier split. Serial execution fell from
 **670.47 seconds** to **525.48 seconds**. These figures are local wall-clock
-measurements, so GitHub runner timings are tracked separately on the PR that
-introduces the change.
+measurements, so they are not a promise about every runner. On GitHub, the PR
+test job fell from **127 seconds** to **102 seconds**. The previous feature push
+also ran a duplicate **194-second** test job; feature branches no longer trigger
+that push workflow, reducing the two-run cost from **321** to **102
+job-seconds**, a **68.2%** reduction.
 
 ## Markers
 

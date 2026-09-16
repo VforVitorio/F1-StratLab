@@ -26,6 +26,13 @@ The complete suite measured 276.82 seconds with four workers, compared with
 525.48 seconds versus 670.47 seconds before the change. These are wall-clock
 measurements on one development machine, not a promise about every runner.
 
+The GitHub Actions comparison is measured from the two adjacent strategy-wake
+and test-efficiency PRs. The PR test job fell from 127 seconds to 102 seconds.
+The previous feature push also ran a duplicate 194-second test job; feature
+branches no longer trigger that push workflow, so the two-run cost fell from
+321 job-seconds to 102 job-seconds, a 68.2% reduction. Job-seconds are a CI
+consumption proxy, not a billing statement.
+
 ## Test tiers
 
 Markers are registered in `pyproject.toml` and should describe why a test is
