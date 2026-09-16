@@ -78,9 +78,9 @@ window.PAGES = [
     title: "Backend API",
     section: "Surfaces",
     file: "pages/backend-api.md",
-    description: "FastAPI routers, telemetry, chat, voice, strategy.",
+    description: "FastAPI routers, telemetry, chat, and strategy.",
     eyebrow: "FastAPI",
-    tags: ["api", "fastapi", "telemetry", "chat", "voice", "mcp", "rag", "pydantic"],
+    tags: ["api", "fastapi", "telemetry", "chat", "mcp", "rag", "pydantic"],
   },
   {
     slug: "webapp",

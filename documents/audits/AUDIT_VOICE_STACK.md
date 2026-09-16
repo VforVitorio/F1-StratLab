@@ -1,6 +1,8 @@
 # Audit: Voice Stack (chat voice I/O)
 
-**Scope:** the interactive voice loop of the chat: STT in (Whisper via HF transformers), single LLM turn, TTS out (Edge-TTS), the backend endpoint `src/telemetry/backend/api/v1/endpoints/voice.py`, the Streamlit voice UI plus the React+OGL audio orb, and the low-latency migration plans. This is distinct from the radio-transcription NLP pipeline (audited in #302). Plan only, no code.
+**Status (2026-09-16):** retired from the submodule `main` in `1bfd237` and preserved in its `legacy_version` branch. This document remains the historical audit of that implementation; it is not a current production contract.
+
+**Scope:** the former interactive voice loop of the chat: STT in (Whisper via HF transformers), single LLM turn, TTS out (Edge-TTS), the backend endpoint `src/telemetry/backend/api/v1/endpoints/voice.py`, the Streamlit voice UI plus the React+OGL audio orb, and the low-latency migration plans. This is distinct from the active radio-transcription NLP pipeline (audited in #302). Plan only, no code.
 
 **Cross-references (owned elsewhere, not duplicated here):** Security #223 (S-4 upload hardening), LLM-cost #261 (provider timeout, blocking LLM calls), NLP/radio #302 (radio Whisper + JSON cache), frontend migration #25 (React SPA).
 

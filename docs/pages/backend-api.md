@@ -132,7 +132,7 @@ The frontend mints a UUID, sends it on every chat request via the `X-Request-Id`
 
 ## Voice endpoints (retired)
 
-The `/api/v1/voice` router (STT, TTS and the STT to LLM to TTS pipeline) was retired in v2: it came from a course requirement and the web app ships without it. The implementation remains available in git history and in the `legacy_version` branch (the legacy Streamlit app was removed from the repo, #551).
+The `/api/v1/voice` router (STT, TTS and the STT to LLM to TTS pipeline) was retired in v2: it came from a course requirement and the web app ships without it. The complete pre-retirement implementation is preserved in the [`legacy_version` branch](https://github.com/VforVitorio/F1_Telemetry_Manager/tree/legacy_version) of the `F1_Telemetry_Manager` submodule. It is separate from the team-radio transcript pipeline, which remains active.
 
 ## Strategy endpoints (N25-N31)
 

@@ -317,11 +317,11 @@ _TIER2_IMPORTS = [
     "seqeval",
     "jiwer",
     "whisper",  # openai-whisper imports under the ``whisper`` name
-    # Audio
+    # Audio used by the team-radio pipeline. Interactive voice I/O was retired
+    # with the Streamlit surface; its former dependencies are deliberately not
+    # part of this smoke list.
     "librosa",
     "soundfile",
-    "pydub",
-    "edge_tts",
     # Computer vision
     "cv2",
     "ultralytics",
@@ -331,12 +331,10 @@ _TIER2_IMPORTS = [
     "websockets",
     "aiofiles",
     "multipart",  # python-multipart imports as ``multipart``
-    "passlib",
     "kafka",  # kafka-python
     # Database
     "qdrant_client",
     # UI / viz
-    "streamlit",
     "plotly",
     "matplotlib",
     "seaborn",

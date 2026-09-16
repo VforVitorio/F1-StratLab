@@ -17,15 +17,16 @@ uv run pytest -v -n 4 --dist=loadfile \
   --cov=src --cov-report=term-missing
 ```
 
-The fast gate took **60.05 seconds** on the development machine used for the
-2026-09-16 audit. The complete suite took **276.82 seconds** with four workers,
-down from **383.27 seconds** before the tier split. Serial execution fell from
-**670.47 seconds** to **525.48 seconds**. These figures are local wall-clock
+The fast gate took **56.24 seconds** on the development machine used for the
+2026-09-16 audit. The complete suite took **245.64 seconds** with four workers,
+down from **276.82 seconds** before this cleanup and **383.27 seconds** before
+the tier split. The earlier serial comparison fell from **670.47 seconds** to
+**525.48 seconds**. These figures are local wall-clock
 measurements, so they are not a promise about every runner. On GitHub, the PR
-test job fell from **127 seconds** to **102 seconds**. The previous feature push
+test job fell from **127 seconds** to **100 seconds**. The previous feature push
 also ran a duplicate **194-second** test job; feature branches no longer trigger
-that push workflow, reducing the two-run cost from **321** to **102
-job-seconds**, a **68.2%** reduction.
+that push workflow, reducing the two-run cost from **321** to **100
+job-seconds**, a **68.8%** reduction.
 
 ## Markers
 
@@ -74,11 +75,30 @@ The excluded checks remain explicit:
   keeping import smoke tests lightweight.
 - Six low-signal test cases were removed, plus one tautological assertion. No
   whole test module was removed.
+- The parent repository carries a deterministic `mini_race.parquet` fixture;
+  the telemetry submodule carries the FakeOpenAI server and recorded SSE
+  fixtures. Its latest hermetic run is 107 passed, 4 skipped, with no warnings.
+- Interactive voice I/O is retired from the active tree. Team-radio audio and
+  Whisper transcription remain active because they feed N29; the former voice
+  implementation is preserved on the submodule's [`legacy_version` branch](https://github.com/VforVitorio/F1_Telemetry_Manager/tree/legacy_version).
+
+## Dependency cleanup
+
+The parent lock updates `accelerate` to 1.15.0 and `pytorch-lightning` to 2.6.6,
+and removes unused `passlib` and `bcrypt`. Test environments use `httpx2` for
+Starlette's current `TestClient`. The latest local pip-audit run reports 37
+findings in Pillow 11.3.0 and setuptools 81.0.0. Their fixes remain constrained
+by the Arcade and CUDA PyTorch graphs; the exact waivers stay in
+`osv-scanner.toml`.
 
 When a production contract changes, update the matching guide under
 `documents/dev_docs/` and this page in the same pull request. When deleting a
 test, state which remaining assertion protects the behaviour and why the old
 case was redundant.
+
+Treat `src/agents/` as a protected path. Do not edit it for routine cleanup or
+simplification. A feature change may touch it only after its impact is mapped,
+the scope is minimal, and extra regression checks cover the affected contract.
 
 ## Further reading
 

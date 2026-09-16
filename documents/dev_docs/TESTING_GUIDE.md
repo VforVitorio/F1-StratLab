@@ -20,17 +20,18 @@ uv run pytest -v -n 4 --dist=loadfile `
 uv run pytest -v -n 4 --dist=loadfile --cov=src --cov-report=term-missing
 ```
 
-On the 2026-09-16 baseline, the fast gate completed in 60.05 seconds locally.
-The complete suite measured 276.82 seconds with four workers, compared with
-383.27 seconds before the tier split. The serial complete-suite comparison was
-525.48 seconds versus 670.47 seconds before the change. These are wall-clock
-measurements on one development machine, not a promise about every runner.
+On the 2026-09-16 baseline, the fast gate completed in 56.24 seconds locally.
+The complete suite measured 245.64 seconds with four workers, compared with
+276.82 seconds before this dependency and warning cleanup, and 383.27 seconds
+before the tier split. The earlier serial comparison was 525.48 seconds versus
+670.47 seconds before the tier split. These are wall-clock measurements on one
+development machine, not a promise about every runner.
 
 The GitHub Actions comparison is measured from the two adjacent strategy-wake
-and test-efficiency PRs. The PR test job fell from 127 seconds to 102 seconds.
+and test-efficiency PRs. The PR test job fell from 127 seconds to 100 seconds.
 The previous feature push also ran a duplicate 194-second test job; feature
 branches no longer trigger that push workflow, so the two-run cost fell from
-321 job-seconds to 102 job-seconds, a 68.2% reduction. Job-seconds are a CI
+321 job-seconds to 100 job-seconds, a 68.8% reduction. Job-seconds are a CI
 consumption proxy, not a billing statement.
 
 ## Test tiers
@@ -86,6 +87,12 @@ uv run pytest --co -q -m "not data and not slow and not network"
 - Six tautological or low-signal test cases were removed, and one tautological
   assertion was simplified. No complete test module was deleted: every
   remaining module still protects a distinct contract or regression surface.
+- The repository now carries a deterministic `mini_race.parquet` fixture. The
+  telemetry submodule carries the FakeOpenAI server and recorded SSE fixtures;
+  its CI exercises those contracts without a live provider.
+- Interactive voice I/O is retired from the active tree. The team-radio audio
+  pipeline remains active and is not part of this removal. The former voice
+  implementation remains on the submodule's `legacy_version` branch.
 
 ## CI layout
 
@@ -111,14 +118,30 @@ Two scheduled workflows complement the gate:
 - `network-contracts.yml` checks that the published Hugging Face cards remain
   reachable, every Monday at 03:30 UTC and on demand.
 
-The submodule has its own CI and remains a separate responsibility. Parent
-changes must still respect the submodule's commit and pointer rules.
+The submodule has its own CI and now runs 107 tests with 4 expected skips and
+no warnings in the hermetic environment. Its work and webapp workflows run only
+for PRs or `main` pushes, avoiding duplicate feature-branch runs. Parent changes
+must still respect the submodule's commit and pointer rules.
+
+## Dependency and warning cleanup
+
+The parent lock now uses `accelerate` 1.15.0 and `pytorch-lightning` 2.6.6,
+and no longer installs the unused `passlib`/`bcrypt` pair. Test environments use
+`httpx2` for the current Starlette `TestClient`. The latest local pip-audit run
+reports 37 findings in two packages: Pillow 11.3.0 and setuptools 81.0.0. Their
+fixes remain blocked by Arcade and the CUDA-pinned PyTorch graph; the exact
+waivers and review date remain in `osv-scanner.toml`.
 
 ## Review rules
 
 Prefer a small contract test over a broad fixture when a seam is the thing at
 risk. Do not test a mock's implementation, add test-only methods to production,
 or mock a dependency before reading how the production code calls it.
+
+Treat `src/agents/` as a protected path. Do not edit it for routine cleanup or
+simplification. A feature change may touch it only after its impact is mapped,
+the scope is kept minimal, and extra regression checks cover the affected agent
+contract.
 
 When deleting a test, record the reason in the PR and check that its behaviour
 is covered by another assertion. Delete duplicated or tautological assertions;

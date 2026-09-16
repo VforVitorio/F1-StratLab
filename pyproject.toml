@@ -67,7 +67,6 @@ dependencies = [
     "websockets>=11.0.0",
     "kafka-python>=2.0.2",
     "python-multipart>=0.0.31",
-    "passlib[bcrypt]>=1.7.4",
     "httpx>=0.25.0",
     "aiofiles>=23.0.0",
     # ===================
@@ -136,6 +135,7 @@ dev = [
     "pytest>=9.0.3",
     "pytest-cov>=4.1.0",
     "pytest-asyncio>=0.21.0",
+    "httpx2>=2.13.0,<3.0.0",
     # Parallel runner, opt-in per run rather than in addopts: a single failing
     # test reads better serially. Measured on 20 logical cores, three legs back
     # to back: the whole suite serially is 628.7 s, `-m "not data"` serially is
@@ -275,6 +275,14 @@ asyncio_mode = "auto"
 # -ra prints a summary of skips/xfails so CI shows the data/gpu/llm-gated tests
 # instead of silently swallowing them (Testing audit T-4).
 addopts = "-ra"
+# The pandas deprecation is emitted by the protected legacy agent implementation
+# in src/agents/. Keep the fast gate quiet without changing that untouchable code;
+# a future agent refactor must remove this narrow filter when it can land safely.
+filterwarnings = [
+    "ignore:DataFrameGroupBy.apply operated on the grouping columns.*:FutureWarning",
+    "ignore:builtin type SwigPyPacked has no __module__ attribute:DeprecationWarning",
+    "ignore:builtin type SwigPyObject has no __module__ attribute:DeprecationWarning",
+]
 markers = [
     "unit: pure hermetic unit test (no data, network, GPU, or LLM)",
     "contract: API/schema/SSE contract test (hermetic, fixture-backed)",
