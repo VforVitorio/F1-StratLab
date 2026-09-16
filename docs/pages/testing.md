@@ -23,10 +23,10 @@ down from **276.82 seconds** before this cleanup and **383.27 seconds** before
 the tier split. The earlier serial comparison fell from **670.47 seconds** to
 **525.48 seconds**. These figures are local wall-clock
 measurements, so they are not a promise about every runner. On GitHub, the PR
-test job fell from **127 seconds** to **102 seconds**. The previous feature push
+test job fell from **127 seconds** to **100 seconds**. The previous feature push
 also ran a duplicate **194-second** test job; feature branches no longer trigger
-that push workflow, reducing the two-run cost from **321** to **102
-job-seconds**, a **68.2%** reduction.
+that push workflow, reducing the two-run cost from **321** to **100
+job-seconds**, a **68.8%** reduction.
 
 ## Markers
 

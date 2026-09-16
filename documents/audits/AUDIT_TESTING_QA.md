@@ -27,9 +27,9 @@ the expensive evidence-producing checks selectable.
 
 The pull-request gate is therefore a performance boundary, not a coverage
 claim. The preceding strategy-wake PR took 194 s for its duplicate push test
-job and 127 s for its PR test job. This batch took 102 s for its PR test job;
+job and 127 s for its PR test job. This batch took 100 s for its PR test job;
 feature branches no longer trigger the duplicate push path. The resulting
-two-run comparison is 321 to 102 job-seconds, a 68.2% reduction in CI test
+two-run comparison is 321 to 100 job-seconds, a 68.8% reduction in CI test
 consumption.
 
 Remaining gaps from the original audit are intentionally not hidden by this
