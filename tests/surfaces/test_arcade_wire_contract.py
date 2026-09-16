@@ -450,6 +450,7 @@ GOLDEN_SHAPE = {
             "total_laps": "int",
             "year": "int",
         },
+        "wake_state": "str",
     },
 }
 
