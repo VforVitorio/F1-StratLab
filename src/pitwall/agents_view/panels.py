@@ -232,4 +232,17 @@ def build_status_bar(payload: dict[str, Any]) -> dict[str, Any]:
     if error:
         return {"text": f"pipeline: {error}", "transient": False}
     lap = (payload.get("arcade") or {}).get("lap", "?")
+    wake_state = strategy.get("wake_state")
+    if wake_state:
+        latest = strategy.get("latest") or {}
+        decision_lap = latest.get("lap_number")
+        last_decision = (
+            f" · last decision L{decision_lap}"
+            if str(wake_state).startswith("dormant") and decision_lap
+            else ""
+        )
+        return {
+            "text": f"lap {lap} · {wake_state}{last_decision}",
+            "transient": False,
+        }
     return {"text": f"lap {lap} · streaming", "transient": True}

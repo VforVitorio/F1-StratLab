@@ -969,6 +969,12 @@ class F1ArcadeView(arcade.View):
             self._show_progress_bar = not self._show_progress_bar
         elif symbol == arcade.key.A:
             self._show_all_cars = not self._show_all_cars
+        elif symbol == arcade.key.W:
+            if self._strategy_connector is not None:
+                enabled = self._strategy_connector.toggle_manual_override()
+                logger.info(
+                    "Strategy manual wake override %s", "enabled" if enabled else "disabled"
+                )
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         if symbol == arcade.key.LEFT:
