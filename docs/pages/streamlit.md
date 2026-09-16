@@ -1,6 +1,6 @@
 # Streamlit Frontend (legacy)
 
-> **Retired surface.** The Streamlit app was replaced by the React web app in v2 and its code was removed from the repo (parent #551, submodule #188). It survives in git history and in the `legacy_version` branch. This page is kept as historical reference; the paths below no longer exist on `main`.
+> **Retired surface.** The Streamlit app was replaced by the React web app in v2 and its code was removed from the repo (parent #551, submodule #188). The pre-retirement Streamlit and voice tree survives in the [`legacy_version` branch](https://github.com/VforVitorio/F1_Telemetry_Manager/tree/legacy_version) of the `F1_Telemetry_Manager` submodule. This page is kept as historical reference; the paths below no longer exist on `main`.
 
 ## Overview
 

@@ -103,7 +103,10 @@ It uses `astral-sh/setup-uv@v7` with Python 3.11, pins uv to `0.9.13`, and
 caches the submodule `uv.lock`. The lint and test jobs install only the
 lightweight `ci` dependency group with `uv sync --frozen --only-group ci --no-install-project`, then run Ruff and pytest through `uv run --frozen --no-sync`. The full runtime is reserved for Docker, where the backend image
 syncs the project dependencies from the same lockfile. The parent CI checks the
-gitlink but does not replace the submodule workflow.
+gitlink but does not replace the submodule workflow. Feature branches trigger
+the submodule workflows through pull requests only; pushes are limited to
+`main`, avoiding duplicate push and PR runs. The current hermetic submodule
+suite is 107 passed and 4 skipped.
 
 ### `.github/workflows/release-please.yml`
 
