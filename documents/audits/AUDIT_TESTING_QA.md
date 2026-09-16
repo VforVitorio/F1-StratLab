@@ -5,6 +5,37 @@
 > **Constraints honored:** `src/agents/` internals and `scripts/run_simulation_cli.py` are UNTOUCHABLE (tested via public entry points and as black boxes; importing them in tests is fine and already precedented); LLM = OpenAI / LM Studio, never Anthropic; **no test ever calls a real model**; no code in this document.
 > **Inputs read:** every test file in both repos, both CI workflows, `AUDIT_P1_BACKEND.md`, `AUDIT_P2_LOADING.md`, `AUDIT_P2B_CORE_COMPUTE.md`, `MIGRATION_PLAN.md` + `SPRINTS_AND_ISSUES.md`, the migration dossier (`SCREENS.md` + 37 `live_*` PNGs), parent + submodule `pyproject.toml`/`pytest.ini`/conftests.
 
+## 2026-09-16 follow-up — efficiency batch
+
+The first implementation batch is now applied in the parent repository. It
+does not claim that data-backed tests run on a clean GitHub runner: data and
+model artefacts remain outside Git. It makes the cheap gate explicit and keeps
+the expensive evidence-producing checks selectable.
+
+| Area | Implemented change | Evidence |
+|---|---|---|
+| Fast gate | Four xdist workers, `--dist=loadfile`, coverage, and exclusion of `data`, `slow`, and `network` | 1,443 passed, 4 skipped, 60.05 s locally |
+| Full suite | Four-worker complete run remains available and scheduled | 1,521 passed, 4 skipped, 276.82 s locally |
+| Serial baseline | No parallelism required for correctness | 525.48 s after versus 670.47 s before |
+| Regeneration | MC-table test writes to temporary output paths and compares committed JSON | `measure_mc_tables.py --json-out ... --eval-dir ...` |
+| Evaluation | Registry goldens call the metric they protect; aggregator wiring has a cheap isolated test | Focused registry run: 4 passed in 4.75 s |
+| Import cost | RAG builder loads PDF, Qdrant, and embedding dependencies only inside the paths that need them | Import probe leaves those packages unloaded |
+| Test inventory | Six low-signal test cases removed; one tautological assertion simplified | No whole test module removed |
+| Scheduling | Nightly complete-suite workflow and Monday network-contract workflow added | `.github/workflows/nightly-tests.yml`, `.github/workflows/network-contracts.yml` |
+
+The pull-request gate is therefore a performance boundary, not a coverage
+claim. The preceding strategy-wake PR took 194 s for its duplicate push test
+job and 127 s for its PR test job. This batch took 102 s for its PR test job;
+feature branches no longer trigger the duplicate push path. The resulting
+two-run comparison is 321 to 102 job-seconds, a 68.2% reduction in CI test
+consumption.
+
+Remaining gaps from the original audit are intentionally not hidden by this
+batch: committed mini fixtures, a hermetic LLM stub, backend route contracts,
+voice coverage, and the submodule pytest job still need separate work. The
+local `pip-audit` run also found 39 advisories in four non-PyTorch packages, so
+the advisory job is not described as clean.
+
 ---
 
 ## 0. Executive summary

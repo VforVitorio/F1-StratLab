@@ -497,6 +497,7 @@ def test_render_without_data_says_so_instead_of_printing_zeros():
 
 
 @pytest.mark.data
+@pytest.mark.slow
 @pytest.mark.skipif(not _HAS_RAW, reason="data/raw absent (CI runner without the dataset)")
 def test_measured_sample_is_non_empty_before_any_figure_is_believed():
     """Guard against a green run that quietly graded nothing.
@@ -514,6 +515,7 @@ def test_measured_sample_is_non_empty_before_any_figure_is_believed():
 
 
 @pytest.mark.data
+@pytest.mark.slow
 @pytest.mark.skipif(
     not (ROOT / "data" / "raw" / "2025" / "Sakhir").is_dir(),
     reason="2025 Sakhir data absent (CI runner without the dataset)",

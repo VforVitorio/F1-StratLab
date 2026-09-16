@@ -123,6 +123,7 @@ def test_pause_sends_no_new_samples_rather_than_repeating_the_last_one():
     assert list(range(span_start, 401)) == []
 
 
+@pytest.mark.slow
 def test_a_backwards_seek_is_empty_and_flagged():
     """Rewind must be a branch, not a negative slice."""
     span_start, rewound, dropped = _telemetry_span_bounds(400, 250, STREAM_MAX_SPAN_FRAMES)
@@ -699,6 +700,7 @@ def _active_frames() -> list:
     return frames
 
 
+@pytest.mark.slow
 def test_no_served_frame_carries_a_gear_the_car_cannot_select():
     """The EFFECT of #1002, on the frames the arcade actually broadcasts.
 
@@ -822,6 +824,7 @@ def test_no_served_frame_takes_the_lap_number_backwards():
     assert not offenders, f"{len(offenders)} backwards frames, first few: {offenders[:5]}"
 
 
+@pytest.mark.slow
 def test_no_driver_is_parked_on_the_line_for_a_whole_lap():
     """The glitch's largest effect, and the one nobody had noticed (#1069).
 
