@@ -35,6 +35,14 @@ if TYPE_CHECKING:
     from qdrant_client import QdrantClient
     from sentence_transformers import SentenceTransformer
 
+from src.rag.index_manifest import (
+    ManifestDocument,
+    build_manifest,
+    manifest_path,
+    sha256_file,
+    write_manifest,
+)
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
@@ -659,6 +667,67 @@ def get_existing_hashes(client: QdrantClient, name: str) -> set[str]:
     return hashes
 
 
+def _collection_vector_size(collection_info: object) -> int:
+    """Read the single-vector dimension from Qdrant's collection metadata."""
+    vectors = collection_info.config.params.vectors  # type: ignore[attr-defined]
+    size = getattr(vectors, "size", None)
+    if size is None:
+        raise RuntimeError("Qdrant collection does not expose a single vector size")
+    return int(size)
+
+
+def _indexed_years(client: QdrantClient, name: str) -> set[int]:
+    """Collect years from payloads without loading vectors into memory."""
+    years: set[int] = set()
+    offset = None
+    while True:
+        points, next_offset = client.scroll(
+            collection_name=name,
+            scroll_filter=None,
+            limit=1000,
+            offset=offset,
+            with_payload=["year"],
+            with_vectors=False,
+        )
+        years.update(int(point.payload["year"]) for point in points if point.payload.get("year"))
+        if next_offset is None:
+            return years
+        offset = next_offset
+
+
+def write_index_manifest(
+    client: QdrantClient,
+    documents: list[PDFDocument],
+    qdrant_path: Path,
+) -> Path:
+    """Write corpus and collection metadata without loading the embedding model."""
+    collection_info = client.get_collection(CFG.collection_name)
+    point_count = int(collection_info.points_count or 0)
+    manifest = build_manifest(
+        collection_name=CFG.collection_name,
+        embedding_model=CFG.embedding_model,
+        embedding_dim=CFG.embedding_dim,
+        distance="Cosine",
+        chunk_size=CFG.chunk_size,
+        chunk_overlap=CFG.chunk_overlap,
+        documents=(
+            ManifestDocument(
+                filename=document.path.name,
+                doc_type=document.doc_type,
+                year=document.year,
+                sha256=sha256_file(document.path),
+            )
+            for document in documents
+        ),
+        indexed_years=_indexed_years(client, CFG.collection_name),
+        point_count=point_count,
+    )
+    path = manifest_path(Path(qdrant_path).parent)
+    write_manifest(path, manifest)
+    log.info("Wrote index manifest %s (%d points)", path, point_count)
+    return path
+
+
 # ---------------------------------------------------------------------------
 # Embedding + upsert
 # ---------------------------------------------------------------------------
@@ -749,6 +818,7 @@ def build_index(
     docs_dir: Path | None = None,
     qdrant_path: Path | None = None,
     force_rebuild: bool = False,
+    manifest_only: bool = False,
 ) -> None:
     """Orchestrate the full PDF → Qdrant pipeline.
 
@@ -763,9 +833,12 @@ def build_index(
         qdrant_path:   On-disk Qdrant storage directory. Created automatically
                        if it does not exist.
         force_rebuild: When ``True``, deletes and recreates the collection before
-                       indexing so all chunks are re-embedded from scratch. Use
-                       this when the embedding model changes or the chunking
-                       parameters are modified.
+                         indexing so all chunks are re-embedded from scratch. Use
+                         this when the embedding model changes or the chunking
+                         parameters are modified.
+        manifest_only: When ``True``, inspect the existing collection and PDFs and
+                       write ``data/rag/index_manifest.json`` without loading the
+                       embedding model or changing Qdrant points.
     """
     docs_dir = docs_dir or CFG.docs_dir
     qdrant_path = qdrant_path or CFG.qdrant_path
@@ -776,25 +849,39 @@ def build_index(
 
     qdrant_path.mkdir(parents=True, exist_ok=True)
     from qdrant_client import QdrantClient
-    from sentence_transformers import SentenceTransformer
 
     client = QdrantClient(path=str(qdrant_path))
-    encoder = SentenceTransformer(CFG.embedding_model)
+    manifest_file = manifest_path(qdrant_path.parent)
+    existing_collections = {item.name for item in client.get_collections().collections}
+
+    if manifest_only and force_rebuild:
+        raise ValueError("--manifest-only cannot be combined with --force-rebuild")
 
     if force_rebuild:
-        existing = {c.name for c in client.get_collections().collections}
-        if CFG.collection_name in existing:
+        manifest_file.unlink(missing_ok=True)
+        if CFG.collection_name in existing_collections:
             client.delete_collection(CFG.collection_name)
             log.info("Deleted existing collection '%s' (--force-rebuild)", CFG.collection_name)
 
-    ensure_collection(client, CFG.collection_name, CFG.embedding_dim)
-    existing_hashes = get_existing_hashes(client, CFG.collection_name)
-    log.info("Existing indexed chunks: %d", len(existing_hashes))
+    if manifest_only:
+        if CFG.collection_name not in existing_collections:
+            raise RuntimeError(
+                f"Cannot write a manifest: Qdrant collection '{CFG.collection_name}' is missing"
+            )
+    else:
+        ensure_collection(client, CFG.collection_name, CFG.embedding_dim)
 
     documents = load_pdf_documents(docs_dir)
     if not documents:
         log.error("No valid PDFs loaded — check naming convention")
         sys.exit(1)
+
+    if manifest_only:
+        write_index_manifest(client, documents, qdrant_path)
+        return
+
+    existing_hashes = get_existing_hashes(client, CFG.collection_name)
+    log.info("Existing indexed chunks: %d", len(existing_hashes))
 
     # Counted in the same pass that collects them. The skipped total used to come
     # from a second `iter_chunks` over every document, which re-ran the sliding
@@ -812,9 +899,13 @@ def build_index(
     log.info("New chunks to index: %d  |  skipped (already indexed): %d", len(all_chunks), skipped)
 
     if not all_chunks:
+        write_index_manifest(client, documents, qdrant_path)
         log.info("Nothing to do — index is up to date")
         return
 
+    from sentence_transformers import SentenceTransformer
+
+    encoder = SentenceTransformer(CFG.embedding_model)
     log.info("Embedding %d chunks with '%s'...", len(all_chunks), CFG.embedding_model)
     embeddings = embed_chunks(all_chunks, encoder)
 
@@ -823,6 +914,7 @@ def build_index(
 
     total = client.get_collection(CFG.collection_name).points_count or 0
     log.info("Done. Upserted: %d  |  Total in collection: %d", n_upserted, total)
+    write_index_manifest(client, documents, qdrant_path)
 
 
 def main() -> None:
@@ -841,11 +933,17 @@ def main() -> None:
         action="store_true",
         help="Delete and recreate the collection before indexing",
     )
+    parser.add_argument(
+        "--manifest-only",
+        action="store_true",
+        help="Write the index manifest without loading embeddings or changing points",
+    )
     args = parser.parse_args()
 
     build_index(
         docs_dir=args.docs_dir,
         force_rebuild=args.force_rebuild,
+        manifest_only=args.manifest_only,
     )
 
 

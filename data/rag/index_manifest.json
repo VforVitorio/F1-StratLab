@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "collection_name": "fia_regulations",
+  "embedding_model": "BAAI/bge-m3",
+  "embedding_dim": 1024,
+  "distance": "Cosine",
+  "chunker": "article_clause_packing_v1",
+  "chunk_size": 512,
+  "chunk_overlap": 64,
+  "documents": [
+    {
+      "filename": "sporting_regs_2023.pdf",
+      "doc_type": "sporting_regs",
+      "year": 2023,
+      "sha256": "5849b028377c970329a94c7a15bc813bfe81af42651901dd2a9bac8e6a63eed7"
+    },
+    {
+      "filename": "sporting_regs_2024.pdf",
+      "doc_type": "sporting_regs",
+      "year": 2024,
+      "sha256": "82f8048dcc2c86c26e8d69321f2700ea9b274346e28bade43815dea31a3993a3"
+    },
+    {
+      "filename": "sporting_regs_2025.pdf",
+      "doc_type": "sporting_regs",
+      "year": 2025,
+      "sha256": "525eef22a60f0755a4468281dd7c78c5ea5bd0eec38dc1b09cc31a0c0132854e"
+    }
+  ],
+  "indexed_years": [
+    2023,
+    2024,
+    2025
+  ],
+  "point_count": 2167,
+  "built_at_utc": "2026-09-19T12:13:18+00:00"
+}

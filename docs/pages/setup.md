@@ -174,6 +174,17 @@ uv run python scripts/build_rag_index.py
 ```
 
 This processes FIA Sporting Regulations PDFs and stores embeddings in `data/rag/`.
+It also writes `data/rag/index_manifest.json`, which records the source PDF
+hashes, model, vector dimension, chunking parameters, indexed years, and point
+count. To create only that metadata for an existing local index, without loading
+the embedding model or changing Qdrant points, run:
+
+```bash
+uv run python scripts/build_rag_index.py --manifest-only
+```
+
+The retriever warns when an old index has no manifest and refuses a present
+manifest whose model, collection, or vector dimension does not match.
 
 ## Network architecture (Docker)
 
