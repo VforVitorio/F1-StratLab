@@ -34,6 +34,17 @@ control. It loads BGE-M3 once and makes no LLM calls. The Markdown and JSON
 reports land in `documents/eval_reports/rag.{md,json}`. The complete run needs
 the local FIA PDFs and Qdrant index, so it stays outside the fast CI gate.
 
+Issue #323 adds five verified 2026 questions and a separate A/B command. It
+compares the production article-aware 512/64 index with a temporary 1024/128
+candidate using the same BGE-M3 encoder and never mutates `data/rag/`:
+
+```bash
+uv run python scripts/benchmark_rag_chunking.py
+```
+
+The candidate is adopted only when P@5, MRR, citation match, and wrong-year
+safety do not regress and at least one quality metric improves.
+
 The fast gate took **56.24 seconds** on the development machine used for the
 2026-09-16 audit. The complete suite took **245.64 seconds** with four workers,
 down from **276.82 seconds** before this cleanup and **383.27 seconds** before

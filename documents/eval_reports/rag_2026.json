@@ -1,63 +1,53 @@
 {
   "header": {
     "harness_sha": "d589435d-dirty",
-    "dataset": "RAG queries_v2.json, 30 FIA regulation queries",
+    "dataset": "RAG queries_v2 + 2026 delta, 35 FIA regulation queries",
     "seed_policy": "deterministic",
-    "era_tag": "2022-2025",
+    "era_tag": "FIA sporting corpus 2023-2026",
     "llm": "none",
     "schema_version": "1",
-    "generated_at": "2026-09-19T13:29:33+00:00",
+    "generated_at": "2026-09-19T13:28:56+00:00",
     "artifacts": {
-      "query_set": "663d72013436"
+      "queries_v2": "663d72013436",
+      "queries_2026": "b288d5248d6a"
     }
   },
-  "query_set": "queries_v2.json",
-  "query_count": 30,
-  "configs": [
+  "query_count": 35,
+  "decision": "KEEP_BASELINE",
+  "candidate_chunks": 2292,
+  "baseline": {
+    "config": "Production article-aware 512/64",
+    "query_count": 35,
+    "precision_at_1": 0.5428571428571428,
+    "precision_at_3": 0.33333333333333337,
+    "precision_at_5": 0.21714285714285722,
+    "hit_at_5": 0.8285714285714286,
+    "content_hit_at_5": 0.9714285714285714,
+    "mrr": 0.6786848072562359,
+    "citation_match_rate": 0.8285714285714286,
+    "wrong_year_rate": 0.0,
+    "wrong_year_query_rate": 0.0,
+    "latency_p50_ms": 38.508,
+    "latency_p95_ms": 65.057
+  },
+  "candidate": {
+    "config": "Candidate article-aware 1024/128",
+    "query_count": 35,
+    "precision_at_1": 0.5428571428571428,
+    "precision_at_3": 0.3238095238095238,
+    "precision_at_5": 0.2114285714285715,
+    "hit_at_5": 0.8285714285714286,
+    "content_hit_at_5": 0.9714285714285714,
+    "mrr": 0.6715419501133788,
+    "citation_match_rate": 0.8285714285714286,
+    "wrong_year_rate": 0.0,
+    "wrong_year_query_rate": 0.0,
+    "latency_p50_ms": 36.985,
+    "latency_p95_ms": 40.3724
+  },
+  "baseline_rows": [
     {
-      "name": "BGE-M3 production, season scoped",
-      "season_scoped": true
-    },
-    {
-      "name": "BGE-M3 production, unscoped control",
-      "season_scoped": false
-    }
-  ],
-  "summaries": [
-    {
-      "config": "BGE-M3 production, season scoped",
-      "query_count": 30,
-      "precision_at_1": 0.5333333333333333,
-      "precision_at_3": 0.3222222222222222,
-      "precision_at_5": 0.20666666666666672,
-      "hit_at_5": 0.8333333333333334,
-      "content_hit_at_5": 0.9666666666666667,
-      "mrr": 0.6751322751322753,
-      "citation_match_rate": 0.8333333333333334,
-      "wrong_year_rate": 0.0,
-      "wrong_year_query_rate": 0.0,
-      "latency_p50_ms": 36.146,
-      "latency_p95_ms": 70.85055
-    },
-    {
-      "config": "BGE-M3 production, unscoped control",
-      "query_count": 30,
-      "precision_at_1": 0.23333333333333334,
-      "precision_at_3": 0.17777777777777773,
-      "precision_at_5": 0.15333333333333338,
-      "hit_at_5": 0.7,
-      "content_hit_at_5": 0.8666666666666667,
-      "mrr": 0.42091269841269846,
-      "citation_match_rate": 0.7333333333333333,
-      "wrong_year_rate": 0.6466666666666666,
-      "wrong_year_query_rate": 0.6333333333333333,
-      "latency_p50_ms": 22.8005,
-      "latency_p95_ms": 23.224149999999998
-    }
-  ],
-  "query_results": [
-    {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q01",
       "category": "tyre_allocation",
       "expected_year": 2025,
@@ -87,10 +77,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 430.857
+      "latency_ms": 163.468
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q02",
       "category": "tyre_allocation",
       "expected_year": 2023,
@@ -120,10 +110,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 37.288
+      "latency_ms": 39.736
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q03",
       "category": "tyre_allocation",
       "expected_year": 2025,
@@ -153,10 +143,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 36.135
+      "latency_ms": 39.709
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q04",
       "category": "tyre_allocation",
       "expected_year": 2025,
@@ -186,10 +176,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 37.289
+      "latency_ms": 39.808
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q05",
       "category": "pit_stops",
       "expected_year": 2025,
@@ -219,10 +209,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 98.31
+      "latency_ms": 121.722
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q06",
       "category": "pit_stops",
       "expected_year": 2025,
@@ -252,10 +242,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 37.112
+      "latency_ms": 37.593
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q07",
       "category": "pit_stops",
       "expected_year": 2025,
@@ -285,10 +275,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.14285714285714285,
-      "latency_ms": 36.742
+      "latency_ms": 38.155
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q08",
       "category": "safety_car",
       "expected_year": 2025,
@@ -318,10 +308,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.157
+      "latency_ms": 37.285
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q09",
       "category": "safety_car",
       "expected_year": 2025,
@@ -351,10 +341,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 35.876
+      "latency_ms": 38.093
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q10",
       "category": "safety_car",
       "expected_year": 2023,
@@ -384,10 +374,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 36.379
+      "latency_ms": 37.555
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q11",
       "category": "flags_penalties",
       "expected_year": 2025,
@@ -417,10 +407,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 35.935
+      "latency_ms": 37.496
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q12",
       "category": "flags_penalties",
       "expected_year": 2025,
@@ -450,10 +440,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 35.895
+      "latency_ms": 37.236
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q13",
       "category": "flags_penalties",
       "expected_year": 2023,
@@ -483,10 +473,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.241
+      "latency_ms": 37.454
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q14",
       "category": "drs",
       "expected_year": 2025,
@@ -516,10 +506,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.053
+      "latency_ms": 38.202
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q15",
       "category": "drs",
       "expected_year": 2023,
@@ -549,10 +539,10 @@
       "content_hit_at_5": 0.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.1111111111111111,
-      "latency_ms": 36.732
+      "latency_ms": 38.078
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q16",
       "category": "safety_car",
       "expected_year": 2025,
@@ -582,10 +572,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 36.953
+      "latency_ms": 37.947
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q17",
       "category": "safety_car",
       "expected_year": 2023,
@@ -615,10 +605,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.119
+      "latency_ms": 39.345
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q18",
       "category": "safety_car",
       "expected_year": 2025,
@@ -648,10 +638,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 35.95
+      "latency_ms": 39.059
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q19",
       "category": "safety_car",
       "expected_year": 2025,
@@ -681,10 +671,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 33.917
+      "latency_ms": 36.653
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q20",
       "category": "safety_car",
       "expected_year": 2025,
@@ -714,10 +704,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 33.765
+      "latency_ms": 36.406
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q21",
       "category": "safety_car",
       "expected_year": 2025,
@@ -747,10 +737,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 33.382
+      "latency_ms": 35.877
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q22",
       "category": "flags_penalties",
       "expected_year": 2025,
@@ -780,10 +770,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.184
+      "latency_ms": 38.801
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q23",
       "category": "safety_car",
       "expected_year": 2025,
@@ -813,10 +803,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 36.593
+      "latency_ms": 39.005
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q24",
       "category": "tyre_allocation",
       "expected_year": 2023,
@@ -846,10 +836,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 33.028
+      "latency_ms": 36.471
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q25",
       "category": "tyre_allocation",
       "expected_year": 2024,
@@ -879,10 +869,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.376
+      "latency_ms": 39.237
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q26",
       "category": "tyre_allocation",
       "expected_year": 2025,
@@ -912,10 +902,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 35.836
+      "latency_ms": 38.863
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q27",
       "category": "tyre_allocation",
       "expected_year": 2025,
@@ -945,10 +935,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 35.809
+      "latency_ms": 38.343
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q28",
       "category": "pit_stops",
       "expected_year": 2025,
@@ -978,10 +968,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.192
+      "latency_ms": 38.931
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q29",
       "category": "safety_car",
       "expected_year": 2025,
@@ -1011,10 +1001,10 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.009
+      "latency_ms": 39.564
     },
     {
-      "config": "BGE-M3 production, season scoped",
+      "config": "Production article-aware 512/64",
       "query_id": "Q30",
       "category": "drs",
       "expected_year": 2024,
@@ -1044,32 +1034,131 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 32.877
+      "latency_ms": 36.126
     },
     {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q01",
-      "category": "tyre_allocation",
-      "expected_year": 2025,
-      "expected_article": "30.2",
+      "config": "Production article-aware 512/64",
+      "query_id": "Q31",
+      "category": "safety_car",
+      "expected_year": 2026,
+      "expected_article": "B5.12.1",
       "retrieved_years_at_5": [
-        2025,
-        2024,
-        2025,
-        2025,
-        2023
+        2026,
+        2026,
+        2026,
+        2026,
+        2026
       ],
       "retrieved_articles_at_5": [
-        "Article 30.2",
-        "Article 30.2",
-        "Article 30.5",
-        "Article 30.2",
-        "Article 30.2"
+        "Article B5.13.1",
+        "Article B5.13.6",
+        "Article B5.10.9",
+        "Article B5.12",
+        "Article B5.15.5"
       ],
-      "wrong_year_hits_at_5": 2,
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 0.0,
+      "precision_at_3": 0.0,
+      "precision_at_5": 0.0,
+      "hit_at_1": 0.0,
+      "hit_at_3": 0.0,
+      "hit_at_5": 0.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 0.0,
+      "mrr": 0.0,
+      "latency_ms": 38.508
+    },
+    {
+      "config": "Production article-aware 512/64",
+      "query_id": "Q32",
+      "category": "safety_car",
+      "expected_year": 2026,
+      "expected_article": "B5.13.1",
+      "retrieved_years_at_5": [
+        2026,
+        2026,
+        2026,
+        2026,
+        2026
+      ],
+      "retrieved_articles_at_5": [
+        "Article B5.13.1",
+        "Article B5.13.2",
+        "Article B5.13.8",
+        "Article B5.10.9",
+        "Article B5.13.6"
+      ],
+      "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
       "precision_at_1": 1.0,
-      "precision_at_3": 0.6666666666666666,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.2,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 1.0,
+      "latency_ms": 40.772
+    },
+    {
+      "config": "Production article-aware 512/64",
+      "query_id": "Q33",
+      "category": "pit_stops",
+      "expected_year": 2026,
+      "expected_article": "B1.6.2",
+      "retrieved_years_at_5": [
+        2026,
+        2026,
+        2026,
+        2026,
+        2026
+      ],
+      "retrieved_articles_at_5": [
+        "Article B1.6.2",
+        "Article B1.6.3",
+        "Article B4.3.2",
+        "Article B8.2.3",
+        "Article B1.9.6"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.2,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 1.0,
+      "latency_ms": 40.199
+    },
+    {
+      "config": "Production article-aware 512/64",
+      "query_id": "Q34",
+      "category": "flags_penalties",
+      "expected_year": 2026,
+      "expected_article": "B5.15.1",
+      "retrieved_years_at_5": [
+        2026,
+        2026,
+        2026,
+        2026,
+        2026
+      ],
+      "retrieved_articles_at_5": [
+        "Article B5.15.1",
+        "Article B5.15.1",
+        "Article B5.15.1",
+        "Article B5.15.4",
+        "Article B5.15.2"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 1.0,
       "precision_at_5": 0.6,
       "hit_at_1": 1.0,
       "hit_at_3": 1.0,
@@ -1077,62 +1166,163 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 23.206
+      "latency_ms": 39.31
     },
     {
-      "config": "BGE-M3 production, unscoped control",
+      "config": "Production article-aware 512/64",
+      "query_id": "Q35",
+      "category": "drs",
+      "expected_year": 2026,
+      "expected_article": "B7.1.1",
+      "retrieved_years_at_5": [
+        2026,
+        2026,
+        2026,
+        2026,
+        2026
+      ],
+      "retrieved_articles_at_5": [
+        "Article B7.1",
+        "Article B7.1.1",
+        "Article B7.1.2",
+        "Article B7.1.1",
+        "Article B7.1"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 0.0,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.4,
+      "hit_at_1": 0.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 0.5,
+      "latency_ms": 40.209
+    }
+  ],
+  "candidate_rows": [
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q01",
+      "category": "tyre_allocation",
+      "expected_year": 2025,
+      "expected_article": "30.2",
+      "retrieved_years_at_5": [
+        2025,
+        2025,
+        2025,
+        2025,
+        2025
+      ],
+      "retrieved_articles_at_5": [
+        "Article 30.2",
+        "Article 30.5",
+        "Article 30.2",
+        "Article 30.5",
+        "Article 10.8"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 1.0,
+      "precision_at_5": 0.6,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 1.0,
+      "latency_ms": 36.282
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
       "query_id": "Q02",
       "category": "tyre_allocation",
       "expected_year": 2023,
       "expected_article": "30.2",
       "retrieved_years_at_5": [
         2023,
-        2024,
-        2025,
+        2023,
+        2023,
         2023,
         2023
       ],
       "retrieved_articles_at_5": [
         "Article 30.5",
         "Article 30.2",
-        "Article 30.2",
-        "Article 30.2",
-        "Article 30.5"
+        "Article 30.5",
+        "Article 30.5",
+        "Article 30.2"
       ],
-      "wrong_year_hits_at_5": 2,
+      "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
       "precision_at_1": 0.0,
-      "precision_at_3": 0.0,
-      "precision_at_5": 0.2,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.4,
       "hit_at_1": 0.0,
-      "hit_at_3": 0.0,
+      "hit_at_3": 1.0,
       "hit_at_5": 1.0,
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
-      "mrr": 0.25,
-      "latency_ms": 23.141
+      "mrr": 0.5,
+      "latency_ms": 38.048
     },
     {
-      "config": "BGE-M3 production, unscoped control",
+      "config": "Candidate article-aware 1024/128",
       "query_id": "Q03",
       "category": "tyre_allocation",
       "expected_year": 2025,
       "expected_article": "30.2",
       "retrieved_years_at_5": [
         2025,
-        2023,
         2025,
         2025,
-        2024
+        2025,
+        2025
       ],
       "retrieved_articles_at_5": [
         "",
         "",
+        "",
         "Article 30.5",
-        "Article 28.1",
         "Article 28.1"
       ],
-      "wrong_year_hits_at_5": 2,
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 0.0,
+      "precision_at_3": 0.0,
+      "precision_at_5": 0.2,
+      "hit_at_1": 0.0,
+      "hit_at_3": 0.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 0.25,
+      "latency_ms": 39.74
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q04",
+      "category": "tyre_allocation",
+      "expected_year": 2025,
+      "expected_article": "30.5",
+      "retrieved_years_at_5": [
+        2025,
+        2025,
+        2025,
+        2025,
+        2025
+      ],
+      "retrieved_articles_at_5": [
+        "Article 30.2",
+        "Article 30.2",
+        "Article 30.5",
+        "Article 30.5",
+        "Article 30.5"
+      ],
+      "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
       "precision_at_1": 0.0,
       "precision_at_3": 0.3333333333333333,
@@ -1143,62 +1333,29 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 22.924
+      "latency_ms": 36.039
     },
     {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q04",
-      "category": "tyre_allocation",
-      "expected_year": 2025,
-      "expected_article": "30.5",
-      "retrieved_years_at_5": [
-        2024,
-        2023,
-        2024,
-        2026,
-        2025
-      ],
-      "retrieved_articles_at_5": [
-        "Article 30.5",
-        "Article 30.5",
-        "Article 30.2",
-        "Article B6.3.6",
-        "Article 30.2"
-      ],
-      "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.0,
-      "precision_at_5": 0.0,
-      "hit_at_1": 0.0,
-      "hit_at_3": 0.0,
-      "hit_at_5": 0.0,
-      "content_hit_at_5": 0.0,
-      "citation_match_at_5": 1.0,
-      "mrr": 0.14285714285714285,
-      "latency_ms": 22.661
-    },
-    {
-      "config": "BGE-M3 production, unscoped control",
+      "config": "Candidate article-aware 1024/128",
       "query_id": "Q05",
       "category": "pit_stops",
       "expected_year": 2025,
       "expected_article": "34.7",
       "retrieved_years_at_5": [
         2025,
-        2026,
-        2023,
-        2024,
-        2024
+        2025,
+        2025,
+        2025,
+        2025
       ],
       "retrieved_articles_at_5": [
         "Article 34.7",
-        "Article B1.6.3",
-        "Article 34.7",
-        "Article 34.7",
-        "Article 34.11"
+        "Article 34.11",
+        "Article 26.13",
+        "Article 55.11",
+        "Article 55.5"
       ],
-      "wrong_year_hits_at_5": 4,
+      "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
       "precision_at_1": 1.0,
       "precision_at_3": 0.3333333333333333,
@@ -1209,63 +1366,129 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 20.136
+      "latency_ms": 41.374
     },
     {
-      "config": "BGE-M3 production, unscoped control",
+      "config": "Candidate article-aware 1024/128",
       "query_id": "Q06",
       "category": "pit_stops",
       "expected_year": 2025,
       "expected_article": "34.14",
       "retrieved_years_at_5": [
-        2023,
-        2024,
-        2026,
+        2025,
+        2025,
+        2025,
         2025,
         2025
       ],
       "retrieved_articles_at_5": [
         "Article 34.14",
-        "Article 34.14",
-        "Article B1.6.2",
-        "Article 34.14",
-        "Article 53.2"
+        "Article 53.2",
+        "Article 58.12",
+        "Article 54.3",
+        "Article 44.6"
       ],
-      "wrong_year_hits_at_5": 3,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.0,
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 0.3333333333333333,
       "precision_at_5": 0.2,
-      "hit_at_1": 0.0,
-      "hit_at_3": 0.0,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
       "hit_at_5": 1.0,
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
-      "mrr": 0.25,
-      "latency_ms": 22.913
+      "mrr": 1.0,
+      "latency_ms": 37.494
     },
     {
-      "config": "BGE-M3 production, unscoped control",
+      "config": "Candidate article-aware 1024/128",
       "query_id": "Q07",
       "category": "pit_stops",
       "expected_year": 2025,
       "expected_article": "56.4",
       "retrieved_years_at_5": [
-        2024,
         2025,
-        2024,
         2025,
-        2024
+        2025,
+        2025,
+        2025
       ],
       "retrieved_articles_at_5": [
         "Article 55.12",
-        "Article 55.12",
-        "Article 55.11",
         "Article 55.17",
-        "Article 55.17"
+        "Article 56.3",
+        "Article 49.4",
+        "Article 58.10"
       ],
-      "wrong_year_hits_at_5": 3,
-      "wrong_year_top1": true,
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 0.0,
+      "precision_at_3": 0.0,
+      "precision_at_5": 0.0,
+      "hit_at_1": 0.0,
+      "hit_at_3": 0.0,
+      "hit_at_5": 0.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 0.0,
+      "mrr": 0.14285714285714285,
+      "latency_ms": 37.279
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q08",
+      "category": "safety_car",
+      "expected_year": 2025,
+      "expected_article": "55.4",
+      "retrieved_years_at_5": [
+        2025,
+        2025,
+        2025,
+        2025,
+        2025
+      ],
+      "retrieved_articles_at_5": [
+        "Article 55.4",
+        "Article 55.15",
+        "Article 51.1",
+        "Article 52.1",
+        "Article 55.1"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.2,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 1.0,
+      "latency_ms": 35.563
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q09",
+      "category": "safety_car",
+      "expected_year": 2025,
+      "expected_article": "56.2",
+      "retrieved_years_at_5": [
+        2025,
+        2025,
+        2025,
+        2025,
+        2025
+      ],
+      "retrieved_articles_at_5": [
+        "Article 55.15",
+        "Article 51.1",
+        "Article 55.17",
+        "Article 58.11",
+        "Article 58.12"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
       "precision_at_1": 0.0,
       "precision_at_3": 0.0,
       "precision_at_5": 0.0,
@@ -1275,30 +1498,30 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 23.175
+      "latency_ms": 37.463
     },
     {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q08",
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q10",
       "category": "safety_car",
-      "expected_year": 2025,
+      "expected_year": 2023,
       "expected_article": "55.4",
       "retrieved_years_at_5": [
         2023,
-        2025,
-        2024,
-        2026,
-        2026
+        2023,
+        2023,
+        2023,
+        2023
       ],
       "retrieved_articles_at_5": [
+        "Article 57.1",
         "Article 55.4",
-        "Article 55.4",
-        "Article 55.4",
-        "Article B5.13.1",
-        "Article B5.1.7"
+        "Article 15.3",
+        "Article 55.14",
+        "Article 58.12"
       ],
-      "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": true,
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
       "precision_at_1": 0.0,
       "precision_at_3": 0.3333333333333333,
       "precision_at_5": 0.2,
@@ -1308,96 +1531,30 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 22.768
+      "latency_ms": 37.503
     },
     {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q09",
-      "category": "safety_car",
-      "expected_year": 2025,
-      "expected_article": "56.2",
-      "retrieved_years_at_5": [
-        2026,
-        2025,
-        2025,
-        2023,
-        2023
-      ],
-      "retrieved_articles_at_5": [
-        "Article B5.12",
-        "Article 55.15",
-        "Article 51.1",
-        "Article 56",
-        "Article 56.1"
-      ],
-      "wrong_year_hits_at_5": 3,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.0,
-      "precision_at_5": 0.0,
-      "hit_at_1": 0.0,
-      "hit_at_3": 0.0,
-      "hit_at_5": 0.0,
-      "content_hit_at_5": 1.0,
-      "citation_match_at_5": 0.0,
-      "mrr": 0.0,
-      "latency_ms": 22.627
-    },
-    {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q10",
-      "category": "safety_car",
-      "expected_year": 2023,
-      "expected_article": "55.4",
-      "retrieved_years_at_5": [
-        2026,
-        2023,
-        2025,
-        2023,
-        2024
-      ],
-      "retrieved_articles_at_5": [
-        "Article B5.13.1",
-        "Article 57.1",
-        "Article 55.4",
-        "Article 55.4",
-        "Article 55.4"
-      ],
-      "wrong_year_hits_at_5": 3,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.0,
-      "precision_at_5": 0.2,
-      "hit_at_1": 0.0,
-      "hit_at_3": 0.0,
-      "hit_at_5": 1.0,
-      "content_hit_at_5": 1.0,
-      "citation_match_at_5": 1.0,
-      "mrr": 0.25,
-      "latency_ms": 23.832
-    },
-    {
-      "config": "BGE-M3 production, unscoped control",
+      "config": "Candidate article-aware 1024/128",
       "query_id": "Q11",
       "category": "flags_penalties",
       "expected_year": 2025,
       "expected_article": "57.2",
       "retrieved_years_at_5": [
-        2026,
-        2024,
         2025,
-        2023,
-        2023
+        2025,
+        2025,
+        2025,
+        2025
       ],
       "retrieved_articles_at_5": [
-        "Article B5.14.2",
-        "Article 37.6",
         "Article 58.11",
+        "Article 37.6",
         "Article 57.1",
-        "Article 37.6"
+        "Article 58.12",
+        "Article 43.7"
       ],
-      "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": true,
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
       "precision_at_1": 0.0,
       "precision_at_3": 0.0,
       "precision_at_5": 0.0,
@@ -1407,62 +1564,62 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 22.795
+      "latency_ms": 36.051
     },
     {
-      "config": "BGE-M3 production, unscoped control",
+      "config": "Candidate article-aware 1024/128",
       "query_id": "Q12",
       "category": "flags_penalties",
       "expected_year": 2025,
       "expected_article": "54.3",
       "retrieved_years_at_5": [
-        2024,
-        2026,
-        2023,
         2025,
-        2026
+        2025,
+        2025,
+        2025,
+        2025
       ],
       "retrieved_articles_at_5": [
         "Article 54.3",
-        "Article B1.9.5",
-        "Article 54.3",
-        "Article 54.3",
-        "Article B1.9.5"
+        "Article 56.5",
+        "Article 40.6",
+        "Article 43.7",
+        "Article 44.6"
       ],
-      "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.0,
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 0.3333333333333333,
       "precision_at_5": 0.2,
-      "hit_at_1": 0.0,
-      "hit_at_3": 0.0,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
       "hit_at_5": 1.0,
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
-      "mrr": 0.25,
-      "latency_ms": 22.782
+      "mrr": 1.0,
+      "latency_ms": 40.693
     },
     {
-      "config": "BGE-M3 production, unscoped control",
+      "config": "Candidate article-aware 1024/128",
       "query_id": "Q13",
       "category": "flags_penalties",
       "expected_year": 2023,
       "expected_article": "6.4",
       "retrieved_years_at_5": [
         2023,
-        2024,
         2023,
-        2024,
-        2025
+        2023,
+        2023,
+        2023
       ],
       "retrieved_articles_at_5": [
         "Article 6.4",
-        "Article 6.4",
         "Article 32.3",
         "Article 6.5",
-        "Article 32.3"
+        "Article 39.4",
+        "Article 54.4"
       ],
-      "wrong_year_hits_at_5": 3,
+      "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
       "precision_at_1": 1.0,
       "precision_at_3": 0.3333333333333333,
@@ -1473,293 +1630,29 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 23.239
+      "latency_ms": 38.996
     },
     {
-      "config": "BGE-M3 production, unscoped control",
+      "config": "Candidate article-aware 1024/128",
       "query_id": "Q14",
       "category": "drs",
       "expected_year": 2025,
       "expected_article": "22.1",
       "retrieved_years_at_5": [
-        2024,
-        2023,
-        2024,
-        2026,
+        2025,
+        2025,
+        2025,
+        2025,
         2025
       ],
       "retrieved_articles_at_5": [
-        "Article 52.1",
-        "Article 52.1",
+        "Article 22.1",
         "Article 58.12",
-        "Article B5.10.9",
-        "Article 22.1"
+        "Article 51.1",
+        "Article 26.7",
+        "Article 52.1"
       ],
-      "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.0,
-      "precision_at_5": 0.2,
-      "hit_at_1": 0.0,
-      "hit_at_3": 0.0,
-      "hit_at_5": 1.0,
-      "content_hit_at_5": 1.0,
-      "citation_match_at_5": 1.0,
-      "mrr": 0.2,
-      "latency_ms": 22.7
-    },
-    {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q15",
-      "category": "drs",
-      "expected_year": 2023,
-      "expected_article": "22.1",
-      "retrieved_years_at_5": [
-        2024,
-        2024,
-        2023,
-        2025,
-        2023
-      ],
-      "retrieved_articles_at_5": [
-        "Article 52.1",
-        "Article 58.12",
-        "Article 52.1",
-        "Article 52.1",
-        "Article 49.1"
-      ],
-      "wrong_year_hits_at_5": 3,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.0,
-      "precision_at_5": 0.0,
-      "hit_at_1": 0.0,
-      "hit_at_3": 0.0,
-      "hit_at_5": 0.0,
-      "content_hit_at_5": 0.0,
-      "citation_match_at_5": 0.0,
-      "mrr": 0.0,
-      "latency_ms": 22.855
-    },
-    {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q16",
-      "category": "safety_car",
-      "expected_year": 2025,
-      "expected_article": "55.7",
-      "retrieved_years_at_5": [
-        2026,
-        2023,
-        2024,
-        2024,
-        2023
-      ],
-      "retrieved_articles_at_5": [
-        "Article B5.13.2",
-        "Article 49.2",
-        "Article 49.2",
-        "Article 55.7",
-        "Article 55.7"
-      ],
-      "wrong_year_hits_at_5": 5,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.0,
-      "precision_at_5": 0.0,
-      "hit_at_1": 0.0,
-      "hit_at_3": 0.0,
-      "hit_at_5": 0.0,
-      "content_hit_at_5": 0.0,
-      "citation_match_at_5": 0.0,
-      "mrr": 0.14285714285714285,
-      "latency_ms": 23.153
-    },
-    {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q17",
-      "category": "safety_car",
-      "expected_year": 2023,
-      "expected_article": "55.8",
-      "retrieved_years_at_5": [
-        2024,
-        2023,
-        2025,
-        2025,
-        2023
-      ],
-      "retrieved_articles_at_5": [
-        "Article 55.8",
-        "Article 55.8",
-        "Article 55.8",
-        "Article 56.6",
-        "Article 58.6"
-      ],
-      "wrong_year_hits_at_5": 3,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.3333333333333333,
-      "precision_at_5": 0.2,
-      "hit_at_1": 0.0,
-      "hit_at_3": 1.0,
-      "hit_at_5": 1.0,
-      "content_hit_at_5": 1.0,
-      "citation_match_at_5": 1.0,
-      "mrr": 0.5,
-      "latency_ms": 22.797
-    },
-    {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q18",
-      "category": "safety_car",
-      "expected_year": 2025,
-      "expected_article": "55.17",
-      "retrieved_years_at_5": [
-        2024,
-        2025,
-        2023,
-        2026,
-        2026
-      ],
-      "retrieved_articles_at_5": [
-        "Article 55.17",
-        "Article 55.17",
-        "Article 55.16",
-        "Article B5.13.8",
-        "Article B5.13.5"
-      ],
-      "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.3333333333333333,
-      "precision_at_5": 0.2,
-      "hit_at_1": 0.0,
-      "hit_at_3": 1.0,
-      "hit_at_5": 1.0,
-      "content_hit_at_5": 1.0,
-      "citation_match_at_5": 1.0,
-      "mrr": 0.5,
-      "latency_ms": 22.818
-    },
-    {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q19",
-      "category": "safety_car",
-      "expected_year": 2025,
-      "expected_article": "56.5",
-      "retrieved_years_at_5": [
-        2026,
-        2026,
-        2026,
-        2026,
-        2025
-      ],
-      "retrieved_articles_at_5": [
-        "Article B5.12.2",
-        "Article B5.12",
-        "Article B5.13.2",
-        "Article B5.15.2",
-        "Article 56.3"
-      ],
-      "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.0,
-      "precision_at_5": 0.0,
-      "hit_at_1": 0.0,
-      "hit_at_3": 0.0,
-      "hit_at_5": 0.0,
-      "content_hit_at_5": 0.0,
-      "citation_match_at_5": 0.0,
-      "mrr": 0.0,
-      "latency_ms": 19.622
-    },
-    {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q20",
-      "category": "safety_car",
-      "expected_year": 2025,
-      "expected_article": "56.6",
-      "retrieved_years_at_5": [
-        2023,
-        2025,
-        2024,
-        2025,
-        2024
-      ],
-      "retrieved_articles_at_5": [
-        "Article 55.16",
-        "Article 55.17",
-        "Article 55.17",
-        "Article 49.5",
-        "Article 56.6"
-      ],
-      "wrong_year_hits_at_5": 3,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.0,
-      "precision_at_5": 0.0,
-      "hit_at_1": 0.0,
-      "hit_at_3": 0.0,
-      "hit_at_5": 0.0,
-      "content_hit_at_5": 1.0,
-      "citation_match_at_5": 0.0,
-      "mrr": 0.1,
-      "latency_ms": 20.056
-    },
-    {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q21",
-      "category": "safety_car",
-      "expected_year": 2025,
-      "expected_article": "56.7",
-      "retrieved_years_at_5": [
-        2024,
-        2025,
-        2023,
-        2026,
-        2026
-      ],
-      "retrieved_articles_at_5": [
-        "Article 56.7",
-        "Article 56.7",
-        "Article 56.7",
-        "Article B5.12",
-        "Article B5.12.4"
-      ],
-      "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.3333333333333333,
-      "precision_at_5": 0.2,
-      "hit_at_1": 0.0,
-      "hit_at_3": 1.0,
-      "hit_at_5": 1.0,
-      "content_hit_at_5": 1.0,
-      "citation_match_at_5": 1.0,
-      "mrr": 0.5,
-      "latency_ms": 20.192
-    },
-    {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q22",
-      "category": "flags_penalties",
-      "expected_year": 2025,
-      "expected_article": "57.3",
-      "retrieved_years_at_5": [
-        2025,
-        2026,
-        2023,
-        2024,
-        2026
-      ],
-      "retrieved_articles_at_5": [
-        "Article 57.3",
-        "Article B5.15.1",
-        "Article 57.3",
-        "Article 57.3",
-        "Article B5.15.1"
-      ],
-      "wrong_year_hits_at_5": 4,
+      "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
       "precision_at_1": 1.0,
       "precision_at_3": 0.3333333333333333,
@@ -1770,30 +1663,162 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 22.804
+      "latency_ms": 38.364
     },
     {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q23",
-      "category": "safety_car",
-      "expected_year": 2025,
-      "expected_article": "58.6",
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q15",
+      "category": "drs",
+      "expected_year": 2023,
+      "expected_article": "22.1",
       "retrieved_years_at_5": [
-        2026,
         2023,
-        2024,
-        2025,
-        2026
+        2023,
+        2023,
+        2023,
+        2023
       ],
       "retrieved_articles_at_5": [
-        "Article B5.15.4",
-        "Article 58.8",
-        "Article 58.8",
-        "Article 58.8",
-        "Article B5.14.3"
+        "Article 52.1",
+        "Article 49.1",
+        "Article 58.12",
+        "Article 6.7",
+        "Article 50.1"
       ],
-      "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": true,
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 0.0,
+      "precision_at_3": 0.0,
+      "precision_at_5": 0.0,
+      "hit_at_1": 0.0,
+      "hit_at_3": 0.0,
+      "hit_at_5": 0.0,
+      "content_hit_at_5": 0.0,
+      "citation_match_at_5": 0.0,
+      "mrr": 0.1111111111111111,
+      "latency_ms": 37.307
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q16",
+      "category": "safety_car",
+      "expected_year": 2025,
+      "expected_article": "55.7",
+      "retrieved_years_at_5": [
+        2025,
+        2025,
+        2025,
+        2025,
+        2025
+      ],
+      "retrieved_articles_at_5": [
+        "Article 49.2",
+        "Article 55.7",
+        "Article 55.10",
+        "Article 55.15",
+        "Article 58.8"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 0.0,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.2,
+      "hit_at_1": 0.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 0.5,
+      "latency_ms": 37.401
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q17",
+      "category": "safety_car",
+      "expected_year": 2023,
+      "expected_article": "55.8",
+      "retrieved_years_at_5": [
+        2023,
+        2023,
+        2023,
+        2023,
+        2023
+      ],
+      "retrieved_articles_at_5": [
+        "Article 55.8",
+        "Article 58.6",
+        "Article 56.6",
+        "Article 55.5",
+        "Article 23.8"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.2,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 1.0,
+      "latency_ms": 37.901
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q18",
+      "category": "safety_car",
+      "expected_year": 2025,
+      "expected_article": "55.17",
+      "retrieved_years_at_5": [
+        2025,
+        2025,
+        2025,
+        2025,
+        2025
+      ],
+      "retrieved_articles_at_5": [
+        "Article 55.17",
+        "Article 55.14",
+        "Article 55.15",
+        "Article 58.10",
+        "Article 57.3"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.2,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 1.0,
+      "latency_ms": 40.235
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q19",
+      "category": "safety_car",
+      "expected_year": 2025,
+      "expected_article": "56.5",
+      "retrieved_years_at_5": [
+        2025,
+        2025,
+        2025,
+        2025,
+        2025
+      ],
+      "retrieved_articles_at_5": [
+        "Article 56.3",
+        "Article 55.17",
+        "Article 55.7",
+        "Article 55.3",
+        "Article 39.2"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
       "precision_at_1": 0.0,
       "precision_at_3": 0.0,
       "precision_at_5": 0.0,
@@ -1802,30 +1827,30 @@
       "hit_at_5": 0.0,
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
-      "mrr": 0.125,
-      "latency_ms": 22.991
+      "mrr": 0.0,
+      "latency_ms": 34.83
     },
     {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q24",
-      "category": "tyre_allocation",
-      "expected_year": 2023,
-      "expected_article": "30.2",
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q20",
+      "category": "safety_car",
+      "expected_year": 2025,
+      "expected_article": "56.6",
       "retrieved_years_at_5": [
-        2023,
-        2024,
-        2023,
-        2023,
-        2024
+        2025,
+        2025,
+        2025,
+        2025,
+        2025
       ],
       "retrieved_articles_at_5": [
-        "Article 30.5",
-        "Article 30.2",
-        "Article 30.5",
-        "Article 30.2",
-        "Article 30.2"
+        "Article 55.17",
+        "Article 49.5",
+        "Article 56.6",
+        "Article 58.7",
+        "Article 55.8"
       ],
-      "wrong_year_hits_at_5": 2,
+      "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
       "precision_at_1": 0.0,
       "precision_at_3": 0.3333333333333333,
@@ -1836,29 +1861,29 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 20.0
+      "latency_ms": 33.949
     },
     {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q25",
-      "category": "tyre_allocation",
-      "expected_year": 2024,
-      "expected_article": "30.2",
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q21",
+      "category": "safety_car",
+      "expected_year": 2025,
+      "expected_article": "56.7",
       "retrieved_years_at_5": [
-        2024,
-        2023,
-        2024,
-        2023,
-        2024
+        2025,
+        2025,
+        2025,
+        2025,
+        2025
       ],
       "retrieved_articles_at_5": [
-        "Article 30.2",
-        "Article 30.2",
-        "Article 30.2",
-        "Article 30.5",
-        "Article 30.5"
+        "Article 56.7",
+        "Article 55.17",
+        "Article 52.1",
+        "Article 55.1",
+        "Article 51.1"
       ],
-      "wrong_year_hits_at_5": 2,
+      "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
       "precision_at_1": 1.0,
       "precision_at_3": 0.3333333333333333,
@@ -1869,10 +1894,142 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 22.53
+      "latency_ms": 32.942
     },
     {
-      "config": "BGE-M3 production, unscoped control",
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q22",
+      "category": "flags_penalties",
+      "expected_year": 2025,
+      "expected_article": "57.3",
+      "retrieved_years_at_5": [
+        2025,
+        2025,
+        2025,
+        2025,
+        2025
+      ],
+      "retrieved_articles_at_5": [
+        "Article 57.3",
+        "Article 37.6",
+        "Article 58.4",
+        "Article 58.11",
+        "Article 44.10"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.2,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 1.0,
+      "latency_ms": 35.004
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q23",
+      "category": "safety_car",
+      "expected_year": 2025,
+      "expected_article": "58.6",
+      "retrieved_years_at_5": [
+        2025,
+        2025,
+        2025,
+        2025,
+        2025
+      ],
+      "retrieved_articles_at_5": [
+        "Article 58.8",
+        "Article 57.3",
+        "Article 58.6",
+        "Article 58.13",
+        "Article 58.4"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 0.0,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.2,
+      "hit_at_1": 0.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 0.3333333333333333,
+      "latency_ms": 36.985
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q24",
+      "category": "tyre_allocation",
+      "expected_year": 2023,
+      "expected_article": "30.2",
+      "retrieved_years_at_5": [
+        2023,
+        2023,
+        2023,
+        2023,
+        2023
+      ],
+      "retrieved_articles_at_5": [
+        "Article 30.5",
+        "Article 30.5",
+        "Article 30.2",
+        "Article 30.2",
+        "Article 5.4"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 0.0,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.4,
+      "hit_at_1": 0.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 0.5,
+      "latency_ms": 36.874
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q25",
+      "category": "tyre_allocation",
+      "expected_year": 2024,
+      "expected_article": "30.2",
+      "retrieved_years_at_5": [
+        2024,
+        2024,
+        2024,
+        2024,
+        2024
+      ],
+      "retrieved_articles_at_5": [
+        "Article 30.2",
+        "Article 30.2",
+        "Article 30.5",
+        "Article 30.5",
+        "Article 30"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.2,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 1.0,
+      "latency_ms": 34.213
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
       "query_id": "Q26",
       "category": "tyre_allocation",
       "expected_year": 2025,
@@ -1881,7 +2038,7 @@
         2025,
         2025,
         2025,
-        2023,
+        2025,
         2025
       ],
       "retrieved_articles_at_5": [
@@ -1889,9 +2046,9 @@
         "Article 30.2",
         "Article 30.5",
         "Article 30.5",
-        "Article 30.5"
+        ""
       ],
-      "wrong_year_hits_at_5": 1,
+      "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
       "precision_at_1": 1.0,
       "precision_at_3": 0.3333333333333333,
@@ -1902,29 +2059,62 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 22.859
+      "latency_ms": 40.074
     },
     {
-      "config": "BGE-M3 production, unscoped control",
+      "config": "Candidate article-aware 1024/128",
       "query_id": "Q27",
       "category": "tyre_allocation",
       "expected_year": 2025,
       "expected_article": "30.5",
       "retrieved_years_at_5": [
         2025,
-        2026,
-        2024,
-        2023,
-        2023
+        2025,
+        2025,
+        2025,
+        2025
       ],
       "retrieved_articles_at_5": [
         "Article 30.5",
-        "Article B6.3.5",
         "Article 30.5",
         "Article 30.5",
+        "Article 26.11",
         "Article 30.5"
       ],
-      "wrong_year_hits_at_5": 4,
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 1.0,
+      "precision_at_5": 0.6,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 1.0,
+      "latency_ms": 37.388
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q28",
+      "category": "pit_stops",
+      "expected_year": 2025,
+      "expected_article": "34.7",
+      "retrieved_years_at_5": [
+        2025,
+        2025,
+        2025,
+        2025,
+        2025
+      ],
+      "retrieved_articles_at_5": [
+        "Article 34.7",
+        "Article 54.3",
+        "Article 34.15",
+        "Article 44.6",
+        "Article 53.2"
+      ],
+      "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
       "precision_at_1": 1.0,
       "precision_at_3": 0.3333333333333333,
@@ -1935,76 +2125,43 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 22.993
+      "latency_ms": 33.419
     },
     {
-      "config": "BGE-M3 production, unscoped control",
-      "query_id": "Q28",
-      "category": "pit_stops",
-      "expected_year": 2025,
-      "expected_article": "34.7",
-      "retrieved_years_at_5": [
-        2023,
-        2024,
-        2026,
-        2025,
-        2023
-      ],
-      "retrieved_articles_at_5": [
-        "Article 34.7",
-        "Article 34.7",
-        "Article B1.6.3",
-        "Article 34.7",
-        "Article 54.3"
-      ],
-      "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
-      "precision_at_3": 0.0,
-      "precision_at_5": 0.2,
-      "hit_at_1": 0.0,
-      "hit_at_3": 0.0,
-      "hit_at_5": 1.0,
-      "content_hit_at_5": 1.0,
-      "citation_match_at_5": 1.0,
-      "mrr": 0.25,
-      "latency_ms": 22.63
-    },
-    {
-      "config": "BGE-M3 production, unscoped control",
+      "config": "Candidate article-aware 1024/128",
       "query_id": "Q29",
       "category": "safety_car",
       "expected_year": 2025,
       "expected_article": "55.4",
       "retrieved_years_at_5": [
-        2026,
         2025,
-        2023,
-        2024,
-        2026
+        2025,
+        2025,
+        2025,
+        2025
       ],
       "retrieved_articles_at_5": [
-        "Article B5.13.1",
         "Article 55.4",
-        "Article 55.4",
-        "Article 55.4",
-        "Article B5.13.8"
+        "Article 55.6",
+        "Article 51.1",
+        "Article 52.1",
+        "Article 58.3"
       ],
-      "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
       "precision_at_3": 0.3333333333333333,
       "precision_at_5": 0.2,
-      "hit_at_1": 0.0,
+      "hit_at_1": 1.0,
       "hit_at_3": 1.0,
       "hit_at_5": 1.0,
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
-      "mrr": 0.5,
-      "latency_ms": 23.095
+      "mrr": 1.0,
+      "latency_ms": 35.165
     },
     {
-      "config": "BGE-M3 production, unscoped control",
+      "config": "Candidate article-aware 1024/128",
       "query_id": "Q30",
       "category": "drs",
       "expected_year": 2024,
@@ -2014,16 +2171,16 @@
         2024,
         2024,
         2024,
-        2026
+        2024
       ],
       "retrieved_articles_at_5": [
         "Article 52.1",
         "Article 22.1",
-        "",
         "Article 26.4",
-        "Article B2.4"
+        "Article 32.4",
+        ""
       ],
-      "wrong_year_hits_at_5": 1,
+      "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
       "precision_at_1": 0.0,
       "precision_at_3": 0.3333333333333333,
@@ -2034,7 +2191,172 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 20.302
+      "latency_ms": 30.261
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q31",
+      "category": "safety_car",
+      "expected_year": 2026,
+      "expected_article": "B5.12.1",
+      "retrieved_years_at_5": [
+        2026,
+        2026,
+        2026,
+        2026,
+        2026
+      ],
+      "retrieved_articles_at_5": [
+        "Article B5.15.5",
+        "Article B5.10.9",
+        "Article B5.12",
+        "Article B5.13.1",
+        "Article B5.13.6"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 0.0,
+      "precision_at_3": 0.0,
+      "precision_at_5": 0.0,
+      "hit_at_1": 0.0,
+      "hit_at_3": 0.0,
+      "hit_at_5": 0.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 0.0,
+      "mrr": 0.0,
+      "latency_ms": 37.88
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q32",
+      "category": "safety_car",
+      "expected_year": 2026,
+      "expected_article": "B5.13.1",
+      "retrieved_years_at_5": [
+        2026,
+        2026,
+        2026,
+        2026,
+        2026
+      ],
+      "retrieved_articles_at_5": [
+        "Article B5.13.1",
+        "Article B5.13.2",
+        "Article B5.13.8",
+        "Article B5.10.9",
+        "Article B5.15.1"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.2,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 1.0,
+      "latency_ms": 35.301
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q33",
+      "category": "pit_stops",
+      "expected_year": 2026,
+      "expected_article": "B1.6.2",
+      "retrieved_years_at_5": [
+        2026,
+        2026,
+        2026,
+        2026,
+        2026
+      ],
+      "retrieved_articles_at_5": [
+        "Article B1.6.2",
+        "Article B4.3.2",
+        "Article B1.6.3",
+        "Article B1.9.4",
+        "Article B8.2.3"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.2,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 1.0,
+      "latency_ms": 33.831
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q34",
+      "category": "flags_penalties",
+      "expected_year": 2026,
+      "expected_article": "B5.15.1",
+      "retrieved_years_at_5": [
+        2026,
+        2026,
+        2026,
+        2026,
+        2026
+      ],
+      "retrieved_articles_at_5": [
+        "Article B5.15.1",
+        "Article B5.15.1",
+        "Article B5.15.1",
+        "Article B5.15.2",
+        "Article B5.15.2"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
+      "precision_at_3": 1.0,
+      "precision_at_5": 0.6,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 1.0,
+      "latency_ms": 34.397
+    },
+    {
+      "config": "Candidate article-aware 1024/128",
+      "query_id": "Q35",
+      "category": "drs",
+      "expected_year": 2026,
+      "expected_article": "B7.1.1",
+      "retrieved_years_at_5": [
+        2026,
+        2026,
+        2026,
+        2026,
+        2026
+      ],
+      "retrieved_articles_at_5": [
+        "Article B7.1",
+        "Article B7.1.1",
+        "Article B7.1.2",
+        "Article B7.1",
+        "Article 2.6"
+      ],
+      "wrong_year_hits_at_5": 0,
+      "wrong_year_top1": false,
+      "precision_at_1": 0.0,
+      "precision_at_3": 0.3333333333333333,
+      "precision_at_5": 0.2,
+      "hit_at_1": 0.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "content_hit_at_5": 1.0,
+      "citation_match_at_5": 1.0,
+      "mrr": 0.5,
+      "latency_ms": 35.825
     }
   ]
 }

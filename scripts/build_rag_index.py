@@ -16,7 +16,7 @@ PDF naming convention (required):
     e.g.  sporting_regs_2025.pdf   technical_regs_2024.pdf
 
 Supported doc_types : sporting_regs, technical_regs
-Supported years     : 2023, 2024, 2025
+Supported years     : 2023, 2024, 2025, 2026
 """
 
 from __future__ import annotations
@@ -36,12 +36,15 @@ if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
 
 from src.rag.index_manifest import (
+    CHUNKER_VERSION,
     ManifestDocument,
     build_manifest,
     manifest_path,
     sha256_file,
     write_manifest,
 )
+
+LEGACY_CHUNKER_VERSION = "sliding_window_v1"
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -261,7 +264,7 @@ def load_pdf_documents(docs_dir: Path) -> list[PDFDocument]:
 # ---------------------------------------------------------------------------
 
 _ARTICLE_HEADING_RE = re.compile(
-    r"(?m)^[ \t]*(?P<number>\d+(?:\.\d+)*)(?:[ \t]+)"
+    r"(?m)^[ \t]*(?P<number>(?:B\d+|\d+)(?:\.\d+)*)(?:[ \t]+)"
     r"(?P<title>[A-Za-z0-9][^\n]*?)\s*$"
 )
 _APPENDIX_HEADING_RE = re.compile(r"(?mi)^[ \t]*(?P<title>APPENDIX\s+\d+)\s*$")
@@ -315,7 +318,7 @@ _MONTH_NAMES = {
 }
 _MAX_ATOMIC_RULE_SIZE = 8192
 _PAGE_METADATA_RE = re.compile(
-    r"(?:formula\s+[12]\s+sporting\s+regulations|©|\d+/\d+)",
+    r"(?:formula\s+1\s*:?\s+sporting\s+regulations|©|\d+/\d+)",
     re.IGNORECASE,
 )
 _SECTION_HEAD_RE = re.compile(r"^\s{0,4}(\d+[\.\d]*\s+[A-Z][A-Z\s]{4,})\s*$", re.MULTILINE)
@@ -380,10 +383,12 @@ def _article_heading_metadata(match: re.Match[str]) -> tuple[str, str] | None:
     line = f"{number} {title}"
     first_word_match = re.match(r"[A-Za-z]+", title)
     first_word = first_word_match.group(0).casefold() if first_word_match else ""
+    major_number = re.sub(r"^B", "", number.split(".", 1)[0])
     if (
-        int(number.split(".", 1)[0]) >= 1000
+        int(major_number) >= 1000
         or len(title) < 3
         or first_word in _MONTH_NAMES
+        or re.fullmatch(r"\d+(?:\s+\d+)+", title)
         or _PAGE_METADATA_RE.search(line)
     ):
         return None
@@ -695,19 +700,66 @@ def _indexed_years(client: QdrantClient, name: str) -> set[int]:
         offset = next_offset
 
 
+def _legacy_sliding_hashes(document: PDFDocument) -> set[str]:
+    """Reproduce the pre-article-aware 512/64 chunk hashes for provenance checks."""
+    text = clean_text(document.text)
+    stride = CFG.chunk_size - CFG.chunk_overlap
+    return {
+        compute_hash(text[start : min(start + CFG.chunk_size, len(text))].strip())
+        for start in range(0, len(text), stride)
+        if text[start : min(start + CFG.chunk_size, len(text))].strip()
+    }
+
+
+def _detect_chunker(
+    documents: list[PDFDocument],
+    indexed_years: set[int],
+    indexed_hashes: set[str],
+) -> tuple[str, bool]:
+    """Identify the current or legacy chunker from stored payload hashes."""
+    if not indexed_hashes:
+        return "empty", False
+
+    source_documents = [document for document in documents if document.year in indexed_years]
+    current_hashes = {
+        chunk.chunk_hash for document in source_documents for chunk in iter_chunks(document)
+    }
+    if indexed_hashes == current_hashes:
+        return CHUNKER_VERSION, True
+
+    legacy_hashes = {
+        chunk_hash
+        for document in source_documents
+        for chunk_hash in _legacy_sliding_hashes(document)
+    }
+    if indexed_hashes == legacy_hashes:
+        return LEGACY_CHUNKER_VERSION, True
+    return "unknown", False
+
+
 def write_index_manifest(
     client: QdrantClient,
     documents: list[PDFDocument],
     qdrant_path: Path,
+    indexed_hashes: set[str] | None = None,
 ) -> Path:
     """Write corpus and collection metadata without loading the embedding model."""
     collection_info = client.get_collection(CFG.collection_name)
     point_count = int(collection_info.points_count or 0)
+    indexed_years = _indexed_years(client, CFG.collection_name)
+    indexed_hashes = (
+        get_existing_hashes(client, CFG.collection_name)
+        if indexed_hashes is None
+        else indexed_hashes
+    )
+    chunker, chunking_verified = _detect_chunker(documents, indexed_years, indexed_hashes)
     manifest = build_manifest(
         collection_name=CFG.collection_name,
         embedding_model=CFG.embedding_model,
         embedding_dim=CFG.embedding_dim,
         distance="Cosine",
+        chunker=chunker,
+        chunking_verified=chunking_verified,
         chunk_size=CFG.chunk_size,
         chunk_overlap=CFG.chunk_overlap,
         documents=(
@@ -719,7 +771,7 @@ def write_index_manifest(
             )
             for document in documents
         ),
-        indexed_years=_indexed_years(client, CFG.collection_name),
+        indexed_years=indexed_years,
         point_count=point_count,
     )
     path = manifest_path(Path(qdrant_path).parent)
@@ -899,7 +951,7 @@ def build_index(
     log.info("New chunks to index: %d  |  skipped (already indexed): %d", len(all_chunks), skipped)
 
     if not all_chunks:
-        write_index_manifest(client, documents, qdrant_path)
+        write_index_manifest(client, documents, qdrant_path, indexed_hashes=existing_hashes)
         log.info("Nothing to do — index is up to date")
         return
 
@@ -914,7 +966,8 @@ def build_index(
 
     total = client.get_collection(CFG.collection_name).points_count or 0
     log.info("Done. Upserted: %d  |  Total in collection: %d", n_upserted, total)
-    write_index_manifest(client, documents, qdrant_path)
+    final_hashes = existing_hashes | {chunk.chunk_hash for chunk in all_chunks}
+    write_index_manifest(client, documents, qdrant_path, indexed_hashes=final_hashes)
 
 
 def main() -> None:

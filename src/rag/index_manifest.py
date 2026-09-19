@@ -38,6 +38,7 @@ class IndexManifest:
     embedding_dim: int
     distance: str
     chunker: str
+    chunking_verified: bool
     chunk_size: int
     chunk_overlap: int
     documents: tuple[ManifestDocument, ...]
@@ -74,6 +75,9 @@ class IndexManifest:
             raise IndexManifestError(f"Manifest missing fields: {', '.join(missing)}")
 
         try:
+            chunking_verified = payload.get("chunking_verified", False)
+            if not isinstance(chunking_verified, bool):
+                raise TypeError("chunking_verified must be a boolean")
             documents = tuple(ManifestDocument(**document) for document in payload["documents"])
             indexed_years = tuple(int(year) for year in payload["indexed_years"])
             manifest = cls(
@@ -83,6 +87,7 @@ class IndexManifest:
                 embedding_dim=int(payload["embedding_dim"]),
                 distance=str(payload["distance"]),
                 chunker=str(payload["chunker"]),
+                chunking_verified=chunking_verified,
                 chunk_size=int(payload["chunk_size"]),
                 chunk_overlap=int(payload["chunk_overlap"]),
                 documents=documents,
@@ -132,6 +137,8 @@ def build_manifest(
     documents: Iterable[ManifestDocument],
     indexed_years: Iterable[int],
     point_count: int,
+    chunker: str = CHUNKER_VERSION,
+    chunking_verified: bool = True,
     built_at_utc: str | None = None,
 ) -> IndexManifest:
     """Build a manifest with sorted documents and years for stable diffs."""
@@ -141,7 +148,8 @@ def build_manifest(
         embedding_model=embedding_model,
         embedding_dim=embedding_dim,
         distance=distance,
-        chunker=CHUNKER_VERSION,
+        chunker=chunker,
+        chunking_verified=chunking_verified,
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         documents=tuple(sorted(documents, key=lambda item: item.filename)),
@@ -193,6 +201,7 @@ def validate_manifest(
     embedding_model: str,
     embedding_dim: int | None = None,
     vector_dim: int | None = None,
+    point_count: int | None = None,
 ) -> list[str]:
     """Return compatibility errors without changing the caller's state."""
     errors: list[str] = []
@@ -205,5 +214,9 @@ def validate_manifest(
     if vector_dim is not None and manifest.embedding_dim != vector_dim:
         errors.append(
             f"manifest embedding_dim={manifest.embedding_dim}, Qdrant vector_dim={vector_dim}"
+        )
+    if point_count is not None and manifest.point_count != point_count:
+        errors.append(
+            f"manifest point_count={manifest.point_count}, Qdrant point_count={point_count}"
         )
     return errors
