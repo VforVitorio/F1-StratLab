@@ -11,13 +11,15 @@ one-line summary of where it landed and what it flagged.
     f1-eval nlp            # NLP per-stage eval: sentiment + gated stages (#304)
     f1-eval projection     # MC projection accuracy vs real stops + the measured tables
     f1-eval stint-lengths  # real stint-length distribution vs the guard rail's bound (#716)
+    f1-eval rag            # FIA regulation retrieval quality and season leakage (#321)
     f1-eval alert-llm      # PROXY alert precision via an LLM judge (#304; spends API calls)
     f1-eval decision-modes # does the stack pick the right lap to STOP (#708; takes minutes)
-    f1-eval all            # every report EXCEPT the two opt-in ones below
+    f1-eval all            # every report EXCEPT the three opt-in ones below
 
-Two commands stay out of ``all`` because they cost something a routine run should
-not silently spend: ``alert-llm`` spends API calls, and ``decision-modes`` drives
-the whole agent stack over hundreds of laps and takes minutes.
+Three commands stay out of ``all`` because they cost something a routine run
+should not silently spend: ``alert-llm`` spends API calls, ``decision-modes``
+drives the whole agent stack over hundreds of laps, and ``rag`` loads a large
+embedding model plus the local Qdrant index.
 """
 
 from __future__ import annotations
@@ -32,6 +34,7 @@ from src.strategy.eval.hygiene import build_hygiene_report
 from src.strategy.eval.nlp import build_nlp_report
 from src.strategy.eval.projection import DEFAULT_SCORING_YEARS, build_projection_report
 from src.strategy.eval.registry import build_registry
+from src.strategy.eval.rag import build_rag_report
 from src.strategy.eval.stint_lengths import build_stint_lengths_report
 from src.strategy.eval.reproduce import build_reproduction_report
 
@@ -106,6 +109,17 @@ def _run_stint_lengths() -> None:
     )
 
 
+def _run_rag() -> None:
+    payload = build_rag_report()
+    summaries = payload["summaries"]
+    scoped = summaries[0]
+    print(
+        f"rag -> {payload['md_path']} ({payload['query_count']} queries; "
+        f"scoped P@5 {scoped['precision_at_5']:.3f}; "
+        f"wrong-year {scoped['wrong_year_rate']:.3f})"
+    )
+
+
 def _run_decision_modes() -> None:
     payload = build_decision_modes_report()
     agreement = payload["agreement"]
@@ -138,6 +152,7 @@ _COMMANDS: dict[str, Callable[[], None]] = {
     "nlp": _run_nlp,
     "projection": _run_projection,
     "stint-lengths": _run_stint_lengths,
+    "rag": _run_rag,
 }
 
 
@@ -167,8 +182,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     years = tuple(args.years) if args.years else DEFAULT_SCORING_YEARS
 
-    # Both of these are opt-in only, so `all` never runs them: alert-llm spends API
-    # calls, and decision-modes drives the agent stack over hundreds of laps.
+    # These commands are opt-in only, so `all` never runs them: alert-llm spends
+    # API calls, decision-modes drives the agent stack, and rag loads BGE-M3.
     if args.command == "alert-llm":
         _run_alert_llm()
         return 0
@@ -178,7 +193,9 @@ def main(argv: list[str] | None = None) -> int:
 
     # `projection` is the only builder that takes a season scope, so it is bound
     # here rather than given every builder a parameter none of the others has.
-    commands = list(_COMMANDS) if args.command == "all" else [args.command]
+    commands = (
+        [name for name in _COMMANDS if name != "rag"] if args.command == "all" else [args.command]
+    )
     for name in commands:
         if name == "projection":
             _run_projection(years)

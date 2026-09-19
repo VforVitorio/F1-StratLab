@@ -68,7 +68,18 @@ uv run pytest tests/audit/test_hf_cards_are_published.py -m network -v
 
 # Collection-only guard used by CI
 uv run pytest --co -q -m "not data and not slow and not network"
+
+# Shared RAG retrieval evaluation. Requires the local FIA PDFs and Qdrant index
+uv run f1-eval rag
 ```
+
+The RAG command uses the 30-query set in `data/rag_eval/queries_v2.json`. It
+reports conventional P@1/P@3/P@5, the historical binary hit@5 measure, MRR,
+retrieval-level citation match, wrong-year rate, and P50/P95 latency. It runs
+the production season-scoped path and an unscoped control. It loads BGE-M3 once
+and never calls an LLM. The report is written to
+`documents/eval_reports/rag.{md,json}`. This is a local data run, not part of
+the fast pull-request gate.
 
 ## What changed in the efficiency pass
 

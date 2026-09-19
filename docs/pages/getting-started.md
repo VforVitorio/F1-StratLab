@@ -26,7 +26,7 @@ f1-sim         # headless CLI simulation against a saved race
 f1-arcade      # pyglet 2D replay plus the two PITWALL windows
 f1-webapp      # post-race web app (wraps `docker compose up`)
 f1-prefetch    # fill the arcade replay cache ahead of time
-f1-eval        # regenerate the evaluation reports (registry, calibration, hygiene, projection, ...)
+f1-eval        # regenerate the evaluation reports (registry, calibration, RAG, hygiene, projection, ...)
 f1-pitwall     # attach the two PITWALL windows to an arcade already running
 ```
 
@@ -45,7 +45,7 @@ A round whose file is already on disk is skipped without being read, which is wh
 
 Rounds already cached are skipped without being loaded, so re-running it costs one filesystem check per round.
 
-`f1-eval` and `f1-pitwall` are developer tools rather than end-user surfaces. The first writes versioned markdown and JSON reports under `documents/eval_reports/` (`f1-eval registry`, `f1-eval calibration`, `f1-eval all`, ...); the second opens the PITWALL windows against an arcade process that is already running, which is how the UI is developed without restarting the replay.
+`f1-eval` and `f1-pitwall` are developer tools rather than end-user surfaces. The first writes versioned markdown and JSON reports under `documents/eval_reports/` (`f1-eval registry`, `f1-eval rag`, `f1-eval calibration`, `f1-eval all`, ...); the second opens the PITWALL windows against an arcade process that is already running, which is how the UI is developed without restarting the replay.
 
 First boot triggers a one-time download of the cached models and reference data into `~/.f1-strat/`. Subsequent runs are offline.
 

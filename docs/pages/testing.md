@@ -17,6 +17,23 @@ uv run pytest -v -n 4 --dist=loadfile \
   --cov=src --cov-report=term-missing
 ```
 
+## RAG retrieval evaluation
+
+The shared `f1-eval rag` command evaluates the production BGE-M3 retriever over
+the 30 manually verified queries in
+[`data/rag_eval/queries_v2.json`](https://github.com/VforVitorio/F1-StratLab/blob/dev/data/rag_eval/queries_v2.json):
+
+```bash
+uv run f1-eval rag
+```
+
+It reports conventional P@1/P@3/P@5, hit@5 for comparison with the historical
+N30B notebook, MRR, retrieval-level citation match, wrong-year rate, and P50/P95
+latency. The command runs the season-scoped production path and an unscoped
+control. It loads BGE-M3 once and makes no LLM calls. The Markdown and JSON
+reports land in `documents/eval_reports/rag.{md,json}`. The complete run needs
+the local FIA PDFs and Qdrant index, so it stays outside the fast CI gate.
+
 The fast gate took **56.24 seconds** on the development machine used for the
 2026-09-16 audit. The complete suite took **245.64 seconds** with four workers,
 down from **276.82 seconds** before this cleanup and **383.27 seconds** before

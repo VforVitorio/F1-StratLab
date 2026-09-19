@@ -65,15 +65,16 @@ uv run python scripts/measure_mc_tables.py
 # Threshold sweeps + MC Dropout figures (one notebook, ~5 min on GPU)
 uv run jupyter nbconvert --execute --inplace notebooks/agents/N33_thresholds_and_calibration.ipynb
 
-# Quantitative RAG benchmark (10-15 min, builds 2 additional Qdrant collections)
-uv run jupyter nbconvert --execute --inplace notebooks/agents/N30B_rag_benchmark.ipynb
+# Shared quantitative RAG retrieval benchmark (local FIA PDFs and Qdrant index)
+uv run f1-eval rag
 ```
 
 Both notebooks emit CSV and Markdown tables alongside their PNGs:
 
 - Sweeps: `data/eval/threshold_sweep_{overtake,sc,undercut}.{csv,md}`
 - MC Dropout: `data/eval/mc_dropout_coverage.{csv,md}`
-- RAG benchmark: `data/rag_eval/results_v1.md`
+- Current RAG retrieval report: `documents/eval_reports/rag.{md,json}`
+- Historical three-configuration notebook report: `data/rag_eval/results_v1.md`
 - Projection accuracy: `documents/eval_reports/projection.{md,json}`
 - Measured MC tables: `data/mc_measured_v1.json`, with thesis-facing extracts at `data/eval/mc_{clean_air,gap_density,sc_window,undercut_band}.{csv,md}`
 
@@ -85,7 +86,8 @@ Both notebooks emit CSV and Markdown tables alongside their PNGs:
 | Whisper turbo (CUDA) | mean per-clip latency | **233.9 ms** (P95 325.8 ms) | `data/eval/whisper_results.{csv,md}` |
 | NLP pipeline (GPU) | mean `run_pipeline` | **42.1 ms** | `data/eval/nlp_pipeline_cpu.{csv,md}` |
 | Sub-agent latency | min / max mean | **487 ms** (pace) / **4.4 s** (rag w/ LLM) | `data/eval/subagent_latency.{csv,md}` |
-| RAG agent | Content P@5 | **0.80** | `data/rag_eval/results_v1.md` |
+| RAG agent, historical N30B v1 | Content P@5 | **0.80** | `data/rag_eval/results_v1.md` |
+| RAG retrieval, shared eval v2 | Strict P@5, season scoped | **0.207** | `documents/eval_reports/rag.md` |
 | MC Dropout (C2) | calibrated 80% coverage | **0.840** | `data/eval/mc_dropout_coverage.{csv,md}` |
 | Position projection | within one place, 552 real stops (2025 only) | **86.1%** | `documents/eval_reports/projection.{md,json}` |
 

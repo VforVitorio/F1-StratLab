@@ -13,11 +13,13 @@ Public API:
 - ``build_reproduction_report`` - headline numbers re-derived vs the configs.
 - ``build_hygiene_report`` - data-leakage / train-serve-skew checks.
 - ``build_nlp_report`` - sentiment/intent/NER holdout metrics for the radio pipeline.
+- ``build_rag_report`` - FIA regulation retrieval quality and wrong-year rate.
 """
 
 from src.strategy.eval.calibration import build_calibration_report
 from src.strategy.eval.hygiene import build_hygiene_report
 from src.strategy.eval.nlp import build_nlp_report
+from src.strategy.eval.rag import build_rag_report
 from src.strategy.eval.registry import build_registry, load_registry
 from src.strategy.eval.reproduce import build_reproduction_report
 
@@ -28,4 +30,5 @@ __all__ = [
     "build_reproduction_report",
     "build_hygiene_report",
     "build_nlp_report",
+    "build_rag_report",
 ]
