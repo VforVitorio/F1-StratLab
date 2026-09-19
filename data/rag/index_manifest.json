@@ -5,6 +5,7 @@
   "embedding_dim": 1024,
   "distance": "Cosine",
   "chunker": "article_clause_packing_v1",
+  "chunking_verified": true,
   "chunk_size": 512,
   "chunk_overlap": 64,
   "documents": [
@@ -25,13 +26,20 @@
       "doc_type": "sporting_regs",
       "year": 2025,
       "sha256": "525eef22a60f0755a4468281dd7c78c5ea5bd0eec38dc1b09cc31a0c0132854e"
+    },
+    {
+      "filename": "sporting_regs_2026.pdf",
+      "doc_type": "sporting_regs",
+      "year": 2026,
+      "sha256": "cbe329807d7803a4db511f80d829de1212d0c6a1c3b327cddb1b841823baa9fd"
     }
   ],
   "indexed_years": [
     2023,
     2024,
-    2025
+    2025,
+    2026
   ],
-  "point_count": 2167,
-  "built_at_utc": "2026-09-19T12:13:18+00:00"
+  "point_count": 2874,
+  "built_at_utc": "2026-09-19T12:44:59+00:00"
 }

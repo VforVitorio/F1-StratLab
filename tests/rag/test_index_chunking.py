@@ -99,6 +99,20 @@ def test_numeric_leading_rule_gets_its_own_article_label() -> None:
 
 
 @pytest.mark.unit
+def test_2026_prefixed_article_heading_gets_its_own_label() -> None:
+    document = _document(
+        "B6.2 Control & Allocation of Tyres\n"
+        "B6.2.1 The tyre allocation rule.\n"
+        "B6.3 Use and Return of Tyres\n"
+    )
+
+    chunks = list(iter_chunks(document, chunk_size=120, chunk_overlap=16))
+
+    assert any(chunk.article == "Article B6.2" for chunk in chunks)
+    assert any(chunk.article == "Article B6.2.1" for chunk in chunks)
+
+
+@pytest.mark.unit
 def test_numbered_rule_keeps_its_nested_exceptions_together() -> None:
     document = _document(
         "55.8 With the exception of the cases listed below, no driver may overtake "

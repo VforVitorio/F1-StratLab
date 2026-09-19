@@ -76,11 +76,18 @@ uv run python scripts/build_rag_index.py --manifest-only
 ```
 
 The manifest records the source PDF hashes, collection, embedding model and
-dimension, distance, chunking parameters, indexed years, point count, and build
-time. A missing manifest is a compatibility warning. A present mismatch stops
-startup so a stale or wrong-model index cannot be used silently.
+dimension, distance, chunker identity, chunking parameters, indexed years, point
+count, and build time. When the existing payload hashes identify the historical
+sliding-window index, the manifest records that fact instead of pretending it
+was built with the current article-aware code. A missing manifest is a
+compatibility warning. A present mismatch stops startup so a stale or
+wrong-model index cannot be used silently.
 
 FIA PDFs are downloaded by `scripts/download_fia_pdfs.py` into `data/rag/documents/`.
+The maintained Sporting Regulations corpus currently covers 2023-2026. The 2026
+PDF uses `B5.13.1`-style article identifiers; the builder preserves those
+identifiers instead of treating them as page metadata. The source is the
+[official FIA regulations page](https://www.fia.com/regulations/category/110).
 
 ---
 

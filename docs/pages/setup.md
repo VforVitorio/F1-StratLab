@@ -186,6 +186,19 @@ uv run python scripts/build_rag_index.py --manifest-only
 The retriever warns when an old index has no manifest and refuses a present
 manifest whose model, collection, or vector dimension does not match.
 
+The current maintained Sporting Regulations corpus covers 2023-2026. The 2026
+source is the official FIA [Section B Sporting Regulations, Issue 08, published
+5 August 2026](https://www.fia.com/system/files/documents/fia_2026_f1_regulations_-_section_b_sporting_-_iss_08_-_2026-08-05_7.pdf).
+The builder recognises its `B5.13.1`-style article identifiers and records the
+source hashes and chunking decision in the manifest.
+
+To reproduce the eval-gated chunking check without replacing the production
+collection:
+
+```bash
+uv run python scripts/benchmark_rag_chunking.py
+```
+
 ## Network architecture (Docker)
 
 ```

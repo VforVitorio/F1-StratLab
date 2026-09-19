@@ -106,14 +106,22 @@ def default_query_path() -> Path:
     return base / "data" / "rag_eval" / QUERY_SET_NAME
 
 
-def load_queries(path: Path | None = None) -> list[RagEvalQuery]:
-    """Load and validate the versioned RAG query set."""
-    query_path = Path(path) if path is not None else default_query_path()
-    payload = json.loads(query_path.read_text(encoding="utf-8"))
-    if not isinstance(payload, list) or not payload:
-        raise ValueError(f"RAG query set must be a non-empty JSON list: {query_path}")
+def load_queries(path: Path | Sequence[Path] | None = None) -> list[RagEvalQuery]:
+    """Load and validate one or more versioned RAG query sets."""
+    if path is None:
+        paths = [default_query_path()]
+    elif isinstance(path, (str, Path)):
+        paths = [Path(path)]
+    else:
+        paths = [Path(item) for item in path]
 
-    queries = [RagEvalQuery.from_dict(item) for item in payload]
+    queries: list[RagEvalQuery] = []
+    for query_path in paths:
+        payload = json.loads(query_path.read_text(encoding="utf-8"))
+        if not isinstance(payload, list) or not payload:
+            raise ValueError(f"RAG query set must be a non-empty JSON list: {query_path}")
+        queries.extend(RagEvalQuery.from_dict(item) for item in payload)
+
     ids = [query.query_id for query in queries]
     if len(ids) != len(set(ids)):
         raise ValueError("RAG query ids must be unique")

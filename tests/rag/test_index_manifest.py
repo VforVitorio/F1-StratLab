@@ -51,6 +51,7 @@ def test_manifest_round_trip_is_sorted_and_hashable(tmp_path: Path) -> None:
         "sporting_regs_2025.pdf",
     ]
     assert loaded.indexed_years == (2023, 2025)
+    assert loaded.chunking_verified is True
     assert sha256_file(path) == manifest_hash(path)
     assert json.loads(path.read_text(encoding="utf-8"))["point_count"] == 2279
 

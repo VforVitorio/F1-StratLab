@@ -65,7 +65,7 @@ class DownloadConfig:
                           pipeline for too long.
     """
 
-    supported_years: list[int] = field(default_factory=lambda: [2023, 2024, 2025])
+    supported_years: list[int] = field(default_factory=lambda: [2023, 2024, 2025, 2026])
     request_timeout: int = 30
     retry_delay: int = 2
     max_retries: int = 3

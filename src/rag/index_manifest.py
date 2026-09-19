@@ -38,6 +38,7 @@ class IndexManifest:
     embedding_dim: int
     distance: str
     chunker: str
+    chunking_verified: bool
     chunk_size: int
     chunk_overlap: int
     documents: tuple[ManifestDocument, ...]
@@ -62,6 +63,7 @@ class IndexManifest:
             "embedding_dim",
             "distance",
             "chunker",
+            "chunking_verified",
             "chunk_size",
             "chunk_overlap",
             "documents",
@@ -74,6 +76,8 @@ class IndexManifest:
             raise IndexManifestError(f"Manifest missing fields: {', '.join(missing)}")
 
         try:
+            if not isinstance(payload["chunking_verified"], bool):
+                raise TypeError("chunking_verified must be a boolean")
             documents = tuple(ManifestDocument(**document) for document in payload["documents"])
             indexed_years = tuple(int(year) for year in payload["indexed_years"])
             manifest = cls(
@@ -83,6 +87,7 @@ class IndexManifest:
                 embedding_dim=int(payload["embedding_dim"]),
                 distance=str(payload["distance"]),
                 chunker=str(payload["chunker"]),
+                chunking_verified=bool(payload["chunking_verified"]),
                 chunk_size=int(payload["chunk_size"]),
                 chunk_overlap=int(payload["chunk_overlap"]),
                 documents=documents,
@@ -132,6 +137,8 @@ def build_manifest(
     documents: Iterable[ManifestDocument],
     indexed_years: Iterable[int],
     point_count: int,
+    chunker: str = CHUNKER_VERSION,
+    chunking_verified: bool = True,
     built_at_utc: str | None = None,
 ) -> IndexManifest:
     """Build a manifest with sorted documents and years for stable diffs."""
@@ -141,7 +148,8 @@ def build_manifest(
         embedding_model=embedding_model,
         embedding_dim=embedding_dim,
         distance=distance,
-        chunker=CHUNKER_VERSION,
+        chunker=chunker,
+        chunking_verified=chunking_verified,
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         documents=tuple(sorted(documents, key=lambda item: item.filename)),
