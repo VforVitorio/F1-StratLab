@@ -138,7 +138,7 @@ class RegulationContext:
 # grounding the CITATION would not have caught it. The condition is the thing.
 _SYSTEM_PROMPT = """You are an FIA Formula 1 regulation expert agent.
 You have access to a tool that retrieves passages from the official FIA Sporting
-Regulations (2023–2025). When asked a regulation question:
+Regulations (2023–2026). When asked a regulation question:
 1. Call query_rag_tool with a precise, focused question.
 2. Read the retrieved passages carefully.
 3. **State the CONDITIONS under which each rule applies, in the same sentence as the
