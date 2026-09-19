@@ -248,6 +248,7 @@ class PaceRangeRequest(BaseModel):
 
 class RagRequest(BaseModel):
     question: str
+    year: Optional[int] = None  # None = search every indexed regulation season
 
 
 class RecommendRequest(BaseModel):

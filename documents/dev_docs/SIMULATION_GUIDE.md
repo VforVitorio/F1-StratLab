@@ -281,7 +281,7 @@ Invoke-RestMethod -Uri "http://localhost:8000/api/v1/strategy/radio" -Method POS
 ### RAG endpoint (N30) — requires LM Studio
 
 ```powershell
-$ragBody = '{"question":"What are the rules for pit stop minimum time?"}'
+$ragBody = '{"question":"What did the 2023 rules say about pit stop minimum time?","year":2023}'
 Invoke-RestMethod -Uri "http://localhost:8000/api/v1/strategy/rag" -Method POST -ContentType "application/json" -Body $ragBody
 ```
 
