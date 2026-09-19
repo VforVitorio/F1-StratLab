@@ -3,7 +3,8 @@
 **Status: Active**, imported by N30 and N31.
 
 Provides runtime retrieval-augmented generation (RAG) over FIA regulation PDFs.
-The Qdrant index must be built once with `scripts/build_rag_index.py` before any query.
+The Qdrant index and its `data/rag/index_manifest.json` metadata must exist before
+any query. Older indexes without a manifest remain readable with a warning.
 
 ---
 
@@ -11,7 +12,7 @@ The Qdrant index must be built once with `scripts/build_rag_index.py` before any
 
 | Symbol | Type | Description |
 |---|---|---|
-| `RagConfig` | dataclass | Centralised config: collection name, embedding model, top-k, derived paths |
+| `RagConfig` | dataclass | Centralised config: collection name, embedding model, dimension, top-k, derived paths |
 | `CFG` | `RagConfig` | Module-level singleton config; edit this to change defaults |
 | `RegulationChunk` | dataclass | Single retrieved passage with `text`, `article`, `doc_type`, `year`, `score`, `section_title` |
 | `RagRetriever` | class | Holds Qdrant client + sentence encoder; call `.query()` per request |
@@ -20,9 +21,9 @@ The Qdrant index must be built once with `scripts/build_rag_index.py` before any
 
 ### `RagRetriever` methods
 
-- `__init__(qdrant_path, collection_name, embedding_model, top_k)`, loads encoder (~1-2 s); raises `RuntimeError` if collection missing
+- `__init__(qdrant_path, collection_name, embedding_model, top_k, embedding_dim)`, validates the manifest before loading the encoder; raises `RuntimeError` for a present but incompatible manifest
 - `query(question, top_k=None, year=None, doc_type=None) -> list[RegulationChunk]`, cosine similarity search, ordered by descending score. `year` restricts the search to one season's rulebook; a season the index does not hold falls back to an unscoped search with one warning rather than returning nothing
-- `health_check() -> dict`, returns `{collection, vector_count, embedding_model, qdrant_path}` for diagnostics
+- `health_check() -> dict`, returns collection, vector count, vector dimension, indexed years, manifest status/hash, and paths for diagnostics
 
 ---
 
@@ -45,7 +46,7 @@ chunks = retriever.query("safety car restart procedure", year=2025)
 for c in chunks:
     print(c.article, c.score, c.text[:80])
 
-# Startup health check
+# Startup health check. A valid manifest reports the corpus years and hash.
 print(retriever.health_check())
 ```
 
@@ -66,6 +67,18 @@ The Qdrant collection must exist before calling `get_retriever()`:
 ```bash
 python scripts/build_rag_index.py
 ```
+
+To create or refresh only the metadata, without loading BGE-M3 or changing
+Qdrant points:
+
+```bash
+uv run python scripts/build_rag_index.py --manifest-only
+```
+
+The manifest records the source PDF hashes, collection, embedding model and
+dimension, distance, chunking parameters, indexed years, point count, and build
+time. A missing manifest is a compatibility warning. A present mismatch stops
+startup so a stale or wrong-model index cannot be used silently.
 
 FIA PDFs are downloaded by `scripts/download_fia_pdfs.py` into `data/rag/documents/`.
 

@@ -1,13 +1,13 @@
 # rag
 
-- harness `390684f3-dirty` · schema v1 · generated 2026-09-17T17:23:23+00:00
+- harness `e30b14ff-dirty` · schema v1 · generated 2026-09-19T12:18:28+00:00
 - era 2022-2025 · dataset RAG queries_v2.json, 30 FIA regulation queries · seed deterministic · llm none
-- artifacts: query_set=`ab38b6c163a0`
+- artifacts: query_set=`663d72013436`
 
 | configuration | n | P@1 | P@3 | P@5 | hit@5 | content hit@5 | MRR | citation match | wrong-year | P50 ms | P95 ms |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| BGE-M3 production, season scoped | 30 | 0.533 | 0.322 | 0.207 | 0.833 | 0.967 | 0.675 | 0.833 | 0.000 | 52.0 | 116.6 |
-| BGE-M3 production, unscoped control | 30 | 0.300 | 0.222 | 0.160 | 0.733 | 0.867 | 0.471 | 0.767 | 0.560 | 37.7 | 47.9 |
+| BGE-M3 production, season scoped | 30 | 0.533 | 0.322 | 0.207 | 0.833 | 0.967 | 0.675 | 0.833 | 0.000 | 71.0 | 264.4 |
+| BGE-M3 production, unscoped control | 30 | 0.300 | 0.222 | 0.160 | 0.733 | 0.867 | 0.471 | 0.767 | 0.560 | 44.5 | 70.3 |
 
 ## Metric contract
 

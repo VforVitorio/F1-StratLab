@@ -21,6 +21,15 @@ from typing import Any
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 
+from src.rag.index_manifest import (
+    IndexManifest,
+    IndexManifestError,
+    manifest_hash,
+    manifest_path,
+    read_manifest,
+    validate_manifest,
+)
+
 # QdrantClient and SentenceTransformer are imported inside RagRetriever.__init__.
 # sentence_transformers alone costs 7.3 s at import and pulls torch and
 # transformers with it, and this module is reached from the orchestrator on every
@@ -52,6 +61,8 @@ class RagConfig:
                          same model used at index build time. Mixing models
                          produces meaningless similarity scores because the
                          vector spaces are incompatible.
+        embedding_dim: Expected vector dimension. Compared with the collection
+                       and manifest before the embedding model is loaded.
         top_k:           Default number of chunks returned per query. Five is
                          enough context for most strategy questions; increase
                          to 10 for multi-article topics like safety car + pit lane.
@@ -59,6 +70,7 @@ class RagConfig:
 
     collection_name: str = "fia_regulations"
     embedding_model: str = "BAAI/bge-m3"  # 1024-dim, MTEB ~67, fits in 8 GB VRAM
+    embedding_dim: int = 1024
     top_k: int = 5
 
     def __post_init__(self) -> None:
@@ -95,6 +107,15 @@ class RagConfig:
 
 
 CFG = RagConfig()
+
+
+def _collection_vector_size(collection_info: Any) -> int | None:
+    """Read a single-vector dimension from Qdrant collection metadata."""
+    vectors = getattr(
+        getattr(getattr(collection_info, "config", None), "params", None), "vectors", None
+    )
+    return getattr(vectors, "size", None)
+
 
 # ---------------------------------------------------------------------------
 # Data transfer object
@@ -172,6 +193,7 @@ class RagRetriever:
         collection_name: str,
         embedding_model: str,
         top_k: int = 5,
+        embedding_dim: int | None = None,
     ) -> None:
         """Initialise the retriever and verify the Qdrant collection exists.
 
@@ -189,6 +211,8 @@ class RagRetriever:
             top_k:           Default number of chunks to return per query. Can be
                              overridden per call in ``query()`` when a broader or
                              narrower context window is needed.
+            embedding_dim:  Expected vector dimension. ``None`` keeps compatibility
+                            with direct callers that do not provide the value.
         """
         from qdrant_client import QdrantClient
         from sentence_transformers import SentenceTransformer
@@ -196,13 +220,16 @@ class RagRetriever:
         self._qdrant_path = Path(qdrant_path)
         self._collection_name = collection_name
         self._embedding_model = embedding_model
+        self._embedding_dim = embedding_dim
         self._top_k = top_k
+        self._manifest_path = manifest_path(self._qdrant_path.parent)
+        self._manifest: IndexManifest | None = None
+        self._manifest_status = "missing"
         # Scopes already reported as absent from the index, so the warning in
         # _warn_unindexed_scope fires once per scope instead of once per lap.
         self._unscoped_warned: set[tuple[int | None, str | None]] = set()
 
         self._client = QdrantClient(path=str(self._qdrant_path))
-        self._encoder = SentenceTransformer(embedding_model)
 
         existing = {c.name for c in self._client.get_collections().collections}
         if collection_name not in existing:
@@ -210,6 +237,46 @@ class RagRetriever:
                 f"Qdrant collection '{collection_name}' not found in {qdrant_path}. "
                 "Run `python scripts/build_rag_index.py` to build the index first."
             )
+
+        collection_info = self._client.get_collection(collection_name)
+        vector_dim = _collection_vector_size(collection_info)
+        self._load_and_validate_manifest(vector_dim)
+        self._encoder = SentenceTransformer(embedding_model)
+
+    def _load_and_validate_manifest(self, vector_dim: int | None) -> None:
+        """Validate metadata before loading BGE-M3, or warn for old indexes."""
+        if not self._manifest_path.exists():
+            self._manifest = None
+            self._manifest_status = "missing"
+            logger.warning(
+                "RAG index manifest missing at %s; continuing for compatibility. "
+                "Run `python scripts/build_rag_index.py --manifest-only` to create it.",
+                self._manifest_path,
+            )
+            return
+
+        try:
+            manifest = read_manifest(self._manifest_path)
+        except IndexManifestError as exc:
+            raise RuntimeError(
+                f"Invalid RAG index manifest at {self._manifest_path}: {exc}"
+            ) from exc
+
+        errors = validate_manifest(
+            manifest,
+            collection_name=self._collection_name,
+            embedding_model=self._embedding_model,
+            embedding_dim=self._embedding_dim,
+            vector_dim=vector_dim,
+        )
+        if errors:
+            details = "; ".join(errors)
+            raise RuntimeError(
+                f"RAG index manifest mismatch at {self._manifest_path}: {details}. "
+                "Rebuild the index or point the retriever at its matching data root."
+            )
+        self._manifest = manifest
+        self._manifest_status = "valid"
 
     def _encode(self, text: str) -> list[float]:
         """Encode a single text string into a normalised embedding vector.
@@ -382,24 +449,57 @@ class RagRetriever:
             for hit in hits
         ]
 
+    def _indexed_years(self) -> list[int]:
+        """Read years from Qdrant when an old index has no manifest."""
+        years: set[int] = set()
+        offset = None
+        while True:
+            points, next_offset = self._client.scroll(
+                collection_name=self._collection_name,
+                scroll_filter=None,
+                limit=1000,
+                offset=offset,
+                with_payload=["year"],
+                with_vectors=False,
+            )
+            years.update(
+                int(point.payload["year"]) for point in points if point.payload.get("year")
+            )
+            if next_offset is None:
+                return sorted(years)
+            offset = next_offset
+
     def health_check(self) -> dict[str, Any]:
         """Return a summary of the collection's current state for diagnostics.
 
         Useful at notebook startup to confirm the index was built correctly before
-        running agent demos. Reports the number of indexed vectors, the embedding
-        model in use, and the Qdrant storage path so misconfigurations are caught
-        early rather than at query time.
+        running agent demos. Reports the collection, corpus years, manifest state,
+        vector dimension, and storage path so stale indexes are visible before a
+        query is trusted.
 
         Returns:
-            Dictionary with keys ``collection``, ``vector_count``, ``embedding_model``,
-            and ``qdrant_path``. ``vector_count`` is 0 if the collection is empty,
-            meaning indexing started but failed partway through.
+            Dictionary with collection, vector, manifest, year, and path metadata.
         """
         info = self._client.get_collection(self._collection_name)
+        vector_dim = _collection_vector_size(info)
+        indexed_years = (
+            list(self._manifest.indexed_years)
+            if self._manifest is not None
+            else self._indexed_years()
+        )
         return {
             "collection": self._collection_name,
             "vector_count": info.points_count,
             "embedding_model": self._embedding_model,
+            "embedding_dim": vector_dim,
+            "indexed_years": indexed_years,
+            "manifest_status": self._manifest_status,
+            "manifest_hash": (
+                manifest_hash(self._manifest_path) if self._manifest_path.exists() else None
+            ),
+            "manifest_path": str(self._manifest_path),
+            "chunk_size": self._manifest.chunk_size if self._manifest else None,
+            "chunk_overlap": self._manifest.chunk_overlap if self._manifest else None,
             "qdrant_path": str(self._qdrant_path),
         }
 
@@ -415,6 +515,7 @@ def get_retriever(
     collection_name: str | None = None,
     embedding_model: str | None = None,
     top_k: int | None = None,
+    embedding_dim: int | None = None,
 ) -> RagRetriever:
     """Return the process-level singleton ``RagRetriever``, creating it on first call.
 
@@ -444,12 +545,14 @@ def get_retriever(
                          used when the index was built.
         top_k:           Default number of chunks returned per query. Defaults to
                          ``CFG.top_k``.
+        embedding_dim:  Expected vector dimension. Defaults to ``CFG.embedding_dim``.
     """
     return RagRetriever(
         qdrant_path=qdrant_path or CFG.qdrant_path,
         collection_name=collection_name or CFG.collection_name,
         embedding_model=embedding_model or CFG.embedding_model,
         top_k=top_k or CFG.top_k,
+        embedding_dim=embedding_dim or CFG.embedding_dim,
     )
 
 
