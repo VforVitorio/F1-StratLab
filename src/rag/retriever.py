@@ -240,10 +240,13 @@ class RagRetriever:
 
         collection_info = self._client.get_collection(collection_name)
         vector_dim = _collection_vector_size(collection_info)
-        self._load_and_validate_manifest(vector_dim)
+        point_count = int(collection_info.points_count or 0)
+        self._load_and_validate_manifest(vector_dim, point_count)
         self._encoder = SentenceTransformer(embedding_model)
 
-    def _load_and_validate_manifest(self, vector_dim: int | None) -> None:
+    def _load_and_validate_manifest(
+        self, vector_dim: int | None, point_count: int | None = None
+    ) -> None:
         """Validate metadata before loading BGE-M3, or warn for old indexes."""
         if not self._manifest_path.exists():
             self._manifest = None
@@ -268,6 +271,7 @@ class RagRetriever:
             embedding_model=self._embedding_model,
             embedding_dim=self._embedding_dim,
             vector_dim=vector_dim,
+            point_count=point_count,
         )
         if errors:
             details = "; ".join(errors)

@@ -113,6 +113,23 @@ def test_2026_prefixed_article_heading_gets_its_own_label() -> None:
 
 
 @pytest.mark.unit
+def test_pdf_page_headers_are_not_article_headings() -> None:
+    document = _document(
+        "B44 2026 Formula 1: Sporting Regulations\n"
+        "B5.13 Safety Car (SC)\n"
+        "13 12 12\n"
+        "B5.13.1 Deployment of Safety Car\n"
+        "The Safety Car will be deployed when required."
+    )
+
+    chunks = list(iter_chunks(document, chunk_size=120, chunk_overlap=16))
+
+    assert all("Formula 1: Sporting Regulations" not in chunk.section_title for chunk in chunks)
+    assert all(chunk.article != "Article 13" for chunk in chunks)
+    assert any(chunk.article == "Article B5.13.1" for chunk in chunks)
+
+
+@pytest.mark.unit
 def test_numbered_rule_keeps_its_nested_exceptions_together() -> None:
     document = _document(
         "55.8 With the exception of the cases listed below, no driver may overtake "

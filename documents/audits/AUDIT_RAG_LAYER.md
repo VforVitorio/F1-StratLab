@@ -21,8 +21,9 @@ official 2026 Sporting Regulations, supports `B5.13.1`-style headings, and
 records a 35-query A/B result in `documents/eval_reports/rag_2026.{md,json}`.
 
 The detailed findings and phase plan below are the historical snapshot from
-2026-07-07. The current implementation status above takes precedence for Phase
-3; Phases 1, 2, 4, and 5 remain separate work unless their status is changed.
+2026-07-07. The current implementation status above takes precedence for
+Phases 3 and 5; Phases 1, 2, and 4 remain separate work unless their status is
+changed.
 
 ---
 
@@ -66,7 +67,7 @@ Consumers: N30's `run_rag_agent` / `run_rag_agent_from_state`; N31 attaches the 
 | **RAG-01** | **P1** | **No season scoping end to end.** One collection mixes years 2023-2025; `query()` exposes no `year`/`doc_type` filter (`retriever.py:208-243`) despite `RegulationChunk` docstrings promising both (`retriever.py:106-113`); `_build_rag_question` (`strategy_orchestrator.py:717-738`) never mentions the race season; N30's prompt hardcodes "prefer 2025" and "2023-2025" (`rag_agent.py` `_SYSTEM_PROMPT`). The Qatar demo's Article 36.3 citation is season-correct by luck of scoring, not by construction. Query-time complement of F-10 (`AUDIT_2026_REG_CONCEPT_DRIFT.md:178`). | Wrong-season rule cited with full confidence in replays and, post-2026, guaranteed drift. Fix is additive: filter param + payload index + caller wiring. **M** |
 | **RAG-02** | **P1** | **Evidence and answer can diverge.** `run_rag_agent` re-queries with the original question after the agent answered from its own (possibly rewritten) tool queries (`rag_agent.py:175-210`, the docstring documents the double retrieval); `ctx.chunks`/`ctx.articles` are therefore not guaranteed to be what the LLM read. No similarity threshold anywhere: `query_rag_tool` (`retriever.py:317-349`) formats top-5 regardless of score; "No relevant passages" is returned only for an empty hit list, never for a low-quality one. Nothing checks that articles cited in `answer` appear in the retrieved set (hallucinated-article risk, ML-eval R-9). | Citations are the product here (they reach the UI and the paper verbatim). Faithfulness must be checkable, then checked. Indirect-injection side of the same surface is owned by Security S-9/D1 (#223); not duplicated here. **M** |
 | **RAG-03** | **P1** | **Fresh-env index build fails: `pypdf` undeclared.** `build_rag_index.py:34` imports it; pyproject declares only `qdrant-client`, `sentence-transformers`, `bs4` (pyproject.toml:43,74,108). **Owned by DevEx DX-05 (#251); tracked here only as a blocking dependency of every phase below.** | ModuleNotFoundError on `uv sync` + run. **S** (lands via #251) |
-| **RAG-04** | **P2** | **Resolved by #1195/#323.** `data/rag/index_manifest.json` records source PDF hashes, model, dimension, distance, chunker identity, chunking parameters, indexed years, point count, and build time. The retriever validates a present manifest before loading BGE-M3, while missing manifests warn for compatibility with older HF copies. `health_check()` exposes years and the manifest hash. The refreshed local corpus contains 2023-2026 and 2,874 points. | The Hub copy must stay synchronized with this manifest and the 2026 PDF whenever the index is republished. **M** |
+| **RAG-04** | **P2** | **Resolved by #1195/#323.** `data/rag/index_manifest.json` records source PDF hashes, model, dimension, distance, chunker identity, chunking parameters, indexed years, point count, and build time. The retriever validates model, collection, vector dimension, and the actual Qdrant point count before loading BGE-M3; missing manifests warn for compatibility with older HF copies. `health_check()` exposes years and the manifest hash. The refreshed local corpus contains 2023-2026 and 2,844 points. Schema-1 manifests without `chunking_verified` remain readable as unverified. | The Hub copy must stay synchronized with this manifest and the 2026 PDF whenever the index is republished. **M** |
 | **RAG-05** | **P2** | **Resolved by #321.** The former N30B notebook-only measurement is now exposed as `uv run f1-eval rag`, using 30 manually verified queries and production question shapes. The report includes P@k, MRR, wrong-year rate, retrieval-level citation match, and latency. | `src/strategy/eval/rag.py` and `documents/eval_reports/rag.{md,json}`. Agent answer faithfulness remains Phase 4. **S-M** |
 | **RAG-06** | **P2** | **Resolved by #323.** The builder now splits on article headings, packs clauses without crossing article boundaries, preserves both numeric and `B`-prefixed 2026 identifiers, and records the chunker in the manifest. The eval-gated 1024/128 candidate was not adopted because it reduced P@5 from 0.217 to 0.206 and MRR from 0.679 to 0.672 on the same 35 queries. Production stays on article-aware 512/64, which is the measured winner. | The larger target can be reconsidered only with a new verified query set and a non-regressing result. **M** |
 | **RAG-07** | **P2** | **Build/runtime path split-brain.** The retriever resolves `data/rag/` through `get_data_root()` (env override `F1_STRAT_DATA_ROOT`, or `~/.f1-strat/data/` in the `uv tool install` flow; `retriever.py:60-75`), but the builder and downloader are hardwired repo-relative (`build_rag_index.py:79-90`, `download_fia_pdfs.py:73-86`) and ignore the override. In an installed-tool env, `build_rag_index.py` writes an index the retriever will never open. | Silent "collection not found" for exactly the users who followed the docs; one shared path helper fixes all three files. **S** |
@@ -94,11 +95,14 @@ Additive N30 entry point that extracts the agent's *actual* tool calls/results f
 **Phase 5 - 2026 refresh + chunking experiment (M-L).** *(F-10 execution + RAG-06)*
 Completed by #323. `supported_years` includes 2026, the official FIA Section B
 Sporting Regulations Issue 08 PDF is tracked by URL and SHA-256, and the local
-index was rebuilt with 2,874 article-aware 512/64 points. Five verified 2026
-queries were added to the same 30-query evaluation harness. The 1024/128 A/B
-candidate built 2,350 chunks, but the gate kept the baseline: P@5 0.217 vs
-0.206, MRR 0.679 vs 0.672, citation match 0.829 vs 0.829, and wrong-year rate
-0.000 for both. Acceptance is met without adopting a weaker chunking scheme.
+index was rebuilt with 2,844 article-aware 512/64 points after removing PDF
+page headers from article detection. Five verified 2026 queries were added to
+the same 30-query evaluation harness. The 1024/128 A/B candidate built 2,292
+chunks, but the gate kept the baseline: P@5 0.217 vs 0.211, MRR 0.679 vs
+0.672, citation match 0.829 vs 0.829, and wrong-year rate 0.000 for both.
+The benchmark also rejects a production collection whose `(year, chunk_hash)`
+set differs from the local baseline and preserves the retriever's unindexed-
+season fallback. Acceptance is met without adopting a weaker chunking scheme.
 
 Order rationale: 1 unblocks everything; 2 kills the silent wrong-season class before eval measures it as noise; 3 must exist before 4/5 so improvements are provable; 5 last because it is the only phase whose value depends on the FIA's calendar.
 

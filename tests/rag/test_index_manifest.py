@@ -57,6 +57,16 @@ def test_manifest_round_trip_is_sorted_and_hashable(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
+def test_manifest_without_chunking_verification_stays_readable() -> None:
+    payload = _manifest().to_dict()
+    payload.pop("chunking_verified")
+
+    loaded = IndexManifest.from_dict(payload)
+
+    assert loaded.chunking_verified is False
+
+
+@pytest.mark.unit
 def test_manifest_write_is_idempotent_for_the_same_index(tmp_path: Path) -> None:
     path = tmp_path / "index_manifest.json"
     manifest = _manifest()
@@ -84,6 +94,15 @@ def test_validation_reports_model_collection_and_dimension_mismatches() -> None:
     assert any("embedding_model" in error for error in errors)
     assert any("expected 384" in error for error in errors)
     assert any("Qdrant vector_dim=768" in error for error in errors)
+
+
+@pytest.mark.unit
+def test_validation_reports_a_stale_point_count() -> None:
+    errors = validate_manifest(
+        _manifest(), collection_name="fia_regulations", embedding_model="BAAI/bge-m3", point_count=1
+    )
+
+    assert errors == ["manifest point_count=2279, Qdrant point_count=1"]
 
 
 @pytest.mark.unit

@@ -1,12 +1,12 @@
 {
   "header": {
-    "harness_sha": "c57fbd0f-dirty",
+    "harness_sha": "d589435d-dirty",
     "dataset": "RAG queries_v2 + 2026 delta, 35 FIA regulation queries",
     "seed_policy": "deterministic",
     "era_tag": "FIA sporting corpus 2023-2026",
     "llm": "none",
     "schema_version": "1",
-    "generated_at": "2026-09-19T13:12:02+00:00",
+    "generated_at": "2026-09-19T13:28:56+00:00",
     "artifacts": {
       "queries_v2": "663d72013436",
       "queries_2026": "b288d5248d6a"
@@ -14,12 +14,12 @@
   },
   "query_count": 35,
   "decision": "KEEP_BASELINE",
-  "candidate_chunks": 2350,
+  "candidate_chunks": 2292,
   "baseline": {
     "config": "Production article-aware 512/64",
     "query_count": 35,
     "precision_at_1": 0.5428571428571428,
-    "precision_at_3": 0.3238095238095238,
+    "precision_at_3": 0.33333333333333337,
     "precision_at_5": 0.21714285714285722,
     "hit_at_5": 0.8285714285714286,
     "content_hit_at_5": 0.9714285714285714,
@@ -27,23 +27,23 @@
     "citation_match_rate": 0.8285714285714286,
     "wrong_year_rate": 0.0,
     "wrong_year_query_rate": 0.0,
-    "latency_p50_ms": 37.311,
-    "latency_p95_ms": 102.1121
+    "latency_p50_ms": 38.508,
+    "latency_p95_ms": 65.057
   },
   "candidate": {
     "config": "Candidate article-aware 1024/128",
     "query_count": 35,
     "precision_at_1": 0.5428571428571428,
-    "precision_at_3": 0.3047619047619048,
-    "precision_at_5": 0.2057142857142858,
+    "precision_at_3": 0.3238095238095238,
+    "precision_at_5": 0.2114285714285715,
     "hit_at_5": 0.8285714285714286,
     "content_hit_at_5": 0.9714285714285714,
     "mrr": 0.6715419501133788,
     "citation_match_rate": 0.8285714285714286,
     "wrong_year_rate": 0.0,
     "wrong_year_query_rate": 0.0,
-    "latency_p50_ms": 35.063,
-    "latency_p95_ms": 38.7195
+    "latency_p50_ms": 36.985,
+    "latency_p95_ms": 40.3724
   },
   "baseline_rows": [
     {
@@ -77,7 +77,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 186.657
+      "latency_ms": 163.468
     },
     {
       "config": "Production article-aware 512/64",
@@ -110,7 +110,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 37.522
+      "latency_ms": 39.736
     },
     {
       "config": "Production article-aware 512/64",
@@ -143,7 +143,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 37.526
+      "latency_ms": 39.709
     },
     {
       "config": "Production article-aware 512/64",
@@ -176,7 +176,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 36.961
+      "latency_ms": 39.808
     },
     {
       "config": "Production article-aware 512/64",
@@ -209,7 +209,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 143.053
+      "latency_ms": 121.722
     },
     {
       "config": "Production article-aware 512/64",
@@ -242,7 +242,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 84.566
+      "latency_ms": 37.593
     },
     {
       "config": "Production article-aware 512/64",
@@ -275,7 +275,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.14285714285714285,
-      "latency_ms": 59.242
+      "latency_ms": 38.155
     },
     {
       "config": "Production article-aware 512/64",
@@ -308,7 +308,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.998
+      "latency_ms": 37.285
     },
     {
       "config": "Production article-aware 512/64",
@@ -341,7 +341,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 37.976
+      "latency_ms": 38.093
     },
     {
       "config": "Production article-aware 512/64",
@@ -374,7 +374,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 37.283
+      "latency_ms": 37.555
     },
     {
       "config": "Production article-aware 512/64",
@@ -407,7 +407,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 37.392
+      "latency_ms": 37.496
     },
     {
       "config": "Production article-aware 512/64",
@@ -440,7 +440,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 37.036
+      "latency_ms": 37.236
     },
     {
       "config": "Production article-aware 512/64",
@@ -473,7 +473,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.972
+      "latency_ms": 37.454
     },
     {
       "config": "Production article-aware 512/64",
@@ -506,7 +506,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 37.1
+      "latency_ms": 38.202
     },
     {
       "config": "Production article-aware 512/64",
@@ -539,7 +539,7 @@
       "content_hit_at_5": 0.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.1111111111111111,
-      "latency_ms": 36.877
+      "latency_ms": 38.078
     },
     {
       "config": "Production article-aware 512/64",
@@ -572,7 +572,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 36.819
+      "latency_ms": 37.947
     },
     {
       "config": "Production article-aware 512/64",
@@ -605,7 +605,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 38.319
+      "latency_ms": 39.345
     },
     {
       "config": "Production article-aware 512/64",
@@ -638,7 +638,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 37.311
+      "latency_ms": 39.059
     },
     {
       "config": "Production article-aware 512/64",
@@ -671,7 +671,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 36.055
+      "latency_ms": 36.653
     },
     {
       "config": "Production article-aware 512/64",
@@ -704,7 +704,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 36.097
+      "latency_ms": 36.406
     },
     {
       "config": "Production article-aware 512/64",
@@ -737,7 +737,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 34.994
+      "latency_ms": 35.877
     },
     {
       "config": "Production article-aware 512/64",
@@ -770,7 +770,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 37.737
+      "latency_ms": 38.801
     },
     {
       "config": "Production article-aware 512/64",
@@ -803,7 +803,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 37.739
+      "latency_ms": 39.005
     },
     {
       "config": "Production article-aware 512/64",
@@ -836,7 +836,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 36.501
+      "latency_ms": 36.471
     },
     {
       "config": "Production article-aware 512/64",
@@ -869,7 +869,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 37.78
+      "latency_ms": 39.237
     },
     {
       "config": "Production article-aware 512/64",
@@ -902,7 +902,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.114
+      "latency_ms": 38.863
     },
     {
       "config": "Production article-aware 512/64",
@@ -935,7 +935,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 37.232
+      "latency_ms": 38.343
     },
     {
       "config": "Production article-aware 512/64",
@@ -968,7 +968,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.971
+      "latency_ms": 38.931
     },
     {
       "config": "Production article-aware 512/64",
@@ -1001,7 +1001,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.666
+      "latency_ms": 39.564
     },
     {
       "config": "Production article-aware 512/64",
@@ -1034,7 +1034,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 35.882
+      "latency_ms": 36.126
     },
     {
       "config": "Production article-aware 512/64",
@@ -1050,11 +1050,11 @@
         2026
       ],
       "retrieved_articles_at_5": [
+        "Article B5.13.1",
         "Article B5.13.6",
+        "Article B5.10.9",
         "Article B5.12",
-        "Article B42",
-        "Article B44",
-        "Article B5.10.8"
+        "Article B5.15.5"
       ],
       "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
@@ -1067,7 +1067,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 37.542
+      "latency_ms": 38.508
     },
     {
       "config": "Production article-aware 512/64",
@@ -1084,10 +1084,10 @@
       ],
       "retrieved_articles_at_5": [
         "Article B5.13.1",
-        "Article B44",
         "Article B5.13.2",
-        "Article B42",
-        "Article B5.13.8"
+        "Article B5.13.8",
+        "Article B5.10.9",
+        "Article B5.13.6"
       ],
       "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
@@ -1100,7 +1100,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 38.889
+      "latency_ms": 40.772
     },
     {
       "config": "Production article-aware 512/64",
@@ -1117,10 +1117,10 @@
       ],
       "retrieved_articles_at_5": [
         "Article B1.6.2",
-        "Article B15",
-        "Article B10",
         "Article B1.6.3",
-        "Article B14"
+        "Article B4.3.2",
+        "Article B8.2.3",
+        "Article B1.9.6"
       ],
       "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
@@ -1133,7 +1133,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 37.831
+      "latency_ms": 40.199
     },
     {
       "config": "Production article-aware 512/64",
@@ -1151,14 +1151,14 @@
       "retrieved_articles_at_5": [
         "Article B5.15.1",
         "Article B5.15.1",
-        "Article B24",
         "Article B5.15.1",
-        "Article B51"
+        "Article B5.15.4",
+        "Article B5.15.2"
       ],
       "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
       "precision_at_1": 1.0,
-      "precision_at_3": 0.6666666666666666,
+      "precision_at_3": 1.0,
       "precision_at_5": 0.6,
       "hit_at_1": 1.0,
       "hit_at_3": 1.0,
@@ -1166,7 +1166,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 38.243
+      "latency_ms": 39.31
     },
     {
       "config": "Production article-aware 512/64",
@@ -1199,7 +1199,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 38.593
+      "latency_ms": 40.209
     }
   ],
   "candidate_rows": [
@@ -1234,7 +1234,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 35.194
+      "latency_ms": 36.282
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1267,7 +1267,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 33.721
+      "latency_ms": 38.048
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1300,7 +1300,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.25,
-      "latency_ms": 36.715
+      "latency_ms": 39.74
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1333,7 +1333,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 34.073
+      "latency_ms": 36.039
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1366,7 +1366,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 33.54
+      "latency_ms": 41.374
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1399,7 +1399,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 34.416
+      "latency_ms": 37.494
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1432,7 +1432,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.14285714285714285,
-      "latency_ms": 34.369
+      "latency_ms": 37.279
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1465,7 +1465,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 34.598
+      "latency_ms": 35.563
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1498,7 +1498,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 34.989
+      "latency_ms": 37.463
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1531,7 +1531,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 34.636
+      "latency_ms": 37.503
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1564,7 +1564,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 35.855
+      "latency_ms": 36.051
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1597,7 +1597,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 34.027
+      "latency_ms": 40.693
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1630,7 +1630,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 35.063
+      "latency_ms": 38.996
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1663,7 +1663,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 34.632
+      "latency_ms": 38.364
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1696,7 +1696,7 @@
       "content_hit_at_5": 0.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.1111111111111111,
-      "latency_ms": 35.307
+      "latency_ms": 37.307
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1729,7 +1729,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 35.454
+      "latency_ms": 37.401
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1762,7 +1762,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 43.574
+      "latency_ms": 37.901
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1795,7 +1795,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 37.346
+      "latency_ms": 40.235
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1828,7 +1828,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 33.614
+      "latency_ms": 34.83
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1861,7 +1861,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 34.885
+      "latency_ms": 33.949
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1894,7 +1894,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 32.362
+      "latency_ms": 32.942
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1927,7 +1927,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 37.423
+      "latency_ms": 35.004
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1960,7 +1960,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 36.459
+      "latency_ms": 36.985
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -1993,7 +1993,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 34.644
+      "latency_ms": 36.874
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -2026,7 +2026,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.335
+      "latency_ms": 34.213
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -2059,7 +2059,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 40.466
+      "latency_ms": 40.074
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -2092,7 +2092,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.469
+      "latency_ms": 37.388
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -2125,7 +2125,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 37.421
+      "latency_ms": 33.419
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -2158,7 +2158,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 37.971
+      "latency_ms": 35.165
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -2191,7 +2191,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 32.912
+      "latency_ms": 30.261
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -2207,11 +2207,11 @@
         2026
       ],
       "retrieved_articles_at_5": [
+        "Article B5.15.5",
+        "Article B5.10.9",
         "Article B5.12",
-        "Article B42",
-        "Article B5.13.6",
-        "Article B44",
-        "Article B5.15.5"
+        "Article B5.13.1",
+        "Article B5.13.6"
       ],
       "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
@@ -2224,7 +2224,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 35.978
+      "latency_ms": 37.88
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -2241,10 +2241,10 @@
       ],
       "retrieved_articles_at_5": [
         "Article B5.13.1",
-        "Article B44",
         "Article B5.13.2",
-        "Article B42",
-        "Article B5.13.8"
+        "Article B5.13.8",
+        "Article B5.10.9",
+        "Article B5.15.1"
       ],
       "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
@@ -2257,7 +2257,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 35.054
+      "latency_ms": 35.301
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -2274,10 +2274,10 @@
       ],
       "retrieved_articles_at_5": [
         "Article B1.6.2",
-        "Article B15",
-        "Article B10",
+        "Article B4.3.2",
         "Article B1.6.3",
-        "Article B14"
+        "Article B1.9.4",
+        "Article B8.2.3"
       ],
       "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
@@ -2290,7 +2290,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 35.731
+      "latency_ms": 33.831
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -2307,23 +2307,23 @@
       ],
       "retrieved_articles_at_5": [
         "Article B5.15.1",
-        "Article B24",
-        "Article B51",
         "Article B5.15.1",
-        "Article B22"
+        "Article B5.15.1",
+        "Article B5.15.2",
+        "Article B5.15.2"
       ],
       "wrong_year_hits_at_5": 0,
       "wrong_year_top1": false,
       "precision_at_1": 1.0,
-      "precision_at_3": 0.3333333333333333,
-      "precision_at_5": 0.4,
+      "precision_at_3": 1.0,
+      "precision_at_5": 0.6,
       "hit_at_1": 1.0,
       "hit_at_3": 1.0,
       "hit_at_5": 1.0,
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 35.273
+      "latency_ms": 34.397
     },
     {
       "config": "Candidate article-aware 1024/128",
@@ -2356,7 +2356,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 34.657
+      "latency_ms": 35.825
     }
   ]
 }

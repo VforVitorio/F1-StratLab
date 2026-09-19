@@ -318,7 +318,7 @@ _MONTH_NAMES = {
 }
 _MAX_ATOMIC_RULE_SIZE = 8192
 _PAGE_METADATA_RE = re.compile(
-    r"(?:formula\s+[12]\s+sporting\s+regulations|©|\d+/\d+)",
+    r"(?:formula\s+1\s*:?\s+sporting\s+regulations|©|\d+/\d+)",
     re.IGNORECASE,
 )
 _SECTION_HEAD_RE = re.compile(r"^\s{0,4}(\d+[\.\d]*\s+[A-Z][A-Z\s]{4,})\s*$", re.MULTILINE)
@@ -388,6 +388,7 @@ def _article_heading_metadata(match: re.Match[str]) -> tuple[str, str] | None:
         int(major_number) >= 1000
         or len(title) < 3
         or first_word in _MONTH_NAMES
+        or re.fullmatch(r"\d+(?:\s+\d+)+", title)
         or _PAGE_METADATA_RE.search(line)
     ):
         return None

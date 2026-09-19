@@ -1,12 +1,12 @@
 {
   "header": {
-    "harness_sha": "c57fbd0f-dirty",
+    "harness_sha": "d589435d-dirty",
     "dataset": "RAG queries_v2.json, 30 FIA regulation queries",
     "seed_policy": "deterministic",
     "era_tag": "2022-2025",
     "llm": "none",
     "schema_version": "1",
-    "generated_at": "2026-09-19T13:06:23+00:00",
+    "generated_at": "2026-09-19T13:29:33+00:00",
     "artifacts": {
       "query_set": "663d72013436"
     }
@@ -36,23 +36,23 @@
       "citation_match_rate": 0.8333333333333334,
       "wrong_year_rate": 0.0,
       "wrong_year_query_rate": 0.0,
-      "latency_p50_ms": 39.9525,
-      "latency_p95_ms": 97.4631
+      "latency_p50_ms": 36.146,
+      "latency_p95_ms": 70.85055
     },
     {
       "config": "BGE-M3 production, unscoped control",
       "query_count": 30,
-      "precision_at_1": 0.26666666666666666,
+      "precision_at_1": 0.23333333333333334,
       "precision_at_3": 0.17777777777777773,
       "precision_at_5": 0.15333333333333338,
       "hit_at_5": 0.7,
       "content_hit_at_5": 0.8666666666666667,
-      "mrr": 0.4392460317460317,
+      "mrr": 0.42091269841269846,
       "citation_match_rate": 0.7333333333333333,
-      "wrong_year_rate": 0.64,
-      "wrong_year_query_rate": 0.6,
-      "latency_p50_ms": 26.466,
-      "latency_p95_ms": 28.0375
+      "wrong_year_rate": 0.6466666666666666,
+      "wrong_year_query_rate": 0.6333333333333333,
+      "latency_p50_ms": 22.8005,
+      "latency_p95_ms": 23.224149999999998
     }
   ],
   "query_results": [
@@ -87,7 +87,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 828.126
+      "latency_ms": 430.857
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -120,7 +120,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 41.633
+      "latency_ms": 37.288
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -153,7 +153,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 41.046
+      "latency_ms": 36.135
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -186,7 +186,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 39.626
+      "latency_ms": 37.289
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -219,7 +219,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 142.158
+      "latency_ms": 98.31
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -252,7 +252,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 39.154
+      "latency_ms": 37.112
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -285,7 +285,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.14285714285714285,
-      "latency_ms": 39.355
+      "latency_ms": 36.742
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -318,7 +318,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 42.029
+      "latency_ms": 36.157
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -351,7 +351,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 42.836
+      "latency_ms": 35.876
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -384,7 +384,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 40.778
+      "latency_ms": 36.379
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -417,7 +417,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 39.804
+      "latency_ms": 35.935
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -450,7 +450,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 39.52
+      "latency_ms": 35.895
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -483,7 +483,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 38.762
+      "latency_ms": 36.241
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -516,7 +516,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 39.839
+      "latency_ms": 36.053
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -549,7 +549,7 @@
       "content_hit_at_5": 0.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.1111111111111111,
-      "latency_ms": 39.49
+      "latency_ms": 36.732
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -582,7 +582,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 40.395
+      "latency_ms": 36.953
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -615,7 +615,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 40.728
+      "latency_ms": 36.119
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -648,7 +648,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 41.114
+      "latency_ms": 35.95
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -681,7 +681,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 39.456
+      "latency_ms": 33.917
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -714,7 +714,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 37.169
+      "latency_ms": 33.765
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -747,7 +747,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 40.582
+      "latency_ms": 33.382
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -780,7 +780,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 41.811
+      "latency_ms": 36.184
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -813,7 +813,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 40.874
+      "latency_ms": 36.593
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -846,7 +846,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 37.029
+      "latency_ms": 33.028
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -879,7 +879,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 40.066
+      "latency_ms": 36.376
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -912,7 +912,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 39.463
+      "latency_ms": 35.836
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -945,7 +945,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 39.539
+      "latency_ms": 35.809
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -978,7 +978,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 40.351
+      "latency_ms": 36.192
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -1011,7 +1011,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 39.472
+      "latency_ms": 36.009
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -1044,7 +1044,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 36.686
+      "latency_ms": 32.877
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1077,7 +1077,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 25.958
+      "latency_ms": 23.206
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1110,7 +1110,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.25,
-      "latency_ms": 27.148
+      "latency_ms": 23.141
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1122,8 +1122,8 @@
         2025,
         2023,
         2025,
-        2024,
-        2025
+        2025,
+        2024
       ],
       "retrieved_articles_at_5": [
         "",
@@ -1143,7 +1143,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 26.807
+      "latency_ms": 22.924
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1176,7 +1176,7 @@
       "content_hit_at_5": 0.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.14285714285714285,
-      "latency_ms": 25.847
+      "latency_ms": 22.661
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1189,7 +1189,7 @@
         2026,
         2023,
         2024,
-        2025
+        2024
       ],
       "retrieved_articles_at_5": [
         "Article 34.7",
@@ -1198,7 +1198,7 @@
         "Article 34.7",
         "Article 34.11"
       ],
-      "wrong_year_hits_at_5": 3,
+      "wrong_year_hits_at_5": 4,
       "wrong_year_top1": false,
       "precision_at_1": 1.0,
       "precision_at_3": 0.3333333333333333,
@@ -1209,7 +1209,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 23.527
+      "latency_ms": 20.136
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1242,7 +1242,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.25,
-      "latency_ms": 26.755
+      "latency_ms": 22.913
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1254,8 +1254,8 @@
         2024,
         2025,
         2024,
-        2024,
-        2025
+        2025,
+        2024
       ],
       "retrieved_articles_at_5": [
         "Article 55.12",
@@ -1275,7 +1275,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 25.739
+      "latency_ms": 23.175
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1308,7 +1308,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 26.497
+      "latency_ms": 22.768
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1341,7 +1341,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 26.722
+      "latency_ms": 22.627
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1374,7 +1374,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.25,
-      "latency_ms": 28.141
+      "latency_ms": 23.832
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1407,7 +1407,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 27.911
+      "latency_ms": 22.795
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1440,7 +1440,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.25,
-      "latency_ms": 26.333
+      "latency_ms": 22.782
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1473,7 +1473,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 27.707
+      "latency_ms": 23.239
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1485,15 +1485,15 @@
         2024,
         2023,
         2024,
-        2025,
-        2023
+        2026,
+        2025
       ],
       "retrieved_articles_at_5": [
         "Article 52.1",
         "Article 52.1",
         "Article 58.12",
-        "Article 22.1",
-        "Article 58.12"
+        "Article B5.10.9",
+        "Article 22.1"
       ],
       "wrong_year_hits_at_5": 4,
       "wrong_year_top1": true,
@@ -1505,8 +1505,8 @@
       "hit_at_5": 1.0,
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
-      "mrr": 0.25,
-      "latency_ms": 26.709
+      "mrr": 0.2,
+      "latency_ms": 22.7
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1539,7 +1539,7 @@
       "content_hit_at_5": 0.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 26.625
+      "latency_ms": 22.855
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1572,7 +1572,7 @@
       "content_hit_at_5": 0.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.14285714285714285,
-      "latency_ms": 26.744
+      "latency_ms": 23.153
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1605,7 +1605,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 28.491
+      "latency_ms": 22.797
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1614,8 +1614,8 @@
       "expected_year": 2025,
       "expected_article": "55.17",
       "retrieved_years_at_5": [
-        2025,
         2024,
+        2025,
         2023,
         2026,
         2026
@@ -1628,17 +1628,17 @@
         "Article B5.13.5"
       ],
       "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": false,
-      "precision_at_1": 1.0,
+      "wrong_year_top1": true,
+      "precision_at_1": 0.0,
       "precision_at_3": 0.3333333333333333,
       "precision_at_5": 0.2,
-      "hit_at_1": 1.0,
+      "hit_at_1": 0.0,
       "hit_at_3": 1.0,
       "hit_at_5": 1.0,
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
-      "mrr": 1.0,
-      "latency_ms": 27.688
+      "mrr": 0.5,
+      "latency_ms": 22.818
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1650,14 +1650,14 @@
         2026,
         2026,
         2026,
-        2024,
+        2026,
         2025
       ],
       "retrieved_articles_at_5": [
         "Article B5.12.2",
         "Article B5.12",
         "Article B5.13.2",
-        "Article 56.3",
+        "Article B5.15.2",
         "Article 56.3"
       ],
       "wrong_year_hits_at_5": 4,
@@ -1671,7 +1671,7 @@
       "content_hit_at_5": 0.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 22.971
+      "latency_ms": 19.622
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1704,7 +1704,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.1,
-      "latency_ms": 23.58
+      "latency_ms": 20.056
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1713,9 +1713,9 @@
       "expected_year": 2025,
       "expected_article": "56.7",
       "retrieved_years_at_5": [
+        2024,
         2025,
         2023,
-        2024,
         2026,
         2026
       ],
@@ -1727,17 +1727,17 @@
         "Article B5.12.4"
       ],
       "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": false,
-      "precision_at_1": 1.0,
+      "wrong_year_top1": true,
+      "precision_at_1": 0.0,
       "precision_at_3": 0.3333333333333333,
       "precision_at_5": 0.2,
-      "hit_at_1": 1.0,
+      "hit_at_1": 0.0,
       "hit_at_3": 1.0,
       "hit_at_5": 1.0,
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
-      "mrr": 1.0,
-      "latency_ms": 23.054
+      "mrr": 0.5,
+      "latency_ms": 20.192
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1770,7 +1770,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 26.312
+      "latency_ms": 22.804
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1803,7 +1803,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.125,
-      "latency_ms": 25.785
+      "latency_ms": 22.991
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1836,7 +1836,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 23.431
+      "latency_ms": 20.0
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1869,7 +1869,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 26.726
+      "latency_ms": 22.53
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1902,7 +1902,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 26.435
+      "latency_ms": 22.859
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1911,31 +1911,31 @@
       "expected_year": 2025,
       "expected_article": "30.5",
       "retrieved_years_at_5": [
-        2026,
         2025,
+        2026,
         2024,
         2023,
         2023
       ],
       "retrieved_articles_at_5": [
-        "Article B6.3.5",
         "Article 30.5",
+        "Article B6.3.5",
         "Article 30.5",
         "Article 30.5",
         "Article 30.5"
       ],
       "wrong_year_hits_at_5": 4,
-      "wrong_year_top1": true,
-      "precision_at_1": 0.0,
+      "wrong_year_top1": false,
+      "precision_at_1": 1.0,
       "precision_at_3": 0.3333333333333333,
       "precision_at_5": 0.2,
-      "hit_at_1": 0.0,
+      "hit_at_1": 1.0,
       "hit_at_3": 1.0,
       "hit_at_5": 1.0,
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
-      "mrr": 0.5,
-      "latency_ms": 26.922
+      "mrr": 1.0,
+      "latency_ms": 22.993
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1968,7 +1968,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.25,
-      "latency_ms": 25.286
+      "latency_ms": 22.63
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -2001,7 +2001,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 26.192
+      "latency_ms": 23.095
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -2034,7 +2034,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 23.502
+      "latency_ms": 20.302
     }
   ]
 }

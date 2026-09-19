@@ -67,6 +67,13 @@ class _SharedQdrantRetriever:
             with_payload=True,
             query_filter=query_filter,
         )
+        if year is not None and not response.points:
+            response = self._client.query_points(
+                collection_name=self._collection_name,
+                query=vector,
+                limit=top_k or 10,
+                with_payload=True,
+            )
         return [
             RegulationChunk(
                 text=point.payload.get("text", ""),
@@ -80,12 +87,11 @@ class _SharedQdrantRetriever:
         ]
 
 
-def _build_candidate(docs_dir: Path, qdrant_path: Path) -> tuple[Any, Any, int]:
+def _build_candidate(documents: list[Any], qdrant_path: Path) -> tuple[Any, Any, int]:
     """Build the candidate collection in a temporary local Qdrant store."""
     from qdrant_client import QdrantClient
     from sentence_transformers import SentenceTransformer
 
-    documents = load_pdf_documents(docs_dir)
     chunks = [
         chunk
         for document in documents
@@ -101,6 +107,42 @@ def _build_candidate(docs_dir: Path, qdrant_path: Path) -> tuple[Any, Any, int]:
     embeddings = embed_chunks(chunks, encoder)
     upsert_chunks(client, CANDIDATE_COLLECTION, chunks, embeddings)
     return client, encoder, len(chunks)
+
+
+def _stored_chunk_keys(client: Any, collection_name: str) -> set[tuple[int, str]]:
+    """Return the source identity carried by every stored production chunk."""
+    keys: set[tuple[int, str]] = set()
+    offset = None
+    while True:
+        points, offset = client.scroll(
+            collection_name=collection_name,
+            limit=1000,
+            offset=offset,
+            with_payload=["year", "chunk_hash"],
+            with_vectors=False,
+        )
+        keys.update(
+            (int(point.payload["year"]), str(point.payload["chunk_hash"]))
+            for point in points
+            if point.payload and point.payload.get("year") and point.payload.get("chunk_hash")
+        )
+        if offset is None:
+            return keys
+
+
+def _assert_baseline_matches_source(client: Any, documents: list[Any]) -> None:
+    """Reject an A/B run when production is not the expected local corpus."""
+    expected = {
+        (chunk.year, chunk.chunk_hash) for document in documents for chunk in iter_chunks(document)
+    }
+    actual = _stored_chunk_keys(client, CFG.collection_name)
+    if actual != expected:
+        missing = len(expected - actual)
+        extra = len(actual - expected)
+        raise RuntimeError(
+            "Production collection does not match the local 512/64 corpus "
+            f"(missing={missing}, extra={extra}); rebuild it before running the A/B."
+        )
 
 
 def _decision(baseline: dict[str, Any], candidate: dict[str, Any]) -> str:
@@ -125,14 +167,16 @@ def main() -> int:
         repo / "data" / "rag_eval" / "queries_2026.json",
     ]
     queries = load_queries(query_paths)
+    documents = load_pdf_documents(docs_dir)
 
     with tempfile.TemporaryDirectory(prefix="f1-rag-323-") as temp_dir:
         candidate_path = Path(temp_dir) / "qdrant_local"
-        candidate_client, encoder, candidate_chunks = _build_candidate(docs_dir, candidate_path)
+        candidate_client, encoder, candidate_chunks = _build_candidate(documents, candidate_path)
         from qdrant_client import QdrantClient
 
         production_client = QdrantClient(path=str(CFG.qdrant_path))
         try:
+            _assert_baseline_matches_source(production_client, documents)
             baseline_retriever = _SharedQdrantRetriever(
                 production_client, CFG.collection_name, encoder
             )

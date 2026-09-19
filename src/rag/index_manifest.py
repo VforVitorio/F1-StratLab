@@ -63,7 +63,6 @@ class IndexManifest:
             "embedding_dim",
             "distance",
             "chunker",
-            "chunking_verified",
             "chunk_size",
             "chunk_overlap",
             "documents",
@@ -76,7 +75,8 @@ class IndexManifest:
             raise IndexManifestError(f"Manifest missing fields: {', '.join(missing)}")
 
         try:
-            if not isinstance(payload["chunking_verified"], bool):
+            chunking_verified = payload.get("chunking_verified", False)
+            if not isinstance(chunking_verified, bool):
                 raise TypeError("chunking_verified must be a boolean")
             documents = tuple(ManifestDocument(**document) for document in payload["documents"])
             indexed_years = tuple(int(year) for year in payload["indexed_years"])
@@ -87,7 +87,7 @@ class IndexManifest:
                 embedding_dim=int(payload["embedding_dim"]),
                 distance=str(payload["distance"]),
                 chunker=str(payload["chunker"]),
-                chunking_verified=bool(payload["chunking_verified"]),
+                chunking_verified=chunking_verified,
                 chunk_size=int(payload["chunk_size"]),
                 chunk_overlap=int(payload["chunk_overlap"]),
                 documents=documents,
@@ -201,6 +201,7 @@ def validate_manifest(
     embedding_model: str,
     embedding_dim: int | None = None,
     vector_dim: int | None = None,
+    point_count: int | None = None,
 ) -> list[str]:
     """Return compatibility errors without changing the caller's state."""
     errors: list[str] = []
@@ -213,5 +214,9 @@ def validate_manifest(
     if vector_dim is not None and manifest.embedding_dim != vector_dim:
         errors.append(
             f"manifest embedding_dim={manifest.embedding_dim}, Qdrant vector_dim={vector_dim}"
+        )
+    if point_count is not None and manifest.point_count != point_count:
+        errors.append(
+            f"manifest point_count={manifest.point_count}, Qdrant point_count={point_count}"
         )
     return errors
