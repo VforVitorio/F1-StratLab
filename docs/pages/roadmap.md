@@ -421,7 +421,7 @@
       <span class="rl-badge done-badge"><span class="sr-only">Status: </span>Shipped</span>
     </div>
     <p class="rl-title">Benchmark suite and thesis evaluation</p>
-    <p class="rl-summary">Four standalone benchmark scripts covering pace, Whisper latency, six sub-agent latency, and the NLP pipeline on CPU and GPU. N33 precision-recall sweeps for overtake, safety car, and undercut models. N30B RAG benchmark comparing BGE-M3 variants over 15 ground-truth queries. Full English localization of strategy notebooks.</p>
+    <p class="rl-summary">Four standalone benchmark scripts covering pace, Whisper latency, six sub-agent latency, and the NLP pipeline on CPU and GPU. N33 precision-recall sweeps for overtake, safety car, and undercut models. The shared <code>f1-eval rag</code> command evaluates the production retriever over 30 ground-truth queries. Full English localization of strategy notebooks.</p>
   </div>
 </li>
 
