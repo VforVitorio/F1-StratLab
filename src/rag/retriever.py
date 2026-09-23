@@ -13,6 +13,7 @@ Public interface::
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -66,14 +67,19 @@ class RagConfig:
         top_k:           Default number of chunks returned per query. Five is
                          enough context for most strategy questions; increase
                          to 10 for multi-article topics like safety car + pit lane.
+        similarity_floor: Minimum cosine score accepted as relevant evidence.
+                         Measured on the shared 30-query set.
     """
 
     collection_name: str = "fia_regulations"
     embedding_model: str = "BAAI/bge-m3"  # 1024-dim, MTEB ~67, fits in 8 GB VRAM
     embedding_dim: int = 1024
     top_k: int = 5
+    similarity_floor: float = 0.50
 
     def __post_init__(self) -> None:
+        if not 0.0 <= self.similarity_floor <= 1.0:
+            raise ValueError("similarity_floor must be between 0.0 and 1.0")
         # Derived from this file's location so the module works regardless of
         # the caller's working directory.
         self._repo_root = Path(__file__).resolve().parent.parent.parent
@@ -194,6 +200,7 @@ class RagRetriever:
         embedding_model: str,
         top_k: int = 5,
         embedding_dim: int | None = None,
+        similarity_floor: float = 0.50,
     ) -> None:
         """Initialise the retriever and verify the Qdrant collection exists.
 
@@ -214,6 +221,9 @@ class RagRetriever:
             embedding_dim:  Expected vector dimension. ``None`` keeps compatibility
                             with direct callers that do not provide the value.
         """
+        if not 0.0 <= similarity_floor <= 1.0:
+            raise ValueError("similarity_floor must be between 0.0 and 1.0")
+
         from qdrant_client import QdrantClient
         from sentence_transformers import SentenceTransformer
 
@@ -222,6 +232,7 @@ class RagRetriever:
         self._embedding_model = embedding_model
         self._embedding_dim = embedding_dim
         self._top_k = top_k
+        self._similarity_floor = similarity_floor
         self._manifest_path = manifest_path(self._qdrant_path.parent)
         self._manifest: IndexManifest | None = None
         self._manifest_status = "missing"
@@ -430,7 +441,8 @@ class RagRetriever:
         Returns:
             List of ``RegulationChunk`` objects ordered by descending cosine
             similarity, every one of them from ``year`` when that season is indexed.
-            Empty list only when the collection itself holds no vectors.
+            Hits below ``similarity_floor`` are omitted, so a nonempty collection
+            can still produce an empty result for an unrelated question.
         """
         k = top_k if top_k is not None else self._top_k
         vector = self._encode(question)
@@ -441,6 +453,7 @@ class RagRetriever:
             self._warn_unindexed_scope(year, doc_type)
             hits = self._search(vector, k, None)
 
+        similarity_floor = getattr(self, "_similarity_floor", 0.50)
         return [
             RegulationChunk(
                 text=hit.payload.get("text", ""),
@@ -451,6 +464,9 @@ class RagRetriever:
                 section_title=hit.payload.get("section_title", ""),
             )
             for hit in hits
+            if math.isfinite(float(hit.score))
+            and 0.0 <= float(hit.score) <= 1.0
+            and float(hit.score) >= similarity_floor
         ]
 
     def _indexed_years(self) -> list[int]:
@@ -557,6 +573,7 @@ def get_retriever(
         embedding_model=embedding_model or CFG.embedding_model,
         top_k=top_k or CFG.top_k,
         embedding_dim=embedding_dim or CFG.embedding_dim,
+        similarity_floor=CFG.similarity_floor,
     )
 
 

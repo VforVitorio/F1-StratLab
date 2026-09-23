@@ -7,8 +7,9 @@ article, season, and source PDF.
 
 The scoped run is the production path. The unscoped run is a control that
 keeps the wrong-season regression visible after season filtering was added.
-Agent answer faithfulness belongs to the later grounding phase because it
-requires the actual LangGraph tool trace.
+The report separately scores answer citations against a versioned real
+LangGraph trace set. It does not generate answers; the current set is an
+observed sample of one trace.
 """
 
 from __future__ import annotations
@@ -26,6 +27,7 @@ from src.rag.retriever import CFG, RegulationChunk, RagRetriever
 from src.strategy.eval.report import build_header, write_report
 
 QUERY_SET_NAME = "queries_v2.json"
+AGENT_TRACE_SET_NAME = "rag_agent_traces.json"
 REPORT_NAME = "rag"
 TOP_K = 10
 REPORT_K = 5
@@ -106,6 +108,13 @@ def default_query_path() -> Path:
     return base / "data" / "rag_eval" / QUERY_SET_NAME
 
 
+def default_agent_trace_path() -> Path:
+    """Return the versioned real-agent trace sample used by Phase 4."""
+    repo = _find_repo_root()
+    base = repo if repo is not None else Path.cwd()
+    return base / "documents" / "eval_reports" / AGENT_TRACE_SET_NAME
+
+
 def load_queries(path: Path | Sequence[Path] | None = None) -> list[RagEvalQuery]:
     """Load and validate one or more versioned RAG query sets."""
     if path is None:
@@ -126,6 +135,92 @@ def load_queries(path: Path | Sequence[Path] | None = None) -> list[RagEvalQuery
     if len(ids) != len(set(ids)):
         raise ValueError("RAG query ids must be unique")
     return queries
+
+
+def load_agent_traces(path: Path | None = None) -> list[dict[str, Any]]:
+    """Load versioned real-agent citation samples and validate their evidence fields."""
+    trace_path = Path(path) if path is not None else default_agent_trace_path()
+    payload = json.loads(trace_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or payload.get("schema_version") != 1:
+        raise ValueError(f"Agent trace set must use schema version 1: {trace_path}")
+
+    traces = payload.get("traces")
+    if not isinstance(traces, list) or not traces:
+        raise ValueError(f"Agent trace set must contain a non-empty list: {trace_path}")
+
+    trace_ids: list[str] = []
+    for trace in traces:
+        if not isinstance(trace, dict):
+            raise ValueError("Each agent trace must be an object")
+        required = (
+            "trace_id",
+            "source",
+            "question",
+            "year",
+            "model",
+            "answer",
+            "tool_call",
+            "tool_result",
+            "citation_violations",
+            "citation_faithful",
+        )
+        missing = [
+            key for key in required if key not in trace or trace[key] is None or trace[key] == ""
+        ]
+        if missing:
+            raise ValueError(f"Agent trace is missing: {', '.join(missing)}")
+        for key in ("answer_article_references", "retrieved_articles"):
+            values = trace.get(key)
+            if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
+                raise ValueError(f"{trace['trace_id']} {key} must be a list of strings")
+        if not trace["answer_article_references"]:
+            raise ValueError(f"{trace['trace_id']} has no answer article references")
+
+        tool_call = trace["tool_call"]
+        tool_result = trace["tool_result"]
+        if not isinstance(tool_call, dict) or not isinstance(tool_result, dict):
+            raise ValueError(f"{trace['trace_id']} tool call and result must be objects")
+        call_id = tool_call.get("id")
+        if (
+            not call_id
+            or call_id != tool_result.get("tool_call_id")
+            or tool_call.get("name") != "query_rag_tool"
+            or tool_result.get("name") != "query_rag_tool"
+        ):
+            raise ValueError(f"{trace['trace_id']} tool call and result do not correlate")
+        arguments = tool_call.get("arguments")
+        if not isinstance(arguments, dict) or arguments.get("question") != trace["question"]:
+            raise ValueError(f"{trace['trace_id']} tool arguments do not match the trace question")
+        if not isinstance(trace["answer"], str) or not trace["answer"]:
+            raise ValueError(f"{trace['trace_id']} answer must be non-empty text")
+        if not all(
+            reference.casefold() in trace["answer"].casefold()
+            for reference in trace["answer_article_references"]
+        ):
+            raise ValueError(f"{trace['trace_id']} references are absent from the answer")
+        if not isinstance(trace["citation_violations"], list) or not all(
+            isinstance(value, str) for value in trace["citation_violations"]
+        ):
+            raise ValueError(f"{trace['trace_id']} citation_violations must be a list of strings")
+        if not isinstance(trace["citation_faithful"], bool) or trace["citation_faithful"] != (
+            not trace["citation_violations"]
+        ):
+            raise ValueError(f"{trace['trace_id']} faithfulness flag disagrees with its violations")
+        headers = tool_result.get("article_headers")
+        header_articles = (
+            [header.get("article") for header in headers] if isinstance(headers, list) else None
+        )
+        if header_articles != trace["retrieved_articles"]:
+            raise ValueError(f"{trace['trace_id']} retrieved articles disagree with tool headers")
+        if not re.fullmatch(r"[0-9a-f]{64}", str(tool_result.get("content_sha256", ""))):
+            raise ValueError(f"{trace['trace_id']} ToolMessage hash must be SHA-256 hex")
+        if not tool_result.get("article_34_7_excerpt"):
+            raise ValueError(f"{trace['trace_id']} is missing its source excerpt")
+        trace_ids.append(str(trace["trace_id"]))
+
+    if len(trace_ids) != len(set(trace_ids)):
+        raise ValueError("Agent trace ids must be unique")
+    return traces
 
 
 def _normalise_text(value: str) -> str:
@@ -280,6 +375,52 @@ def summarise_rows(rows: Sequence[dict[str, Any]], config_name: str) -> dict[str
     }
 
 
+def evaluate_agent_traces(traces: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """Measure citation-subset match on saved real agent traces, without inference."""
+    if not traces:
+        raise ValueError("Cannot evaluate an empty agent trace set")
+
+    rows: list[dict[str, Any]] = []
+    citation_count = 0
+    matched_citation_count = 0
+    for trace in traces:
+        references = trace["answer_article_references"]
+        retrieved = {
+            _normalise_article(article)
+            for article in trace["retrieved_articles"]
+            if _normalise_article(article)
+        }
+        unsupported = [
+            reference for reference in references if _normalise_article(reference) not in retrieved
+        ]
+        count = len(references)
+        matches = count - len(unsupported)
+        citation_count += count
+        matched_citation_count += matches
+        rows.append(
+            {
+                "trace_id": trace["trace_id"],
+                "year": int(trace["year"]),
+                "model": trace["model"],
+                "citation_count": count,
+                "matched_citation_count": matches,
+                "unsupported_articles": unsupported,
+                "fully_matched": not unsupported,
+            }
+        )
+
+    fully_matched = sum(row["fully_matched"] for row in rows)
+    return {
+        "trace_count": len(rows),
+        "citation_count": citation_count,
+        "matched_citation_count": matched_citation_count,
+        "citation_match_rate": matched_citation_count / citation_count,
+        "fully_matched_trace_count": fully_matched,
+        "trace_match_rate": fully_matched / len(rows),
+        "traces": rows,
+    }
+
+
 def _markdown_table(summaries: Sequence[dict[str, Any]]) -> str:
     """Render the comparison table consumed by the shared report writer."""
     lines = [
@@ -298,6 +439,33 @@ def _markdown_table(summaries: Sequence[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def _agent_trace_section(evaluation: dict[str, Any]) -> str:
+    """Render answer-level citation match separately from retrieval-level recall."""
+    lines = [
+        "## Agent-trace citation match",
+        "",
+        "| trace | year | model | matched citations | unsupported articles |",
+        "|---|---:|---|---:|---|",
+    ]
+    for trace in evaluation["traces"]:
+        unsupported = ", ".join(trace["unsupported_articles"]) or "none"
+        lines.append(
+            f"| {trace['trace_id']} | {trace['year']} | {trace['model']} | "
+            f"{trace['matched_citation_count']}/{trace['citation_count']} | {unsupported} |"
+        )
+    lines.extend(
+        [
+            "",
+            f"Citation-instance match: {evaluation['matched_citation_count']}/"
+            f"{evaluation['citation_count']} ({evaluation['citation_match_rate']:.3f}). "
+            f"Fully matched traces: {evaluation['fully_matched_trace_count']}/"
+            f"{evaluation['trace_count']} ({evaluation['trace_match_rate']:.3f}).",
+            "This is an observed real-trace sample; n=1 is not a stable estimate of general answer quality.",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def _report_notes(queries: Sequence[RagEvalQuery]) -> str:
     """Explain the metric boundaries and the control run in the report."""
     categories = ", ".join(sorted({query.category for query in queries}))
@@ -308,7 +476,8 @@ def _report_notes(queries: Sequence[RagEvalQuery]) -> str:
             "",
             "P@k is conventional precision over the top k returned chunks. `hit@5` is the older binary benchmark measure and is retained for comparison with N30B.",
             "A strict hit requires the expected season, article, and at least one verified keyword. Content hit@5 requires the expected season and keyword but ignores the article metadata field.",
-            "Citation match is retrieval-level article recall at five chunks. It does not claim that an LLM cited the article faithfully; that belongs to the grounding phase and must use the actual tool trace.",
+            "Citation match in the main table is retrieval-level article recall at five chunks. It does not claim that an LLM cited the article faithfully.",
+            "The separate agent-trace section measures answer citations against article metadata in recorded real LangGraph tool traces. It makes no model calls.",
             "Wrong-year rate is the share of top-five chunks from a season different from the query. The scoped row is the production path. The unscoped row is a control for the season filter.",
             "The evaluator calls the production `RagRetriever` directly, loads one embedding model, and does not spend LLM calls. Alternative embeddings and chunking remain in the historical N30B notebook until a separate A/B issue adopts them.",
         ]
@@ -319,6 +488,8 @@ def build_rag_report(query_path: Path | None = None) -> dict[str, Any]:
     """Run the scoped production benchmark and write the shared RAG report."""
     path = Path(query_path) if query_path is not None else default_query_path()
     queries = load_queries(path)
+    trace_path = default_agent_trace_path()
+    agent_trace_evaluation = evaluate_agent_traces(load_agent_traces(trace_path))
     retriever = RagRetriever(
         qdrant_path=CFG.qdrant_path,
         collection_name=CFG.collection_name,
@@ -343,10 +514,13 @@ def build_rag_report(query_path: Path | None = None) -> dict[str, Any]:
     ]
     header = build_header(
         dataset=f"RAG {path.name}, {len(queries)} FIA regulation queries",
-        artifacts={"query_set": path},
+        artifacts={"query_set": path, "agent_trace_set": trace_path},
     )
     table = _markdown_table(summaries)
-    body = f"{table}\n\n## Metric contract\n\n{_report_notes(queries)}"
+    body = (
+        f"{table}\n\n## Metric contract\n\n{_report_notes(queries)}\n\n"
+        f"{_agent_trace_section(agent_trace_evaluation)}"
+    )
     md_path, json_path = write_report(
         REPORT_NAME,
         header,
@@ -357,6 +531,8 @@ def build_rag_report(query_path: Path | None = None) -> dict[str, Any]:
             "configs": [asdict(config) for config in configs],
             "summaries": summaries,
             "query_results": query_results,
+            "agent_trace_set": trace_path.name,
+            "agent_trace_evaluation": agent_trace_evaluation,
         },
     )
     return {
@@ -365,4 +541,5 @@ def build_rag_report(query_path: Path | None = None) -> dict[str, Any]:
         "query_count": len(queries),
         "summaries": summaries,
         "query_results": query_results,
+        "agent_trace_evaluation": agent_trace_evaluation,
     }

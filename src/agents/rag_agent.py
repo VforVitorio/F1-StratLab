@@ -14,9 +14,9 @@ Entry points
 ------------
 run_rag_agent(question, year=None)
     Takes a natural-language regulation question, invokes the ReAct agent,
-    and returns a RegulationContext with the LLM answer + source chunks.
-    ``year`` scopes retrieval to one season's rulebook and reaches both of the
-    retrievals this function makes; None searches every indexed season.
+    and returns a RegulationContext with the LLM answer and actual tool-result
+    source chunks.
+    ``year`` scopes the tool retrieval to one season's rulebook.
 
 run_rag_agent_from_state(lap_state)
     RSM adapter: extracts the question from lap_state["question"] and the
@@ -26,6 +26,8 @@ run_rag_agent_from_state(lap_state)
 
 import json
 import importlib.util
+import math
+import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -67,6 +69,7 @@ _LC_OK = (
 # Output dataclass
 # ==============================================================================
 
+
 @dataclass
 class RegulationContext:
     """Structured output returned by the RAG agent for a single query.
@@ -97,9 +100,15 @@ class RegulationContext:
     """
 
     question: str
-    answer:   str
-    chunks:   list[RegulationChunk] = field(default_factory=list)
-    articles: list[str]             = field(default_factory=list)
+    answer: str
+    chunks: list[RegulationChunk] = field(default_factory=list)
+    articles: list[str] = field(default_factory=list)
+    citation_violations: list[str] = field(default_factory=list)
+
+    @property
+    def citation_faithful(self) -> bool:
+        """Return whether every article cited by the answer was retrieved."""
+        return not self.citation_violations
 
     @property
     def reasoning(self) -> str:
@@ -112,11 +121,7 @@ class RegulationContext:
         return self.answer
 
     def __repr__(self) -> str:
-        return (
-            f"RegulationContext("
-            f"articles={self.articles}, "
-            f"answer={self.answer[:80]!r}...)"
-        )
+        return f"RegulationContext(articles={self.articles}, answer={self.answer[:80]!r}...)"
 
 
 # ==============================================================================
@@ -186,7 +191,9 @@ def get_rag_react_agent():
         provider = os.environ.get("F1_LLM_PROVIDER", "lmstudio")
         model_name = subagent_model()
         if provider == "openai":
-            llm = ChatOpenAI(model=model_name, temperature=0, timeout=120, max_retries=LLM_MAX_RETRIES)
+            llm = ChatOpenAI(
+                model=model_name, temperature=0, timeout=120, max_retries=LLM_MAX_RETRIES
+            )
         else:
             llm = ChatOpenAI(
                 model=model_name,
@@ -206,60 +213,281 @@ def get_rag_react_agent():
 
 
 # ==============================================================================
-def _extract_tool_queries(messages: list[object]) -> list[str]:
-    """Return the regulation questions actually sent to ``query_rag_tool``."""
-    queries: list[str] = []
+_TOOL_HEADER = re.compile(
+    r"^\[(?P<rank>\d+)\]\s+(?P<doc_type>.+?)\s+(?P<year>\d{4})"
+    r"(?:\s+—\s+(?P<article>.*?))?\s+\(score:\s*(?P<score>[^)]+)\)$"
+)
+_TOOL_HEADER_START = re.compile(r"^\[\d+\]\s+.+\(score:")
+_ARTICLE_ID_PATTERN = r"[A-Z]?\d+(?:\.\d+)*(?:\s*\([a-z0-9]+\))?"
+_ARTICLE_ID = re.compile(_ARTICLE_ID_PATTERN, re.IGNORECASE)
+_CITATION_PREFIX = re.compile(r"\b(?:articles?|arts?\.?)\s+", re.IGNORECASE)
+_MEASUREMENT_UNIT_SUFFIX = re.compile(
+    r"^\s*(?:(?:km\s*/\s*h|kmh|kph|m\s*/\s*s|sec(?:ond)?s?|"
+    r"min(?:ute)?s?|h(?:our)?s?|kg|s|h)(?=$|[^a-z0-9])|%)",
+    re.IGNORECASE,
+)
+_INVALID_ARTICLE_TOKEN = re.compile(r"[A-Z0-9._()\-]*\d[A-Z0-9._()\-]*", re.IGNORECASE)
+_ARTICLE_TOKEN = re.compile(rf"^(?:article\s+)?(?P<id>{_ARTICLE_ID_PATTERN})$", re.IGNORECASE)
+
+
+def _message_text(content: object) -> str:
+    """Flatten string or text-block message content for trace parsing."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        texts = []
+        for block in content:
+            if isinstance(block, str):
+                texts.append(block)
+            elif isinstance(block, dict) and block.get("type") == "text":
+                block_text = block.get("text", "")
+                if isinstance(block_text, str):
+                    texts.append(block_text)
+        return "\n".join(text for text in texts if isinstance(text, str))
+    return ""
+
+
+def _tool_messages(messages: list[object]) -> list[str]:
+    """Return results correlated to actual ``query_rag_tool`` call IDs."""
+    call_names: dict[str, str] = {}
     for message in messages:
+        if getattr(message, "type", "") != "ai":
+            continue
         for tool_call in getattr(message, "tool_calls", []) or []:
-            if not isinstance(tool_call, dict) or tool_call.get("name") != "query_rag_tool":
+            if not isinstance(tool_call, dict):
                 continue
-            args = tool_call.get("args") or {}
-            query = args.get("question") if isinstance(args, dict) else None
-            if isinstance(query, str) and query.strip():
-                queries.append(query.strip())
-    return queries
+            call_id = tool_call.get("id")
+            name = tool_call.get("name")
+            if isinstance(call_id, str) and isinstance(name, str):
+                call_names[call_id] = name
+
+    results: list[str] = []
+    for message in messages:
+        message_type = getattr(message, "type", "")
+        message_name = getattr(message, "name", None)
+        call_id = getattr(message, "tool_call_id", None)
+        if (
+            message_type != "tool"
+            or call_names.get(call_id) != "query_rag_tool"
+            or message_name not in {None, "", "query_rag_tool"}
+        ):
+            continue
+        content = _message_text(getattr(message, "content", None))
+        if content:
+            results.append(content)
+    return results
 
 
-def _retrieve_tool_passages(messages: list[object], year: int | None) -> list[RegulationChunk]:
-    """Rehydrate typed passages using the queries N30 actually sent to the tool."""
-    queries = _extract_tool_queries(messages)
-    if not queries:
+def _parse_tool_result(content: str) -> list[RegulationChunk]:
+    """Parse typed chunks from one actual ``query_rag_tool`` result."""
+    if content.startswith("No relevant regulation passages found"):
         return []
 
-    retriever = get_retriever()
     chunks: list[RegulationChunk] = []
-    seen: set[tuple[str, int, str]] = set()
-    for query in queries:
-        for chunk in retriever.query(query, year=year):
-            key = (chunk.text, chunk.year, chunk.doc_type)
+    current_match = None
+    current_text: list[str] = []
+
+    def append_current() -> None:
+        if current_match is None:
+            return
+        try:
+            score = float(current_match.group("score"))
+        except ValueError:
+            return
+        if not math.isfinite(score) or not 0.0 <= score <= 1.0:
+            return
+        chunks.append(
+            RegulationChunk(
+                text="\n".join(current_text).strip(),
+                article=(current_match.group("article") or "").strip(),
+                doc_type=current_match.group("doc_type").strip(),
+                year=int(current_match.group("year")),
+                score=score,
+            )
+        )
+
+    for line in content.strip().splitlines():
+        match = _TOOL_HEADER.match(line)
+        if _TOOL_HEADER_START.match(line):
+            append_current()
+            current_match = None
+            current_text = []
+            if match is not None:
+                current_match = match
+                current_text = []
+        elif current_match is not None:
+            current_text.append(line)
+    append_current()
+    return chunks
+
+
+def _retrieve_tool_passages(messages: list[object]) -> list[RegulationChunk]:
+    """Extract the exact passages returned to the LLM without re-querying Qdrant."""
+    chunks: list[RegulationChunk] = []
+    seen: set[tuple[str, int, str, str, str]] = set()
+    for content in _tool_messages(messages):
+        for chunk in _parse_tool_result(content):
+            key = (chunk.text, chunk.year, chunk.doc_type, chunk.article, chunk.section_title)
             if key not in seen:
                 seen.add(key)
                 chunks.append(chunk)
     return chunks
 
 
+def _citation_violations(answer: str, articles: list[str]) -> list[str]:
+    """Return unsupported or malformed article references in an answer."""
+    retrieved = set()
+    for article in articles:
+        normalized = _normalise_article(article)
+        if normalized is not None:
+            retrieved.add(normalized)
+    cited: set[str] = set()
+    violations: set[str] = set()
+    for prefix in _CITATION_PREFIX.finditer(answer):
+        plural = prefix.group(0).strip().casefold().rstrip(".").endswith("s")
+        parsed, errors = _parse_citation_list(answer, prefix.end(), plural=plural)
+        cited.update(parsed)
+        violations.update(errors)
+    violations.update(citation for citation in cited if citation not in retrieved)
+    return sorted(violations)
+
+
+def _normalise_article(value: str) -> str | None:
+    """Normalize one article label while requiring a complete article identifier."""
+    candidate = " ".join(value.split())
+    match = _ARTICLE_TOKEN.fullmatch(candidate)
+    if match is None:
+        return None
+    article_id = re.sub(r"\s*\(", "(", match.group("id")).casefold()
+    return f"article {article_id}"
+
+
+def _parse_citation_list(
+    text: str,
+    start: int,
+    *,
+    plural: bool = False,
+) -> tuple[set[str], set[str]]:
+    """Parse a citation list and retain malformed references as violations."""
+    citations: set[str] = set()
+    violations: set[str] = set()
+    first_reference = True
+    position = start
+    while True:
+        while position < len(text) and text[position].isspace():
+            position += 1
+        position = _skip_markdown_markers(position, text)
+        match = _ARTICLE_ID.match(text, position)
+        if match is None:
+            invalid = _INVALID_ARTICLE_TOKEN.match(text, position)
+            if invalid is not None:
+                violations.add(f"invalid article citation: {invalid.group(0)}".casefold())
+            break
+
+        raw_id = match.group(0)
+        end = match.end()
+        unit_suffix_start = _skip_markdown_markers(end, text)
+        if not first_reference and _MEASUREMENT_UNIT_SUFFIX.match(text[unit_suffix_start:]):
+            break
+
+        tail = unit_suffix_start
+        while tail < len(text) and text[tail].isspace():
+            tail += 1
+
+        malformed_end = end
+        malformed = False
+        if end < len(text) and (text[end].isalnum() or text[end] in "(_-–—"):
+            malformed = True
+        elif end < len(text) and text[end] == ".":
+            following = text[end + 1] if end + 1 < len(text) else ""
+            if following and (following.isalnum() or following in "._"):
+                malformed = True
+        elif tail < len(text) and text[tail] in "-–—":
+            article_range = re.match(r"[-–—]\s*(?:[*`]+\s*)?[A-Z]?\d", text[tail:], re.IGNORECASE)
+            if article_range is not None:
+                malformed = True
+                malformed_end = tail + article_range.end()
+        elif tail < len(text) and text[tail] == "(":
+            malformed = True
+            malformed_end = tail
+
+        if malformed:
+            while malformed_end < len(text) and (
+                text[malformed_end].isalnum() or text[malformed_end] in "._()-–—"
+            ):
+                malformed_end += 1
+            violations.add(
+                f"invalid article citation: {raw_id}{text[end:malformed_end]}".casefold()
+            )
+            break
+
+        canonical = _normalise_article(raw_id)
+        if canonical is not None:
+            citations.add(canonical)
+        first_reference = False
+
+        if tail >= len(text):
+            break
+        separator_end = tail
+        if text[tail] in ",;/&":
+            if text[tail] == ",":
+                next_position = tail + 1
+                while next_position < len(text) and text[next_position].isspace():
+                    next_position += 1
+                next_position = _skip_conjunction(next_position, text)
+                while next_position < len(text) and text[next_position].isspace():
+                    next_position += 1
+                next_position = _skip_markdown_markers(next_position, text)
+                next_article = _ARTICLE_ID.match(text, next_position)
+                if next_article is None:
+                    break
+                if "." not in next_article.group(0) and not plural:
+                    break
+            separator_end += 1
+            while separator_end < len(text) and text[separator_end].isspace():
+                separator_end += 1
+            separator_end = _skip_conjunction(separator_end, text)
+        else:
+            separator_end = _skip_conjunction(tail, text)
+            if separator_end == tail:
+                break
+
+        position = separator_end
+
+    return citations, violations
+
+
+def _skip_markdown_markers(position: int, text: str) -> int:
+    while position < len(text) and text[position] in ("*", "`"):
+        position += 1
+    return position
+
+
+def _skip_conjunction(position: int, text: str) -> int:
+    for word in ("and", "or"):
+        if text[position : position + len(word)].casefold() != word:
+            continue
+        end = position + len(word)
+        if end == len(text) or not text[end].isalnum():
+            return end
+    return position
+
+
 # Entry points
 # ==============================================================================
+
 
 def run_rag_agent(question: str, year: int | None = None) -> "RegulationContext":
     """Run the RAG ReAct agent for a single regulation question.
 
     Invokes the LangGraph agent with query_rag_tool, extracts the final answer
-    from the last message, then re-queries the retriever with the exact tool
-    questions to populate typed RegulationChunk objects.
+    from the last message, and parses the actual tool messages into typed
+    RegulationChunk objects. No second semantic retrieval is performed, so the
+    context cannot silently cite a different result set from the one the LLM read.
 
-    The retriever is called twice: once by the agent (via query_rag_tool) to
-    retrieve passages for the LLM, and once here to get typed chunk objects for
-    the RegulationContext. This is intentional: the @tool wrapper returns a
-    formatted string, not RegulationChunk instances, so a second retrieval is
-    needed to populate ctx.chunks and ctx.articles. Reusing the tool's actual
-    questions keeps those sources aligned with what the LLM read.
-
-    BOTH calls take the season, and they have to stay in step. The agent's call
-    receives it through the RunnableConfig the graph forwards to the tool, the
-    re-query below as a plain argument. Scoping only one of them would leave the
-    LLM reading one season while ctx.chunks and ctx.articles cite another, and
-    those articles are what the orchestrator prints as citations.
+    The season reaches the actual tool through the RunnableConfig the graph
+    forwards. Its result message supplies the chunks and article metadata used
+    to verify answer citations.
 
     question:
         Natural-language regulation question from the orchestrator (N31).
@@ -278,21 +506,23 @@ def run_rag_agent(question: str, year: int | None = None) -> "RegulationContext"
     """
     from langchain_core.messages import HumanMessage
 
-    agent  = get_rag_react_agent()
+    agent = get_rag_react_agent()
     result = agent.invoke(
         {"messages": [HumanMessage(content=question)]},
         config={"configurable": {"season": year}},
     )
-    answer = result["messages"][-1].content
+    answer = _message_text(result["messages"][-1].content)
 
-    chunks = _retrieve_tool_passages(result["messages"], year)
-    articles  = list(dict.fromkeys(c.article for c in chunks if c.article))
+    chunks = _retrieve_tool_passages(result["messages"])
+    articles = list(dict.fromkeys(c.article for c in chunks if c.article))
+    citation_violations = _citation_violations(answer, articles)
 
     return RegulationContext(
         question=question,
         answer=answer,
         chunks=chunks,
         articles=articles,
+        citation_violations=citation_violations,
     )
 
 
