@@ -15,14 +15,17 @@ Phase 3 is implemented in `src/strategy/eval/rag.py` and exposed as
 `data/rag_eval/queries_v2.json`; the generated report is
 `documents/eval_reports/rag.{md,json}`. The benchmark measures the production
 season-scoped retriever and keeps an unscoped control for wrong-year regression.
-Agent answer faithfulness remains Phase 4 because it requires the actual tool
-trace and is not inferred from retrieval alone. Phase 5 now ingests the
+The report now includes a separate answer-citation match rate over versioned
+real LangGraph traces in `documents/eval_reports/rag_agent_traces.json`; it is
+not inferred from retrieval alone. The current trace set is `n=1`, an initial
+observation rather than a general quality estimate. Phase 4 is being completed
+under #322. Phase 5 now ingests the
 official 2026 Sporting Regulations, supports `B5.13.1`-style headings, and
 records a 35-query A/B result in `documents/eval_reports/rag_2026.{md,json}`.
 
 The detailed findings and phase plan below are the historical snapshot from
 2026-07-07. The current implementation status above takes precedence for
-Phases 3 and 5; Phases 1, 2, and 4 remain separate work unless their status is
+Phases 3, 4, and 5; Phases 1 and 2 remain separate work unless their status is
 changed.
 
 ---

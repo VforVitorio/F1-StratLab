@@ -1,14 +1,15 @@
 {
   "header": {
-    "harness_sha": "d589435d-dirty",
+    "harness_sha": "f423ce29-dirty",
     "dataset": "RAG queries_v2.json, 30 FIA regulation queries",
     "seed_policy": "deterministic",
     "era_tag": "2022-2025",
     "llm": "none",
     "schema_version": "1",
-    "generated_at": "2026-09-19T13:29:33+00:00",
+    "generated_at": "2026-09-23T07:37:06+00:00",
     "artifacts": {
-      "query_set": "663d72013436"
+      "query_set": "663d72013436",
+      "agent_trace_set": "829faa5a124e"
     }
   },
   "query_set": "queries_v2.json",
@@ -36,8 +37,8 @@
       "citation_match_rate": 0.8333333333333334,
       "wrong_year_rate": 0.0,
       "wrong_year_query_rate": 0.0,
-      "latency_p50_ms": 36.146,
-      "latency_p95_ms": 70.85055
+      "latency_p50_ms": 85.03200000000001,
+      "latency_p95_ms": 220.82045
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -51,8 +52,8 @@
       "citation_match_rate": 0.7333333333333333,
       "wrong_year_rate": 0.6466666666666666,
       "wrong_year_query_rate": 0.6333333333333333,
-      "latency_p50_ms": 22.8005,
-      "latency_p95_ms": 23.224149999999998
+      "latency_p50_ms": 63.2975,
+      "latency_p95_ms": 81.9109
     }
   ],
   "query_results": [
@@ -87,7 +88,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 430.857
+      "latency_ms": 2012.043
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -120,7 +121,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 37.288
+      "latency_ms": 83.242
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -153,7 +154,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 36.135
+      "latency_ms": 76.254
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -186,7 +187,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 37.289
+      "latency_ms": 92.447
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -219,7 +220,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 98.31
+      "latency_ms": 315.608
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -252,7 +253,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 37.112
+      "latency_ms": 104.969
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -285,7 +286,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.14285714285714285,
-      "latency_ms": 36.742
+      "latency_ms": 84.203
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -318,7 +319,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.157
+      "latency_ms": 88.315
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -351,7 +352,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 35.876
+      "latency_ms": 81.091
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -384,7 +385,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 36.379
+      "latency_ms": 89.116
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -417,7 +418,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 35.935
+      "latency_ms": 81.055
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -450,7 +451,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 35.895
+      "latency_ms": 80.731
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -483,7 +484,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.241
+      "latency_ms": 90.719
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -516,7 +517,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.053
+      "latency_ms": 90.807
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -549,7 +550,7 @@
       "content_hit_at_5": 0.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.1111111111111111,
-      "latency_ms": 36.732
+      "latency_ms": 89.26
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -582,7 +583,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 36.953
+      "latency_ms": 86.542
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -615,7 +616,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.119
+      "latency_ms": 83.982
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -648,7 +649,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 35.95
+      "latency_ms": 90.052
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -681,7 +682,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 33.917
+      "latency_ms": 82.629
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -714,7 +715,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 33.765
+      "latency_ms": 81.635
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -747,7 +748,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 33.382
+      "latency_ms": 84.795
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -780,7 +781,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.184
+      "latency_ms": 92.515
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -813,7 +814,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 36.593
+      "latency_ms": 96.171
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -846,7 +847,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 33.028
+      "latency_ms": 75.381
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -879,7 +880,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.376
+      "latency_ms": 80.736
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -912,7 +913,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 35.836
+      "latency_ms": 79.952
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -945,7 +946,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 35.809
+      "latency_ms": 81.636
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -978,7 +979,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.192
+      "latency_ms": 85.269
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -1011,7 +1012,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 36.009
+      "latency_ms": 85.497
     },
     {
       "config": "BGE-M3 production, season scoped",
@@ -1044,7 +1045,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 32.877
+      "latency_ms": 77.62
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1077,7 +1078,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 23.206
+      "latency_ms": 51.225
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1110,7 +1111,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.25,
-      "latency_ms": 23.141
+      "latency_ms": 55.714
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1143,7 +1144,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 22.924
+      "latency_ms": 66.422
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1176,7 +1177,7 @@
       "content_hit_at_5": 0.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.14285714285714285,
-      "latency_ms": 22.661
+      "latency_ms": 50.05
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1209,7 +1210,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 20.136
+      "latency_ms": 47.66
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1242,7 +1243,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.25,
-      "latency_ms": 22.913
+      "latency_ms": 67.327
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1275,7 +1276,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 23.175
+      "latency_ms": 60.342
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1308,7 +1309,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 22.768
+      "latency_ms": 61.219
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1341,7 +1342,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 22.627
+      "latency_ms": 68.037
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1374,7 +1375,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.25,
-      "latency_ms": 23.832
+      "latency_ms": 68.454
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1407,7 +1408,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 22.795
+      "latency_ms": 61.026
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1440,7 +1441,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.25,
-      "latency_ms": 22.782
+      "latency_ms": 59.659
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1473,7 +1474,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 23.239
+      "latency_ms": 64.96
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1506,7 +1507,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.2,
-      "latency_ms": 22.7
+      "latency_ms": 63.24
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1539,7 +1540,7 @@
       "content_hit_at_5": 0.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 22.855
+      "latency_ms": 55.482
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1572,7 +1573,7 @@
       "content_hit_at_5": 0.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.14285714285714285,
-      "latency_ms": 23.153
+      "latency_ms": 62.693
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1605,7 +1606,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 22.797
+      "latency_ms": 63.355
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1638,7 +1639,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 22.818
+      "latency_ms": 77.668
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1671,7 +1672,7 @@
       "content_hit_at_5": 0.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.0,
-      "latency_ms": 19.622
+      "latency_ms": 67.919
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1704,7 +1705,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.1,
-      "latency_ms": 20.056
+      "latency_ms": 47.921
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1737,7 +1738,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 20.192
+      "latency_ms": 53.025
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1770,7 +1771,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 22.804
+      "latency_ms": 71.242
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1803,7 +1804,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 0.0,
       "mrr": 0.125,
-      "latency_ms": 22.991
+      "latency_ms": 62.337
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1836,7 +1837,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.3333333333333333,
-      "latency_ms": 20.0
+      "latency_ms": 53.526
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1869,7 +1870,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 22.53
+      "latency_ms": 71.345
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1902,7 +1903,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 22.859
+      "latency_ms": 93.409
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1935,7 +1936,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 1.0,
-      "latency_ms": 22.993
+      "latency_ms": 83.431
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -1968,7 +1969,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.25,
-      "latency_ms": 22.63
+      "latency_ms": 77.599
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -2001,7 +2002,7 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 23.095
+      "latency_ms": 80.053
     },
     {
       "config": "BGE-M3 production, unscoped control",
@@ -2034,7 +2035,27 @@
       "content_hit_at_5": 1.0,
       "citation_match_at_5": 1.0,
       "mrr": 0.5,
-      "latency_ms": 20.302
+      "latency_ms": 63.381
     }
-  ]
+  ],
+  "agent_trace_set": "rag_agent_traces.json",
+  "agent_trace_evaluation": {
+    "trace_count": 1,
+    "citation_count": 1,
+    "matched_citation_count": 1,
+    "citation_match_rate": 1.0,
+    "fully_matched_trace_count": 1,
+    "trace_match_rate": 1.0,
+    "traces": [
+      {
+        "trace_id": "rag-20260923-pit-lane-speed",
+        "year": 2025,
+        "model": "gpt-4.1-mini",
+        "citation_count": 1,
+        "matched_citation_count": 1,
+        "unsupported_articles": [],
+        "fully_matched": true
+      }
+    ]
+  }
 }

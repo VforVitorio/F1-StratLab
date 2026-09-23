@@ -19,8 +19,10 @@ from src.strategy.eval.rag import (
     _normalise_text,
     _strict_hit,
     article_matches,
+    evaluate_agent_traces,
     evaluate_retriever,
     keyword_matches,
+    load_agent_traces,
     load_queries,
     summarise_rows,
 )
@@ -184,6 +186,50 @@ def test_summary_uses_conventional_precision_and_reports_controls() -> None:
     assert summary["wrong_year_query_rate"] == 0.5
     assert summary["latency_p50_ms"] == 15.0
     assert summary["latency_p95_ms"] == pytest.approx(19.5)
+
+
+@pytest.mark.unit
+def test_agent_trace_citation_rate_uses_the_recorded_live_trace() -> None:
+    traces = load_agent_traces(Path("documents/eval_reports/rag_agent_traces.json"))
+
+    evaluation = evaluate_agent_traces(traces)
+
+    assert evaluation["trace_count"] == 1
+    assert evaluation["citation_count"] == 1
+    assert evaluation["matched_citation_count"] == 1
+    assert evaluation["citation_match_rate"] == 1.0
+    assert evaluation["fully_matched_trace_count"] == 1
+    assert evaluation["trace_match_rate"] == 1.0
+
+
+@pytest.mark.unit
+def test_load_agent_traces_rejects_mismatched_tool_call_ids(tmp_path: Path) -> None:
+    payload = json.loads(Path("documents/eval_reports/rag_agent_traces.json").read_text())
+    payload["traces"][0]["tool_result"]["tool_call_id"] = "unmatched-call-id"
+    path = tmp_path / "agent-traces.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="correlate"):
+        load_agent_traces(path)
+
+
+@pytest.mark.unit
+def test_agent_trace_citation_rate_flags_a_mixed_supported_and_missing_citation() -> None:
+    evaluation = evaluate_agent_traces(
+        [
+            {
+                "trace_id": "fixture",
+                "year": 2025,
+                "model": "gpt-4.1-mini",
+                "answer_article_references": ["Article 34.7", "Article 99.9"],
+                "retrieved_articles": ["Article 34.7"],
+            }
+        ]
+    )
+
+    assert evaluation["citation_match_rate"] == 0.5
+    assert evaluation["fully_matched_trace_count"] == 0
+    assert evaluation["traces"][0]["unsupported_articles"] == ["Article 99.9"]
 
 
 @pytest.mark.unit

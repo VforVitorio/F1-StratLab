@@ -178,23 +178,15 @@ def test_the_tool_passes_the_configured_season_to_the_retriever(monkeypatch):
     assert seen["year"] is None
 
 
-def test_both_retrieval_sites_receive_the_same_season(monkeypatch):
-    """The tool call and its typed-source rehydration must share the season.
-
-    One call feeds the LLM through the tool, the other populates ``ctx.chunks`` and
-    ``ctx.articles`` from the same query, which is what the orchestrator prints as
-    citations. Scoping only the first would have the model reading one season while
-    the recommendation cites another, and no other test in the suite compares them.
-    """
+def test_the_agent_tool_receives_the_race_season(monkeypatch):
+    """Season scoping belongs to the actual tool call, not a second re-query."""
     import src.agents.rag_agent as rag_agent_module
     import src.rag.retriever as retriever_module
 
     tool_seasons: list = []
-    direct_seasons: list = []
 
     class _Recording:
         def query(self, question, top_k=None, year=None, doc_type=None):
-            direct_seasons.append(year)
             return []
 
     class _FakeAgent:
@@ -228,4 +220,3 @@ def test_both_retrieval_sites_receive_the_same_season(monkeypatch):
     rag_agent_module.run_rag_agent("q", year=2024)
 
     assert tool_seasons == [2024], "the agent's own retrieval was not scoped"
-    assert direct_seasons == [2024, 2024], f"the two retrieval sites disagree: {direct_seasons}"
