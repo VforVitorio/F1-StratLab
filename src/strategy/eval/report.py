@@ -110,6 +110,7 @@ def build_header(
     *,
     dataset: str,
     seed_policy: str = "deterministic",
+    era_tag: str = ERA_TAG,
     llm: str = "none",
     artifacts: dict[str, Path] | None = None,
 ) -> ReportHeader:
@@ -126,6 +127,7 @@ def build_header(
         harness_sha=_harness_sha(),
         dataset=dataset,
         seed_policy=seed_policy,
+        era_tag=era_tag,
         llm=llm,
         artifacts=hashed,
     )

@@ -53,7 +53,7 @@ Create a `.env` file at the repo root:
 |---|---|---|---|
 | `BACKEND_URL` | no | `http://localhost:8000` | Backend URL, read by the frontend |
 | `FRONTEND_URL` | no | `http://localhost:8501` | Frontend URL, read by the backend for CORS |
-| `F1_LLM_PROVIDER` | no | `lmstudio` | Set to `openai` for OpenAI API |
+| `F1_LLM_PROVIDER` | no | per surface, see [INSTALL.md](https://github.com/VforVitorio/F1-StratLab/blob/main/INSTALL.md#llm-provider-per-surface) | Set to `openai` for OpenAI API |
 | `OPENAI_API_KEY` | if provider=openai |, | OpenAI API key |
 | `F1_STRAT_DATA_ROOT` | no | repo `data/` | Override data directory |
 | `F1_API_KEY` | no | unset | Shared secret for the `X-API-Key` header. Unset = unauthenticated (safe only on a loopback bind, see `F1_HOST` below) |
@@ -92,7 +92,7 @@ through nginx on `:8501` (see Docker below), launched with `f1-webapp`.
 
 ### 6. LM Studio (for LLM agents)
 
-Start LM Studio with a model loaded, serving on `http://localhost:1234/v1`. The orchestrator defaults to this endpoint. Sub-agents use `gpt-4.1-mini`; the orchestrator uses `gpt-5.4-mini`.
+Start LM Studio with a model loaded, serving on `http://localhost:1234/v1`. The CLI and the backend fall back to this endpoint when `F1_LLM_PROVIDER` is unset; the arcade falls back to OpenAI instead ([INSTALL.md](https://github.com/VforVitorio/F1-StratLab/blob/main/INSTALL.md#llm-provider-per-surface)). Sub-agents use `gpt-4.1-mini`; the orchestrator uses `gpt-5.4-mini`.
 
 ## Docker deployment
 
@@ -150,22 +150,54 @@ Same two services, with paths relative to `src/telemetry/` instead of the repo r
 
 The webapp Dockerfile has two stages:
 
-1. **node-builder**: `npm ci && npm run build` of the Vite + React SPA
+1. **bun-builder**: `bun install --frozen-lockfile && bun run build` of the Vite + React SPA
 2. **nginx**: serves the built assets and reverse-proxies `/api` to the backend service
 
 ### Backend Dockerfile
 
-The backend Dockerfile installs `setuptools` and `wheel` first (needed by `openai-whisper` for `pkg_resources`), then installs all requirements with `--no-build-isolation`.
+The backend image uses Python 3.11 and copies the pinned `uv` binary from the
+official uv image. It copies `pyproject.toml` and `uv.lock` before the backend
+source so Docker can reuse the dependency layer. The dependency layer runs
+`uv sync --frozen --no-dev --no-install-project` and uses CPU PyTorch wheels on
+Linux. The container puts `/app/.venv/bin` on `PATH`, so the Compose command
+and the image command execute the locked `uvicorn` installation.
+
+The host data directory remains read-only, except for the nested
+`data/cache/fastf1` mount used by FastF1. The RAG directory remains writable.
 
 ## Building the RAG index
 
 Before using the RAG Agent (N30), build the Qdrant vector index:
 
 ```bash
-python scripts/build_rag_index.py
+uv run python scripts/build_rag_index.py
 ```
 
 This processes FIA Sporting Regulations PDFs and stores embeddings in `data/rag/`.
+It also writes `data/rag/index_manifest.json`, which records the source PDF
+hashes, model, vector dimension, chunking parameters, indexed years, and point
+count. To create only that metadata for an existing local index, without loading
+the embedding model or changing Qdrant points, run:
+
+```bash
+uv run python scripts/build_rag_index.py --manifest-only
+```
+
+The retriever warns when an old index has no manifest and refuses a present
+manifest whose model, collection, or vector dimension does not match.
+
+The current maintained Sporting Regulations corpus covers 2023-2026. The 2026
+source is the official FIA [Section B Sporting Regulations, Issue 08, published
+5 August 2026](https://www.fia.com/system/files/documents/fia_2026_f1_regulations_-_section_b_sporting_-_iss_08_-_2026-08-05_7.pdf).
+The builder recognises its `B5.13.1`-style article identifiers and records the
+source hashes and chunking decision in the manifest.
+
+To reproduce the eval-gated chunking check without replacing the production
+collection:
+
+```bash
+uv run python scripts/benchmark_rag_chunking.py
+```
 
 ## Network architecture (Docker)
 

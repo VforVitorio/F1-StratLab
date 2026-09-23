@@ -198,6 +198,7 @@ class DecisionAgreement:
     races: int
     no_data: int = 0
     no_boundary: int = 0
+    overlap: int = 0
 
     @property
     def sample_size(self) -> int:
@@ -211,7 +212,14 @@ class DecisionAgreement:
         looked at. Leaving them out would shrink the denominator and inflate the
         scored share by exactly the stops the old code used to score wrongly.
         """
-        return self.sample_size + self.guard_railed + self.no_call + self.no_data + self.no_boundary
+        return (
+            self.sample_size
+            + self.guard_railed
+            + self.no_call
+            + self.no_data
+            + self.no_boundary
+            + self.overlap
+        )
 
     @property
     def exact(self) -> float:
@@ -466,6 +474,17 @@ def _pit_decision_lap(actions: dict[int, str], low: int, high: int) -> int | Non
     return None
 
 
+def _claim_decision(
+    claimed: set[tuple[int, str, str, int]], year: int, race: str, driver: str, chosen_lap: int
+) -> bool:
+    """Claim one transition for one driver and race, returning False on reuse."""
+    key = (year, race, driver, chosen_lap)
+    if key in claimed:
+        return False
+    claimed.add(key)
+    return True
+
+
 def _replay_span(stop_laps: list[int], total_laps: int) -> tuple[int, int]:
     """The laps to replay for one (race, driver), covering the union of the windows.
 
@@ -550,6 +569,7 @@ def measure_decision_agreement(
 
     featured_by_year: dict[int, Any] = {}
     verdicts: list[StopVerdict] = []
+    claimed_decisions: set[tuple[int, str, str, int]] = set()
     races_measured = 0
 
     for year, race in races:
@@ -580,7 +600,7 @@ def measure_decision_agreement(
             engine = RaceReplayEngine(str(race_dir), driver, team, interval_seconds=0)
             actions = _decisions_in_window(engine, featured, driver, low, high, risk_tolerance)
 
-            for stop_lap in stop_laps:
+            for stop_lap in sorted(stop_laps):
                 compound, tyre_life = _stop_context(laps, driver, stop_lap)
                 blocked = guard_rail_block(stop_lap, total_laps, compound, tyre_life)
                 if blocked is not None:
@@ -619,6 +639,20 @@ def measure_decision_agreement(
                     verdicts.append(StopVerdict(year, race, driver, stop_lap, None, None, unscored))
                     continue
 
+                if not _claim_decision(claimed_decisions, year, race, driver, chosen):
+                    verdicts.append(
+                        StopVerdict(
+                            year,
+                            race,
+                            driver,
+                            stop_lap,
+                            None,
+                            None,
+                            "overlap_in_window",
+                        )
+                    )
+                    continue
+
                 verdicts.append(
                     StopVerdict(year, race, driver, stop_lap, chosen, chosen - stop_lap, "scored")
                 )
@@ -631,6 +665,7 @@ def measure_decision_agreement(
         races=races_measured,
         no_data=sum(1 for v in verdicts if v.bucket == "no_data"),
         no_boundary=sum(1 for v in verdicts if v.bucket == "no_boundary_in_window"),
+        overlap=sum(1 for v in verdicts if v.bucket == "overlap_in_window"),
     )
     return agreement, verdicts
 
@@ -690,6 +725,8 @@ def _render_table(
         "number to watch: the stack looked and declined to stop anywhere near the real",
         "lap. Charging a retirement to the model as a missed call would flatter neither",
         "side honestly, so the two are never merged.",
+        "`overlap_in_window` is a real stop whose transition was already assigned to an earlier",
+        "stop for the same driver. It remains in the denominator but not in the agreement rate.",
         "",
         "`no_boundary_in_window` is the third case and it is the one this tier used to",
         "get wrong (#752). It means only this: the stack asked to stop somewhere in the",
@@ -786,6 +823,7 @@ def build_decision_modes_report() -> dict[str, Any]:
                 "within_two": agreement.within_two,
                 "mean_signed_error": agreement.mean_signed_error,
                 "mean_absolute_error": agreement.mean_absolute_error,
+                "overlap": agreement.overlap,
             },
             "buckets": _bucket_counts(verdicts),
             "verdicts": [

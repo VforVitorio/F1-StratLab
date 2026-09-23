@@ -78,6 +78,7 @@ def test_the_test_and_the_publisher_agree_on_which_cards_exist():
     )
 
 
+@pytest.mark.network
 @pytest.mark.parametrize(("local", "repo_id", "repo_type"), _CARDS)
 def test_the_published_card_matches_the_repo_copy(local, repo_id, repo_type):
     """Fails the moment a card is edited here and not pushed.

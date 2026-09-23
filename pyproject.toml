@@ -67,7 +67,6 @@ dependencies = [
     "websockets>=11.0.0",
     "kafka-python>=2.0.2",
     "python-multipart>=0.0.31",
-    "passlib[bcrypt]>=1.7.4",
     "httpx>=0.25.0",
     "aiofiles>=23.0.0",
     # ===================
@@ -109,7 +108,6 @@ dependencies = [
     # Declared here on its own — it used to ride in via the retired voice extra
     # and librosa's transitive dependency, which is not a contract.
     "soundfile>=0.12.0",
-    "nltk>=3.10.0",
     "gliner>=0.2.25",
     "onnxruntime<1.24",
     "setfit>=1.1.3",
@@ -137,8 +135,17 @@ dev = [
     "pytest>=9.0.3",
     "pytest-cov>=4.1.0",
     "pytest-asyncio>=0.21.0",
+    "httpx2>=2.13.0,<3.0.0",
+    # Parallel runner, opt-in per run rather than in addopts: a single failing
+    # test reads better serially. Measured on 20 logical cores, three legs back
+    # to back: the whole suite serially is 628.7 s, `-m "not data"` serially is
+    # 115.6 s, and `-m "not data" -n auto --dist=loadfile` is 61.5 s. So the
+    # marker does most of the work and xdist is worth 1.88x on top of it. The
+    # gain stays far under the core count because with loadfile no run can go
+    # below its slowest single FILE.
+    "pytest-xdist>=3.6.0",
     "black>=26.3.1",
-    "ruff>=0.0.286",
+    "ruff>=0.16.6",
     "mypy>=1.0.0",
     "ipykernel>=6.25.0",
     "jupyter>=1.0.0",
@@ -268,10 +275,20 @@ asyncio_mode = "auto"
 # -ra prints a summary of skips/xfails so CI shows the data/gpu/llm-gated tests
 # instead of silently swallowing them (Testing audit T-4).
 addopts = "-ra"
+# The pandas deprecation is emitted by the protected legacy agent implementation
+# in src/agents/. Keep the fast gate quiet without changing that untouchable code;
+# a future agent refactor must remove this narrow filter when it can land safely.
+filterwarnings = [
+    "ignore:DataFrameGroupBy.apply operated on the grouping columns.*:FutureWarning",
+    "ignore:builtin type SwigPyPacked has no __module__ attribute:DeprecationWarning",
+    "ignore:builtin type SwigPyObject has no __module__ attribute:DeprecationWarning",
+]
 markers = [
     "unit: pure hermetic unit test (no data, network, GPU, or LLM)",
     "contract: API/schema/SSE contract test (hermetic, fixture-backed)",
     "data: requires the HF dataset/model weights (skipped on CI runners)",
     "gpu: requires CUDA",
     "llm: requires a live or stubbed LLM backend",
+    "slow: expensive measurement or real-path test kept out of the fast gate",
+    "network: requires an external network service or public artifact",
 ]

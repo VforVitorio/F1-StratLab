@@ -27,7 +27,7 @@ Design (per documents/audits/P2B_ENGINE_DESIGN.md, #169 Phases 1.1 + 1.2)
   * ``no-llm`` — the deterministic, zero-LLM-client path (see ``no_llm.py``); fixes
                  #166 by construction (it never calls ``_run_conditional_agents``).
 
-Untouchability: nothing in ``src/agents/`` is modified. Every strategy layer is the
+The engine does not duplicate or own agent internals. Every strategy layer is the
 SAME code object the orchestrator runs (imported, never copied); the only
 engine-owned code is the call sequence itself and the default-lap_state builder.
 
@@ -69,6 +69,7 @@ from src.agents.strategy_orchestrator import (
     StrategyRecommendation,
     _assemble_recommendation,
     _build_orchestrator_prompt,
+    _format_regulation_sources,
     _decide_agents_to_call,
     _get_orchestrator_llm,
     _live_drivers_from,
@@ -95,7 +96,7 @@ logger = logging.getLogger(__name__)
 # instantiates the radio agent's three transformer models, and the backend needs the
 # scoping rule without paying for them. Kept importable under the old name because
 # callers and tests already reference `engine._scope_laps_to_gp`.
-from src.strategy.inference.scoping import _scope_laps_to_gp  # noqa: E402
+from src.strategy.inference.scoping import _scope_laps_to_gp, season_of  # noqa: E402
 
 
 class _StageTimer:
@@ -263,6 +264,7 @@ def _run_rich(
             pit_out=pit_out,
             radio_out=radio_out,
             regulation_context=regulation_context,
+            regulation_sources=_format_regulation_sources(rag_dict),
             # The one argument in this call the orchestrator deliberately does NOT
             # pass: /recommend and the MCP tool are stateless per request and have no
             # race to accumulate over. tests/engine/test_memory_scope_is_deliberate.py
@@ -387,7 +389,7 @@ def _build_default_lap_state(race_state: RaceState, laps_df: pd.DataFrame) -> di
     """
     driver_rows = laps_df[laps_df["Driver"] == race_state.driver]
     lap_row = driver_rows[driver_rows["LapNumber"] == race_state.lap]
-    year = int(laps_df["Year"].iloc[0]) if "Year" in laps_df.columns else 2025
+    year = season_of(laps_df)
     gp_name = str(laps_df["GP_Name"].iloc[0]) if "GP_Name" in laps_df.columns else ""
     stint = int(lap_row["Stint"].iloc[0]) if not lap_row.empty else 1
     team = str(lap_row["Team"].iloc[0]) if not lap_row.empty and "Team" in lap_row else "Unknown"

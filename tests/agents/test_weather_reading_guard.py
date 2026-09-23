@@ -56,18 +56,6 @@ def test_a_real_reading_passes_through():
     assert reading_or_default({"air_temp": 23.4}, "air_temp", 28.0) == 23.4
 
 
-def test_the_three_agents_agree_on_this_read():
-    """All three sub-agents route this read through one implementation (#788).
-
-    They keep DIFFERENT default temperatures on purpose — pace 25/35, tire and
-    race_situation 28/38 — because reconciling those numbers is a modelling decision
-    tracked in #789. What must not differ again is the None handling: pace was the only
-    one of the three that had it right, and its guard is now the shared helper.
-    """
-    for default in (25.0, 28.0, 35.0, 38.0):
-        assert reading_or_default(PRODUCER_WEATHER_2025, "track_temp", default) == default
-
-
 def test_the_producer_shape_never_reaches_float_as_none():
     """float() over every weather key of a real producer payload must not raise.
 

@@ -43,6 +43,8 @@ from src.strategy.inference.guard_rails import (
 from src.agents._shared_defaults import (
     DEFAULT_TOTAL_LAPS,
     LLM_MAX_RETRIES,
+    lm_studio_base_url,
+    subagent_model,
 )
 from src.agents.race_state_builder import UNKNOWN_TYRE_LIFE
 
@@ -215,11 +217,9 @@ class PitAgentCFG:
     from undercut_clean.parquet so tool calls are stateless.
 
     Attributes:
-        model_name: LM Studio model identifier for the ReAct agent LLM.
         team_year_median_fallback: Global fallback for team_year_median feature (s).
     """
 
-    model_name: str = 'gpt-4.1-mini'
     team_year_median_fallback: float = 2.8
 
     def __post_init__(self) -> None:
@@ -1374,8 +1374,8 @@ class PitStrategyAgent:
     def get_react_agent(
         self,
         provider: str = None,
-        model_name: str = 'gpt-4.1-mini',
-        base_url: str = 'http://localhost:1234/v1',
+        model_name: str = None,
+        base_url: str | None = None,
         api_key: str = 'lm-studio',
     ):
         """Return the LangGraph ReAct agent, creating it on the first call (lazy).
@@ -1386,8 +1386,9 @@ class PitStrategyAgent:
 
         Args:
             provider: 'lmstudio' (default) or 'openai'.
-            model_name: Model identifier for ChatOpenAI.
-            base_url: Base URL for LM Studio (ignored when provider='openai').
+            model_name: Model identifier for ChatOpenAI. Defaults to
+                ``subagent_model()``, which reads ``F1_LLM_MODEL_AGENTS``.
+            base_url: Optional base URL for LM Studio. Defaults to ``LM_STUDIO_HOST``.
             api_key: API key; 'lm-studio' for local server.
 
         Returns:
@@ -1409,10 +1410,12 @@ class PitStrategyAgent:
 
         if provider is None:
             provider = os.environ.get('F1_LLM_PROVIDER', 'lmstudio')
+        if model_name is None:
+            model_name = subagent_model()
 
         if provider == 'lmstudio':
             llm = ChatOpenAI(
-                base_url=base_url,
+                base_url=base_url or lm_studio_base_url(),
                 api_key=api_key,
                 model=model_name,
                 temperature=0,

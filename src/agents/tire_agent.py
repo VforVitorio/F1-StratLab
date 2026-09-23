@@ -38,7 +38,9 @@ from src.agents._shared_defaults import (
     DEFAULT_TOTAL_LAPS,
     DEFAULT_TRACK_TEMP_C,
     LLM_MAX_RETRIES,
+    lm_studio_base_url,
     reading_or_default,
+    subagent_model,
 )
 from src.agents.race_state_builder import UNKNOWN_TYRE_LIFE, normalise_compound
 from src.agents.tire_parsing import parse_tool_outputs
@@ -276,7 +278,6 @@ class TireAgentConfig:
 
     n_mc: int = 50
     mc_seed: int = 42
-    model_name: str = "gpt-4.1-mini"
     cliff_pit_soon_laps: int = 3
     cliff_monitor_laps: int = 7
     fresh_reference_tyre_life: int = 3
@@ -1464,8 +1465,8 @@ class TireAgent:
     def get_react_agent(
         self,
         provider: str = None,
-        model_name: str = "gpt-4.1-mini",
-        base_url: str = "http://localhost:1234/v1",
+        model_name: str = None,
+        base_url: str | None = None,
         api_key: str = "lm-studio",
     ):
         """Return the LangGraph ReAct agent, creating it on the first call (lazy).
@@ -1475,8 +1476,9 @@ class TireAgent:
 
         Args:
             provider: 'lmstudio' (default) or 'openai'.
-            model_name: Model identifier for ChatOpenAI.
-            base_url: Base URL for LM Studio (ignored when provider='openai').
+            model_name: Model identifier for ChatOpenAI. Defaults to
+                ``subagent_model()``, which reads ``F1_LLM_MODEL_AGENTS``.
+            base_url: Optional base URL for LM Studio. Defaults to ``LM_STUDIO_HOST``.
             api_key: API key; use 'lm-studio' for local server.
 
         Returns:
@@ -1501,11 +1503,13 @@ class TireAgent:
 
         if provider is None:
             provider = os.environ.get("F1_LLM_PROVIDER", "lmstudio")
+        if model_name is None:
+            model_name = subagent_model()
 
         if provider == "lmstudio":
             llm = ChatOpenAI(
                 model=model_name,
-                base_url=base_url,
+                base_url=base_url or lm_studio_base_url(),
                 api_key=api_key,
                 temperature=0,
                 timeout=120,
@@ -1563,10 +1567,10 @@ class TireAgent:
             # within a cluster), and a race's own mean is a per-race number that
             # happens to have the same units.
             "cluster_mean_lap_s": TireAgentConfig._TRAINED_CLUSTER_MEAN_LAP_S.get(
-                self.cfg.cluster_for(gp_name, 0), 0.0
+                self.cfg.cluster_for(gp_name, -1), 0.0
             ),
             "total_laps": int(session.total_laps),
-            "cluster_id": self.cfg.cluster_for(gp_name, 0),
+            "cluster_id": self.cfg.cluster_for(gp_name, -1),
             "team_id": _encode_team_id(self.cfg.team_id_map, stint_state.get("team", "Unknown")),
             "year": stint_state.get("year", 2025),
             "AirTemp": float(_weather.get("AirTemp", DEFAULT_AIR_TEMP_C)),
@@ -1646,10 +1650,10 @@ class TireAgent:
             # above: this race's own mean lap time is a different quantity wearing the
             # same units.
             "cluster_mean_lap_s": TireAgentConfig._TRAINED_CLUSTER_MEAN_LAP_S.get(
-                self.cfg.cluster_for(gp_name, 0), 0.0
+                self.cfg.cluster_for(gp_name, -1), 0.0
             ),
             "total_laps": total_laps,
-            "cluster_id": self.cfg.cluster_for(gp_name, 0),
+            "cluster_id": self.cfg.cluster_for(gp_name, -1),
             "team_id": _encode_team_id(self.cfg.team_id_map, team),
             "year": year,
             # reading_or_default, not .get(key, default): the producers report an

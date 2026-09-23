@@ -13,6 +13,8 @@ behaviour: repeated samples, a negative slice, and an unbounded payload.
 
 from __future__ import annotations
 
+import ast
+import functools
 import math
 from pathlib import Path
 from types import SimpleNamespace
@@ -121,6 +123,7 @@ def test_pause_sends_no_new_samples_rather_than_repeating_the_last_one():
     assert list(range(span_start, 401)) == []
 
 
+@pytest.mark.slow
 def test_a_backwards_seek_is_empty_and_flagged():
     """Rewind must be a branch, not a negative slice."""
     span_start, rewound, dropped = _telemetry_span_bounds(400, 250, STREAM_MAX_SPAN_FRAMES)
@@ -656,6 +659,7 @@ def test_eligible_is_not_open_at_every_site_that_decodes_it():
 # --- #1002: the discrete channels stop being interpolated ----------------------
 
 
+@functools.lru_cache(maxsize=1)
 def _cached_session_or_skip():
     """Any cached arcade session, or a skip. The pickles are not in git.
 
@@ -664,23 +668,28 @@ def _cached_session_or_skip():
     Melbourne held Suzuka, and the assertions below were measured against a race
     they did not name (#1119). The name is `{year}_r{round}_race.pkl` now, and
     what these tests need is a real cached race rather than a particular one.
-    """
-    import pickle
 
+    Memoised, and reading through the loader rather than through a bare
+    `pickle.load`. Six tests share this session, and each one used to pay its
+    own full read of whichever file sorts first, which is the largest one, with
+    the collector left on that the loader disables.
+    """
     from src.arcade.config import ARCADE_CACHE_DIR, CACHE_VERSION
+    from src.arcade.data import SessionLoader
 
     candidates = sorted(ARCADE_CACHE_DIR.glob("*_race.pkl"))
     if not candidates:
         pytest.skip("no arcade session pickle on this install")
     for cached in candidates:
-        with cached.open("rb") as handle:
-            session = pickle.load(handle)
+        session = SessionLoader._read_cache(cached)
         if session.version == CACHE_VERSION:
             return session
     pytest.skip(f"no cached pickle is at {CACHE_VERSION}")
 
 
-def _active_frames(session) -> list:
+@functools.lru_cache(maxsize=1)
+def _active_frames() -> list:
+    session = _cached_session_or_skip()
     frames = [
         frame for driver in session.frames_by_driver.values() for frame in driver if frame.active
     ]
@@ -691,6 +700,7 @@ def _active_frames(session) -> list:
     return frames
 
 
+@pytest.mark.slow
 def test_no_served_frame_carries_a_gear_the_car_cannot_select():
     """The EFFECT of #1002, on the frames the arcade actually broadcasts.
 
@@ -710,7 +720,7 @@ def test_no_served_frame_carries_a_gear_the_car_cannot_select():
     was rebuilt (#1094). A test that can only pass against a stale artefact is
     asserting the artefact, not the code.
     """
-    frames = _active_frames(_cached_session_or_skip())
+    frames = _active_frames()
     gears = {frame.gear for frame in frames}
     assert max(gears) <= 8, f"gears above 8 are served: {sorted(g for g in gears if g > 8)}"
     assert min(gears) >= 0
@@ -750,7 +760,7 @@ def test_no_served_frame_carries_a_drs_code_the_feed_never_emits():
     two open frames - so an open wing drew as a flicker. Measured before the fix:
     **1,775 served frames** on 4, 5, 6, 7, 9, 11 or 13.
     """
-    frames = _active_frames(_cached_session_or_skip())
+    frames = _active_frames()
     served = {frame.drs for frame in frames}
     manufactured = served - {0, 1, 2, 3, 8, 10, 12, 14}
     assert not manufactured, f"codes FastF1 never emits are on the wire: {sorted(manufactured)}"
@@ -765,7 +775,7 @@ def test_the_brake_channel_is_the_boolean_it_was_measured_as():
     **86,925 served frames (3.49%) sat strictly between 2 and 98** across 10,976
     distinct values, none of which any car ever published.
     """
-    frames = _active_frames(_cached_session_or_skip())
+    frames = _active_frames()
     served = {round(frame.brake, 6) for frame in frames}
     assert served <= {0.0, 100.0}, f"interpolated brake pressures are served: {sorted(served)[:8]}"
     assert served == {0.0, 100.0}, "both states must occur, or the channel is stuck"
@@ -779,7 +789,7 @@ def test_a_tyre_age_is_a_whole_number_of_laps():
     either neighbouring value, the worst 16.4 laps out**. The TimingTower renders this
     number, and a pit exit is exactly where it was wrong.
     """
-    frames = _active_frames(_cached_session_or_skip())
+    frames = _active_frames()
     fractional = [f.tyre_life for f in frames if abs(f.tyre_life - round(f.tyre_life)) > 1e-9]
     assert not fractional, f"{len(fractional)} frames carry a fractional tyre age"
 
@@ -814,6 +824,7 @@ def test_no_served_frame_takes_the_lap_number_backwards():
     assert not offenders, f"{len(offenders)} backwards frames, first few: {offenders[:5]}"
 
 
+@pytest.mark.slow
 def test_no_driver_is_parked_on_the_line_for_a_whole_lap():
     """The glitch's largest effect, and the one nobody had noticed (#1069).
 
@@ -1016,3 +1027,80 @@ def test_a_shared_lap_boundary_sample_comes_out_lap_ascending():
     assert list(concat["tyre_life"][falls + 1]) == [1.0], "a tyre aged backwards mid-stint"
     # And the compound changes once, rather than flickering back and forth.
     assert int(np.count_nonzero(np.diff(concat["tyre"]) != 0)) == 1
+
+
+# --- #1121: the merge happens once per driver, and CI is the only place that sees it ---
+#
+# The per-lap windows still exist after the merge, so every guard above keeps working
+# under the change AND under a revert to `lap.get_telemetry()`. What a revert moves is
+# the cost (270.4 s against 80.0 s for a Lusail 2025 build) and, for the other revert,
+# the served order. Both are invisible to the assertions in this file: the six guards
+# that read a real pickle skip on every CI runner, and a rebuilt pickle passes them
+# whichever path built it. So the property is asserted on the source instead.
+
+
+def _extraction_ast() -> dict[str, ast.FunctionDef]:
+    """`_process_driver_data` and `_merge_driver_channels`, parsed rather than imported.
+
+    Parsed because the property is about which FastF1 calls appear and how often,
+    which a text search cannot tell from a mention in a comment, and because this
+    has to run where there is no FastF1 cache and no race on disk.
+    """
+    source = Path(__file__).resolve().parents[2] / "src" / "arcade" / "data.py"
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+    wanted = {"_process_driver_data", "_merge_driver_channels"}
+    found = {
+        node.name: node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name in wanted
+    }
+    missing = wanted - set(found)
+    assert not missing, f"src/arcade/data.py no longer defines {sorted(missing)}"
+    return found
+
+
+def _called_attrs(node: ast.AST) -> list[str]:
+    return [
+        call.func.attr
+        for call in ast.walk(node)
+        if isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute)
+    ]
+
+
+def test_the_extraction_never_asks_for_the_driver_ahead_channel():
+    """`DriverAhead` costs 5.29 s of the 6.6 s a driver used to take and nothing reads it.
+
+    `Lap.get_telemetry()` and `Laps.get_telemetry()` both call `add_driver_ahead()`
+    internally, which is why neither of them appears here either.
+    """
+    functions = _extraction_ast()
+    for name, node in functions.items():
+        called = _called_attrs(node)
+        assert "add_driver_ahead" not in called, f"{name} pays for DriverAhead again"
+        assert "get_telemetry" not in called, (
+            f"{name} calls get_telemetry(), which computes DriverAhead whether it is "
+            "asked per lap or once per driver"
+        )
+
+
+def test_the_merge_happens_once_per_driver_and_the_slicing_per_lap():
+    """The shape of the fix, stated where a revert has to break it.
+
+    A revert to the per-lap call puts `get_telemetry` back inside the `for` (caught
+    above). A jump the other way, to `Laps.get_telemetry()` for the whole driver,
+    drops `slice_by_lap` and with it the boundary sample at every lap line: measured
+    on Lusail 2025 that moves 754 of 1,063 crossings and reorders 5,343 of 129,084
+    served frames, 736 of them at the front.
+    """
+    functions = _extraction_ast()
+    merge_calls = _called_attrs(functions["_merge_driver_channels"])
+    assert merge_calls.count("merge_channels") == 1, "the channels are merged once per driver"
+    assert "add_distance" in merge_calls, "race distance has to be integrated over the whole span"
+
+    loops = [n for n in ast.walk(functions["_process_driver_data"]) if isinstance(n, ast.For)]
+    assert loops, "_process_driver_data no longer iterates the driver's laps"
+    sliced_in_a_loop = any("slice_by_lap" in _called_attrs(loop) for loop in loops)
+    assert sliced_in_a_loop, (
+        "nothing slices the merged frame per lap, so the shared lap-boundary sample "
+        "#1069 orders does not exist"
+    )

@@ -358,8 +358,8 @@ Every agent exposes two entry points: one that expects populated module globals 
 **They are not uniform.** The shapes below come from `inspect.signature`, and three of them differ from what the pattern would suggest:
 
 ```python
-run_pace_agent_from_state(lap_state)                                  # no laps_df, unlike every other adapter
-run_tire_agent(stint_state)                                           # a stint state, not a lap state
+run_pace_agent_from_state(lap_state)  # no laps_df, unlike every other adapter
+run_tire_agent(stint_state)  # a stint state, not a lap state
 run_tire_agent_from_state(lap_state, laps_df)
 run_race_situation_agent_from_state(lap_state, laps_df)
 run_pit_strategy_agent_from_state(lap_state, laps_df)
@@ -394,14 +394,14 @@ One consequence worth knowing before debugging a call: **the effect does not sho
 
 ## LLM configuration
 
-| Layer | Model | Provider |
-|---|---|---|
-| Sub-agents N26-N29 | gpt-4.1-mini | OpenAI or LM Studio |
-| Orchestrator N31 | gpt-5.4-mini | OpenAI or LM Studio |
+| Layer | Model | Environment variable | Provider |
+|---|---|---|---|
+| Sub-agents N26-N30 | gpt-4.1-mini | `F1_LLM_MODEL_AGENTS` | OpenAI or LM Studio |
+| Orchestrator N31 | gpt-5.4-mini | `F1_LLM_MODEL_ORCHESTRATOR` | OpenAI or LM Studio |
 
-N25 (pace) is not in this table because it never calls an LLM. See the "No LLM step" note under [N25: Pace Agent](#/multi-agent#n25-pace-agent-paceagentpy) above.
+N30 (rag) shares the sub-agent model. N25 (pace) is not in this table because it never calls an LLM. See the "No LLM step" note under [N25: Pace Agent](#/multi-agent#n25-pace-agent-paceagentpy) above.
 
-Set `F1_LLM_PROVIDER=openai` env var to use the real OpenAI API. Default is LM Studio at `http://localhost:1234/v1`.
+Setting `F1_LLM_PROVIDER=openai` selects the OpenAI API on every surface. The fallback when it is unset differs per surface, LM Studio at `http://localhost:1234/v1` for the CLI and the backend, OpenAI for the arcade. Full table in [INSTALL.md](https://github.com/VforVitorio/F1-StratLab/blob/main/INSTALL.md#llm-provider-per-surface).
 
 ## Data flow
 

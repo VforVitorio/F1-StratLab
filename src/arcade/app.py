@@ -422,7 +422,10 @@ class F1ArcadeView(arcade.View):
         gp_name = self._resolve_gp_name()
         # Provider defaults to OpenAI (what the agents load with
         # ``F1_LLM_PROVIDER=openai``, ChatOpenAI model=gpt-4.1-mini for
-        # N25-N30 and the orchestrator model for N31). ``F1_LLM_PROVIDER``
+        # N26-N30 and the orchestrator model for N31; N25 has no LLM step
+        # since #778/#780). Both models resolve through
+        # ``src/agents/_shared_defaults.py`` and can be pointed elsewhere with
+        # ``F1_LLM_MODEL_AGENTS`` / ``F1_LLM_MODEL_ORCHESTRATOR``. ``F1_LLM_PROVIDER``
         # env wins so a user running LM Studio locally (set it to
         # "lmstudio") keeps working without a code edit.
         provider = os.environ.get("F1_LLM_PROVIDER") or "openai"
@@ -966,6 +969,12 @@ class F1ArcadeView(arcade.View):
             self._show_progress_bar = not self._show_progress_bar
         elif symbol == arcade.key.A:
             self._show_all_cars = not self._show_all_cars
+        elif symbol == arcade.key.W:
+            if self._strategy_connector is not None:
+                enabled = self._strategy_connector.toggle_manual_override()
+                logger.info(
+                    "Strategy manual wake override %s", "enabled" if enabled else "disabled"
+                )
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         if symbol == arcade.key.LEFT:

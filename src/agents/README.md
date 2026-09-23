@@ -14,7 +14,7 @@ Each module is importable without a FastF1 session via its `*_from_state` RSM ad
 | `race_situation_agent.py` | N27 | LightGBM overtake prob + SC prob (N12 + N14) | `run_race_situation_agent(lap_state)` · `run_race_situation_agent_from_state(lap_state, laps_df)` |
 | `pit_strategy_agent.py` | N28 | N15 pit quantiles + N16 undercut + compound recommendation | `run_pit_strategy_agent(lap_state)` · `run_pit_strategy_agent_from_state(lap_state, laps_df)` |
 | `radio_agent.py` | N29 | RoBERTa sentiment + SetFit intent + BERT-large NER + RCM parser | `run_radio_agent(lap_state, persist=False)` · `run_radio_agent_from_state(lap_state, laps_df, persist=False)` |
-| `rag_agent.py` | N30 | FIA regulation retrieval (Qdrant + BGE-M3 + LangGraph ReAct) | `run_rag_agent(question)` · `run_rag_agent_from_state(lap_state, laps_df=None)` |
+| `rag_agent.py` | N30 | FIA regulation retrieval (Qdrant + BGE-M3 + LangGraph ReAct) | `run_rag_agent(question, year=None)` · `run_rag_agent_from_state(lap_state, laps_df=None)` |
 | `position_projection.py` |, | Pure primitive: turns per-rival gaps into a projected end-of-window track position, so the decision layer scores in cars rather than in seconds. Loads no model, reads no file. | `project_positions(rivals, plan, config, pit_loss_s, cliff_laps, stop_is_neutralised=False)` · `payoff(result, current_position, config)` · `rank_targets(rivals, config, our_pit_loss_s)` |
 | `strategy_orchestrator.py` | N31 | MoE routing + MC simulation + LLM synthesis | `run_strategy_orchestrator(race_state, lap_state)` · `run_strategy_orchestrator_from_state(race_state, laps_df, lap_state=None)` |
 
@@ -190,9 +190,21 @@ The legacy engine is not used. Do not import from it in new code.
 
 ## LLM configuration (production)
 
-| Layer | Model |
-|---|---|
-| Sub-agents N25-N29 | `gpt-4.1-mini` |
-| Orchestrator N31 | `gpt-5.4-mini` (`OrchestratorConfig.model_name`) |
+| Layer | Model | Environment variable |
+|---|---|---|
+| Sub-agents N26-N30 | `gpt-4.1-mini` | `F1_LLM_MODEL_AGENTS` |
+| Orchestrator N31 | `gpt-5.4-mini` | `F1_LLM_MODEL_ORCHESTRATOR` |
+
+N25 (pace) is absent because it has no LLM step: its ReAct scaffold was retired in #778/#780.
+N30 (rag) runs on the sub-agent model like the rest.
+
+Both defaults live in `src/agents/_shared_defaults.py`, resolved by `subagent_model()` and
+`orchestrator_model()` at the moment a client is built, so setting either variable after import
+still takes effect. `OrchestratorCFG.model_name` overrides the second one for a single process.
+
+When `F1_LLM_PROVIDER=lmstudio`, every agent client also resolves its endpoint at build time from
+`LM_STUDIO_HOST` through `lm_studio_base_url()`. The default host is `localhost` and the port is
+1234; compose sets the host to `host.docker.internal` so the container reaches LM Studio on the
+host.
 
 Notebooks default to `local-model` (LM Studio). Switch to the OpenAI model IDs above when deploying via FastAPI.

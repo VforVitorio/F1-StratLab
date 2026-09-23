@@ -1,6 +1,6 @@
 # F1 StratLab
 
-> F1 StratLab is an open-source (Apache-2.0) multi-agent AI system that turns public Formula 1 telemetry (FastF1, OpenF1) and FIA regulations into real-time race-strategy recommendations. It combines seven ML predictors (lap-time delta, tire degradation, overtake, safety car, pit duration, undercut, circuit clustering), an NLP pipeline over team radio, a RAG layer over FIA rules, and a LangGraph orchestrator (N31). Built as a Final-Degree Project (TFG) by Víctor Vega Sobral for the 2022–2025 regulation era. Three delivery surfaces from one codebase: a headless CLI, a PySide6 arcade (2D replay + dashboards), and a Streamlit web app. The pages below link to the raw Markdown so AI systems can read the prose directly.
+> F1 StratLab is an open-source (Apache-2.0) multi-agent AI system that turns public Formula 1 telemetry (FastF1, OpenF1) and FIA regulations into real-time race-strategy recommendations. It combines seven ML predictors (lap-time delta, tire degradation, overtake, safety car, pit duration, undercut, circuit clustering), an NLP pipeline over team radio, a RAG layer over FIA rules, and a LangGraph orchestrator (N31). Built as a Final-Degree Project (TFG) by Víctor Vega Sobral for the 2022–2025 regulation era. Three delivery surfaces from one codebase: a headless CLI, a PySide6 arcade (2D replay + dashboards), and a React webapp for post-race analysis. The former Streamlit webapp is a legacy reference only. The pages below link to the raw Markdown so AI systems can read the prose directly.
 
 ## Start here
 - [Welcome](https://docs.f1stratlab.com/pages/home.md): What F1 StratLab is and how the layers connect.
@@ -14,7 +14,7 @@
 - [Agents API reference](https://docs.f1stratlab.com/pages/agents-api.md): Entry points, feature vectors, and Pydantic output schemas.
 
 ## Surfaces
-- [Backend API](https://docs.f1stratlab.com/pages/backend-api.md): FastAPI routers + FastMCP — telemetry, chat, voice, strategy.
+- [Backend API](https://docs.f1stratlab.com/pages/backend-api.md): FastAPI routers + FastMCP for telemetry, chat, and strategy. Voice is a legacy surface.
 - [Streamlit frontend (legacy)](https://docs.f1stratlab.com/pages/streamlit.md): Retired Streamlit app, kept for historical reference; the React web app replaced it.
 - [Arcade quick start](https://docs.f1stratlab.com/pages/arcade-quick-start.md): One-command launch of the three-window arcade.
 - [Dashboard architecture (legacy)](https://docs.f1stratlab.com/pages/arcade-dashboard.md): Retired PySide6 dashboard, kept for historical reference; PITWALL replaced it.

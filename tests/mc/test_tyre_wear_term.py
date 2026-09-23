@@ -349,14 +349,6 @@ class TestTheValueReachesBothBranches:
 
         assert with_wear["STAY_OUT"]["E"] != without["STAY_OUT"]["E"]
 
-    def test_neither_branch_moves_when_there_is_no_reading(self):
-        """The fallback keeps every pre-#744b caller on exactly its old numbers,
-        which is why the frozen goldens did not need re-freezing."""
-        rivals = _rivals_with_usable_gaps()
-
-        assert self._score([], None) == self._score([], None)
-        assert self._score(rivals, None) == self._score(rivals, None)
-
     def test_every_candidate_pays_at_its_own_call_site_not_just_the_helper(self):
         """Gate G2's surviving mutant: zeroing OVERCUT's old-lap count AT THE CALL SITE
         left all 232 tests green.

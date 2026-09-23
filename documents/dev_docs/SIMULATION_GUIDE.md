@@ -12,8 +12,11 @@ Quick reference for running, testing, and verifying every layer of the stack.
 .\.venv\Scripts\Activate.ps1
 ```
 
-**LM Studio** — must be running on `http://localhost:1234` for any LLM step.
-Load a model (e.g. Llama-3-8B or equivalent) before running with-LLM tests.
+**LM Studio**: required only when the resolved provider is `lmstudio`, which is what
+`f1-sim` falls back to when neither `--provider` nor `F1_LLM_PROVIDER` is set. It must
+then be serving on `http://localhost:1234` with a model loaded. Passing
+`--provider openai` uses the OpenAI API instead and needs no local server. Per-surface
+table in `INSTALL.md`, section "LLM provider, per surface".
 
 ---
 
@@ -278,7 +281,7 @@ Invoke-RestMethod -Uri "http://localhost:8000/api/v1/strategy/radio" -Method POS
 ### RAG endpoint (N30) — requires LM Studio
 
 ```powershell
-$ragBody = '{"question":"What are the rules for pit stop minimum time?"}'
+$ragBody = '{"question":"What did the 2023 rules say about pit stop minimum time?","year":2023}'
 Invoke-RestMethod -Uri "http://localhost:8000/api/v1/strategy/rag" -Method POST -ContentType "application/json" -Body $ragBody
 ```
 

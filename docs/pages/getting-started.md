@@ -26,7 +26,7 @@ f1-sim         # headless CLI simulation against a saved race
 f1-arcade      # pyglet 2D replay plus the two PITWALL windows
 f1-webapp      # post-race web app (wraps `docker compose up`)
 f1-prefetch    # fill the arcade replay cache ahead of time
-f1-eval        # regenerate the evaluation reports (registry, calibration, hygiene, projection, ...)
+f1-eval        # regenerate the evaluation reports (registry, calibration, RAG, hygiene, projection, ...)
 f1-pitwall     # attach the two PITWALL windows to an arcade already running
 ```
 
@@ -38,11 +38,14 @@ The first four are what a new user actually runs.
 f1-prefetch --year 2025                   # the whole calendar
 f1-prefetch --year 2025 --rounds 1,3,5-8  # commas and ranges
 f1-prefetch --year 2025 --with-radio      # also fetch the team radio the agents read
+f1-prefetch --year 2025 --force           # rebuild rounds that are already cached
 ```
+
+A round whose file is already on disk is skipped without being read, which is what makes a second run cheap. The check is the presence of that file and nothing else, so it cannot see a cache left stale by a release that changed the replay format. After such a release the skip reports every round as cached and rebuilds nothing, and `--force` is the way past it.
 
 Rounds already cached are skipped without being loaded, so re-running it costs one filesystem check per round.
 
-`f1-eval` and `f1-pitwall` are developer tools rather than end-user surfaces. The first writes versioned markdown and JSON reports under `documents/eval_reports/` (`f1-eval registry`, `f1-eval calibration`, `f1-eval all`, ...); the second opens the PITWALL windows against an arcade process that is already running, which is how the UI is developed without restarting the replay.
+`f1-eval` and `f1-pitwall` are developer tools rather than end-user surfaces. The first writes versioned markdown and JSON reports under `documents/eval_reports/` (`f1-eval registry`, `f1-eval rag`, `f1-eval calibration`, `f1-eval all`, ...); the second opens the PITWALL windows against an arcade process that is already running, which is how the UI is developed without restarting the replay.
 
 First boot triggers a one-time download of the cached models and reference data into `~/.f1-strat/`. Subsequent runs are offline.
 
@@ -58,13 +61,15 @@ uv sync --all-extras
 
 `uv sync` reads `pyproject.toml`, resolves the lockfile and pulls the CUDA-routed PyTorch wheel automatically **on Windows**. Everything else, Linux and macOS included, resolves to the CPU wheel: CI runners and CPU-only Linux boxes were downloading about 5 GB of unused CUDA libraries, so the markers were narrowed deliberately (`pyproject.toml`, #251). A Linux GPU box opts back in by editing those markers.
 
+`uv sync --all-extras` does not cover one notebook. `N19_sentiment_vader.ipynb` is the VADER sentiment baseline that RoBERTa replaced, so nothing on the three surfaces reaches it, and nltk was dropped from the dependencies rather than waived against an advisory with no patched release (#1176). That notebook runs with `uv run --with nltk jupyter lab`.
+
 Run the simulation against a saved race:
 
 ```bash
 uv run scripts/run_simulation_cli.py Sakhir NOR McLaren --no-llm
 ```
 
-Drop `--no-llm` once an LLM provider is configured (LM Studio at `http://localhost:1234/v1` or `OPENAI_API_KEY` in `.env`).
+Drop `--no-llm` once an LLM provider is configured. Without `--provider`, `f1-sim` reads `F1_LLM_PROVIDER` from a repo-root `.env` and falls back to LM Studio at `http://localhost:1234/v1`; `--provider openai` selects OpenAI, which needs `OPENAI_API_KEY`.
 
 ## 3. Docker
 
@@ -89,7 +94,7 @@ The first boot triggers a one-time download of the cached models and reference d
 
 ### Which LLM providers are supported?
 
-OpenAI and LM Studio, the system is provider-agnostic and does not depend on a single vendor. Set `F1_LLM_PROVIDER=openai` to use the OpenAI API; the default is a local LM Studio server at `http://localhost:1234/v1`.
+OpenAI and LM Studio, the system is provider-agnostic and does not depend on a single vendor. Setting `F1_LLM_PROVIDER=openai` selects the OpenAI API everywhere. The fallback when it is unset is per surface, a local LM Studio server at `http://localhost:1234/v1` for the CLI and the backend, OpenAI for the arcade, listed in [INSTALL.md](https://github.com/VforVitorio/F1-StratLab/blob/main/INSTALL.md#llm-provider-per-surface).
 
 ### Do I need an API key?
 

@@ -2,7 +2,7 @@
 
 Single source of truth for how F1 StratLab is built, tested, released and deployed. Reading it once explains how a commit becomes a published release and the live docs site.
 
-The pipeline is split across eight GitHub Actions workflows, a release-please bot for versioning, Dependabot for dependency hygiene, and a few repository-level toggles that make everything work. Three of them carry the weight and get a section each below; the other five are the security scanners and the automation.
+The pipeline is split across ten GitHub Actions workflows, a release-please bot for versioning, Dependabot for dependency hygiene, and a few repository-level toggles that make everything work. The pull-request gate is deliberately small and fast; the scheduled workflows carry the expensive and external checks.
 
 ## Branching strategy
 
@@ -38,6 +38,8 @@ Eight workflows live under `.github/workflows/`. They run independently, on diff
 | `ci.yml` | test / lint / typecheck / pip-audit, plus the PITWALL UI job |
 | `release-please.yml` | version bumps, the CHANGELOG and the release PR |
 | `docs.yml` | builds and publishes this site |
+| `nightly-tests.yml` | full data-capable pytest suite, four workers and coverage |
+| `network-contracts.yml` | scheduled external Hugging Face publication contract |
 | `codeql.yml` | SAST over the project's own code |
 | `osv-scanner.yml` | cross-ecosystem vulnerability scan |
 | `gitleaks.yml` | secret scanning over the repo and its diffs |
@@ -46,14 +48,65 @@ Eight workflows live under `.github/workflows/`. They run independently, on diff
 
 ### `.github/workflows/ci.yml`
 
-Triggered on push to `main`, `dev`, `test`, `feat/**`, `fix/**`, `docs/**`, and on pull request targeting `main` or `dev`. Four jobs run in parallel on `ubuntu-latest`:
+Triggered on push to `main`, `dev`, and `test`, and on pull request targeting `main` or `dev`. Feature branches use the pull-request trigger, so the same commit does not pay for a second push run. Five jobs run in parallel on `ubuntu-latest`:
 
-- `test`, path-filter gated on `src/**`, `tests/**`, `pyproject.toml`, `uv.lock` (via `dorny/paths-filter@v4`; skips entirely on a docs-only or unrelated diff). When triggered: `uv sync --all-extras --frozen` (Python 3.12), a "collected-count floor" check (`pytest --co -q` must collect at least 40 nodes, guarding against a refactor silently gutting the suite), then `uv run pytest -v --cov=src --cov-report=term-missing`.
-- `lint`, always runs, no `uv sync` needed. `uvx ruff check .` and `uvx ruff format --check .` as ephemeral tools, so it skips installing the whole ML/torch stack just to lint style.
+- `test`, path-filter gated on source, scripts, tests, data contracts, documentation, dependency, and workflow paths (via `dorny/paths-filter@v4`). When triggered: `uv sync --all-extras --frozen` (Python 3.12), a collected-count floor check, then `uv run pytest -v -n 4 --dist=loadfile -m "not data and not slow and not network" --cov=src --cov-report=term-missing`. The fast gate leaves model-backed measurements and external contracts to scheduled workflows.
+- `lint`, always runs, no `uv sync` needed. `uvx ruff@$RUFF_VERSION check .` and `uvx ruff@$RUFF_VERSION format --check .` as ephemeral tools, so it skips installing the whole ML/torch stack just to lint style. The version comes from the `RUFF_VERSION` variable at the top of the workflow, pinned because an unpinned `uvx ruff` resolves the newest release at run time and can turn every branch red without a commit.
 - `typecheck`, same path-filter gate as `test`. `uv sync --extra dev --frozen` then `uv run mypy src/rag/`. Narrow scope: only production-ready typed modules are checked. Caches `.mypy_cache/` keyed on `pyproject.toml` + `src/rag/**`.
-- `pip-audit`, always runs, no path filter. Exports the locked dependency set (`uv export --frozen --all-extras`) and runs `pip-audit` against it for same-day CVE alerts, independent of whether the diff touches `uv.lock`. Advisory (`continue-on-error: true`) while baselining.
+- `pip-audit`, always runs, no path filter. Exports the locked dependency set with `uv export --frozen --no-emit-project --all-extras --no-hashes` and runs the pinned `pip-audit` tool against it for same-day CVE alerts, independent of whether the diff touches `uv.lock`. Advisory (`continue-on-error: true`) while baselining.
 
 The jobs are deliberately decoupled. A red `lint` does not stop `test` from running. `test` and `typecheck` both checkout with `fetch-depth: 0` **before** the paths-filter step, because the filter falls back to `git diff` on `push` events and needs full history.
+
+### Test tiers
+
+The parent pytest configuration registers seven explicit markers:
+
+| Marker | Meaning | Default PR gate |
+|---|---|---|
+| `unit` | pure hermetic logic | included |
+| `contract` | API, schema, or fixture-backed protocol | included |
+| `data` | HF dataset or model artefacts | excluded, nightly or local |
+| `gpu` | CUDA-dependent work | excluded, local hardware |
+| `llm` | live or stubbed LLM backend | excluded until a hermetic stub exists |
+| `slow` | expensive measurement or real-path test | excluded, nightly or focused |
+| `network` | external service or public artefact | excluded, scheduled workflow |
+
+Run the fast gate locally with:
+
+```bash
+uv run pytest -n 4 --dist=loadfile -m "not data and not slow and not network" --cov=src
+```
+
+Run the complete local suite when changing test boundaries or preparing a
+release:
+
+```bash
+uv run pytest -n 4 --dist=loadfile --cov=src
+```
+
+The `-ra` pytest setting keeps skipped and deselected tests visible. A skipped
+data test means that the required artefact is absent; it is not a passing
+measurement.
+
+### Scheduled test workflows
+
+`nightly-tests.yml` runs the full parent suite from a recursive checkout with
+four xdist workers and coverage, Monday to Friday at 03:00 UTC or on demand.
+`network-contracts.yml` runs the Hugging Face publication contract every
+Monday at 03:30 UTC or on demand. Keeping these checks outside the PR gate
+shortens reviews without deleting the evidence-producing tests.
+
+### `src/telemetry/.github/workflows/ci.yml`
+
+The telemetry submodule has its own CI in the `F1_Telemetry_Manager` repository.
+It uses `astral-sh/setup-uv@v7` with Python 3.11, pins uv to `0.9.13`, and
+caches the submodule `uv.lock`. The lint and test jobs install only the
+lightweight `ci` dependency group with `uv sync --frozen --only-group ci --no-install-project`, then run Ruff and pytest through `uv run --frozen --no-sync`. The full runtime is reserved for Docker, where the backend image
+syncs the project dependencies from the same lockfile. The parent CI checks the
+gitlink but does not replace the submodule workflow. Feature branches trigger
+the submodule workflows through pull requests only; pushes are limited to
+`main`, avoiding duplicate push and PR runs. The current hermetic submodule
+suite is 107 passed and 4 skipped.
 
 ### `.github/workflows/release-please.yml`
 
@@ -165,12 +218,12 @@ The release-please job runs on the built-in `GITHUB_TOKEN`, not a repository-sec
 Before opening a PR, run the same commands CI runs:
 
 ```bash
-uv run pytest -v
-uvx ruff check . && uvx ruff format --check .
+uv run pytest -v -n 4 --dist=loadfile -m "not data and not slow and not network" --cov=src
+uv run ruff check . && uv run ruff format --check .
 uv run mypy src/rag/
 ```
 
-`lint` uses `uvx` (ephemeral tool run, no `uv sync`), not `uv run`, matching the actual CI job saves a needless full-environment sync just to check style.
+The local commands use `uv run`, so ruff comes from `uv.lock` and cannot disagree with the gate: the lock and `RUFF_VERSION` hold the same version, and a bump changes `pyproject.toml`, `uv.lock` and the workflow in one PR. CI itself uses `uvx ruff@$RUFF_VERSION` instead, because the `lint` job never syncs and would otherwise install the whole ML stack to check style.
 
 Once the PR is open and green, target `dev` (see "Branching strategy" above: `main` is release-only) and queue it for auto-merge:
 

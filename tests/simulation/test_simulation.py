@@ -11,7 +11,7 @@ Two kinds of coverage live here:
    an ``APIConnectionError`` surfaces, keeping the run deterministic.
 
 2. Integration test against the ``/api/v1/strategy/simulate`` endpoint using
-   ``fastapi.testclient.TestClient.stream`` — the exact pattern the manual
+   ``starlette.testclient.TestClient.stream`` — the exact pattern the manual
    smoke test used. The mini-app only mounts ``strategy.router`` so we avoid
    pulling ``backend.main`` (which imports FastMCP, Supabase, etc.) and the
    test stays hermetic.
@@ -151,7 +151,8 @@ def test_simulate_endpoint_streams_sse_frames():
     """POST /api/v1/strategy/simulate must return an SSE stream with 4+ frames.
 
     Mounts only ``strategy.router`` on a bare FastAPI app so the test does not
-    pull ``backend.main`` (which imports FastMCP, Supabase, voice stack, etc.).
+    pull ``backend.main`` (which imports FastMCP, Supabase, and other service
+    stacks). The retired voice router is no longer part of the active tree.
     This mirrors the pattern used by the manual smoke test and keeps the
     integration cost low enough for CI.
 
@@ -165,7 +166,7 @@ def test_simulate_endpoint_streams_sse_frames():
     _ensure_backend_on_path()
     from backend.api.v1.endpoints import strategy
     from fastapi import FastAPI
-    from fastapi.testclient import TestClient
+    from starlette.testclient import TestClient
 
     app = FastAPI()
     app.include_router(strategy.router, prefix="/api/v1")

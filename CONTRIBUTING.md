@@ -69,7 +69,7 @@ after merge.
 git clone https://github.com/VforVitorio/F1-StratLab.git
 cd F1-StratLab
 git submodule update --init --recursive     # src/telemetry/ is a submodule
-uv sync                                      # installs every dependency
+uv sync --all-extras                         # base deps + the dev extra (pytest, ruff, mypy)
 cp .env.example .env                         # add OPENAI_API_KEY here
 ```
 
@@ -163,18 +163,17 @@ these safeguards trigger there. They are no-ops on POSIX.
 ## Pull request checklist
 
 - [ ] Branch off `dev` (`main` is release-only).
-- [ ] `pytest tests/ -x` green.
-- [ ] **`pytest tests/eval/ -q` green, run LOCALLY.** CI cannot run this
-      directory: it needs `data/models/` and the labeled holdouts, which the
-      runners do not have, so those tests are skipped there and **a failure in
-      them is invisible to every pull request**. This is not hypothetical: a
-      golden asserting a pit coverage of 0.7047 sat red for months after the
-      holdout was regenerated to 0.7024, with every PR passing over it (#634).
-      A green CI means these did not run, not that they passed.
+- [ ] `uv run pytest -n 4 --dist=loadfile -m "not data and not slow and not network"`
+      green. This is the fast local equivalent of the required CI gate.
+- [ ] Run the complete local suite before a release or a change to test
+      boundaries: `uv run pytest -n 4 --dist=loadfile`.
+- [ ] If `tests/eval/` or another data-backed area changed, run its data tier
+      locally. CI deliberately excludes model and dataset measurements from
+      the PR gate; a skip in CI is not evidence that the measurement passed.
 - [ ] If `src/telemetry/*` changed, commit inside the submodule and
       bump the submodule pointer in the parent repo.
-- [ ] `ROADMAP.md` and the relevant `docs/` file updated when behaviour
-      changes.
+- [ ] The relevant `documents/` guide or audit and the matching `docs/pages/`
+      page are updated when behaviour, tests, or CI contracts change.
 - [ ] One logical change per commit; imperative subject line; **no
       `Co-Authored-By` or AI-attribution trailers, ever.**
 - [ ] If a new sub-agent output was added, update
@@ -182,20 +181,38 @@ these safeguards trigger there. They are no-ops on POSIX.
 
 ## CI pipeline
 
-Four jobs run on every push and PR (`.github/workflows/ci.yml`):
+The pull-request gate runs the fast, hermetic part of the suite. Expensive
+measurements and external contracts run in separate scheduled workflows so a
+normal review gets a useful answer quickly without hiding the broader checks.
+See [`documents/dev_docs/TESTING_GUIDE.md`](documents/dev_docs/TESTING_GUIDE.md)
+for the full tier policy.
+
+Five jobs are defined in the parent workflow (`.github/workflows/ci.yml`):
 
 | Job | Installs | Runs |
 |---|---|---|
-| `lint` | nothing, ruff via `uvx` | `ruff check .` + `ruff format --check .` |
-| `typecheck` | `uv sync --extra dev` (mypy + project deps, no voice extras) | `mypy src/rag/` |
-| `test` | `uv sync --all-extras` (full ML/voice/arcade stack) | `pytest -v --cov=src` + a collected-test-count floor (guards against a refactor silently dropping the suite) |
+| `lint` | nothing, ruff via `uvx ruff@$RUFF_VERSION` | `ruff check .` + `ruff format --check .` |
+| `typecheck` | `uv sync --extra dev` (mypy ships in the dev extra) | `mypy src/rag/` |
+| `test` | `uv sync --all-extras` (same set: `dev` is the only extra) | `pytest -v -n 4 --dist=loadfile -m "not data and not slow and not network" --cov=src` + collected-test-count floor |
 | `pip-audit` | `uv export` to a requirements file | `pip-audit` against the locked deps (advisory, `continue-on-error: true` while baselining) |
 
 `test` and `typecheck` are additionally gated by `dorny/paths-filter`:
-they skip their real work (still reporting green) when the diff touches
-neither `src/`, `tests/`, `pyproject.toml`, `uv.lock`, nor the workflow
-file itself, a docs-only or CI-only PR does not pay for a full ML-stack
-install. `lint` and `pip-audit` stay always-on.
+they run when source, tests, scripts, data contracts, documentation, or CI
+configuration changes. A purely unrelated change can still skip their real
+work while reporting green. The fast test expression excludes `data`, `slow`,
+and `network` tests; `-ra` keeps the skip summary visible. `lint` and
+`pip-audit` stay always-on.
+
+The scheduled workflows complete the excluded surface:
+
+- `.github/workflows/nightly-tests.yml` runs the full suite with four workers
+  and coverage from a recursive checkout.
+- `.github/workflows/network-contracts.yml` runs the Hugging Face publication
+  contract every Monday and on demand.
+
+The nightly suite is an observability check, not permission to weaken a
+failure. A data-backed failure still needs local reproduction and an explicit
+decision before a release.
 
 All jobs share uv's wheel cache (`enable-cache: true`, keyed off
 `uv.lock`), so the cache only invalidates when the resolved graph

@@ -47,7 +47,7 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.agents._shared_defaults import LLM_MAX_RETRIES
+from src.agents._shared_defaults import LLM_MAX_RETRIES, lm_studio_base_url, orchestrator_model
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +105,7 @@ from src.agents.radio_agent        import (
     RCMEvent,
 )
 from src.agents.rag_agent          import run_rag_agent
+from src.strategy.inference.scoping import season_of
 
 
 # ==============================================================================
@@ -140,8 +141,12 @@ class OrchestratorCFG:
     See documents/audits/AUDIT_ORCHESTRATOR_MEMORY.md, section 1.1.
     """
 
-    model_name:             str   = "gpt-5.4-mini"
-    base_url:               str   = "http://localhost:1234/v1"
+    # None means "whatever the layer default resolves to", so the value is read at
+    # BUILD time and an env change still lands. A literal here would freeze the
+    # policy at import. Set it to override for one process; otherwise `orchestrator_model()` wins.
+    # `scripts/prompt_ab/_common.py:apply_model_flag` writes it for an A/B run.
+    model_name:             str | None = None
+    base_url:               str | None = None
     temperature:            float = 0.0
     n_sim:                  int   = 500
     sc_prob_threshold:      float = 0.30
@@ -193,13 +198,14 @@ def _get_orchestrator_llm():
             )
         from langchain_openai import ChatOpenAI
         provider = os.environ.get("F1_LLM_PROVIDER", "lmstudio")
+        model_name = CFG.model_name or orchestrator_model()
         if provider == "openai":
             # No parallel_tool_calls: OpenAI rejects it when no tools are specified
-            llm = ChatOpenAI(model=CFG.model_name, temperature=CFG.temperature, timeout=120, max_retries=LLM_MAX_RETRIES)
+            llm = ChatOpenAI(model=model_name, temperature=CFG.temperature, timeout=120, max_retries=LLM_MAX_RETRIES)
         else:
             llm = ChatOpenAI(
-                model=CFG.model_name,
-                base_url=CFG.base_url,
+                model=model_name,
+                base_url=CFG.base_url or lm_studio_base_url(),
                 api_key="lm-studio",
                 temperature=CFG.temperature,
                 model_kwargs={"parallel_tool_calls": False},
@@ -215,7 +221,7 @@ def _get_orchestrator_llm():
                 "deterministically: consecutive laps will disagree on confidence, "
                 "pit_lap_target and reasoning even when the prompt is identical. "
                 "See documents/audits/AUDIT_ORCHESTRATOR_MEMORY.md, section 1.1.",
-                CFG.temperature, CFG.model_name,
+                CFG.temperature, model_name,
             )
         # _LLMSynthesis only has the 3 fields the LLM actually fills.
         # scenario_scores (dict) and regulation_context are attached in code after.
@@ -1573,7 +1579,7 @@ from src.rag.store_lock import is_store_locked as _is_store_locked
 _rag_unavailable_logged = False
 
 
-def _run_rag_agent_or_degrade(question: str):
+def _run_rag_agent_or_degrade(question: str, year: int | None = None):
     """N30's answer, or None when the regulation store cannot be opened.
 
     The store is local single-writer (`QdrantClient(path=...)`), so a second
@@ -1592,10 +1598,18 @@ def _run_rag_agent_or_degrade(question: str):
     missing embedding model or a bad question must still surface: those are not
     "another process is running", and swallowing them would trade one silent
     failure for another.
+
+    Args:
+        question: The regulation question built by :func:`_build_rag_question`.
+        year:     Season to scope retrieval to, normally ``lap_state["year"]``.
+                  None searches every indexed season. The season travels from here
+                  rather than being named inside ``question``, because putting it in
+                  the text only shifts the embedding and still leaves a third of the
+                  hits in another year.
     """
     global _rag_unavailable_logged
     try:
-        return run_rag_agent(question)
+        return run_rag_agent(question, year=year)
     except (RuntimeError, *_LOCK_EXCEPTIONS) as exc:
         if not _is_store_locked(exc):
             raise
@@ -1631,9 +1645,10 @@ def _build_rag_question(
         # specification together (Art. 30.5 n), a wet-start and resumption rule)
         # and invites the answer to drop its condition (#826).
         return (
-            "What is the procedure for drivers and teams when the safety car is "
-            "deployed during a race? Describe what drivers must do, and state any "
-            "conditions that limit when each requirement applies."
+            "What rules govern entering the pit lane and changing tyre specifications "
+            "when a Safety Car is deployed during an ordinary race? Distinguish this "
+            "from rules that apply only to a wet formation-lap start or a race "
+            "resumption, and state the conditions for each requirement."
         )
     if pit_action == "UNDERCUT":
         return (
@@ -1687,6 +1702,7 @@ def _build_orchestrator_prompt(
     pit_out              = None,
     radio_out            = None,
     regulation_context:  str = "",
+    regulation_sources:  str = "",
     memory_block:        str = "",
 ) -> str:
     """Build the LLM synthesis prompt for Layer 3.
@@ -1698,9 +1714,10 @@ def _build_orchestrator_prompt(
     data) so the LLM can fill the expanded StrategyRecommendation schema
     without having to reverse-engineer values from the reasoning strings.
 
-    N30 regulation context is injected as a hard constraint block: the LLM is
-    told explicitly which actions are regulation-compliant before it decides,
-    so illegal options cannot appear in the output.
+    N30 regulation context is injected with its verbatim retrieved passages when
+    available. The passages are authoritative only under their quoted conditions;
+    the generated summary is shown separately so a bad paraphrase cannot silently
+    become a universal constraint.
 
     best_mc is the MC argmax passed as a hint. The LLM may override it if
     regulation context, radio alerts, or a planned contingency justify a
@@ -1722,12 +1739,23 @@ def _build_orchestrator_prompt(
     """
     mc_table = "\n".join(_format_mc_row(name, cell) for name, cell in mc_results.items())
 
-    reg_block = (
-        f"REGULATION CONSTRAINT (hard — exclude non-compliant actions):\n"
-        f"{regulation_context}"
-        if regulation_context
-        else "REGULATION CONSTRAINT: none flagged — all four actions are compliant."
-    )
+    if regulation_sources:
+        reg_block = (
+            "REGULATION EVIDENCE (verbatim retrieved passages; apply a rule only "
+            "when its quoted condition holds):\n"
+            f"{regulation_sources}\n"
+            "N30 SUMMARY (untrusted paraphrase; do not use it to invent article "
+            "numbers or conditions):\n"
+            f"{regulation_context or '(empty)'}"
+        )
+    elif regulation_context:
+        reg_block = (
+            "REGULATION SUMMARY (not independently grounded in a retrieved passage; "
+            "do not let it override numeric evidence):\n"
+            f"{regulation_context}"
+        )
+    else:
+        reg_block = "REGULATION EVIDENCE: none retrieved; all four actions remain available."
 
     # Pace CI bounds rendered into the prompt guidance: keep a safe fallback
     # when pace_out is unavailable so the format string never crashes.
@@ -1803,11 +1831,11 @@ def _build_orchestrator_prompt(
     return (
         f"You are the F1 Strategy Orchestrator. Synthesise the sub-agent outputs below\n"
         f"into a single StrategyRecommendation. Choose the primary action that maximises\n"
-        f"risk-adjusted position gain while respecting the regulation constraint, and fill\n"
+        f"risk-adjusted position gain while respecting verified regulation evidence, and fill\n"
         f"every structured field so the strategy can be executed without parsing your prose.\n\n"
         f"CRITICAL: the Monte Carlo score is ONE input among many. Your decision must\n"
         f"weigh it against the tire cliff distance, the specific rival gap and pace delta,\n"
-        f"any radio or RCM alerts, and the regulation constraint. Never justify a call\n"
+        f"any radio or RCM alerts, and the regulation evidence. Never justify a call\n"
         f"with MC numbers alone — cite at least one tire, one situation or radio, and\n"
         f"(if present) one regulation signal. If evidence across agents disagrees, say so\n"
         f"and explain which signal you trusted and why.\n\n"
@@ -2103,6 +2131,30 @@ def _run_always_on_agents_from_state(
     return pace_out, tire_out, situation_out, radio_out
 
 
+def _format_regulation_sources(rag_dict: dict | None) -> str:
+    """Render retrieved regulation passages for the synthesis prompt.
+
+    N30's summary is generated prose and may lose an applicability clause. The
+    chunks are the evidence the retriever supplied, so N31 receives both without
+    changing the public ``regulation_context`` response field.
+    """
+    if not rag_dict:
+        return ""
+
+    rendered: list[str] = []
+    for index, chunk in enumerate(rag_dict.get("chunks") or [], start=1):
+        if not isinstance(chunk, dict):
+            continue
+        text = str(chunk.get("text") or "").strip()
+        if not text:
+            continue
+        article = str(chunk.get("article") or "article unknown")
+        section = str(chunk.get("section_title") or "").strip()
+        label = f"{article}{f' | {section}' if section else ''}"
+        rendered.append(f"[Retrieved passage {index} | {label}]\n{text}")
+    return "\n\n".join(rendered)
+
+
 def _run_conditional_agents(
     active:       set,
     lap_state:    dict,
@@ -2133,11 +2185,9 @@ def _run_conditional_agents(
     ``regulation_context_str`` may be ``None`` when the respective agent was
     not activated this lap; ``rag_dict`` is the structured payload from N30
     (``question`` / ``answer`` / ``articles`` / ``chunks``) for downstream
-    consumers that need more than just the answer string (the arcade
-    dashboard surfaces article references and chunk text in its RAG card).
-    The legacy ``regulation_context_str`` is preserved verbatim for the
-    orchestrator's own LLM prompt and for ``StrategyRecommendation``,
-    neither of which depend on the structured shape.
+    consumers that need more than just the answer string. The arcade dashboard
+    surfaces article references and chunk text in its RAG card, and Layer 3
+    receives the chunk text as grounded evidence alongside the legacy summary.
     """
     pit_out = None
     if "N28" in active:
@@ -2185,7 +2235,8 @@ def _run_conditional_agents(
             pit_action = pit_action,
             compound   = race_state.compound,
         )
-        reg_out = _run_rag_agent_or_degrade(question)
+        # lap_state["year"], not race_state.year: RaceState has no year field.
+        reg_out = _run_rag_agent_or_degrade(question, year=lap_state["year"])
 
     if reg_out is not None:
         regulation_context = reg_out.answer
@@ -2467,9 +2518,9 @@ def run_strategy_orchestrator(
         sc_currently_active = situation_out.sc_currently_active,
     )
 
-    # Layer 1c: conditional agents. The structured RAG dict is only used by
-    # the arcade dashboard; the orchestrator path keeps the answer string.
-    pit_out, regulation_context, _rag_dict = _run_conditional_agents(
+    # Layer 1c: conditional agents. Keep both the summary and the retrieved
+    # passages so Layer 3 can distinguish evidence from N30 paraphrase.
+    pit_out, regulation_context, rag_dict = _run_conditional_agents(
         active        = active,
         lap_state     = lap_state,
         tire_out      = tire_out,
@@ -2508,6 +2559,7 @@ def run_strategy_orchestrator(
         pit_out            = pit_out,
         radio_out          = radio_out,
         regulation_context = regulation_context,
+        regulation_sources  = _format_regulation_sources(rag_dict),
     )
 
     synth: _LLMSynthesis = _get_orchestrator_llm().invoke(prompt)
@@ -2569,7 +2621,7 @@ def run_strategy_orchestrator_from_state(
     if lap_state is None:
         driver_rows = laps_df[laps_df["Driver"] == race_state.driver]
         lap_row     = driver_rows[driver_rows["LapNumber"] == race_state.lap]
-        year        = int(laps_df["Year"].iloc[0]) if "Year" in laps_df.columns else 2025
+        year        = season_of(laps_df)
         # Derive the GP from the (driver, lap) row match, NOT laps_df.iloc[0] (the
         # first row of the whole-season frame): the latter blends one race's GP with
         # another race's stint/team: the #465 wrong-GP bug engine._build_default_lap_state
@@ -2651,9 +2703,9 @@ def run_strategy_orchestrator_from_state(
         sc_currently_active = situation_out.sc_currently_active,
     )
 
-    # Layer 1c: conditional agents (RSM variants). Same RAG-dict treatment
-    # as the FastF1 entry point: discarded here, consumed only by the arcade.
-    pit_out, regulation_context, _rag_dict = _run_conditional_agents(
+    # Layer 1c: conditional agents (RSM variants). Keep the same grounded
+    # regulation sources as the FastF1 entry point.
+    pit_out, regulation_context, rag_dict = _run_conditional_agents(
         active        = active,
         lap_state     = lap_state,
         tire_out      = tire_out,
@@ -2689,6 +2741,7 @@ def run_strategy_orchestrator_from_state(
         pit_out            = pit_out,
         radio_out          = radio_out,
         regulation_context = regulation_context,
+        regulation_sources  = _format_regulation_sources(rag_dict),
     )
 
     synth: _LLMSynthesis = _get_orchestrator_llm().invoke(prompt)
