@@ -22,11 +22,11 @@
   },
   "failures": [],
   "inputs": {
-    "api": "C:\\Users\\victo\\Desktop\\Documents\\Cuarto Año\\TFG\\F1_StratLab_1252\\documents\\audits\\TRACE_1252_1252-lusail-nor-l7-20260924-run1.json",
-    "browser": "C:\\Users\\victo\\Desktop\\Documents\\Cuarto Año\\TFG\\F1_StratLab_1252\\documents\\audits\\TRACE_1252_1252-lusail-nor-l7-20260924-run1_browser.json"
+    "api": "documents/audits/TRACE_1252_1252-lusail-nor-l7-20260924-run1.json",
+    "browser": "documents/audits/TRACE_1252_1252-lusail-nor-l7-20260924-run1_browser.json"
   },
   "screenshots": {
-    "data": "C:\\Users\\victo\\Desktop\\Documents\\Cuarto Año\\TFG\\F1_StratLab_1252\\documents\\audits\\TRACE_1252_1252-lusail-nor-l7-20260924-run1_data.png",
-    "agents": "C:\\Users\\victo\\Desktop\\Documents\\Cuarto Año\\TFG\\F1_StratLab_1252\\documents\\audits\\TRACE_1252_1252-lusail-nor-l7-20260924-run1_agents.png"
+    "data": "documents/audits/TRACE_1252_1252-lusail-nor-l7-20260924-run1_data.png",
+    "agents": "documents/audits/TRACE_1252_1252-lusail-nor-l7-20260924-run1_agents.png"
   }
 }
