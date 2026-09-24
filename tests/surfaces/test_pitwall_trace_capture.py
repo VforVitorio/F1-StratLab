@@ -1,10 +1,11 @@
 import hashlib
 import json
 from copy import deepcopy
+from pathlib import Path
 from types import SimpleNamespace
 
 from scripts.trace_pitwall_real_path import _evaluate_trace_checks, _matches_target
-from scripts.verify_pitwall_trace import evaluate_trace_reports
+from scripts.verify_pitwall_trace import _resolve_screenshot_path, evaluate_trace_reports
 
 
 def test_trace_matches_only_the_configured_real_decision_coordinates():
@@ -262,6 +263,22 @@ def test_trace_report_verifier_accepts_correlated_values_and_real_page_evidence(
     checks = evaluate_trace_reports(api_report, browser_report, {"data": 10, "agents": 10})
 
     assert checks and all(checks.values()), checks
+
+
+def test_screenshot_resolution_uses_the_audit_copy_for_stale_windows_paths(tmp_path: Path):
+    screenshot = tmp_path / "TRACE_1252_trace-test_data.png"
+    screenshot.write_bytes(b"png evidence")
+    browser_report = {
+        "screenshots": {
+            "data": {
+                "path": r"C:\Users\old-checkout\documents\audits\TRACE_1252_trace-test_data.png"
+            }
+        }
+    }
+
+    resolved = _resolve_screenshot_path(browser_report["screenshots"], "data", tmp_path)
+
+    assert resolved == screenshot
 
 
 def test_trace_report_verifier_rejects_stale_or_missing_evidence():

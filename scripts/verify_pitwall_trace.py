@@ -6,7 +6,7 @@ import argparse
 import hashlib
 import json
 import re
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -33,6 +33,14 @@ def _same_race(value: Any, year: int, gp: str) -> bool:
 def _screenshot_path(screenshots: dict[str, Any], name: str) -> str:
     value = screenshots.get(name)
     return str(value.get("path", "")) if isinstance(value, dict) else str(value or "")
+
+
+def _resolve_screenshot_path(
+    screenshots: dict[str, Any], name: str, audit_dir: Path
+) -> Path | None:
+    value = _screenshot_path(screenshots, name)
+    filename = PureWindowsPath(value).name
+    return audit_dir / filename if filename else None
 
 
 def _row_from_text(text: str, driver: str) -> list[str] | None:
@@ -330,9 +338,11 @@ def main() -> int:
     browser_report = _read_json(browser_path)
     screenshots = _mapping(browser_report.get("screenshots"))
     screenshot_sizes = {}
+    resolved_screenshots = {}
     for name in ("data", "agents"):
-        path = Path(_screenshot_path(screenshots, name))
-        screenshot_sizes[name] = path.stat().st_size if path.is_file() else 0
+        path = _resolve_screenshot_path(screenshots, name, audit_dir)
+        resolved_screenshots[name] = path
+        screenshot_sizes[name] = path.stat().st_size if path is not None and path.is_file() else 0
 
     checks = evaluate_trace_reports(api_report, browser_report, screenshot_sizes)
     failures = [name for name, passed in checks.items() if not passed]
@@ -359,8 +369,14 @@ def main() -> int:
         },
         "checks": checks,
         "failures": failures,
-        "inputs": {"api": str(api_path), "browser": str(browser_path)},
-        "screenshots": {name: _screenshot_path(screenshots, name) for name in screenshots},
+        "inputs": {
+            "api": api_path.relative_to(REPO_ROOT).as_posix(),
+            "browser": browser_path.relative_to(REPO_ROOT).as_posix(),
+        },
+        "screenshots": {
+            name: path.relative_to(REPO_ROOT).as_posix() if path is not None else ""
+            for name, path in resolved_screenshots.items()
+        },
     }
     out = args.out or audit_dir / f"TRACE_1252_{args.run_id}_verified.json"
     if not out.is_absolute():

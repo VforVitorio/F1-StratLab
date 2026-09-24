@@ -1,6 +1,6 @@
 /** Capture the live DATA and AGENTS pages while they consume a real Arcade stream. */
 import { mkdir, stat, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 
@@ -320,7 +320,12 @@ const report = {
   },
   rendered,
   errors,
-  screenshots,
+  screenshots: Object.fromEntries(
+    Object.entries(screenshots).map(([name, screenshot]) => [
+      name,
+      { ...screenshot, path: basename(screenshot.path) },
+    ]),
+  ),
 };
 await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 process.stdout.write(`${JSON.stringify({ run_id: runId, status, report: reportPath })}\n`);
