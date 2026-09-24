@@ -81,6 +81,61 @@ and never calls an LLM. The report is written to
 `documents/eval_reports/rag.{md,json}`. This is a local data run, not part of
 the fast pull-request gate.
 
+## PITWALL real-path trace
+
+Issue #1252 has a local trace for one measured Lusail 2025 tick. It reads one
+NDJSON message from the live Arcade TCP server, then captures the real
+`/api/tick`, `/api/bulk`, `/api/live`, and `/api/agents` responses. The JSON
+report records the full wire message and each sequence. Check the rendered
+pages separately in a browser.
+
+Build the bundle, then choose unused loopback ports. In one PowerShell window,
+launch the no-LLM replay:
+
+```powershell
+Push-Location src/pitwall/ui
+npm run build
+Pop-Location
+
+$env:F1_STREAM_PORT = "55998"
+$env:F1_PITWALL_BROWSER_PORT = "55999"
+$env:OPENAI_API_KEY = ""
+$env:HF_HUB_OFFLINE = "1"
+$env:TRANSFORMERS_OFFLINE = "1"
+uv run f1-arcade --viewer --year 2025 --round 23 --driver NOR --team McLaren --strategy --no-llm
+```
+
+Raise playback to 8x with five Up-arrow presses. In two other windows, set the
+same ports and start both captures with one fresh run ID. Run them at the same
+time so the pages can be matched to the wire sequence.
+
+```powershell
+$env:F1_STREAM_PORT = "55998"
+$env:F1_PITWALL_BROWSER_PORT = "55999"
+uv run python scripts/trace_pitwall_real_path.py --run-id 1252-lusail-nor-l7-run1
+```
+
+In the third window, run the Playwright page probe:
+
+```powershell
+node src/pitwall/ui/scripts/trace-live.mjs `
+  http://127.0.0.1:55999 1252-lusail-nor-l7-run1 7 Lusail NOR
+```
+
+It saves the API responses, rendered page text, console errors, and screenshots
+beside the report. After both capture commands finish, verify the files
+together:
+
+```powershell
+uv run python scripts/verify_pitwall_trace.py --run-id 1252-lusail-nor-l7-run1
+```
+
+The verifier checks the five sequences, strategy action, DATA values, browser
+errors, and screenshot files, then writes a separate `_verified.json`. Use a
+new run ID for each retry. This local run needs 2025 data and model weights.
+`--no-llm` and the empty API key prevent paid model calls. It is not part of the
+PR test gate.
+
 ## What changed in the efficiency pass
 
 - The MC-table regeneration test writes to `tmp_path` through the script's

@@ -36,6 +36,7 @@ from __future__ import annotations
 import json
 import logging
 import mimetypes
+import os
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -46,9 +47,8 @@ logger = logging.getLogger(__name__)
 
 # Loopback only. See the module docstring: the payload is unauthenticated.
 BROWSER_HOST = "127.0.0.1"
-# 0 lets the OS pick a free one, which is what a dev surface wants: two arcades
-# side by side must not fight, and the chosen port is logged.
-BROWSER_PORT = 0
+# 0 lets the OS choose unless a live trace pins a known port for browser capture.
+BROWSER_PORT = int(os.environ.get("F1_PITWALL_BROWSER_PORT", "0"))
 
 _TEXT_TYPES = {".html": "text/html", ".js": "text/javascript", ".css": "text/css"}
 

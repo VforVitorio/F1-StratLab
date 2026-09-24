@@ -14,6 +14,9 @@ name a file, and nothing here listens beyond the loopback interface.
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -268,3 +271,22 @@ def test_a_port_it_cannot_bind_degrades_to_no_server_rather_than_a_crash(tmp_pat
 
     with mock.patch("src.pitwall.webserver.ThreadingHTTPServer", refuse):
         assert BrowserServer(dist, _FakeHost()).start() is None
+
+
+def test_browser_port_can_be_pinned_for_a_live_trace():
+    env = os.environ.copy()
+    env["F1_PITWALL_BROWSER_PORT"] = "58473"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from src.pitwall.webserver import BROWSER_PORT; print(BROWSER_PORT)",
+        ],
+        cwd=Path(__file__).resolve().parents[2],
+        env=env,
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+
+    assert result.stdout.strip() == "58473"
