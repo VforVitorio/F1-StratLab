@@ -1,0 +1,32 @@
+{
+  "run_id": "1252-lusail-nor-l7-20260924-run1",
+  "status": "pass",
+  "sequence": 3227,
+  "decision": {
+    "lap_number": 7,
+    "action": "STAY_OUT",
+    "no_llm": true
+  },
+  "checks": {
+    "run_ids_match": true,
+    "both_reports_claim_pass": true,
+    "wire_hash_and_size_match_payload": true,
+    "all_five_sequences_match": true,
+    "browser_target_matches_api_trace": true,
+    "scenario_and_no_llm_match": true,
+    "host_and_agents_values_match_wire": true,
+    "data_routes_match_wire_and_display": true,
+    "all_browser_routes_succeeded": true,
+    "browser_has_no_errors": true,
+    "screenshots_exist_and_are_nonempty": true
+  },
+  "failures": [],
+  "inputs": {
+    "api": "C:\\Users\\victo\\Desktop\\Documents\\Cuarto Año\\TFG\\F1_StratLab_1252\\documents\\audits\\TRACE_1252_1252-lusail-nor-l7-20260924-run1.json",
+    "browser": "C:\\Users\\victo\\Desktop\\Documents\\Cuarto Año\\TFG\\F1_StratLab_1252\\documents\\audits\\TRACE_1252_1252-lusail-nor-l7-20260924-run1_browser.json"
+  },
+  "screenshots": {
+    "data": "C:\\Users\\victo\\Desktop\\Documents\\Cuarto Año\\TFG\\F1_StratLab_1252\\documents\\audits\\TRACE_1252_1252-lusail-nor-l7-20260924-run1_data.png",
+    "agents": "C:\\Users\\victo\\Desktop\\Documents\\Cuarto Año\\TFG\\F1_StratLab_1252\\documents\\audits\\TRACE_1252_1252-lusail-nor-l7-20260924-run1_agents.png"
+  }
+}
