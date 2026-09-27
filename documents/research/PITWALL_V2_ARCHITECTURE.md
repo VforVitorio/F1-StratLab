@@ -1,6 +1,6 @@
 # PITWALL v2 architecture (v2.6.0, "Arcade, modernized")
 
-**Status: design, agreed 2026-08-07. NO code written.**
+**Status: architecture decision, agreed 2026-08-07. This records the design decision, not implementation status; check current code and issues before treating any item as open.**
 **This document SUPERSEDES `PITWALL_REALISM_AND_TELEMETRY_SURFACE.md` sections 3 to 6 and the
 phase decomposition of epic #281.** Its Topic 1 (the observability model, sections 1 to 2) stands
 and is unaffected.

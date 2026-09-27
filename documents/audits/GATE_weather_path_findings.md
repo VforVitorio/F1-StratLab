@@ -56,7 +56,7 @@ So the default-firing branch on the replay path requires: weather.parquet missin
 - `backend/utils/laps_cache.py:29-40` (`get_laps_df`) DOES call `augment_featured_laps` — the CLAUDE.md "every consumer" rule holds here.
 - `src/f1_strat_manager/laps_augment.py` `RAW_COLUMNS_TO_RESTORE = {"Time": "Time_s", "TrackStatus": "TrackStatus"}` — weather columns are NOT restored by augmentation.
 - `/lap-state` producer `endpoints/strategy.py:574-583`: `weather = {"air_temp": _safe_none(r.get("AirTemp")), "track_temp": _safe_none(r.get("TrackTemp")), ...}` — keys unconditionally present.
-- `backend/utils/race_state_builder.py:114-115`: `float(weather.get("air_temp", 25.0))` / `float(weather.get("track_temp", 35.0))` — default fires only on MISSING key. Lines 89-103 of the SAME FILE document this exact dead-default class for `position` (#465) and fix it there — but not for weather. The twin that never got the fix.
+- `backend/utils/race_state_builder.py:114-115`: `float(weather.get("air_temp", 25.0))` / `float(weather.get("track_temp", 35.0))` — the defaults fire only when a key is absent. The adjacent `position` path at lines 89-103 handles a present `None`; these weather conversions do not.
 - Reachability chain 1 (webapp): `webapp/src/features/strategy/queries.ts:160-161` — `fetchLapState(...)` then `runRecommend(lapState, ...)`; `lib/api/strategy.ts:322` GETs `lap-state`, `:352` posts `lap_state: lapState` verbatim to `/recommend`; `endpoints/strategy.py:1349` feeds it to `build_race_state`. No sanitisation between.
 - Reachability chain 2 (chat/MCP): `backend/mcp_tools.py:397-413` `_build_lap_state` delegates to the SAME `get_lap_state` producer; `:583-595` `recommend_strategy` feeds it to `build_race_state`.
 
@@ -122,7 +122,7 @@ NEW canonical builder (src/agents/race_state_builder.py, this branch) on the SAM
   which honoured the None contract in the producer but never updated the consumer 100 lines
   away in the same repo — `backend/utils/race_state_builder.py:89-103` fixed exactly this
   class for `position` in the SAME commit wave and left `air_temp`/`track_temp` at :114-115
-  untouched. Textbook twin-not-fixed.
+  unchanged, so the weather reads still fail when the producer supplies a present `None`.
 - Blast radius: webapp Strategy tab pins `const YEAR = 2025` (`webapp/src/lib/api/strategy.ts:244`)
   and `RACE_YEAR = 2025` (`race.ts:17`) -> the DEFAULT year of the surface is the broken one.
   MCP chat `recommend_strategy` defaults `year: int = 2025` (`mcp_tools.py:570`) -> same.
@@ -279,7 +279,7 @@ the same missing-columns root cause as E4 (#782).
    call; (c) the #486 regression-by-data (track_temp_delta=0 on 2025). All three share the root
    cause of E4 — the featured-2025 parquet's missing weather columns (#782); restoring those
    columns (or augmenting them from weather.parquet) would heal (a), (b), (c) AND reduce the
-   blast radius of any future dead-default twin.
+   chance that consumers rely on fabricated readings when the source columns are absent.
 4. Sites #15/#16 (debug 28/45, HUD 18/45) are cosmetic; one-line follow-up at most.
 
 

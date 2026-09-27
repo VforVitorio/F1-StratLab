@@ -1,6 +1,6 @@
 # PITWALL · DATA - the traces, the slack, and the radio: the space spec
 
-**Status: SPEC, awaiting sign-off on the questions in section 8. Nothing here is built.**
+**Status: design spec; the questions in section 8 still need sign-off. Related PITWALL components exist in the codebase, but this document has not been verified as fully implemented.**
 
 Sprint 9's elevate pass shipped (#987-#996) and skipped the three items the agreed layout drawing
 had explicitly assigned to it. Two of them are visible in the shipped window: an empty gap at the

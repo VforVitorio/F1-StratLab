@@ -102,6 +102,8 @@ Verified by grep over `tests/` (executed): no test imports or exercises `reading
 
 `notebooks/strategy/overtake_probability/outputs/n12b_scoreboard.png` (untracked; the IMPL log itself calls it "an unrelated PNG"). A `git add -A` would ship it inside this refactor PR. Exclude it or commit it separately.
 
-### [LOW / docs] F7 — The shipped SWEEP doc still describes the tyre_life/compound twins as UNFIXED, but this branch fixed them after the sweep ran
+### [LOW / docs] F7 - The SWEEP was stale when this gate reviewed it
 
 `documents/audits/SWEEP_present_none_traps.md` F1/F2 and its closing verdict ("tire_agent.run_from_state still reads tyre_life (:1479) with the two-arg get") describe the pre-change-5 tree; the working tree now derives both via `normalise_compound`/`UNKNOWN_TYRE_LIFE` (verified at `tire_agent.py:1485-1487`, `no_llm.py:139-141`). The IMPL log records the closure, but the SWEEP file itself carries no correction note — unlike DESIGN §F11, which got one when it went stale. A reader grepping the audits later will believe :1479 is still broken. One-line addendum in the SWEEP (F1/F2 tyre_life+compound halves fixed on this branch; R1 -> #790 and R4 remain live) closes it.
+
+**Resolution:** `SWEEP_present_none_traps.md` already has an addendum dated 2026-08-02 recording that F1/F2 were fixed after the sweep. The recommendation above is therefore historical; no further addendum to the sweep is needed.
