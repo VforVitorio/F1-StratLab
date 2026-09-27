@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F1 StratLab orchestrator flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --paper: #08080c; --surface: #111827; --surface-raised: #17192b;
+      --ink: #f5f5f5; --muted: #bfc0c0; --accent: #6c5ce7;
+      --accent-tint: rgba(108,92,231,0.14); --link: #3385ff;
+      --rule: rgba(245,245,245,0.14); --sans: 'Geist', system-ui, sans-serif;
+      --serif: 'Instrument Serif', Georgia, serif; --mono: 'Geist Mono', ui-monospace, monospace;
+    }
+    body { background: var(--paper); color: var(--ink); font-family: var(--sans); padding: 24px; }
+    main { max-width: 1280px; margin: 0 auto; }
+    .eyebrow { color: var(--muted); font: 500 12px var(--mono); letter-spacing: .16em; margin: 0 0 12px 8px; text-transform: uppercase; }
+    svg { display: block; height: auto; width: 100%; }
+  </style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">F1 StratLab · decision pipeline</p>
+  <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="orchestration-title orchestration-desc">
+    <title id="orchestration-title">N31 orchestrator flow</title>
+  <desc id="orchestration-desc">N26 and N27 distributions plus conditional N28 inputs feed Monte Carlo. N25 pace is sampled for RNG order but not scored. With finite rival gaps, payoff is terminal positions gained plus a margin-weighted tie-break; otherwise time_delta divided by POS_GAP_S gives position-equivalent units. Rich synthesis validates 12 LLM fields, then N31 adds scenario_scores and regulation_context to make the 14-field recommendation.</desc>
+    <defs>
+      <style>
+        :root { --paper:#08080c; --surface:#111827; --surface-raised:#17192b; --ink:#f5f5f5; --muted:#bfc0c0; --accent:#6c5ce7; --accent-tint:rgba(108,92,231,.14); --link:#3385ff; --rule:rgba(245,245,245,.14); --sans:'Geist',system-ui,sans-serif; --serif:'Instrument Serif',Georgia,serif; --mono:'Geist Mono',ui-monospace,monospace; }
+        .title { fill:var(--ink); font:400 40px var(--serif); }
+        .node { fill:var(--surface); stroke:var(--rule); stroke-width:1.2; }
+        .focus { fill:var(--accent-tint); stroke:var(--accent); stroke-width:1.6; }
+        .node-title { fill:var(--ink); font:600 16px var(--sans); }
+        .node-sub { fill:var(--muted); font:400 12px var(--mono); }
+        .flow { fill:none; stroke:var(--muted); stroke-width:1.4; marker-end:url(#orchestration-arrow); }
+      </style>
+      <marker id="orchestration-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#bfc0c0"/>
+      </marker>
+    </defs>
+    <rect width="1280" height="720" fill="#08080c"/>
+    <text class="title" x="80" y="96">N31 orchestration flow</text>
+
+    <path class="flow" d="M340 348 H380"/>
+    <path class="flow" d="M620 348 H660"/>
+    <path class="flow" d="M916 348 H956"/>
+    <path class="flow" d="M220 452 V464 Q220 472 228 472 H640 Q648 472 648 480 V500"/>
+    <path class="flow" d="M916 548 H1068 Q1076 548 1076 540 V460 Q1076 452 1084 452"/>
+
+    <rect class="node" x="100" y="244" width="240" height="208" rx="8"/>
+    <text class="node-title" x="124" y="284">Race input</text>
+    <text class="node-sub" x="124" y="324">
+      <tspan x="124" dy="0">RaceState · lap_state</tspan>
+      <tspan x="124" dy="20">race · tyre · weather</tspan>
+      <tspan x="124" dy="28">radio · RCM · rivals</tspan>
+    </text>
+
+    <rect class="node" x="380" y="244" width="240" height="208" rx="8"/>
+    <text class="node-title" x="404" y="284">MC distributions</text>
+    <text class="node-sub" x="404" y="324">
+      <tspan x="404" dy="0">N26 cliff · N27 SC draws</tspan>
+      <tspan x="404" dy="24">N28 pit/undercut when routed</tspan>
+      <tspan x="404" dy="28">N25 pace_i draw not scored</tspan>
+    </text>
+
+    <rect class="node focus" x="660" y="244" width="256" height="208" rx="8"/>
+    <text class="node-title" x="684" y="284">Monte Carlo</text>
+    <text class="node-sub" x="684" y="324">
+      <tspan x="684" dy="0">500 shared draws</tspan>
+      <tspan x="684" dy="20">N26/N27/N28 score inputs</tspan>
+      <tspan x="684" dy="28">score = α·E + (1−α)·P10</tspan>
+      <tspan x="684" dy="20">finite: position gain + margin</tspan>
+      <tspan x="684" dy="20">fallback: time_delta /</tspan>
+      <tspan x="684" dy="20">POS_GAP_S</tspan>
+    </text>
+
+    <rect class="node" x="956" y="244" width="240" height="208" rx="8"/>
+    <text class="node-title" x="980" y="284">Synthesis and result</text>
+    <text class="node-sub" x="980" y="324">
+      <tspan x="980" dy="0">Rich: agent reasoning + MC</tspan>
+      <tspan x="980" dy="20">scores + N30 FIA evidence</tspan>
+      <tspan x="980" dy="28">12 LLM fields; N31 adds MC + N30</tspan>
+      <tspan x="980" dy="20">14-field StrategyRecommendation</tspan>
+      <tspan x="980" dy="20">No-LLM: MC + guardrails</tspan>
+      <tspan x="980" dy="20">N28/N30 LLM calls skipped</tspan>
+    </text>
+
+    <rect class="node" x="380" y="500" width="536" height="96" rx="8"/>
+    <text class="node-title" x="404" y="536">Agent reasoning and FIA context</text>
+    <text class="node-sub" x="404" y="564">
+      <tspan x="404" dy="0">N25 pace · N29 radio · N30 FIA evidence</tspan>
+      <tspan x="404" dy="20">Rich profile passes these to synthesis</tspan>
+    </text>
+
+    <text x="80" y="640" fill="#bfc0c0" font-family="'Geist Mono',monospace" font-size="12">No-llm can mark N28/N30 as routed, but skips their LLM-backed calls.</text>
+    <text x="80" y="668" fill="#a29bfe" font-family="'Geist Mono',monospace" font-size="12">N30 provides regulation context; it does not impose a universal action filter.</text>
+  </svg>
+</main>
+</body>
+</html>

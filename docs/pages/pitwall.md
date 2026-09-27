@@ -203,15 +203,18 @@ arcade process                    pitwall process
   pyglet replay                     ArcadeStreamClient  (ONE socket)
   TelemetryStreamServer  ──TCP──▶     └─ latest payload slot
   127.0.0.1:9998                          │
-                                          ├─ window: DATA    ┐ js_api
-                                          ├─ window: AGENTS  ┘ get_tick(since_seq)
-                                          └─ loopback HTTP    /api/tick
+                                          ├─ window: DATA      get_tick(since_seq)
+                                          ├─ window: AGENTS    get_agents_view(since_seq)
+                                          └─ loopback HTTP    /api/tick · /api/agents
 ```
 
-**One client, however many consumers.** Both windows and any browser tab read
-through the same `get_tick(since_seq)`, and the sequence is what makes them
-agree: against a blind latest-payload slot, two pollers on independent 10 Hz
-timers were measured reading a different frame on 58% of polls.
+**One client, sibling views.** DATA reads the sequenced tick through
+`get_tick(since_seq)`. AGENTS reads `get_agents_view(since_seq)`, which builds
+its formatted view from a separate `get_tick` call. Both consume the same
+stream through the host, but the polls are independent and may observe different
+sequence numbers if a new payload arrives between them. Neither window feeds
+the other. The loopback routes preserve the split as `/api/tick` and
+`/api/agents`.
 
 **Closing one window does not blind the other.** The client belongs to the
 host, not to a window; a window closing only decrements a count, and the last

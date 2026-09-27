@@ -29,38 +29,39 @@ graph TD
     ORCH --> N27
     ORCH --> N29
 
-    N26 -->|tire_warning == PIT_SOON| N28
+    N26 -->|warning_level == PIT_SOON| N28
     N29 -->|PROBLEM or WARNING alert| N28
-    N27 -->|sc_prob > 0.30| N30
+    N27 -->|SC probability above configured threshold| N30
     N29 -->|WARNING intent, or an RCM RED_FLAG / TIME_PENALTY| N30
     N28 -->|always when N28 active| N30
     N27 -->|sc_currently_active, overrides every threshold| N28
     N27 -->|sc_currently_active, overrides every threshold| N30
 
     subgraph "Layer 2: Monte Carlo simulation"
-        MC[500 draws x 4 candidates<br/>STAY_OUT / PIT_NOW / UNDERCUT / OVERCUT<br/>score = alpha * E + 1-alpha * P10]
+        MC[500 shared draws x 4 candidates<br/>N26 cliff / N27 SC / N28 pit and undercut<br/>N25 pace_i draw retained for RNG order, not scored<br/>STAY_OUT / PIT_NOW / UNDERCUT / OVERCUT<br/>score = alpha * E + 1-alpha * P10]
     end
 
     subgraph "Layer 3: LLM synthesis"
-        LLM[ChatOpenAI.with_structured_output<br/>StrategyRecommendation]
+        LLM[ChatOpenAI.with_structured_output<br/>_LLMSynthesis, 12 fields]
     end
 
-    N25 --> MC
-    N26 --> MC
-    N27 --> MC
-    N28 --> MC
+    N25 -->|pace_i draw only, not scored| MC
+    N26 -->|cliff distribution| MC
+    N27 -->|SC distribution| MC
+    N28 -->|pit and undercut distributions| MC
     MC --> LLM
     N29 --> LLM
     N30 --> LLM
-    LLM --> REC[StrategyRecommendation]
+    LLM -->|N31 adds MC scores + N30 context| REC[StrategyRecommendation, 14 fields]
 ```
 
 **Routing rules (text equivalent of the diagram above):**
 
 - The orchestrator always runs the four always-on agents: N25 Pace, N26 Tire, N27 Race Situation and N29 Radio.
-- N28 Pit Strategy activates when N26 reports `tire_warning == PIT_SOON`, when N29 raises a PROBLEM or WARNING alert, or when N27 reports an active Safety Car.
-- N30 RAG activates when N27 reports `sc_prob > 0.30`, when N28 is active, or under an active Safety Car.
-- Monte Carlo then draws 500 samples over four candidates (STAY_OUT, PIT_NOW, UNDERCUT, OVERCUT), scoring `score = α·E + (1−α)·P10`, and the LLM synthesises the final `StrategyRecommendation`. Since the projection redesign the score is measured in **projected track position**, not in seconds, see [What the Monte Carlo actually scores](#/multi-agent) below.
+- In the RSM `*_from_state` adapter, N25 and N27 run in parallel; N26 and N29 run sequentially. N25 receives `lap_state`; N27 receives a copy enriched with RCM events plus `laps_df`; N26 and N29 receive `lap_state` plus `laps_df`. The Pydantic `RaceState` is N31 context, not a substitute for these adapter arguments.
+- N28 Pit Strategy activates when N26 reports `warning_level == PIT_SOON`, when N29 raises a PROBLEM or WARNING alert, or when N27 reports an active SC or VSC.
+- N30 RAG activates when N27's SC probability exceeds its configured threshold, when N29 reports a qualifying warning or RCM penalty, when N28 is active, or under an active SC or VSC.
+- Monte Carlo scores four candidates (STAY_OUT, PIT_NOW, UNDERCUT, OVERCUT) on 500 shared draws. N26 cliff, N27 SC and N28 pit/undercut samples enter the payoff. N25's pace sample is retained for the seeded RNG sequence but is not scored. The formula is `score = α·E[S] + (1−α)·P10[S]`. With finite rival gaps, `S` is terminal positions gained plus a small margin-weighted tie-break. Without usable gaps, the legacy path converts `time_delta / POS_GAP_S` into position-equivalent units (`POS_GAP_S = 1.5 s/position`), not seconds or absolute positions. See [What the Monte Carlo actually scores](#/multi-agent) below.
 
 ## Three-window arcade
 
@@ -70,7 +71,7 @@ Since Phase 3.5 Proceso B (April 2026), the `python -m src.arcade.main ... --str
 graph LR
     subgraph arcade["Arcade process (pyglet)"]
         REPLAY[F1ArcadeView<br/>race replay]
-        PIPE[StrategyPipeline<br/>local N31 copy]
+        PIPE[StrategyPipeline<br/>shared run_lap engine]
         STREAM[TelemetryStreamServer<br/>TCP 127.0.0.1:9998]
     end
 
@@ -92,7 +93,7 @@ Four properties are load-bearing:
 
 1. **The arcade owns the `TelemetryStreamServer`.** `src/arcade/stream.py` exposes the merged arcade + strategy snapshot; every other window is a subscriber, never the source of truth.
 2. **One subprocess hosts both windows.** The arcade spawns a single `subprocess.Popen`. Two windows in one process is cheaper than two, and it is what lets them share a single stream reader.
-3. **The two windows share ONE stream reader.** `PitwallHost` owns a single `ArcadeStreamClient` and both windows poll it by sequence number, so they cannot disagree about which frame they are showing - a blind latest-payload slot had them differing on 58% of polls. Closing one window only decrements a count; it does not blind the other.
+3. **The two windows share one stream client, not a synchronized poll.** `PitwallHost` owns a single `ArcadeStreamClient`. DATA calls `get_tick()` and AGENTS calls `get_agents_view()`, which reads through `get_tick()` independently. A new payload can arrive between those polls, so their sequence numbers can differ. Closing one window only decrements a count; it does not blind the other.
 4. **Arcade runs the strategy pipeline in-process.** `src/arcade/strategy_pipeline.py` delegates to the shared engine (`src/strategy/inference/engine.py::run_lap`), so the arcade does not depend on the FastAPI backend at runtime and does not carry its own copy of the orchestrator. It used to; that copy drifted and crashed (#166), which is why the engine exists.
 
 See [Arcade strategy pipeline](#/arcade-strategy-pipeline) for the shared engine and its profiles, and [PITWALL windows](#/pitwall) for the follower architecture.
@@ -213,7 +214,7 @@ Both columns are the six races the tier sampled when the comparison was made, so
 >
 > The table above is deliberately **not** that comparison. It used to read "54 to 66", pairing a pre-#829 number with a post-#829 one, so two variables moved inside the one sentence written to attribute an effect to the bounds. Both of its columns are now measured on the fixed inputs; only the constants differ. The `min_stint` and scored counts happen to be identical either way (17 and 54 under the old bounds, with or without the input fix), which is why the arithmetic half of the old claim survived, but that was luck, not the argument.
 >
-> Read them as the **deterministic** layer, `profile="no-llm"`: the Monte Carlo plus the guard rails, with the LLM synthesis off. Twelve of the fourteen recommendation fields the multi-agent system emits are written by the LLM, so this is not a measurement of the system this page describes end to end.
+> Read them as the deterministic `profile="no-llm"` output: Monte Carlo plus guardrails. This profile skips N28, N30 and LLM synthesis. The rich profile has the LLM write 12 of 14 recommendation fields, so these results do not measure the full rich pipeline.
 
 `documents/eval_reports/stint_lengths.md` regenerates these shares from the live constants on every run, so the report always grades what is actually shipping rather than what was shipping when it was written.
 
@@ -245,15 +246,16 @@ Answers regulation questions by retrieving relevant FIA Sporting Regulation pass
 
 - **Retriever**: Qdrant + BGE-M3 embeddings
 - **Output**: `RegulationContext` (answer, articles, chunks)
-- **Activation**: conditional, only runs when sc_prob > 0.30, N28 is active, **or N27 reports `sc_currently_active = True`** (so the orchestrator pulls the SC pit-lane regulation snippet into the recommendation context)
+- **Activation**: conditional, runs when N27's SC probability exceeds the configured threshold, N29 reports a qualifying WARNING or RCM penalty, N28 is active, or N27 reports `sc_currently_active = True`.
+- **Season scope**: applies when a year is supplied. An empty scoped search retries unscoped; a missing year starts unscoped.
 
 ### N31: Strategy Orchestrator (`strategy_orchestrator.py`)
 
 Three-layer pipeline:
 
 1. **MoE Routing**: deterministic if-else rules decide which conditional agents (N28, N30) to activate based on always-on agent outputs.
-2. **Monte Carlo Simulation**: draws 500 samples from sub-agent probability distributions and evaluates four strategy candidates (STAY_OUT, PIT_NOW, UNDERCUT, OVERCUT). Score = alpha * E[S] + (1-alpha) * P10[S], where S is a **projected track position** (see below).
-3. **LLM Synthesis**: structured-output LLM aggregates all reasoning strings and MC scores into a `StrategyRecommendation`.
+2. **Monte Carlo Simulation**: scores four strategy candidates on 500 shared draws. N26 cliff, N27 SC and N28 pit/undercut draws enter the payoff. N25 pace is sampled to preserve RNG order but does not enter the payoff. The score is `alpha * E[S] + (1-alpha) * P10[S]`. With finite rival gaps, `S` is terminal positions gained plus a small margin-weighted tie-break. Otherwise, the legacy fallback uses `time_delta / POS_GAP_S` in position-equivalent units (`POS_GAP_S = 1.5 s/position`).
+3. **LLM Synthesis**: `with_structured_output` validates the 12-field `_LLMSynthesis`; N31 attaches `scenario_scores` and `regulation_context` to produce the final 14-field `StrategyRecommendation`.
 
 - **Output**: `StrategyRecommendation` (action, reasoning, confidence, scenario_scores, contingencies)
 - **Action values**: STAY_OUT, PIT_NOW, UNDERCUT, OVERCUT, ALERT
@@ -368,7 +370,7 @@ run_rag_agent_from_state(lap_state, laps_df=None)
 run_strategy_orchestrator_from_state(race_state, laps_df, lap_state=None)
 ```
 
-That last argument is the one worth remembering: without `lap_state` the orchestrator never sees the rival gaps, so the Monte Carlo falls back to the legacy seconds path instead of scoring in projected track position. See [agents-api.md](#/agents-api) for the full per-agent reference.
+That last argument is the one worth remembering: without `lap_state` the orchestrator never sees the rival gaps, so Monte Carlo uses the time-based fallback converted into position-equivalent units instead of scoring positions gained from projected rival gaps. See [agents-api.md](#/agents-api) for the full per-agent reference.
 
 ## Decision memory: three surfaces, not five
 

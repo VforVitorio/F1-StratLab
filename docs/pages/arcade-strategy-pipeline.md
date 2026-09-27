@@ -1,8 +1,8 @@
 # Strategy Pipeline, the shared engine
 
-`src/strategy/inference/engine.py::run_lap` is the single implementation of the N31 lap pipeline. The CLI, the arcade and the backend all route through it. This page covers what it returns, the two profiles, and why the arcade is now a nine-line delegate instead of a copy.
+`src/strategy/inference/engine.py::run_lap` is the shared N31 engine wrapper for `f1-sim`, Arcade and backend race simulation. The single-lap `/recommend` endpoint calls `run_strategy_orchestrator_from_state` directly, outside that wrapper. This page covers both call paths, the engine profiles and the Arcade delegate.
 
-## One engine, three surfaces
+## Call paths
 
 ```mermaid
 graph LR
@@ -19,20 +19,17 @@ graph LR
 
     C2 --> ENG
     A2 --> ENG
-    W2 --> ENG
     W3 --> ENG
 
-    ENG["run_lap<br/>src/strategy/inference/engine.py"]
-    ENG --> P1["profile=rich<br/>LLM synthesis, full per-stage payloads"]
-    ENG --> P2["profile=no-llm<br/>MC argmax plus the regulatory guard-rails,<br/>no provider call"]
-    P1 --> SUBS[six sub-agents through their<br/>public *_from_state entry points]
-    P2 --> SUBS
-    SUBS --> OUT[StrategyRecommendation<br/>plus agent_outputs and stage timings]
+    ENG["run_lap wrapper<br/>input scoping + rich/no-llm profile"]
+    W2 -. "direct endpoint call" .-> N31["N31 orchestrator<br/>routing · agents · Monte Carlo · synthesis"]
+    ENG --> N31
+    N31 --> OUT[StrategyRecommendation<br/>run_lap also returns agent_outputs and timings]
 ```
 
-The arrow that matters is the one that is missing: no surface has its own copy. **A strategy call in the web app is the same call the CLI would print for that lap.** If they ever disagree, that is a bug, not a difference of surface.
+`/api/v1/strategy/simulate` and the CLI/Arcade paths use `run_lap`. The single-lap `/api/v1/strategy/recommend` handler instead builds the race state and calls `run_strategy_orchestrator_from_state` directly. Both use the N31 orchestration logic, but `/recommend` bypasses the engine wrapper and its profile selection.
 
-Every surface needs the same six sub-agents, the same MoE routing, the same Monte Carlo pass and the same synthesis. They differ only in what they render. So the pipeline lives in one place and the surfaces choose how much of its output to consume:
+The wrapper callers share GP scoping, caller-owned decision memory and the `rich` or `no-llm` profile. The direct `/recommend` path has its own request-to-`RaceState` conversion and is stateless. Outputs can differ because the wrapper carries race memory and the profiles run different agents.
 
 ```
 src/strategy/inference/engine.py
@@ -51,18 +48,19 @@ The sub-agents are imported through their public `*_from_state` entry points; th
 
 | profile | what runs | use it for |
 |---|---|---|
-| `rich` | the full pipeline, including the LLM synthesis step | the default; reproduces `run_strategy_orchestrator_from_state` byte for byte |
-| `no-llm` | everything except the LLM; the deterministic guardrails produce the decision | fast, offline, reproducible runs, and any path that must not spend tokens |
+| `rich` | always-on agents, routed N28/N30 calls and LLM synthesis | the default; `run_lap` supplies its caller-owned decision memory |
+| `no-llm` | skips N28, N30 and LLM synthesis; runs Monte Carlo with the conservative pit prior and applies deterministic guardrails | runs that must not make LLM calls |
 
-`rich` is guarded by parity tests against the orchestrator, so the two cannot drift apart silently.
+Both profiles reuse orchestrator functions, but they do not promise byte-for-byte output parity. `tests/engine/test_engine_threads_every_argument.py` checks argument forwarding, not output equality. The engine's `memory_block` also differs from the stateless `/recommend` path.
 
 ## The arcade delegates
 
-`src/arcade/strategy_pipeline.py::run_strategy_pipeline` keeps its old public signature so `src/arcade/strategy.py` and the dashboard formatters are untouched. Its body is one call:
+`src/arcade/strategy_pipeline.py::run_strategy_pipeline` keeps its public signature so `src/arcade/strategy.py` and the dashboard formatters are untouched. It selects the engine profile from the Arcade mode, then delegates:
 
 ```python
+profile = "no-llm" if no_llm else "rich"
 rec, agent_outputs, _timings = run_lap(
-    race_state, laps_df, lap_state, profile="rich", memory=memory
+    race_state, laps_df, lap_state, profile=profile, memory=memory
 )
 return rec, agent_outputs
 ```
