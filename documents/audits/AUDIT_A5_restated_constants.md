@@ -1,4 +1,4 @@
-# Audit A5 — Restated constants / rules (the twin-that-never-got-the-fix defect)
+# Audit A5 - Repeated constants and rules
 
 **Scope**: `src/agents/`, `src/strategy/`, `src/simulation/`, `scripts/`, `tests/`
 **Method**: read-only, no LLM/API calls, every "agree/disagree" computed and shown.
@@ -124,7 +124,7 @@ Concrete counter-example at `laps_remaining = 16`: `_STINT_CAPACITY_LAPS['SOFT']
 
 **No test enforces any of this**: `tests/agents/test_orchestrator_prompt.py` (the only test file that reads `_build_orchestrator_prompt`'s output) asserts on the STAY_OUT framing, memory-block placement, and the regulation-article example — never on the numeric guard-rail block. `tests/mc/test_guard_rails.py` and `tests/eval/test_decision_modes.py` correctly import `guard_rails.py`'s real constants (the fix from the historical `remaining < 3` bug, confirmed in the "genuinely single-sourced" section below) but neither reads `_build_orchestrator_prompt`'s or `_PIT_STRATEGY_SYSTEM_PROMPT`'s text at all, so nothing ties the THREE English copies to the ONE Python copy.
 
-**What breaks if they drift**: this is the textbook shape of the repo's dominant defect, now with **three** hand-synced copies instead of two. A future change to `guard_rails.py` (e.g. widening `_MIN_STINT_LAPS` after more data, following the same path #716 already took once) has to be manually propagated to TWO separate prompt strings in TWO separate agent files, six lines apart in wording but with no shared source. Missing one leaves the N28 tool-caller LLM and the N31 synthesis LLM operating on different "HARD constraints" for the same lap — an outcome the `guard_rails.py` docstring already predicts in the abstract ("These rules used to live in `no_llm.py` ... they drifted") but that prediction was written about the CODE mirror, not about a second and third PROMPT mirror, which this audit found still exist.
+**If these values drift**: the same numeric policy appears in `guard_rails.py` and in two prompt strings. If `_MIN_STINT_LAPS` changes, either prompt can remain stale, leaving the N28 tool-caller and N31 synthesis models with different rules for the same lap. The `guard_rails.py` docstring describes earlier drift from `no_llm.py`; it does not cover these two prompt copies.
 
 **Fix**: same as F4 for item 5. For items 1/2/4/6, since `guard_rails.py` is explicitly documented as importable-and-cheap (`"imports nothing heavy"`, precisely so policy constants don't cost a model load), both `_PIT_STRATEGY_SYSTEM_PROMPT` and `_build_orchestrator_prompt` should f-string-interpolate `guard_rails._NO_PIT_BEFORE_LAP`, `_NO_PIT_LAST_N_LAPS`, `_CLIFF_P10_SAFE`, `_MIN_STINT_LAPS` directly instead of restating them as English numerals. This collapses three sources of truth into one importable module that already exists and already carries the "do not re-derive me" warning in its own docstring.
 
