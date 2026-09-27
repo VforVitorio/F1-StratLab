@@ -34,7 +34,11 @@ import src.strategy.eval.report as report
 from src.strategy.eval.report import ReportHeader, _render_md
 
 ROOT = Path(__file__).parent.parent.parent
-REPORTS = sorted((ROOT / "documents" / "eval_reports").glob("*.md"))
+REPORTS = sorted(
+    path
+    for path in (ROOT / "documents" / "eval_reports").glob("*.md")
+    if path.name != "README.md"  # Folder guidance is not a generated evaluation report.
+)
 
 # What an empty artifact dict renders as. An em dash here is a prose defect in
 # generated output as well as a mismatch, so the value is asserted literally
