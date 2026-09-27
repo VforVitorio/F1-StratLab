@@ -25,7 +25,7 @@
   <p class="eyebrow">F1 StratLab · decision pipeline</p>
   <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="orchestration-title orchestration-desc">
     <title id="orchestration-title">N31 orchestrator flow</title>
-  <desc id="orchestration-desc">N25 to N28 distributions feed Monte Carlo, while N29 radio reasoning and N30 regulation evidence inform rich synthesis.</desc>
+  <desc id="orchestration-desc">N26 and N27 distributions plus conditional N28 inputs feed Monte Carlo. N25 pace is sampled for RNG order but not scored. With finite rival gaps, payoff is terminal positions gained plus a margin-weighted tie-break; otherwise time_delta divided by POS_GAP_S gives position-equivalent units. Rich synthesis validates 12 LLM fields, then N31 adds scenario_scores and regulation_context to make the 14-field recommendation.</desc>
     <defs>
       <style>
         :root { --paper:#08080c; --surface:#111827; --surface-raised:#17192b; --ink:#f5f5f5; --muted:#bfc0c0; --accent:#6c5ce7; --accent-tint:rgba(108,92,231,.14); --link:#3385ff; --rule:rgba(245,245,245,.14); --sans:'Geist',system-ui,sans-serif; --serif:'Instrument Serif',Georgia,serif; --mono:'Geist Mono',ui-monospace,monospace; }
@@ -60,36 +60,38 @@
     <rect class="node" x="380" y="244" width="240" height="208" rx="8"/>
     <text class="node-title" x="404" y="284">MC distributions</text>
     <text class="node-sub" x="404" y="324">
-      <tspan x="404" dy="0">Always-on: N25 · N26 · N27</tspan>
-      <tspan x="404" dy="24">Conditional: N28</tspan>
-      <tspan x="404" dy="28">Only N25-N28 feed MC</tspan>
+      <tspan x="404" dy="0">N26 cliff · N27 SC draws</tspan>
+      <tspan x="404" dy="24">N28 pit/undercut when routed</tspan>
+      <tspan x="404" dy="28">N25 pace_i draw not scored</tspan>
     </text>
 
     <rect class="node focus" x="660" y="244" width="256" height="208" rx="8"/>
     <text class="node-title" x="684" y="284">Monte Carlo</text>
     <text class="node-sub" x="684" y="324">
-      <tspan x="684" dy="0">500 draws per candidate</tspan>
-      <tspan x="684" dy="20">samples model distributions</tspan>
+      <tspan x="684" dy="0">500 shared draws</tspan>
+      <tspan x="684" dy="20">N26/N27/N28 score inputs</tspan>
       <tspan x="684" dy="28">score = α·E + (1−α)·P10</tspan>
-      <tspan x="684" dy="20">finite rival gaps → positions</tspan>
-      <tspan x="684" dy="20">otherwise → legacy seconds</tspan>
+      <tspan x="684" dy="20">finite: position gain + margin</tspan>
+      <tspan x="684" dy="20">fallback: time_delta /</tspan>
+      <tspan x="684" dy="20">POS_GAP_S</tspan>
     </text>
 
     <rect class="node" x="956" y="244" width="240" height="208" rx="8"/>
     <text class="node-title" x="980" y="284">Synthesis and result</text>
     <text class="node-sub" x="980" y="324">
-      <tspan x="980" dy="0">Rich: N29 reasoning + MC</tspan>
+      <tspan x="980" dy="0">Rich: agent reasoning + MC</tspan>
       <tspan x="980" dy="20">scores + N30 FIA evidence</tspan>
-      <tspan x="980" dy="28">14-field recommendation</tspan>
+      <tspan x="980" dy="28">12 LLM fields; N31 adds MC + N30</tspan>
+      <tspan x="980" dy="20">14-field StrategyRecommendation</tspan>
       <tspan x="980" dy="20">No-LLM: MC + guardrails</tspan>
-      <tspan x="980" dy="20">N28/N30 skipped</tspan>
+      <tspan x="980" dy="20">N28/N30 LLM calls skipped</tspan>
     </text>
 
     <rect class="node" x="380" y="500" width="536" height="96" rx="8"/>
-    <text class="node-title" x="404" y="536">Radio and regulation context</text>
+    <text class="node-title" x="404" y="536">Agent reasoning and FIA context</text>
     <text class="node-sub" x="404" y="564">
-      <tspan x="404" dy="0">N29 reasoning · N30 FIA evidence when routed</tspan>
-      <tspan x="404" dy="20">Rich profile passes both to synthesis</tspan>
+      <tspan x="404" dy="0">N25 pace · N29 radio · N30 FIA evidence</tspan>
+      <tspan x="404" dy="20">Rich profile passes these to synthesis</tspan>
     </text>
 
     <text x="80" y="640" fill="#bfc0c0" font-family="'Geist Mono',monospace" font-size="12">No-llm can mark N28/N30 as routed, but skips their LLM-backed calls.</text>

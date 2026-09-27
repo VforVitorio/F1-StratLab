@@ -10,7 +10,7 @@
         </mxCell>
 
         <!-- ROOT -->
-        <mxCell id="root" value="&lt;b&gt;StrategyRecommendation&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Pydantic BaseModel · structured output&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="root" value="&lt;b&gt;StrategyRecommendation&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Pydantic BaseModel · N31 final assembly (12 LLM + 2 managed fields)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="445" y="80" width="280" height="60" as="geometry" />
         </mxCell>
 
@@ -20,7 +20,7 @@
         </mxCell>
 
         <!-- BLOCK 2, Pit execution -->
-        <mxCell id="b2" value="&lt;b&gt;Pit execution&lt;/b&gt;&lt;br/&gt;&lt;i&gt;3 fields · LLM + conditional N28 values below&lt;/i&gt;&lt;br/&gt;&lt;br/&gt;pit_lap_target : int | None&lt;br/&gt;compound_next ∈ {SOFT,&lt;br/&gt;MEDIUM, HARD} | None&lt;br/&gt;undercut_target : str | None" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+        <mxCell id="b2" value="&lt;b&gt;Pit execution&lt;/b&gt;&lt;br/&gt;&lt;i&gt;3 fields · LLM (N28 fallback)&lt;/i&gt;&lt;br/&gt;&lt;br/&gt;pit_lap_target : int | None&lt;br/&gt;compound_next ∈ {SOFT,&lt;br/&gt;MEDIUM, HARD} | None&lt;br/&gt;undercut_target : str | None" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
           <mxGeometry x="290" y="200" width="220" height="160" as="geometry" />
         </mxCell>
 
@@ -40,8 +40,8 @@
         </mxCell>
 
         <!-- NOTE -->
-        <mxCell id="note" value="with_structured_output validates 12 LLM fields. N31 adds scenario_scores and regulation_context after synthesis.&lt;br/&gt;N28 fills pit_lap_target and compound_next only when the LLM leaves them empty. When N28 supplies undercut_target, it takes precedence." style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;whiteSpace=wrap;" vertex="1" parent="1">
-          <mxGeometry x="60" y="545" width="950" height="70" as="geometry" />
+        <mxCell id="note" value="with_structured_output validates 12 LLM fields; N31 adds scenario_scores and regulation_context. N28 fills pit_lap_target and compound_next only when absent, and its undercut_target takes precedence when supplied." style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="60" y="555" width="950" height="40" as="geometry" />
         </mxCell>
 
         <!-- EDGES from root to four LLM blocks -->
@@ -50,7 +50,9 @@
         <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;" edge="1" source="root" target="b3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;" edge="1" source="root" target="b4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <!-- dashed edge from root to grounding block -->
-        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;dashed=1;strokeColor=#b85450;" edge="1" source="root" target="b5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;dashed=1;strokeColor=#b85450;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="root" target="b5" parent="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="270" y="110"/><mxPoint x="270" y="480"/></Array></mxGeometry>
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>

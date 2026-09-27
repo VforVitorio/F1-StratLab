@@ -29,38 +29,39 @@ graph TD
     ORCH --> N27
     ORCH --> N29
 
-    N26 -->|tire_warning == PIT_SOON| N28
+    N26 -->|warning_level == PIT_SOON| N28
     N29 -->|PROBLEM or WARNING alert| N28
-    N27 -->|sc_prob > 0.30| N30
+    N27 -->|SC probability above configured threshold| N30
     N29 -->|WARNING intent, or an RCM RED_FLAG / TIME_PENALTY| N30
     N28 -->|always when N28 active| N30
     N27 -->|sc_currently_active, overrides every threshold| N28
     N27 -->|sc_currently_active, overrides every threshold| N30
 
     subgraph "Layer 2: Monte Carlo simulation"
-        MC[500 draws x 4 candidates<br/>STAY_OUT / PIT_NOW / UNDERCUT / OVERCUT<br/>score = alpha * E + 1-alpha * P10]
+        MC[500 shared draws x 4 candidates<br/>N26 cliff / N27 SC / N28 pit and undercut<br/>N25 pace_i draw retained for RNG order, not scored<br/>STAY_OUT / PIT_NOW / UNDERCUT / OVERCUT<br/>score = alpha * E + 1-alpha * P10]
     end
 
     subgraph "Layer 3: LLM synthesis"
-        LLM[ChatOpenAI.with_structured_output<br/>StrategyRecommendation]
+        LLM[ChatOpenAI.with_structured_output<br/>_LLMSynthesis, 12 fields]
     end
 
-    N25 --> MC
-    N26 --> MC
-    N27 --> MC
-    N28 --> MC
+    N25 -->|pace_i draw only, not scored| MC
+    N26 -->|cliff distribution| MC
+    N27 -->|SC distribution| MC
+    N28 -->|pit and undercut distributions| MC
     MC --> LLM
     N29 --> LLM
     N30 --> LLM
-    LLM --> REC[StrategyRecommendation]
+    LLM -->|N31 adds MC scores + N30 context| REC[StrategyRecommendation, 14 fields]
 ```
 
 **Routing rules (text equivalent of the diagram above):**
 
 - The orchestrator always runs the four always-on agents: N25 Pace, N26 Tire, N27 Race Situation and N29 Radio.
-- N28 Pit Strategy activates when N26 reports `tire_warning == PIT_SOON`, when N29 raises a PROBLEM or WARNING alert, or when N27 reports an active Safety Car.
-- N30 RAG activates when N27 reports `sc_prob > 0.30`, when N28 is active, or under an active Safety Car.
-- Monte Carlo then draws 500 samples over four candidates (STAY_OUT, PIT_NOW, UNDERCUT, OVERCUT), scoring `score = α·E + (1−α)·P10`, and the LLM synthesises the final `StrategyRecommendation`. Since the projection redesign the score is measured in **projected track position**, not in seconds, see [What the Monte Carlo actually scores](#/multi-agent) below.
+- In the RSM `*_from_state` adapter, N25 and N27 run in parallel; N26 and N29 run sequentially. N25 receives `lap_state`; N27 receives a copy enriched with RCM events plus `laps_df`; N26 and N29 receive `lap_state` plus `laps_df`. The Pydantic `RaceState` is N31 context, not a substitute for these adapter arguments.
+- N28 Pit Strategy activates when N26 reports `warning_level == PIT_SOON`, when N29 raises a PROBLEM or WARNING alert, or when N27 reports an active SC or VSC.
+- N30 RAG activates when N27's SC probability exceeds its configured threshold, when N29 reports a qualifying warning or RCM penalty, when N28 is active, or under an active SC or VSC.
+- Monte Carlo scores four candidates (STAY_OUT, PIT_NOW, UNDERCUT, OVERCUT) on 500 shared draws. N26 cliff, N27 SC and N28 pit/undercut samples enter the payoff. N25's pace sample is retained for the seeded RNG sequence but is not scored. The formula is `score = α·E[S] + (1−α)·P10[S]`. With finite rival gaps, `S` is terminal positions gained plus a small margin-weighted tie-break. Without usable gaps, the legacy path converts `time_delta / POS_GAP_S` into position-equivalent units (`POS_GAP_S = 1.5 s/position`), not seconds or absolute positions. See [What the Monte Carlo actually scores](#/multi-agent) below.
 
 ## Three-window arcade
 
@@ -253,8 +254,8 @@ Answers regulation questions by retrieving relevant FIA Sporting Regulation pass
 Three-layer pipeline:
 
 1. **MoE Routing**: deterministic if-else rules decide which conditional agents (N28, N30) to activate based on always-on agent outputs.
-2. **Monte Carlo Simulation**: draws 500 samples from sub-agent probability distributions and evaluates four strategy candidates (STAY_OUT, PIT_NOW, UNDERCUT, OVERCUT). Score = alpha * E[S] + (1-alpha) * P10[S], where S is a **projected track position** (see below).
-3. **LLM Synthesis**: structured-output LLM aggregates all reasoning strings and MC scores into a `StrategyRecommendation`.
+2. **Monte Carlo Simulation**: scores four strategy candidates on 500 shared draws. N26 cliff, N27 SC and N28 pit/undercut draws enter the payoff. N25 pace is sampled to preserve RNG order but does not enter the payoff. The score is `alpha * E[S] + (1-alpha) * P10[S]`. With finite rival gaps, `S` is terminal positions gained plus a small margin-weighted tie-break. Otherwise, the legacy fallback uses `time_delta / POS_GAP_S` in position-equivalent units (`POS_GAP_S = 1.5 s/position`).
+3. **LLM Synthesis**: `with_structured_output` validates the 12-field `_LLMSynthesis`; N31 attaches `scenario_scores` and `regulation_context` to produce the final 14-field `StrategyRecommendation`.
 
 - **Output**: `StrategyRecommendation` (action, reasoning, confidence, scenario_scores, contingencies)
 - **Action values**: STAY_OUT, PIT_NOW, UNDERCUT, OVERCUT, ALERT
@@ -369,7 +370,7 @@ run_rag_agent_from_state(lap_state, laps_df=None)
 run_strategy_orchestrator_from_state(race_state, laps_df, lap_state=None)
 ```
 
-That last argument is the one worth remembering: without `lap_state` the orchestrator never sees the rival gaps, so the Monte Carlo falls back to the legacy seconds path instead of scoring in projected track position. See [agents-api.md](#/agents-api) for the full per-agent reference.
+That last argument is the one worth remembering: without `lap_state` the orchestrator never sees the rival gaps, so Monte Carlo uses the time-based fallback converted into position-equivalent units instead of scoring positions gained from projected rival gaps. See [agents-api.md](#/agents-api) for the full per-agent reference.
 
 ## Decision memory: three surfaces, not five
 
