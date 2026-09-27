@@ -20,7 +20,7 @@
         </mxCell>
 
         <!-- BLOCK 2, Pit execution -->
-        <mxCell id="b2" value="&lt;b&gt;Pit execution&lt;/b&gt;&lt;br/&gt;&lt;i&gt;3 fields · LLM (N28 fallback)&lt;/i&gt;&lt;br/&gt;&lt;br/&gt;pit_lap_target : int | None&lt;br/&gt;compound_next ∈ {SOFT,&lt;br/&gt;MEDIUM, HARD} | None&lt;br/&gt;undercut_target : str | None" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+        <mxCell id="b2" value="&lt;b&gt;Pit execution&lt;/b&gt;&lt;br/&gt;&lt;i&gt;3 fields · LLM + conditional N28 values below&lt;/i&gt;&lt;br/&gt;&lt;br/&gt;pit_lap_target : int | None&lt;br/&gt;compound_next ∈ {SOFT,&lt;br/&gt;MEDIUM, HARD} | None&lt;br/&gt;undercut_target : str | None" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
           <mxGeometry x="290" y="200" width="220" height="160" as="geometry" />
         </mxCell>
 
@@ -35,13 +35,13 @@
         </mxCell>
 
         <!-- BLOCK 5, Post-hoc grounding (centered below the four LLM blocks) -->
-        <mxCell id="b5" value="&lt;b&gt;Post-hoc grounding&lt;/b&gt;&lt;br/&gt;&lt;i&gt;2 fields · attached in code (not filled by the LLM)&lt;/i&gt;&lt;br/&gt;&lt;br/&gt;scenario_scores : dict, MC output per strategy (E, P10, P90, score)&lt;br/&gt;regulation_context : str, N30 RAG answer when activated" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+        <mxCell id="b5" value="&lt;b&gt;Orchestrator-managed fields&lt;/b&gt;&lt;br/&gt;&lt;i&gt;2 fields · not written by the LLM&lt;/i&gt;&lt;br/&gt;&lt;br/&gt;scenario_scores: E, P10, P90, score per candidate&lt;br/&gt;projection path adds eligible and target; ineligible score is null&lt;br/&gt;regulation_context: N30 answer when activated" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
           <mxGeometry x="290" y="430" width="490" height="100" as="geometry" />
         </mxCell>
 
         <!-- NOTE -->
-        <mxCell id="note" value="Schema validated by with_structured_output over _LLMSynthesis (extra=&quot;forbid&quot;) · _assemble_recommendation attaches scenario_scores and regulation_context after the LLM call, with N28 fallbacks for pit-execution fields the LLM left empty." style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;whiteSpace=wrap;" vertex="1" parent="1">
-          <mxGeometry x="60" y="555" width="950" height="40" as="geometry" />
+        <mxCell id="note" value="with_structured_output validates 12 LLM fields. N31 adds scenario_scores and regulation_context after synthesis.&lt;br/&gt;N28 fills pit_lap_target and compound_next only when the LLM leaves them empty. When N28 supplies undercut_target, it takes precedence." style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="60" y="545" width="950" height="70" as="geometry" />
         </mxCell>
 
         <!-- EDGES from root to four LLM blocks -->

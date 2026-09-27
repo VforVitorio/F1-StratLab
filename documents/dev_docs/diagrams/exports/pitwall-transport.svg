@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="pitwall-title pitwall-desc">
+    <title id="pitwall-title">Arcade wire and PITWALL views</title>
+    <desc id="pitwall-desc">One producer broadcasts schema version two to one host. Independent DATA and AGENTS polls use the same stream and can return different sequence numbers.</desc>
+    <defs>
+      <style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap');</style>
+      <style>
+        :root { --paper:#08080c; --surface:#111827; --surface-raised:#17192b; --ink:#f5f5f5; --muted:#bfc0c0; --accent:#6c5ce7; --accent-tint:rgba(108,92,231,.14); --link:#3385ff; --rule:rgba(245,245,245,.14); --sans:'Geist',system-ui,sans-serif; --serif:'Instrument Serif',Georgia,serif; --mono:'Geist Mono',ui-monospace,monospace; }
+        .title { fill:var(--ink); font:400 40px var(--serif); }
+        .node { fill:var(--surface); stroke:var(--rule); stroke-width:1.2; }
+        .focus { fill:var(--accent-tint); stroke:var(--accent); stroke-width:1.6; }
+        .node-title { fill:var(--ink); font:600 16px var(--sans); }
+        .node-sub { fill:var(--muted); font:400 12px var(--mono); }
+        .flow { fill:none; stroke:var(--muted); stroke-width:1.4; marker-end:url(#pitwall-arrow); }
+        .view-data { fill:none; stroke:var(--link); stroke-width:1.4; marker-end:url(#pitwall-arrow-link); }
+        .view-agents { fill:none; stroke:var(--accent); stroke-width:1.4; marker-end:url(#pitwall-arrow-accent); }
+      </style>
+      <marker id="pitwall-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#bfc0c0"/>
+      </marker>
+      <marker id="pitwall-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#3385ff"/>
+      </marker>
+      <marker id="pitwall-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#6c5ce7"/>
+      </marker>
+    </defs>
+    <rect width="1280" height="720" fill="#08080c"/>
+    <text class="title" x="60" y="92">One wire, two PITWALL views</text>
+
+    <path class="flow" d="M252 360 H276"/>
+    <path class="flow" d="M556 360 H596"/>
+    <path class="flow" d="M768 360 H816"/>
+    <path class="view-data" d="M1016 320 H1040 Q1048 320 1048 312 V232 Q1048 224 1056 224 H1060"/>
+    <path class="view-agents" d="M1016 400 H1040 Q1048 400 1048 408 V488 Q1048 496 1056 496 H1060"/>
+
+    <rect class="node" x="56" y="288" width="196" height="144" rx="8"/>
+    <text class="node-title" x="76" y="328">Arcade producer</text>
+    <text class="node-sub" x="76" y="360">
+      <tspan x="76" dy="0">F1ArcadeView</tspan>
+      <tspan x="76" dy="20">replay + StrategyState</tspan>
+      <tspan x="76" dy="28">TelemetryStreamServer</tspan>
+    </text>
+
+    <rect class="node" x="276" y="232" width="280" height="256" rx="8"/>
+    <text class="node-title" x="296" y="268">Wire schema v2</text>
+    <text class="node-sub" x="296" y="304">
+      <tspan x="296" dy="0">schema_version=2 · seq</tspan>
+      <tspan x="296" dy="20">arcade.drivers: per-driver map</tspan>
+      <tspan x="296" dy="20">telemetry.drivers: sample spans</tspan>
+      <tspan x="296" dy="28">strategy.start · latest</tspan>
+      <tspan x="296" dy="20">history_tail: up to 30</tspan>
+      <tspan x="296" dy="20">prior rows omit per_agent</tspan>
+      <tspan x="296" dy="28">playback.speed · paused</tspan>
+      <tspan x="296" dy="20">frame_index · total_frames</tspan>
+    </text>
+
+    <rect class="node" x="596" y="288" width="172" height="144" rx="8"/>
+    <text class="node-title" x="616" y="328">TCP broadcast</text>
+    <text class="node-sub" x="616" y="360">
+      <tspan x="616" dy="0">newline-delimited</tspan>
+      <tspan x="616" dy="20">JSON</tspan>
+      <tspan x="616" dy="20">loopback socket</tspan>
+    </text>
+
+    <rect class="node focus" x="816" y="264" width="200" height="192" rx="8"/>
+    <text class="node-title" x="836" y="300">PitwallHost</text>
+    <text class="node-sub" x="836" y="336">
+      <tspan x="836" dy="0">one ArcadeStreamClient</tspan>
+      <tspan x="836" dy="20">one latest tick by seq</tspan>
+      <tspan x="836" dy="28">loopback routes</tspan>
+      <tspan x="836" dy="20">/api/tick · /api/agents</tspan>
+    </text>
+
+    <rect class="node" x="1060" y="160" width="168" height="152" rx="8"/>
+    <text class="node-title" x="1080" y="196">PITWALL · DATA</text>
+    <text class="node-sub" x="1080" y="232">
+      <tspan x="1080" dy="0">get_tick(since_seq)</tspan>
+      <tspan x="1080" dy="20">raw timing</tspan>
+      <tspan x="1080" dy="20">telemetry</tspan>
+      <tspan x="1080" dy="20">independent poll</tspan>
+    </text>
+
+    <rect class="node" x="1060" y="432" width="168" height="152" rx="8"/>
+    <text class="node-title" x="1080" y="468">PITWALL · AGENTS</text>
+    <text class="node-sub" x="1080" y="504">
+      <tspan x="1080" dy="0">get_agents_view</tspan>
+      <tspan x="1080" dy="20">(since_seq)</tspan>
+      <tspan x="1080" dy="20">independent poll</tspan>
+      <tspan x="1080" dy="20">seq may differ</tspan>
+    </text>
+  </svg>

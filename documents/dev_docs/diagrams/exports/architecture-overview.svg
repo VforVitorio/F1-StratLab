@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="architecture-title architecture-desc">
+    <title id="architecture-title">F1 StratLab system architecture</title>
+    <desc id="architecture-desc">Public race inputs feed per-lap state and specialist agents, which inform the N31 orchestrator, its recommendation, and the delivery surfaces.</desc>
+    <defs>
+      <style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap');</style>
+      <style>
+        :root { --paper:#08080c; --surface:#111827; --surface-raised:#17192b; --ink:#f5f5f5; --muted:#bfc0c0; --accent:#6c5ce7; --accent-tint:rgba(108,92,231,.14); --link:#3385ff; --rule:rgba(245,245,245,.14); --sans:'Geist',system-ui,sans-serif; --serif:'Instrument Serif',Georgia,serif; --mono:'Geist Mono',ui-monospace,monospace; }
+        .title { fill:var(--ink); font:400 40px var(--serif); }
+        .node { fill:var(--surface); stroke:var(--rule); stroke-width:1.2; }
+        .focus { fill:var(--accent-tint); stroke:var(--accent); stroke-width:1.6; }
+        .node-title { fill:var(--ink); font:600 16px var(--sans); }
+        .node-sub { fill:var(--muted); font:400 12px var(--mono); }
+        .flow { fill:none; stroke:var(--muted); stroke-width:1.4; marker-end:url(#architecture-arrow); }
+      </style>
+      <marker id="architecture-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#bfc0c0"/>
+      </marker>
+    </defs>
+    <rect width="1280" height="720" fill="#08080c"/>
+    <text class="title" x="60" y="92">F1 StratLab system architecture</text>
+
+    <path class="flow" d="M260 352 H300"/>
+    <path class="flow" d="M500 352 H540"/>
+    <path class="flow" d="M740 352 H780"/>
+    <path class="flow" d="M980 352 H1020"/>
+
+    <rect class="node" x="60" y="256" width="200" height="192" rx="8"/>
+    <text class="node-title" x="80" y="292">Data and state</text>
+    <text class="node-sub" x="80" y="328">
+      <tspan x="80" dy="0">FastF1 · OpenF1</tspan>
+      <tspan x="80" dy="20">FIA rulebook index</tspan>
+      <tspan x="80" dy="28">RaceState / lap_state</tspan>
+      <tspan x="80" dy="20">Tyres · weather · RCM</tspan>
+    </text>
+
+    <rect class="node" x="300" y="256" width="200" height="192" rx="8"/>
+    <text class="node-title" x="320" y="292">N25-N30 agents</text>
+    <text class="node-sub" x="320" y="328">
+      <tspan x="320" dy="0">Always-on</tspan>
+      <tspan x="320" dy="20">N25, N26, N27, N29</tspan>
+      <tspan x="320" dy="28">Conditional</tspan>
+      <tspan x="320" dy="20">N28, N30</tspan>
+    </text>
+
+    <rect class="node focus" x="540" y="256" width="200" height="192" rx="8"/>
+    <text class="node-title" x="560" y="292">N31 orchestration</text>
+    <text class="node-sub" x="560" y="328">
+      <tspan x="560" dy="0">MoE routing</tspan>
+      <tspan x="560" dy="20">Monte Carlo · 500 draws</tspan>
+      <tspan x="560" dy="28">LLM synthesis</tspan>
+      <tspan x="560" dy="20">N30 adds FIA context</tspan>
+    </text>
+
+    <rect class="node" x="780" y="256" width="200" height="192" rx="8"/>
+    <text class="node-title" x="800" y="292">Recommendation</text>
+    <text class="node-sub" x="800" y="328">
+      <tspan x="800" dy="0">14-field schema</tspan>
+      <tspan x="800" dy="20">MC scores</tspan>
+      <tspan x="800" dy="28">Regulation context</tspan>
+      <tspan x="800" dy="20">carried with result</tspan>
+    </text>
+
+    <rect class="node" x="1020" y="256" width="200" height="192" rx="8"/>
+    <text class="node-title" x="1040" y="292">Delivery surfaces</text>
+    <text class="node-sub" x="1040" y="328">
+      <tspan x="1040" dy="0">CLI · f1-sim</tspan>
+      <tspan x="1040" dy="20">Arcade · PITWALL</tspan>
+      <tspan x="1040" dy="28">FastAPI · React</tspan>
+    </text>
+
+    <text x="540" y="504" fill="#bfc0c0" font-family="'Geist Mono',monospace" font-size="12">N30 provides retrieved evidence and context; it does not act as a universal action filter.</text>
+  </svg>

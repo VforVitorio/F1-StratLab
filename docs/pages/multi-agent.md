@@ -70,7 +70,7 @@ Since Phase 3.5 Proceso B (April 2026), the `python -m src.arcade.main ... --str
 graph LR
     subgraph arcade["Arcade process (pyglet)"]
         REPLAY[F1ArcadeView<br/>race replay]
-        PIPE[StrategyPipeline<br/>local N31 copy]
+        PIPE[StrategyPipeline<br/>shared run_lap engine]
         STREAM[TelemetryStreamServer<br/>TCP 127.0.0.1:9998]
     end
 
@@ -92,7 +92,7 @@ Four properties are load-bearing:
 
 1. **The arcade owns the `TelemetryStreamServer`.** `src/arcade/stream.py` exposes the merged arcade + strategy snapshot; every other window is a subscriber, never the source of truth.
 2. **One subprocess hosts both windows.** The arcade spawns a single `subprocess.Popen`. Two windows in one process is cheaper than two, and it is what lets them share a single stream reader.
-3. **The two windows share ONE stream reader.** `PitwallHost` owns a single `ArcadeStreamClient` and both windows poll it by sequence number, so they cannot disagree about which frame they are showing - a blind latest-payload slot had them differing on 58% of polls. Closing one window only decrements a count; it does not blind the other.
+3. **The two windows share one stream client, not a synchronized poll.** `PitwallHost` owns a single `ArcadeStreamClient`. DATA calls `get_tick()` and AGENTS calls `get_agents_view()`, which reads through `get_tick()` independently. A new payload can arrive between those polls, so their sequence numbers can differ. Closing one window only decrements a count; it does not blind the other.
 4. **Arcade runs the strategy pipeline in-process.** `src/arcade/strategy_pipeline.py` delegates to the shared engine (`src/strategy/inference/engine.py::run_lap`), so the arcade does not depend on the FastAPI backend at runtime and does not carry its own copy of the orchestrator. It used to; that copy drifted and crashed (#166), which is why the engine exists.
 
 See [Arcade strategy pipeline](#/arcade-strategy-pipeline) for the shared engine and its profiles, and [PITWALL windows](#/pitwall) for the follower architecture.
@@ -213,7 +213,7 @@ Both columns are the six races the tier sampled when the comparison was made, so
 >
 > The table above is deliberately **not** that comparison. It used to read "54 to 66", pairing a pre-#829 number with a post-#829 one, so two variables moved inside the one sentence written to attribute an effect to the bounds. Both of its columns are now measured on the fixed inputs; only the constants differ. The `min_stint` and scored counts happen to be identical either way (17 and 54 under the old bounds, with or without the input fix), which is why the arithmetic half of the old claim survived, but that was luck, not the argument.
 >
-> Read them as the **deterministic** layer, `profile="no-llm"`: the Monte Carlo plus the guard rails, with the LLM synthesis off. Twelve of the fourteen recommendation fields the multi-agent system emits are written by the LLM, so this is not a measurement of the system this page describes end to end.
+> Read them as the deterministic `profile="no-llm"` output: Monte Carlo plus guardrails. This profile skips N28, N30 and LLM synthesis. The rich profile has the LLM write 12 of 14 recommendation fields, so these results do not measure the full rich pipeline.
 
 `documents/eval_reports/stint_lengths.md` regenerates these shares from the live constants on every run, so the report always grades what is actually shipping rather than what was shipping when it was written.
 
@@ -245,7 +245,8 @@ Answers regulation questions by retrieving relevant FIA Sporting Regulation pass
 
 - **Retriever**: Qdrant + BGE-M3 embeddings
 - **Output**: `RegulationContext` (answer, articles, chunks)
-- **Activation**: conditional, only runs when sc_prob > 0.30, N28 is active, **or N27 reports `sc_currently_active = True`** (so the orchestrator pulls the SC pit-lane regulation snippet into the recommendation context)
+- **Activation**: conditional, runs when N27's SC probability exceeds the configured threshold, N29 reports a qualifying WARNING or RCM penalty, N28 is active, or N27 reports `sc_currently_active = True`.
+- **Season scope**: applies when a year is supplied. An empty scoped search retries unscoped; a missing year starts unscoped.
 
 ### N31: Strategy Orchestrator (`strategy_orchestrator.py`)
 

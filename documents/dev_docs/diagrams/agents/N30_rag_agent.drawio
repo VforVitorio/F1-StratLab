@@ -10,8 +10,8 @@
         </mxCell>
 
         <!-- ACTIVATION TRIGGER (side note) -->
-        <mxCell id="trigger" value="&lt;b&gt;Activated when:&lt;/b&gt;&lt;br/&gt;N27.sc_prob_3lap &gt; 0.3&lt;br/&gt;N29.alerts has PENALTY/WARNING&lt;br/&gt;N28 active (compound change)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="30" y="85" width="210" height="70" as="geometry" />
+        <mxCell id="trigger" value="&lt;b&gt;Activated when:&lt;/b&gt;&lt;br/&gt;N27 SC forecast exceeds threshold&lt;br/&gt;N29 warning or RCM penalty&lt;br/&gt;N28 is active&lt;br/&gt;active SC/VSC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="30" y="85" width="240" height="100" as="geometry" />
         </mxCell>
 
         <!-- INPUT -->
@@ -30,18 +30,18 @@
         </mxCell>
 
         <!-- VECTOR DB -->
-        <mxCell id="vdb" value="&lt;b&gt;Qdrant Vector DB (local on-disk)&lt;/b&gt;&lt;br/&gt;FIA Sporting Regulations 2023-2025&lt;br/&gt;Embeddings: BAAI/bge-m3 · 1024-dim · RTX 5070&lt;br/&gt;2,279 chunks · 512 chars · 64-char overlap" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="260" y="505" width="450" height="80" as="geometry" />
+        <mxCell id="vdb" value="&lt;b&gt;Qdrant Vector DB (local on-disk)&lt;/b&gt;&lt;br/&gt;FIA Sporting Regulations · year filter when supplied&lt;br/&gt;Empty scoped search: retry unscoped&lt;br/&gt;Missing year: unscoped search from the start&lt;br/&gt;BAAI/bge-m3 · top-k=5 default · cosine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="260" y="495" width="450" height="112" as="geometry" />
         </mxCell>
 
         <!-- OUTPUT -->
-        <mxCell id="output" value="&lt;b&gt;RegulationContext&lt;/b&gt;&lt;br/&gt;question · answer · chunks[] · articles[] (FIA citations)&lt;br/&gt;reasoning (property, alias for answer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="295" y="660" width="380" height="65" as="geometry" />
+        <mxCell id="output" value="&lt;b&gt;RegulationContext&lt;/b&gt;&lt;br/&gt;question · answer · chunks[] · articles[]&lt;br/&gt;citation_violations[] · reasoning aliases answer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="295" y="640" width="380" height="78" as="geometry" />
         </mxCell>
 
         <!-- NOTE -->
-        <mxCell id="note" value="→ N31 as hard constraint, N30.articles used to filter illegal strategy options before LLM decides" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="160" y="740" width="650" height="20" as="geometry" />
+        <mxCell id="note" value="N30 passes retrieved evidence and regulation_context to N31 synthesis; it does not hard-filter strategy actions." style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=2;fontSize=11;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="70" y="755" width="640" height="30" as="geometry" />
         </mxCell>
 
         <!-- EDGES -->
