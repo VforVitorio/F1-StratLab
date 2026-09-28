@@ -89,7 +89,7 @@ def _scope_laps_to_gp(
     # Resolve the spelling first: the replay path scopes with the metadata name while the
     # frame is keyed by the parquet slug, so 2025 Miami matched nothing and took the
     # fallback below — the whole race ran on the UNSCOPED season frame, which is the very
-    # regression the fallback's warning names (PR3_GP_KEYSPACE_SWEEP.md).
+    # regression the fallback's warning names (../../../documents/audits/implementation/pr3-gp-keyspace-sweep.md).
     stored_name = resolve_gp_key(set(laps_df["GP_Name"].dropna().astype(str)), gp_name)
     scoped = laps_df[laps_df["GP_Name"] == stored_name]
     if scoped.empty:

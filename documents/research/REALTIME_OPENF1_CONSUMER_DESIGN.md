@@ -19,7 +19,7 @@ Documents this builds on (read, not re-planned):
 `src/simulation/race_state_manager.py` (the contract),
 `documents/research/PITWALL_REALISM_AND_TELEMETRY_SURFACE.md` (observability tiers,
 fan-out options O1/O2/O3), `documents/research/RIVAL_AGENT_DESIGN.md` (derive-do-not-read
-discipline), `documents/audits/AUDIT_2026_REG_CONCEPT_DRIFT.md` (epic #189, the model
+discipline), `documents/audits/assessments/2026-reg-concept-drift.md` (epic #189, the model
 gate), `documents/research/ECOSYSTEM_REPO_INTEGRATION.md` (placement rule).
 
 ---
@@ -126,15 +126,15 @@ doc's tier (c) (hidden) applies to our own driver too, since the project is not 
 The replay framing is "our driver gets full telemetry, rivals get timing-screen only."
 Live, that asymmetry weakens in a specific and fortunate way:
 
-- **The data asymmetry collapses.** Live, our driver and every rival sit in the same
+- The data asymmetry collapses. Live, our driver and every rival sit in the same
   public tier. Nothing privileged exists to fetch.
-- **The contract barely notices.** This is the fortunate part: `get_driver_state` was
+- The contract barely notices. This is the fortunate part: `get_driver_state` was
   designed conservatively. Its fields are timing-tier values (lap/sector times, speeds,
   position, gap, compound, tyre life, stint, pit flags, track status) plus one honest
   estimate (`fuel_load`, a linear depletion model, not a measurement, per the module
   docstring). None of the driver fields encodes a private channel. So the dict survives
   live almost intact; what changes is the STORY told about it, not its shape.
-- **The asymmetry that survives is modeling attention, not data.** Live, "our driver"
+- The asymmetry that survives is modeling attention, not data. Live, "our driver"
   means: the car whose estimators run continuously (degradation TCN state, fuel
   model, stint plan), with rivals tracked at the same observational tier but without a
   persistent modeled state. That is also a fair description of how a real wall treats
@@ -200,10 +200,10 @@ is required; the fallback is the guardrail layer that already exists.
 
 Two transports behind one ingestor interface, chosen by config:
 
-- **Real-time push** (primary for race day): OpenF1's real-time offering (MQTT over
+- Real-time push (primary for race day): OpenF1's real-time offering (MQTT over
   WebSocket at the time of writing; requires a paid/registered account). Terms and
   transport details must be re-verified when implementation starts (open question Q1).
-- **Disciplined polling** (fallback and rehearsal): REST polling of the same endpoints
+- Disciplined polling (fallback and rehearsal): REST polling of the same endpoints
   keyed by `session_key` and `date > last_watermark`, at ~4-5 s. OpenF1's REST serves
   live sessions with a few seconds of delay; at lap cadence this is fully sufficient.
   The polling transport is not a degraded afterthought; it is the guaranteed-available
@@ -225,18 +225,18 @@ replay's `Time` column role.
 The streams are asynchronous and mutually unordered; `lap_state` is a per-lap snapshot.
 Assembly rules:
 
-- **Per-driver lap accumulators**, keyed by (driver number, lap number). `laps` rows
+- Per-driver lap accumulators, keyed by (driver number, lap number). `laps` rows
   carry the lap number explicitly; event streams (`pit`, `position`, `intervals`,
   `race_control`, `weather`) are timestamped and attributed to the lap whose window
   contains them, using each driver's lap start/end times from the `laps` stream.
-- **Keep-latest vs append-only**: `intervals`, `position`, `weather`, `car_data` are
+- Keep-latest vs append-only: `intervals`, `position`, `weather`, `car_data` are
   keep-latest per driver (only the value nearest lap close matters); `laps`, `pit`,
   `stints`, `race_control` are append-only facts that must never be dropped.
-- **Lap closure for OUR driver** = the tick. A lap closes when its `laps` row arrives
+- Lap closure for OUR driver = the tick. A lap closes when its `laps` row arrives
   with a lap duration (the row lands seconds after the car crosses the line). On
   closure, the emitter snapshots lap L for the driver and, for each rival, the freshest
   data at that instant.
-- **Rivals may be mid-lap at our lap close.** That is physically correct (a timing
+- Rivals may be mid-lap at our lap close. That is physically correct (a timing
   screen shows exactly this). Rival fields carry the last COMPLETED lap's values plus
   live gap/interval, with per-rival staleness metadata in the `live` block. Lapped
   cars and retirements degrade to stale-then-absent, mirroring how the replay handles
@@ -255,15 +255,15 @@ Assembly rules:
 
 ### 4.5 Out-of-order, late, and corrected data
 
-- **Grace, then emit, then freeze.** The emitter waits a short grace window (a few
+- Grace, then emit, then freeze. The emitter waits a short grace window (a few
   seconds) after our lap row arrives, to let the intervals/stints laggards land, then
   emits. An emitted `lap_state` is immutable: strategy decisions are not retroactive,
   and mutating history would poison the agents' per-lap reasoning trail.
-- **Late corrections** (timing corrections, deleted laps) are applied to the internal
+- Late corrections (timing corrections, deleted laps) are applied to the internal
   store and logged, so post-session analysis and the parity tests see them, but no
   re-emission occurs. This is the same posture a wall takes: decisions are made on the
   screen that was available at the time.
-- **Out-of-order within the grace window** is handled naturally by the accumulators
+- Out-of-order within the grace window is handled naturally by the accumulators
   (facts are keyed, not sequenced).
 
 ### 4.6 Backpressure
@@ -287,21 +287,21 @@ orchestrator, guardrails, and LLM synthesis all fit comfortably inside that budg
 
 One producer, the existing consumers, no new transports invented:
 
-- **Orchestrator loop (in-process):** the live manager feeds the same per-lap loop the
+- Orchestrator loop (in-process): the live manager feeds the same per-lap loop the
   replay feeds today. The CLI stays untouched; a separate additive entry point (for
   example an `f1-live` command or backend-managed session) hosts the live loop, never
   a modification of `run_simulation_cli.py`.
-- **Backend (FastAPI):** the existing `/api/v1/strategy/simulate` SSE generator pattern
+- Backend (FastAPI): the existing `/api/v1/strategy/simulate` SSE generator pattern
   gains a sibling live-session mode: same `start`/`lap`/`error`/`summary` event
   vocabulary, sourced from the live emitter instead of the replay engine. The pit-wall
   doc's WebSocket relay (option O1) then serves the browser dashboard; live mode is
   simply a second payload source for the same relay.
-- **Arcade TCP stream:** Arcade remains a desktop replay surface. In live mode it
+- Arcade TCP stream: Arcade remains a desktop replay surface. In live mode it
   consumes lap-cadence `lap_state` plus decisions (its strategy snapshot already has
   exactly that shape); smooth 60 FPS car motion would need the `location` stream and is
   explicitly out of scope for v1 (Arcade renders live as a timing-tower-style update,
   not an animation).
-- **Pit-wall dashboard (web):** per the pit-wall doc, O3 rendering with the O1 relay;
+- Pit-wall dashboard (web): per the pit-wall doc, O3 rendering with the O1 relay;
   the live `session_meta.live` staleness block drives the data-age labels that doc
   requires (tier labeling: observed / derived / estimate).
 
@@ -335,16 +335,16 @@ session too) before ever running on a race.
 Live inference is pointless on drifting models. Every model in section 3.5 is trained
 on the 2022-2025 regulation; the 2026 cars break the learned relationships (the concept
 drift analysis, retraining order, and weekend data strategy live in
-`documents/audits/AUDIT_2026_REG_CONCEPT_DRIFT.md`, epic #189, and are NOT duplicated
+`documents/audits/assessments/2026-reg-concept-drift.md`, epic #189, and are NOT duplicated
 here). The dependency is one-directional and hard:
 
-- **Gate:** the live consumer may run its mechanics (sections 4-6) against any session
+- Gate: the live consumer may run its mechanics (sections 4-6) against any session
   at any time, but agent recommendations on 2026 races are enabled only after the #189
   retraining pipeline (weekend FP/Qualy/Sprint data, pitlab Studio as the retrain
   surface) has produced validated 2026 models. This restates the roadmap rule already
   fixed in the ecosystem plan: Phase 4 (2026 adaptation) before Phase 5 (live), and the
   same rule protects box-bot downstream (never publish numbers from drifting models).
-- **Non-gated work:** everything in this document except "recommendations on a 2026
+- Non-gated work: everything in this document except "recommendations on a 2026
   race" is regulation-independent plumbing and can be built and rehearsed on 2024-2025
   archived sessions via the shadow-replay harness.
 
@@ -379,19 +379,19 @@ direction invariant intact.
 
 ## 10. Risks
 
-- **OpenF1 access terms change** (pricing, transport, rate limits). Mitigation: the
+- OpenF1 access terms change (pricing, transport, rate limits). Mitigation: the
   transport interface isolates it; polling REST is the floor; re-verify terms at L3.
-- **Feed lag clusters at exactly the wrong moment** (stint row missing at lap close
+- Feed lag clusters at exactly the wrong moment (stint row missing at lap close
   after a pit stop, the highest-value decision lap). Mitigation: grace window + the
   derive-from-pit-events fallback for tyre age; guardrails already suppress
   low-confidence calls.
-- **Provisional-vs-corrected timing noise** degrades model inputs in ways the parity
+- Provisional-vs-corrected timing noise degrades model inputs in ways the parity
   test tolerances must quantify, not hand-wave. Mitigation: measure on the shadow
   harness (same race, both producers) before trusting live numbers.
-- **Semantic overreach in comms**: presenting live output as pit-wall-grade while our
+- Semantic overreach in comms: presenting live output as pit-wall-grade while our
   driver has no private telemetry. Mitigation: section 3.2's honest framing propagates
   to every surface label and to any publication text.
-- **Scope creep toward sub-lap streaming** (car_data/location, 10 Hz dashboards).
+- Scope creep toward sub-lap streaming (car_data/location, 10 Hz dashboards).
   Mitigation: v1 is lap-cadence by design; sub-lap belongs to the dashboard track and
   only through the same ingestor, later.
 

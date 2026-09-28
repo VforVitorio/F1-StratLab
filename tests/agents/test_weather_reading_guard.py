@@ -22,7 +22,7 @@ import pytest
 from src.agents._shared_defaults import reading_or_default
 
 # The dict the backend producer really emits for a 2025 lap, verified over real HTTP
-# (documents/audits/GATE_qatar_lap7_cross_surface.md, Task 2).
+# (documents/audits/gates/qatar-lap7-cross-surface.md, Task 2).
 PRODUCER_WEATHER_2025 = {
     "air_temp": None,
     "track_temp": None,

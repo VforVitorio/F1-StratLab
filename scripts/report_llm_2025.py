@@ -6,10 +6,8 @@ definitions rather than restating them. The paired deterministic arm is scored
 from its own JSONL over the SAME windows, so the two columns are comparable by
 construction instead of by assertion.
 
-Every rate is printed with the population it describes on the same line. That is
-not decoration: the sample is a seeded draw over rail-eligible green-flag stops of
-nine races, so a bare percentage here would be read as a season figure and it is
-not one.
+The report records each arm's actual race coverage beside its rates. The sample
+is a seeded draw from nine races, not the full 2025 season.
 """
 
 from __future__ import annotations
@@ -46,19 +44,7 @@ def _bucket_table(buckets: dict[str, int], total: int) -> list[str]:
 
 
 def _coverage_lines(spec_paths: list[str], llm: dict, det: dict) -> list[str]:
-    """Laps the spec asked for against laps each arm actually produced.
-
-    This exists because of a real failure in this session: a second concurrent
-    process could not open the single-writer Qdrant store, every lap of that
-    process raised inside the RAG agent, and the CLI's per-lap ``except
-    Exception`` turned the whole run into skipped laps. From the outside that is
-    indistinguishable from laps the replay engine legitimately declines to serve
-    (a retired car, a missing position). The only thing that separates them is
-    counting what was asked for.
-
-    A low LLM-arm coverage with a high deterministic-arm coverage over the same
-    windows means the LLM arm broke, not that the sample is thin.
-    """
+    """Compare requested laps with delivered laps to expose arm-specific gaps."""
     if not spec_paths:
         return []
 
@@ -70,29 +56,23 @@ def _coverage_lines(spec_paths: list[str], llm: dict, det: dict) -> list[str]:
     llm_laps, det_laps = llm["laps_measured"], det["laps_measured"]
     lines = [
         "",
-        "## Coverage: laps asked for against laps produced",
+        "## Coverage",
         "",
         "| arm | laps planned | laps produced | coverage |",
         "| --- | --- | --- | --- |",
         f"| LLM (`rich`) | {planned} | {llm_laps} | {llm_laps / planned:.1%} |",
         f"| deterministic (`no-llm`) | {planned} | {det_laps} | {det_laps / planned:.1%} |",
         "",
-        "A gap in BOTH arms is the replay engine declining to serve a lap (a retired car, "
-        "a lap with no position). A gap in the LLM arm ALONE is the LLM arm failing, and "
-        "it looks identical from the row count alone, which is why it is counted here.",
+        "Gaps in both arms can come from replay exclusions, such as a retired car or a lap "
+        "without a position. An LLM-only gap is a missing row in that output; coverage counts "
+        "do not identify its cause. Check the run logs before assigning one.",
         "",
     ]
     return lines
 
 
 def _race_list(measured: dict) -> str:
-    """The races an arm actually has rows for, named.
-
-    The design is nine races; an arm that stopped early covers fewer, and the
-    difference is exactly the kind of thing a population sentence hides when it
-    quotes the design instead of the data. Printed from the verdicts so it cannot
-    drift from what was scored.
-    """
+    """Return the distinct races represented in this arm's measured verdicts."""
     races = sorted({v["race"] for v in measured["verdicts"]})
     return f"{len(races)} ({', '.join(races)})" if races else "none"
 
@@ -118,18 +98,17 @@ def _paired_rows(llm: dict, det: dict) -> list[str]:
 
     lines = [
         "",
-        "## Paired contrast: the same stops, both profiles",
+        "## Paired comparison",
         "",
-        "The only legitimate LLM-vs-deterministic comparison. Both arms ran the identical",
-        "windows through the identical harness; only `profile` differs. The published",
-        "`decision_modes.md` numbers are NOT comparable to these: different sample.",
+        "Both arms used the same windows and harness; only `profile` differs. The published",
+        "`decision_modes.md` figures use a different sample and are not comparable.",
         "",
-        f"- stops measured by both arms: **{len(shared)}**",
-        f"- same bucket in both arms: **{_rate(agree_bucket, len(shared))}**",
-        f"- scored by both arms: **{len(both_scored)}**, of which same chosen lap: "
-        f"**{_rate(same_lap, len(both_scored))}**",
-        f"- **deterministic scored, LLM did not: {len(det_scored_llm_not)}** "
-        f"(of these, {len(det_exact_llm_lost)} were EXACT agreements the LLM path lost)",
+        f"- Stops measured by both arms: {len(shared)}",
+        f"- Same bucket in both arms: {_rate(agree_bucket, len(shared))}",
+        f"- Scored by both arms: {len(both_scored)}; same chosen lap: "
+        f"{_rate(same_lap, len(both_scored))}",
+        f"- Deterministic scored, LLM did not: {len(det_scored_llm_not)}; "
+        f"exact agreements lost by the LLM arm: {len(det_exact_llm_lost)}",
         f"- LLM scored, deterministic did not: {len(llm_scored_det_not)}",
         "",
     ]
@@ -149,18 +128,7 @@ def _paired_rows(llm: dict, det: dict) -> list[str]:
 
 
 def _cost_lines(llm: dict) -> list[str]:
-    """Cost from the rows, and NOTHING the rows cannot support.
-
-    An earlier version of this function printed the string "Zero prompt tokens
-    are cacheable here (measured)" as a literal. It was false, and worse, it was
-    unmeasurable: the rows carried no cached-token field at all, so nothing in
-    this report could ever have contradicted it. A hardcoded sentence with
-    "(measured)" in it is the strongest possible claim and the weakest possible
-    evidence, and an adversarial gate caught it in a file whose entire purpose is
-    stating what was measured.
-
-    The cached share now comes off the rows or is not printed.
-    """
+    """Report runtime and token counts without inferring missing cache usage."""
     tokens = llm["tokens"]
     laps = llm["laps_measured"]
     hours = llm["wall_clock_seconds"] / 3600
@@ -168,10 +136,10 @@ def _cost_lines(llm: dict) -> list[str]:
 
     lines = [
         "",
-        "## What it cost",
+        "## Runtime and token use",
         "",
-        f"- **{laps} evaluated laps**, {llm['windows']} windows",
-        f"- **{hours:.2f} h** inside `run_lap` (excludes per-process boot)",
+        f"- Evaluated laps: {laps} across {llm['windows']} windows",
+        f"- Time inside `run_lap`: {hours:.2f} h (per-process boot excluded)",
         f"- {tokens['calls']} LLM calls, {tokens['prompt']:,} prompt + "
         f"{tokens['completion']:,} completion tokens",
         f"- {tokens['calls'] / laps:.1f} calls/lap, "
@@ -180,28 +148,22 @@ def _cost_lines(llm: dict) -> list[str]:
     ]
     if cached is None:
         lines.append(
-            "- cached prompt tokens: **not recorded in these rows**, so the money figure "
-            "below is an upper bound"
+            "- Cached prompt tokens were not recorded, so this run does not support a cost estimate"
         )
     else:
         share = cached / tokens["prompt"] if tokens["prompt"] else 0.0
         lines.append(f"- **{cached:,} cached prompt tokens ({share:.1%} of prompt)**")
     lines += [
         "",
-        "Prices read 2026-08-06: `gpt-4.1-mini` $0.40 / $1.60 / $0.10 cached per 1M, "
-        "`gpt-5.4-mini` $0.75 / $4.50 / $0.075 cached per 1M.",
+        "Reference prices checked 2026-08-06, per million tokens (input/output/cached input): "
+        "`gpt-4.1-mini` $0.40/$1.60/$0.10; `gpt-5.4-mini` $0.75/$4.50/$0.075.",
         "",
     ]
     return lines
 
 
 def _regime_lines(llm: dict) -> list[str]:
-    """Both readings of the two contested population questions, from one measurement.
-
-    Whether the wet race and the directive-forced stops belong inside the headline
-    is a reporting choice, not a run-time one: the rows are the same either way.
-    Printing both is strictly more honest than picking one and saying so.
-    """
+    """Compare all sampled stops with dry, unconstrained stops from the same rows."""
     wet = {"Silverstone"}
     forced = {("Lusail", 32)}
     inside = llm["verdicts"]
@@ -225,7 +187,7 @@ def _regime_lines(llm: dict) -> list[str]:
 
     lines = [
         "",
-        "## Both readings of the population, from the same rows",
+        "## Population variants",
         "",
         "| reading | result |",
         "| --- | --- |",
@@ -233,12 +195,11 @@ def _regime_lines(llm: dict) -> list[str]:
         f"| dry, freely-chosen stops only (Silverstone and the Lusail L32 trio removed) "
         f"| {summary(core)} |",
         "",
-        "Neither is more correct. The first says *2025 as it happened*, including a wet race "
-        "and a set of stops forced by a Pirelli maximum-stint directive the system cannot "
-        "observe (the directive is not in the RAG corpus, which holds season rulebooks only; "
-        "the 25-lap Qatar limit is confirmed by Pirelli's own press release). The second says "
-        "*the population the system was built for*. Quoting either without naming it is the "
-        "error.",
+        "The first row includes wet and directive-forced stops. The system cannot observe the "
+        "Pirelli maximum-stint directive because it is absent from the RAG corpus; Pirelli's "
+        "press release confirms the 25-lap Qatar limit. The second row excludes Silverstone "
+        "and the Lusail lap-32 group to measure dry, freely chosen stops. Report each rate "
+        "with its population.",
         "",
     ]
     return lines
@@ -274,17 +235,16 @@ def main() -> None:
         "# 2025 season, LLM mode: what the shipped system recommends",
         "",
         "Generated by `scripts/report_llm_2025.py`. Sample and protocol: "
-        "`documents/audits/MEASUREMENT_2025_METHODOLOGY.md`. Session record: "
-        "`documents/audits/MEASUREMENT_SESSION_2025_LOG.md`.",
+        "`documents/audits/measurements/2025-methodology.md`. Session record: "
+        "`documents/audits/measurements/session-2025-log.md`.",
         "",
-        "**Population, stated once and applying to every rate below:** rail-eligible "
-        "green-flag pit stops of the 2025 season, drawn by a seeded uniform draw "
-        "(`seed 20250806`, at most 3 windows per race-lap) from a nine-race design covering all "
-        "four circuit clusters. It is **not** a season-wide figure and it is not comparable to "
-        "the published `decision_modes.md` numbers, whose sample is different.",
+        "Sample: rail-eligible green-flag 2025 pit stops selected by a seeded uniform draw "
+        "(`seed 20250806`, at most 3 windows per race-lap) from nine races across four circuit "
+        "clusters. These rates do not describe the full season and are not comparable with "
+        "`decision_modes.md`, which uses a different sample.",
         "",
-        f"**Races each arm ACTUALLY covers**, which is not the design and must not be quoted as "
-        f"it: LLM arm {_race_list(llm)}; deterministic arm {_race_list(det)}.",
+        f"Actual race coverage differs by arm. LLM: {_race_list(llm)}. "
+        f"Deterministic: {_race_list(det)}.",
         "",
         "## Headline",
         "",
@@ -301,8 +261,8 @@ def main() -> None:
         f"| mean signed error | {agree['mean_signed_error']:+.2f} | "
         f"{det['agreement']['mean_signed_error']:+.2f} |",
         "",
-        "`mean signed error` is **not quotable as a system property**: it moves with "
-        "`DECISION_WINDOW_LAPS`. It is here so the direction of the bias is visible.",
+        "Mean signed error depends on `DECISION_WINDOW_LAPS`; these values describe this "
+        "configuration only.",
         "",
         "### Buckets, LLM arm",
         "",
@@ -318,11 +278,10 @@ def main() -> None:
     if census:
         lines += [
             "",
-            "## What the LLM actually filled in",
+            "## Fields populated by the LLM",
             "",
-            "Eleven of these fields do not exist on the deterministic path, which emits an "
-            "argmax and a fixed reasoning string. Whether the planner populates them at all "
-            "is a result.",
+            "The deterministic path emits an argmax and a fixed reasoning string. The counts "
+            "below show which additional fields the planner populated.",
             "",
             f"- actions: `{census['actions']}`",
             f"- pace modes: `{census['pace_modes']}`",

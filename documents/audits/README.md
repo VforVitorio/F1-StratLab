@@ -1,11 +1,11 @@
 # Audit records
 
-This is an agent-assisted audit archive. Reports are evidence from a dated review, not automatically current findings. Check the cited code, data, and issue before acting on a recommendation.
+These agent-assisted reviews record a particular code, data, or runtime snapshot. A finding may be stale; check its date, cited source, and issue before acting on it.
 
-- `GATE_*` records a verification gate, usually tied to a change or issue.
-- `AUDIT_*` records a broader code or design review.
-- `MEASURE_*` pairs a human-readable result with structured data when both exist.
-- `TRACE_*` records runtime evidence; `REVIEW_*` records adjudication; `FIX_*` records a change and its verification.
-- `*_LOG` files are chronological records. Keep them append-only when later runs need the earlier sequence.
+- `assessments/` contains code and design audits.
+- `gates/` contains issue and change verification reports.
+- `measurements/` contains results and their structured data.
+- `reviews/` contains independent and adjudication reviews.
+- `fixes/`, `designs/`, `traces/`, `sweeps/`, and `implementation/` contain change records, proposals, runtime captures, repository scans, and implementation notes.
 
-Files are kept at their current paths because issues, pull requests, scripts, tests, and other audits link to them. A result marked historical or superseded can still be useful evidence; its date and scope determine how to read it.
+Filenames use a short topic and retain an issue or audit ID where it helps locate the evidence. A few open-issue reports remain in this directory while their issue branches carry pending edits. Traces and measurement data stay beside their reports when scripts or tests consume them.

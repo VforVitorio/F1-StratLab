@@ -20,17 +20,17 @@ There is no `auth` router. Authentication is a single ASGI middleware wrapping e
 
 Two more mount points sit outside the router list:
 
-- **`GET /`** and **`GET /health`**, unauthenticated liveness endpoints, registered directly on the `FastAPI` app in `main.py`.
-- **`/mcp`**, the FastMCP Streamable-HTTP server, mounted only when `F1_MCP_ENABLED=true` (off by default). The chat pipeline reaches the same tools in-process regardless of this flag, so leaving it unmounted removes an open network surface, not a feature. See "Authentication" and "MCP-Driven Tool Routing" below.
+- `GET /` and **`GET /health`**, unauthenticated liveness endpoints, registered directly on the `FastAPI` app in `main.py`.
+- `/mcp`, the FastMCP Streamable-HTTP server, mounted only when `F1_MCP_ENABLED=true` (off by default). The chat pipeline reaches the same tools in-process regardless of this flag, so leaving it unmounted removes an open network surface, not a feature. See "Authentication" and "MCP-Driven Tool Routing" below.
 
 ## Authentication
 
 Every router (and the `/mcp` mount, when enabled) sits behind a single shared-secret ASGI middleware, `ApiKeyMiddleware` (`backend/core/auth.py`, Security A1 / issue #224). It is intentionally pure ASGI rather than `BaseHTTPMiddleware`, because the latter buffers the whole response body and would break the SSE streams (`/chat/tool-message-stream`, `/simulate`).
 
-- **Header**: `X-API-Key`, compared against the `F1_API_KEY` env var with `hmac.compare_digest`.
-- **Open paths**: `/` and `/health` always pass unauthenticated (uptime probes). `OPTIONS` (CORS preflight) always passes.
-- **Safe-by-default when unset**: if `F1_API_KEY` is not set, every other request also passes, this is the local-dev default. The dangerous combination is a non-loopback bind (`F1_HOST` other than `127.0.0.1`/`localhost`/`::1`) with no key set: `enforce_startup_security()` refuses to boot in that case rather than come up open on the network.
-- **WebSocket**: gated the same way; an unauthorized WS handshake gets a policy-violation close (code 1008) instead of a 401 body.
+- Header: `X-API-Key`, compared against the `F1_API_KEY` env var with `hmac.compare_digest`.
+- Open paths: `/` and `/health` always pass unauthenticated (uptime probes). `OPTIONS` (CORS preflight) always passes.
+- Safe-by-default when unset: if `F1_API_KEY` is not set, every other request also passes, this is the local-dev default. The dangerous combination is a non-loopback bind (`F1_HOST` other than `127.0.0.1`/`localhost`/`::1`) with no key set: `enforce_startup_security()` refuses to boot in that case rather than come up open on the network.
+- WebSocket: gated the same way; an unauthorized WS handshake gets a policy-violation close (code 1008) instead of a 401 body.
 
 This means `F1_API_KEY` and `F1_HOST` (see [Setup and deployment](#/setup)) are the two env vars that decide whether the backend is safe to expose beyond localhost.
 

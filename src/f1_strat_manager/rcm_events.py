@@ -245,7 +245,7 @@ def classify_rcm_event(event: "RCMEvent") -> str:
     # suspension, so these keyword sets are best-effort FIA phrasing and are
     # NOT corpus-verified — flagged in the PR/issue for validation against a
     # real red-flag race before being relied on for the restart-procedure logic
-    # the audit describes (AUDIT_NLP_RADIO_PIPELINE.md section 5.2 item 4).
+    # the audit describes (../../documents/audits/assessments/nlp-radio-pipeline.md section 5.2 item 4).
     if any(k in msg for k in _SESSION_SUSPENDED_KEYWORDS):
         return "SESSION_SUSPENDED"
     if any(k in msg for k in _SESSION_RESUMED_KEYWORDS):

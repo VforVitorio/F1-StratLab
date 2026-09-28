@@ -38,9 +38,9 @@ src/strategy/inference/engine.py
         -> tuple[StrategyRecommendation, dict | None, dict[str, float]]
 ```
 
-- **`StrategyRecommendation`**, the synthesised decision (14 fields). What the CLI and the web app consume.
-- **`agent_outputs`**, the raw per-sub-agent dataclasses, keyed `pace_out`, `tire_out`, `situation_out`, `radio_out`, `pit_out`, `regulation_context`, `rag`, `active`, `guardrail_reason`. What the arcade dashboard renders its cards and charts from.
-- **stage timings**, per-stage seconds, for the surfaces that show them.
+- `StrategyRecommendation`, the synthesised decision (14 fields). What the CLI and the web app consume.
+- `agent_outputs`, the raw per-sub-agent dataclasses, keyed `pace_out`, `tire_out`, `situation_out`, `radio_out`, `pit_out`, `regulation_context`, `rag`, `active`, `guardrail_reason`. What the arcade dashboard renders its cards and charts from.
+- stage timings, per-stage seconds, for the surfaces that show them.
 
 The sub-agents are imported through their public `*_from_state` entry points; the output dataclasses come from `src/agents/strategy_orchestrator.py`. Nothing about them is engine-specific.
 
@@ -92,9 +92,9 @@ The arcade strategy driver is `src/arcade/strategy.py::SimConnector`. It is a pl
 
 The arcade used to subscribe to `GET /api/v1/strategy/simulate/stream`. Phase 3.5 replaced it with the direct in-process loop:
 
-- **No extra process.** Strategy mode no longer needs `uvicorn` running first.
-- **No SSE client.** The arcade's consumer was a hand-rolled parser over `httpx.stream` with its own reconnect logic. A thread is simpler.
-- **Standalone.** The arcade ships without a FastAPI dependency.
+- No extra process. Strategy mode no longer needs `uvicorn` running first.
+- No SSE client. The arcade's consumer was a hand-rolled parser over `httpx.stream` with its own reconnect logic. A thread is simpler.
+- Standalone. The arcade ships without a FastAPI dependency.
 
 The backend SSE endpoint is still live and smoke-tested; the arcade just does not consume it.
 

@@ -6,7 +6,7 @@ help on 2025 -- the season the system actually runs in?
 reduction, but only ever on `laps_tiredeg.parquet` (2023-24, the only parquet
 carrying N04's training target). That is a real number about the seasons the
 threshold was CHOSEN on, not evidence about what ships -- see
-`documents/audits/MEASURE_fresh_reference_quality_gate.md`'s 2025 addendum.
+`documents/audits/measurements/fresh-reference-quality-gate.md`'s 2025 addendum.
 
 This script measures the identical diagnostic on `laps_featured_2025.parquet`
 (the real, full 24-race 2025 season), reusing the actual production functions

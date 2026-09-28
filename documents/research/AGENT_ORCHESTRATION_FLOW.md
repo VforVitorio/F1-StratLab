@@ -9,11 +9,11 @@ be improved, and designs an additive v2 graph if so.
 
 Cross-references (not duplicated here):
 
-- `documents/audits/AUDIT_P2B_CORE_COMPUTE.md` (epic #169): probe duplication F1, ReAct
+- `documents/audits/assessments/p2b-core-compute.md` (epic #169): probe duplication F1, ReAct
   turn inflation F3, sequential always-on F6, N31 cadence F11, the shared engine plan.
-- `documents/audits/AUDIT_LLM_COST_LATENCY.md` (epic #261): per-agent token table, L-1
+- `documents/audits/assessments/llm-cost-latency.md` (epic #261): per-agent token table, L-1
   timeouts, L-2 model config, L-4 cache observability, prompt-cache restructuring.
-- `documents/audits/AUDIT_ML_AGENTS_EVAL.md` (epic #205): conformance battery, MC and
+- `documents/audits/assessments/ml-agents-eval.md` (epic #205): conformance battery, MC and
   routing evaluation, golden regression bed.
 - `documents/research/RIVAL_AGENT_DESIGN.md` section 7: the Rival Agent as an additive node.
 
@@ -75,20 +75,20 @@ P2b F1).
 
 ### 3.1 Sound, keep as-is (also in v2)
 
-- **Deterministic MoE routing.** The original N31 plan considered an LLM supervisor
+- Deterministic MoE routing. The original N31 plan considered an LLM supervisor
   choosing which workers to call (memory `project_agent_notebooks.md`). The shipped
   deterministic gate is the better design: free, testable, auditable, and it makes the
   routing itself a unit-testable function. v2 keeps the exact rules and only changes
   *where* they live (conditional edges instead of inline if-else). Do not move routing
   into an LLM.
-- **MC as a deterministic, seeded layer** between agents and synthesis. This is the
+- MC as a deterministic, seeded layer between agents and synthesis. This is the
   academic payoff of the probabilistic pipeline and the anchor for reproducibility.
-- **Structured output everywhere the LLM commits to a decision** (N29, N31). The
+- Structured output everywhere the LLM commits to a decision (N29, N31). The
   in-house proof that schema-validated single calls are reliable.
-- **N30 as a hard constraint injected before the decision LLM**, and the layered
+- N30 as a hard constraint injected before the decision LLM, and the layered
   guard-rails (prompt-level in N26/N27/N28/N31 + code-level SC override in N28 +
   programmatic guard in the no-LLM path; memory `project_strategic_guardrails.md`).
-- **The frozen 14-field `StrategyRecommendation`** (memory
+- The frozen 14-field `StrategyRecommendation` (memory
   `project_orchestrator_v2_schema.md`). v2 changes nothing about the output contract.
 
 ### 3.2 Improvable: the flow verdict table
@@ -148,22 +148,22 @@ START
 END
 ```
 
-- **Conditional edges** implement Layer 1b: the `route` node computes the activation
+- Conditional edges implement Layer 1b: the `route` node computes the activation
   set from the fan-out outputs and the graph branches on it. Same rules, now visible in
   a rendered graph, unit-testable per edge, and logged per lap.
-- **Parallel fan-out** uses LangGraph's superstep semantics: all always-on nodes run in
+- Parallel fan-out uses LangGraph's superstep semantics: all always-on nodes run in
   one step, each writing its own state key (no shared-key contention). N28 and N30 fan
   out in parallel when both activate; the one N30 question template that reads
   `pit_out.action` falls back to the generic pit question in that case, or N30 is
   sequenced only for that branch (design choice to fix during Phase 1).
-- **`monte_carlo` is a plain deterministic node.** Not an agent, never was; keeping it
+- `monte_carlo` is a plain deterministic node. Not an agent, never was; keeping it
   as an isolated node makes it the cheapest golden-test target in the system (seeded
   inputs in, exact dict out) and the place where the Rival extension lands.
-- **`synthesize`** keeps the single structured-output call but splits the prompt into a
+- `synthesize` keeps the single structured-output call but splits the prompt into a
   static `SystemMessage` (guardrails + rubric + field spec) and a short dynamic
   `HumanMessage`, per the LLM-cost audit's prompt-cache restructuring. Provider stays
   OpenAI / LM Studio via `langchain-openai`, model per layer from the L-2 config module.
-- **`guardrails_assemble`** merges `_assemble_recommendation` semantics with the
+- `guardrails_assemble` merges `_assemble_recommendation` semantics with the
   programmatic guard currently living only in the CLI's no-LLM path, so both profiles
   share one guard implementation.
 
@@ -182,11 +182,11 @@ One graph, two-plus compiled profiles (a compile-time flag or a conditional edge
 A LangGraph checkpointer (SQLite for local, in-memory for tests) with
 `thread_id = session key`, one checkpoint per lap:
 
-- **Replay/resume:** restart a 70-lap simulation at lap 40; time-travel to any lap for
+- Replay/resume: restart a 70-lap simulation at lap 40; time-travel to any lap for
   debugging a bad recommendation.
-- **Regression bed:** the ML-eval audit (#205) golden runs become "replay checkpoints,
+- Regression bed: the ML-eval audit (#205) golden runs become "replay checkpoints,
   assert node outputs", instead of bespoke fixture plumbing.
-- **Live mode:** a live OpenF1 feed (see `documents/research/REALTIME_OPENF1_CONSUMER_DESIGN.md`)
+- Live mode: a live OpenF1 feed (see `documents/research/REALTIME_OPENF1_CONSUMER_DESIGN.md`)
   becomes "one graph invocation per lap on the same thread", with crash recovery free.
 
 ### 4.5 Streaming
@@ -203,14 +203,14 @@ agent module, an additive `lap_state` gap-history key, and a duplicated "anticip
 orchestrator" entry point. In the plain pipeline that means a third copy of the Layer
 1-3 wiring. In the v2 graph it collapses to:
 
-- **One node** (`rival_node`) joining the always-on fan-out, reading only
+- One node (`rival_node`) joining the always-on fan-out, reading only
   `lap_state["rivals"]` + the gap provider (single-driver boundary preserved by
   construction).
-- **One routing rule** as a conditional edge: skip the rival branch when no rival is
+- One routing rule as a conditional edge: skip the rival branch when no rival is
   within a pit cycle (the MoE rule section 7.1 already names).
-- **One MC variant**: the `monte_carlo` node gains the rival draws and the modified
+- One MC variant: the `monte_carlo` node gains the rival draws and the modified
   STAY_OUT / UNDERCUT / OVERCUT scoring of section 7.2, behind a flag.
-- **One prompt block**: `synthesize` injects RIVAL INTENT (section 7.3) when `rival_out` is
+- One prompt block: `synthesize` injects RIVAL INTENT (section 7.3) when `rival_out` is
   present. Output stays the frozen 14 fields.
 
 The TFM ablation becomes trivially clean: control arm = graph with the rival branch
@@ -222,30 +222,30 @@ the strongest single argument for building v2 before the TFM starts.
 
 **Buys:**
 
-- **Latency:** full fan-out of 4-5 always-on agents (V1) plus parallel N28/N30 (V2);
+- Latency: full fan-out of 4-5 always-on agents (V1) plus parallel N28/N30 (V2);
   Layer 1 bounded by the slowest agent. Combined with the engine retiring the CLI probe
   duplication (P2b F1, the audit's estimated 40-45% LLM-lap saving) and bounded ReAct
   loops (V3), per-lap wall time and token cost both drop without touching any agent.
-- **Determinism and testability:** routing, MC, and guardrails become individually
+- Determinism and testability: routing, MC, and guardrails become individually
   golden-testable nodes; checkpoints feed the ML-eval regression bed (#205); the no-llm
   profile is exactly reproducible end to end.
-- **One wiring:** the two entry-point twins, the arcade pipeline copy, and the CLI
+- One wiring: the two entry-point twins, the arcade pipeline copy, and the CLI
   probe path converge on one graph (P2b F10/F1).
-- **Live-mode and surface readiness:** checkpointing + streaming are the two primitives
+- Live-mode and surface readiness: checkpointing + streaming are the two primitives
   the SSE/pit-wall surfaces and the 2026 live ambition actually need.
-- **A first-class Rival slot** (section 5).
+- A first-class Rival slot (section 5).
 
 **Costs and risks:**
 
-- **Parity risk:** any prompt reshaping (cache-friendly System/Human split) can change
+- Parity risk: any prompt reshaping (cache-friendly System/Human split) can change
   LLM outputs; must be gated by the ML-eval conformance battery, not assumed neutral.
-- **Torch thread safety:** the shipped code deliberately serializes N26/N29; parallel
+- Torch thread safety: the shipped code deliberately serializes N26/N29; parallel
   fan-out must either verify safety (inference under `no_grad` on separate model
   instances is typically fine) or wrap torch nodes in a lock, which halves V1's win.
-- **Dependency/version churn:** LangGraph APIs move; pin versions in the engine extra
+- Dependency/version churn: LangGraph APIs move; pin versions in the engine extra
   and keep the graph surface thin (nodes are wrappers, easy to re-wire).
-- **Effort:** this is a Sprint-sized build that only pays if the P2b engine lands
-  first; sequencing per `documents/audits/IMPLEMENTATION_ROADMAP.md` (engine P2b #169
+- Effort: this is a Sprint-sized build that only pays if the P2b engine lands
+  first; sequencing per `documents/audits/implementation/roadmap.md` (engine P2b #169
   before graph; graph before Rival).
 
 ## 7. Migration path and parity gate

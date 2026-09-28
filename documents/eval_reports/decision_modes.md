@@ -78,7 +78,7 @@ here said they did.
 ### Scope
 
 - Sampled races (24 measured): 2025 Austin, 2025 Baku, 2025 Barcelona, 2025 Budapest, 2025 Imola, 2025 Jeddah, 2025 Las_Vegas, 2025 Lusail, 2025 Marina_Bay, 2025 Melbourne, 2025 Mexico_City, 2025 Miami_Gardens, 2025 Monaco, 2025 Montréal, 2025 Monza, 2025 Sakhir, 2025 Shanghai, 2025 Silverstone, 2025 Spa-Francorchamps, 2025 Spielberg, 2025 Suzuka, 2025 São_Paulo, 2025 Yas_Island, 2025 Zandvoort.
-- **Every one is 2025, deliberately.** 2023 and 2024 are training seasons for
+- Every one is 2025, deliberately. 2023 and 2024 are training seasons for
   every model in the stack, so a decision tier scored there is partly reading
   back its own training data.
 - This is the whole 2025 season, not a stratified subset. It used to be six

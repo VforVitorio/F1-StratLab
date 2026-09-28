@@ -18,5 +18,5 @@
 
 ## Divergences reconciled
 
-- **pace mae_test_s**: 0.392 (notebook N06 (superseded)) -> **0.4104** (thesis Tabla 6.1 (final))
-- **sentiment accuracy**: 0.875 (published-era (superseded)) -> **0.84** (thesis Tabla 6.1 (final))
+- pace mae_test_s: 0.392 (notebook N06 (superseded)) -> **0.4104** (thesis Tabla 6.1 (final))
+- sentiment accuracy: 0.875 (published-era (superseded)) -> **0.84** (thesis Tabla 6.1 (final))

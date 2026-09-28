@@ -7,7 +7,7 @@ assets that CI runners lack.
 
 Keep everything here small (target **< 150 KB per file**). Large assets stay on Hugging Face.
 
-Intended contents (added as the test tiers land, see `documents/audits/AUDIT_TESTING_QA.md`):
+Intended contents (added as the test tiers land, see `documents/audits/assessments/testing-qa.md`):
 
 - `mini_race.parquet` — a < 150 KB slice of one race for engine and data-path tests
 - `*.sse` — recorded chat SSE transcripts, shared by the Python parser and the SPA's TS parser

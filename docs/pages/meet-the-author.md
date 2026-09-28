@@ -17,12 +17,12 @@ a digital twin of an F1 race.
 
 ## Where to find me
 
-- **GitHub**, [@VforVitorio](https://github.com/VforVitorio)
-- **Project landing**, [f1stratlab.com](https://f1stratlab.com/)
-- **DeepWiki**, [F1 StratLab on DeepWiki](https://deepwiki.com/VforVitorio/F1-StratLab)
-- **LinkedIn**, [victorvegasobral](https://www.linkedin.com/in/victorvegasobral/)
-- **Hugging Face dataset**, [f1-strategy-dataset](https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset)
-- **Portfolio**, [victorvegasobral.com](https://victorvegasobral.com)
+- GitHub, [@VforVitorio](https://github.com/VforVitorio)
+- Project landing, [f1stratlab.com](https://f1stratlab.com/)
+- DeepWiki, [F1 StratLab on DeepWiki](https://deepwiki.com/VforVitorio/F1-StratLab)
+- LinkedIn, [victorvegasobral](https://www.linkedin.com/in/victorvegasobral/)
+- Hugging Face dataset, [f1-strategy-dataset](https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset)
+- Portfolio, [victorvegasobral.com](https://victorvegasobral.com)
 
 ## About the project
 
@@ -50,15 +50,15 @@ graph view for navigation by topic, by tag, or by cross-reference.
 
 ## Acknowledgements
 
-- **Academic**: UIE Campus Coruña, Intelligent Systems Engineering
+- Academic: UIE Campus Coruña, Intelligent Systems Engineering
   faculty and thesis advisors.
-- **Open data community**, [FastF1](https://docs.fastf1.dev) and
+- Open data community, [FastF1](https://docs.fastf1.dev) and
   [OpenF1](https://openf1.org) provide the telemetry, lap and timing
   data this entire project depends on.
-- **Open-source libraries**: LangGraph, LightGBM, XGBoost, PyTorch,
+- Open-source libraries: LangGraph, LightGBM, XGBoost, PyTorch,
   Pydantic, FastAPI, React, Vite, ECharts, PySide6, pyglet, Qdrant, and
   the Hugging Face ecosystem.
-- **Reference work**: TUMFTM race-simulation for the pit-delta
+- Reference work: TUMFTM race-simulation for the pit-delta
   framing, plus the wider F1 analytics community whose public
   notebooks shaped the early modelling decisions.
 

@@ -130,8 +130,8 @@ docker-compose up --build
 
 Services:
 
-- **backend**: FastAPI on port 8000. Volumes: `./src:/app/src:ro` (read-only source, agents import from here), `./data:/app/data:ro` (read-only data), `./data/rag:/app/data/rag:rw` (writable RAG index, N30 may write here).
-- **webapp**: React SPA served by nginx on port 8501; `/api` is reverse-proxied to `backend`, so the browser stays same-origin. Depends on `backend`.
+- backend: FastAPI on port 8000. Volumes: `./src:/app/src:ro` (read-only source, agents import from here), `./data:/app/data:ro` (read-only data), `./data/rag:/app/data/rag:rw` (writable RAG index, N30 may write here).
+- webapp: React SPA served by nginx on port 8501; `/api` is reverse-proxied to `backend`, so the browser stays same-origin. Depends on `backend`.
 
 `uv run f1-webapp` wraps this compose invocation and prints the URLs.
 

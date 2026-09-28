@@ -259,9 +259,8 @@ class TireAgentConfig:
             training-season laps: gating at 1.10 cuts the deg_cost_s error bound's
             mean absolute error from 0.650 to 0.434 s/lap and its signed bias from
             +0.351 to +0.139, at the cost of 49 of 1714 stints (2.9%) losing their
-            reference entirely and falling back to ``None`` (``scripts/
-            measure_deg_error_bound.py``, ``documents/audits/MEASURE_fresh_reference_
-            quality_gate.md``).
+            reference entirely and falling back to ``None`` (``scripts/measure_deg_error_bound.py``,
+            ``documents/audits/measurements/fresh-reference-quality-gate.md``).
         deg_cost_floor_s / deg_cost_ceiling_s: Bounds on the referenced wear, in
             seconds per lap. MEASURED, not chosen: they are the 1st and 99th
             percentiles over 31,624 training-season laps
@@ -389,7 +388,7 @@ class TireAgentConfig:
         metadata name ('Miami Gardens'). Today that particular query still lands, but only
         because the pooled clustering artefact carries the race TWICE under both spellings
         (25 rows for 24 circuits) - a duplicate PR 6 removes, at which point an unresolved
-        query would start defaulting silently. See PR3_GP_KEYSPACE_SWEEP.md.
+        query would start defaulting silently. See ../../documents/audits/implementation/pr3-gp-keyspace-sweep.md.
         """
         return self.circuit_cluster_map.get(
             resolve_gp_key(self.circuit_cluster_map, gp_name), default
@@ -916,7 +915,7 @@ def _compound_name_to_id(compound_name: str, gp_name: str, year: int) -> str:
     year_data = alloc.get(str(year), {})
     # The JSON is keyed by the parquet slug. Queried with the metadata name, 2025 Miami
     # missed and took the fallback, routing MEDIUM/HARD stints to the C2/C1 TCN bundle
-    # instead of C4/C3 for the whole race (PR3_GP_KEYSPACE_SWEEP.md).
+    # instead of C4/C3 for the whole race (../../documents/audits/implementation/pr3-gp-keyspace-sweep.md).
     gp_data = year_data.get(resolve_gp_key(year_data, gp_name), {})
     return gp_data.get(compound_name.upper(), fallback.get(compound_name.upper(), "C3"))
 
@@ -1086,7 +1085,8 @@ class TireAgent:
         chased. A pooled constant cannot normalise 2,343 different zero points, and
         measurement put it at Spearman +0.188 against +0.191 for having no reference
         at all. This one measures +0.308 and 73.9% non-negative
-        (``scripts/measure_tyre_reference.py``, ``documents/audits/MEASURE_744a_*``).
+        (``scripts/measure_tyre_reference.py``,
+        ``documents/audits/measurements/744a-tyre-reference.md``).
 
         Returns ``None``, never 0.0, when the stint has no lap at the reference tyre
         life: a replay that starts mid-stint. Zero is a legitimate reading of the

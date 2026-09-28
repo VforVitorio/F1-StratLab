@@ -235,7 +235,7 @@ unknown event types as skippable. That posture is what makes additive evolution 
 
 ## 4. The HF artifact contract
 
-**Current state (verified by P5 audit, `AUDIT_P5_DATA_ENGINEERING.md:96-102`):** one
+**Current state (verified by P5 audit, `../audits/assessments/p5-data-engineering.md:96-102`):** one
 flat dataset repo `VforVitorio/f1-strategy-dataset` holding `models/` and `data/` at
 the repo root (layout confirmed against `data_cache.py` and re-verified 2026-07-04),
 downloaded via `snapshot_download` with `revision="main"` (`data_cache.py:58-59`).
@@ -277,7 +277,7 @@ How a downstream repo knows what it is building against and when a break lands.
 2. **Breaking = renaming, removing, retyping a field, changing an enum value, or
    changing event ordering / framing.** Any of these requires a major schema version
    and a core release that announces it.
-3. **Schema artifacts (PLANNED, P5 F-15, `AUDIT_P5_DATA_ENGINEERING.md:151,168`):**
+3. **Schema artifacts (PLANNED, P5 F-15, `../audits/assessments/p5-data-engineering.md:151,168`):**
    publish `lap_state` as a versioned JSON-schema artifact (with the additive-keys rule
    and the weather F-14 caveat written into it). The real-time doc adopts this as its
    layer L0 (golden `lap_state` fixtures + parity tests, with Testing epic #181/#182);
@@ -311,18 +311,18 @@ How a downstream repo knows what it is building against and when a break lands.
 
 ## 7. Risks
 
-- **The mutable `main` pin is live today** (4). Until the pin manifest ships, every
+- The mutable `main` pin is live today (4). Until the pin manifest ships, every
   installed CLI and every downstream repo is exposed to silent Hub-side changes. This
   is the single most valuable fix in this document.
-- **`lap_state` has no machine-readable schema yet** (P5 F-15): three consumers
+- `lap_state` has no machine-readable schema yet (P5 F-15): three consumers
   (`to_arcade_frame` in `replay_engine.py`, the SPA, the future live adapter) mirror it
   by hand. Drift is undetectable until the golden fixtures (L0 / R5) exist.
-- **The broadcast payload is unversioned** at the exact moment the relay design turns
+- The broadcast payload is unversioned at the exact moment the relay design turns
   it into a cross-repo contract. The version field must land with the relay, not after.
-- **Guardrail dependency on the code/LLM split** (2): if a future change moves a
+- Guardrail dependency on the code/LLM split (2): if a future change moves a
   code-attached field into the LLM fill path (or vice versa), box-bot's trust model
   silently breaks. Treat the "Filled by" column as part of the frozen schema.
-- **`confidence` misuse:** it is documented non-calibrated; any consumer surfacing it
+- `confidence` misuse: it is documented non-calibrated; any consumer surfacing it
   as a probability (bot copy, dashboards) misrepresents the system.
 
 ## 8. Open questions

@@ -259,7 +259,7 @@ CACHE_VERSION: Final[str] = "v18"  # + the shared lap-boundary sample sorts stab
 # --- Multiprocessing pool -------------------------------------------------
 # Serial. The reason recorded here used to be a hang: Windows spawn plus pickling
 # a loaded session across 8 workers, on a cold cache. That story is NOT
-# established. `documents/audits/AUDIT_P2_LOADING.md` row A3 repeats it as fact,
+# established. `documents/audits/assessments/p2-loading.md` row A3 repeats it as fact,
 # and the load audit that went looking could not reproduce it. Nobody has since
 # re-run it either, so treat the hang as unexplained rather than as the reason.
 #

@@ -19,7 +19,7 @@ is how the two copies drift apart.
 Everything here stays source-level or uses a dummy api key, so it runs on a CI
 runner with no weights and no key. That matters more than usual for the
 temperature canary: the whole premise of
-``documents/audits/AUDIT_ORCHESTRATOR_MEMORY.md`` is that the parameter is dropped,
+``documents/audits/assessments/orchestrator-memory.md`` is that the parameter is dropped,
 and if a library upgrade starts honoring it, this file is what tells us.
 """
 
@@ -128,7 +128,7 @@ def test_the_orchestrator_model_still_discards_temperature():
     Not a bug being asserted as correct - a fact being pinned. If a langchain-openai
     or provider upgrade starts honoring temperature for this model, Layer 3 becomes
     materially more deterministic overnight and every number in
-    AUDIT_ORCHESTRATOR_MEMORY.md (the 36/41 confidence disagreements between two
+    ../../documents/audits/assessments/orchestrator-memory.md (the 36/41 confidence disagreements between two
     identical passes, the coin flip on the one decision lap) is measured on a
     configuration that no longer exists.
 

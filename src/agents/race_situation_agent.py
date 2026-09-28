@@ -297,7 +297,7 @@ class RaceSituationConfig:
         `sc_rate_for` above already resolves ONE keyspace for this same config; the cluster
         map next to it did not, which is the one-copy-fixed-its-twin-not pattern this repo
         keeps producing. Four spellings need both resolvers, not just the slug one
-        (PR3_GP_KEYSPACE_SWEEP.md).
+        (../../documents/audits/implementation/pr3-gp-keyspace-sweep.md).
         """
         return self.circuit_cluster_map.get(
             resolve_gp_key(self.circuit_cluster_map, gp_name), default
@@ -414,7 +414,7 @@ def _abs_compound(relative: str, gp_name: str, year: int) -> str:
 
     The fifth consumer of this JSON, and the one the earlier keyspace sweeps missed. Its
     failure mode is the loudest of the three: unresolved it returns the RELATIVE name
-    ('HARD') where the caller expects a Cx string (PR3_GP_KEYSPACE_SWEEP.md).
+    ('HARD') where the caller expects a Cx string (../../documents/audits/implementation/pr3-gp-keyspace-sweep.md).
     """
     year_data = TIRE_COMPOUNDS.get(str(year), {})
     gp_data = year_data.get(resolve_gp_key(year_data, gp_name), {})

@@ -10,10 +10,10 @@ Phase 3.5 Proceso B shipped the `src/arcade/dashboard/` package (fifteen modules
 
 ## The window split
 
-- **Arcade replay**: `pyglet`-backed, owned by `F1ArcadeView`. Drives the simulation loop, owns the `StrategyState`, runs `TelemetryStreamServer` on `127.0.0.1:9998`, and renders the track.
-- **Strategy dashboard**: `PySide6` `MainWindow`. Orchestrator card, six sub-agent cards with embedded `pyqtgraph` charts, scenario bars, six-tab reasoning panel.
-- **Telemetry window**: `PySide6` `TelemetryWindow`. Standalone `QMainWindow` with a 2x2 grid of `pyqtgraph` plots (Delta, Speed, Brake, Throttle) in F1-broadcast style.
-- **PITWALL**: a third process, `python -m src.pitwall`, opening **PITWALL · DATA** and **PITWALL · AGENTS**, two pywebview windows rendering React over the same broadcast, through one shared TCP client. It also serves the same two pages on loopback and logs the URL.
+- Arcade replay: `pyglet`-backed, owned by `F1ArcadeView`. Drives the simulation loop, owns the `StrategyState`, runs `TelemetryStreamServer` on `127.0.0.1:9998`, and renders the track.
+- Strategy dashboard: `PySide6` `MainWindow`. Orchestrator card, six sub-agent cards with embedded `pyqtgraph` charts, scenario bars, six-tab reasoning panel.
+- Telemetry window: `PySide6` `TelemetryWindow`. Standalone `QMainWindow` with a 2x2 grid of `pyqtgraph` plots (Delta, Speed, Brake, Throttle) in F1-broadcast style.
+- PITWALL: a third process, `python -m src.pitwall`, opening **PITWALL · DATA** and **PITWALL · AGENTS**, two pywebview windows rendering React over the same broadcast, through one shared TCP client. It also serves the same two pages on loopback and logs the URL.
 
 The pyglet window runs in the arcade process. The two Qt windows live together inside one subprocess; PITWALL is another.
 
@@ -57,11 +57,11 @@ Colour palette, compound pill colour map, flag chip styles, monospace font stack
 
 The flagship card. Four visual elements:
 
-- **Action badge**, large pill coloured by `classify_action`: green STAY_OUT, amber PIT_NOW, cyan UNDERCUT, magenta OVERCUT, red ALERT.
-- **Confidence bar**: `QProgressBar` with a `qlineargradient` stylesheet painting a traffic-light gradient.
-- **Pace and Risk chips**, two smaller pills, recoloured per regime.
-- **Plan strip**, one line: "Plan: PIT lap 28, fit C3, target UNDERCUT HAM". The compound is rendered as an inline pill.
-- **Guardrail line**, shown only when the no-LLM hard guard overrode the LLM pick.
+- Action badge, large pill coloured by `classify_action`: green STAY_OUT, amber PIT_NOW, cyan UNDERCUT, magenta OVERCUT, red ALERT.
+- Confidence bar: `QProgressBar` with a `qlineargradient` stylesheet painting a traffic-light gradient.
+- Pace and Risk chips, two smaller pills, recoloured per regime.
+- Plan strip, one line: "Plan: PIT lap 28, fit C3, target UNDERCUT HAM". The compound is rendered as an inline pill.
+- Guardrail line, shown only when the no-LLM hard guard overrode the LLM pick.
 
 ### `agent_card.py`
 
@@ -172,10 +172,10 @@ The fields above arrived across several releases rather than with one bump, and 
 
 Five threads cooperate.
 
-- **Arcade main thread** (pyglet), runs the `F1ArcadeView.on_update` tick, mutates the `StrategyState` under `_lock`, calls `TelemetryStreamServer.broadcast(snapshot)`.
-- **SimConnector background thread**, iterates `RaceReplayEngine.replay()` and calls `run_strategy_pipeline(race_state, laps_df, lap_state, memory=self._memory)` per lap. Passing `lap_state` is not optional: with it `None` the Monte Carlo falls back to the legacy seconds path and the projection layer is silently amputated, which is the one call shape these pages used to show. One thread, one lap at a time, so the main pyglet thread never blocks on LLM inference.
-- **TelemetryStreamServer accept thread**, daemon thread inside the arcade process. Blocks on `server_socket.accept()`.
-- **Qt main thread** (dashboard subprocess), runs `QApplication.exec()`. Drives all UI updates. Never touches the network.
-- **QThread stream clients** (one per top-level Qt window), each owns its own TCP socket.
+- Arcade main thread (pyglet), runs the `F1ArcadeView.on_update` tick, mutates the `StrategyState` under `_lock`, calls `TelemetryStreamServer.broadcast(snapshot)`.
+- SimConnector background thread, iterates `RaceReplayEngine.replay()` and calls `run_strategy_pipeline(race_state, laps_df, lap_state, memory=self._memory)` per lap. Passing `lap_state` is not optional: with it `None` the Monte Carlo falls back to the legacy seconds path and the projection layer is silently amputated, which is the one call shape these pages used to show. One thread, one lap at a time, so the main pyglet thread never blocks on LLM inference.
+- TelemetryStreamServer accept thread, daemon thread inside the arcade process. Blocks on `server_socket.accept()`.
+- Qt main thread (dashboard subprocess), runs `QApplication.exec()`. Drives all UI updates. Never touches the network.
+- QThread stream clients (one per top-level Qt window), each owns its own TCP socket.
 
 The `StrategyState._lock` is the only contended mutex. Neither thread holds it across I/O.

@@ -36,21 +36,21 @@ Constraints inherited from the project:
 
 ## 1. Where radiogate sits
 
-- **Ecosystem**: post-TFG, F1 StratLab becomes a multi-repo ecosystem. `radiogate` is the
+- Ecosystem: post-TFG, F1 StratLab becomes a multi-repo ecosystem. `radiogate` is the
   Radio NLP initiative: mega-corpus + auto-labeling + improved sentiment + picaresca
   detection. The HF artifact is `f1stratlab/f1-team-radio-corpus` under the `f1stratlab`
   org (the current `VforVitorio/f1-strategy-dataset` is planned to move there).
-- **Repo topology is an open decision**: the stated preference is a submodule of the
+- Repo topology is an open decision: the stated preference is a submodule of the
   core repo; the standing recommendation in `project_future_vision` is an independent
   public repo for visibility (the corpus is a standalone artifact, and the ecosystem rule
   says "repo independiente si es artefacto standalone"). Decide at kickoff (open question
   Q2, section 7).
-- **Academic placement**: picaresca detection was explicitly considered and discarded as
+- Academic placement: picaresca detection was explicitly considered and discarded as
   the TFM topic (the TFM is the Rival Agent). It remains future or personal work. It maps
   naturally onto the MUIIA PLN course (102467) essay territory, and its output (a rival
   radio trust signal) is a candidate input to the Rival Agent's intent estimate, which
   creates a clean but optional dependency (Q8).
-- **Roadmap placement**: FUTURE.md phases put the radio corpus in Fase 1 (corpus to HF),
+- Roadmap placement: FUTURE.md phases put the radio corpus in Fase 1 (corpus to HF),
   before the LoRA (Fase 2) and the 2026 adaptation (Fase 4). The picaresca layer extends
   work-item 2 of the thesis's future-work list.
 
@@ -310,18 +310,18 @@ apart.
 
 **Hard, fully defensible metrics:**
 
-- **Claim extraction and typing**: precision/recall against the GOLD annotations;
+- Claim extraction and typing: precision/recall against the GOLD annotations;
   standard, no caveats.
-- **Divergence detection**: agreement between the automatic divergence band and human
+- Divergence detection: agreement between the automatic divergence band and human
   judgment when the human sees the same telemetry panel. This is measurable because the
   human is judging the same observable evidence, not guessing intent. Report per claim
   family.
-- **Proxy-label validation**: check that divergence predicts what it should. Examples:
+- Proxy-label validation: check that divergence predicts what it should. Examples:
   clips labeled STRONG divergence on TYRE_GRIP should show a lower subsequent-pit rate
   than CONSISTENT complaints; P4 candidates should show elevated rival-pit-within-window
   rates vs matched controls. These are falsifiable statements about the labels
   themselves.
-- **Calibration**: reliability diagrams and ECE for the misdirection probability on
+- Calibration: reliability diagrams and ECE for the misdirection probability on
   GOLD; Platt or isotonic recalibration on a held-out fold (the project's standard
   practice for its LightGBM classifiers).
 
@@ -371,24 +371,24 @@ the report says so in the abstract, not in a footnote.
 
 The consumer-side design (all additive, nothing in `src/agents/` internals changes):
 
-- **Corpus/runner surface**: `RadioPipelineRunner` output dicts gain optional fields:
+- Corpus/runner surface: `RadioPipelineRunner` output dicts gain optional fields:
   `claim_family`, `divergence_score`, `divergence_band`, `picaresca_class`,
   `p_misdirection`, `evidence_ref`. Absent fields mean "not computed", so every existing
   consumer keeps working (same additive-contract discipline as the `RadioOutput`
   degradation contract from Track A).
-- **Rival radio down-weighting**: today the system is single-driver and rival radio is
+- Rival radio down-weighting: today the system is single-driver and rival radio is
   not consumed. The natural first consumer is the future Rival Agent (the TFM): its
   intent estimate over a rival's next move should weight that rival's radio evidence by
   (1 - p_misdirection), and treat P4/P3 flags as evidence FOR the opposite of the
   literal claim (a dummy box call is information: the rival wants the tracked car to
   pit).
-- **Own-pit-wall guardrail**: in the orchestrator's guardrail layer (the strategic
+- Own-pit-wall guardrail: in the orchestrator's guardrail layer (the strategic
   guardrails already exist as a pattern), add: no strategy recommendation may cite a
   rival radio claim as primary evidence when `p_misdirection` exceeds a threshold; the
   claim can only enter as context with its trust weight attached.
-- **Post-race analytics**: Streamlit gets a "radio honesty" view per race (divergence
+- Post-race analytics: Streamlit gets a "radio honesty" view per race (divergence
   timelines per driver), which is also the natural QA surface for the labels themselves.
-- **Deliberately out of scope**: using picaresca output to auto-trigger strategy changes.
+- Deliberately out of scope: using picaresca output to auto-trigger strategy changes.
   The signal informs and de-weights; it never drives.
 
 ---
@@ -445,19 +445,19 @@ Plan (extends `RadioDatasetBuilder`, which stays the single ingestion path):
 
 ### 4.2 Transcription at scale
 
-- **Engine**: the existing `WhisperTranscriber` (model selectable, same flag surface as
+- Engine: the existing `WhisperTranscriber` (model selectable, same flag surface as
   `--whisper-model`), with the JSON cache and model-version invalidation already proven
   in Track A. No new transcription stack.
-- **Quality flags per clip** (new columns): Whisper's `avg_logprob`,
+- Quality flags per clip (new columns): Whisper's `avg_logprob`,
   `no_speech_prob`, `compression_ratio`, clip duration, plus a derived
   `transcript_quality` band (ok / suspect / unusable) using Whisper's own standard
   thresholds. Team radio is acoustically hostile (compression, wind, engine noise,
   clipped push-to-talk boundaries); pretending WER is uniform would corrupt every
   downstream label, so quality flags gate which clips are eligible for silver labels.
-- **WER measurement, not assumption**: the GOLD annotation pass (section 4.4) includes
+- WER measurement, not assumption: the GOLD annotation pass (section 4.4) includes
   transcript correction for its 300 to 500 clips, which yields a measured WER on
   realistic radio audio, reported per quality band in the dataset card.
-- **Language detection**: Whisper's language ID per clip, stored as `language`. Most
+- Language detection: Whisper's language ID per clip, stored as `language`. Most
   radio is English but Italian, Spanish, French, and Japanese exchanges exist. v1
   policy: transcribe in-language, keep `language`, add an optional machine-translation
   column later if needed; NLP labels are only auto-applied to languages the label models
@@ -528,7 +528,7 @@ annotation UI (Argilla or Label Studio; decide in R2, Q3):
   reading); a round is an evening of work, not a month.
 - After each round: retrain the affected model(s), refresh silver labels, re-rank the
   pool.
-- **Stopping criterion** (explicit, so the loop does not run on vibes): stop a label
+- Stopping criterion (explicit, so the loop does not run on vibes): stop a label
   family when EITHER the trained model's F1 on the frozen GOLD slice improves by less
   than 0.5 points for two consecutive rounds, OR the annotation budget for that family
   (Q3) is exhausted. Log the stopping state in the dataset card so corpus users know
@@ -574,14 +574,14 @@ schema problem. Plan, in order:
 
 ### 4.6 Label quality, coverage checks, and versioning
 
-- **Per-family QC dashboard** (build artifact, not a product): class balance per season
+- Per-family QC dashboard (build artifact, not a product): class balance per season
   and per GP, LF coverage/overlap/conflict matrices (standard Snorkel diagnostics),
   silver-vs-gold agreement per family, transcript-quality distribution of labeled vs
   unlabeled pools (to catch quality-correlated label bias).
-- **Drift checks**: label distributions per season; 2026 brings a regulation change and
+- Drift checks: label distributions per season; 2026 brings a regulation change and
   plausibly different radio behavior (new energy-management vocabulary), so the card
   reports per-season distributions and the models record their training-season range.
-- **Dataset versioning**: semantic versions (`v1.0` = transcripts + core NLP labels,
+- Dataset versioning: semantic versions (`v1.0` = transcripts + core NLP labels,
   `v1.x` = label refreshes, `v2.0` = picaresca layer), each version a pinned HF revision;
   downstream training always references a revision hash, mirroring how the project
   already pins `nlp_model_version` in parquet rows. A CHANGELOG section in the card maps
