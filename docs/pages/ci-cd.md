@@ -206,10 +206,10 @@ gh api -X PUT repos/VforVitorio/F1-StratLab/pages \
 
 ## Repository settings that make this work
 
-- **Allow GitHub Actions to create and approve pull requests.** Required for release-please to open release PRs.
-- **Allow auto-merge on the repository.** Required for `gh pr merge --auto` to be a valid option.
-- **GitHub Pages source = `gh-pages` branch.** Required for the docs site to publish.
-- **Branch protection on `main` and `dev`.** Required to ensure CI checks pass before merge.
+- Allow GitHub Actions to create and approve pull requests. Required for release-please to open release PRs.
+- Allow auto-merge on the repository. Required for `gh pr merge --auto` to be a valid option.
+- GitHub Pages source = `gh-pages` branch. Required for the docs site to publish.
+- Branch protection on `main` and `dev`. Required to ensure CI checks pass before merge.
 
 The release-please job runs on the built-in `GITHUB_TOKEN`, not a repository-secret PAT. An earlier setup used a `RELEASE_PLEASE_TOKEN` fine-grained PAT, but `main` carries no required status checks on the release PR, so the PAT bought nothing and an expired one silently broke the job (a stale-but-truthy secret does not fall back to `GITHUB_TOKEN`). If a future deploy needs the release PR itself to trigger CI checks, reintroducing a PAT is the fix; until then, none is configured.
 

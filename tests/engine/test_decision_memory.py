@@ -6,7 +6,7 @@ can be tested on a CI runner with no weights, so it carries the whole behavioura
 contract and the surfaces only have to be checked for wiring.
 
 Every assertion here traces to a measurement in
-``documents/audits/AUDIT_ORCHESTRATOR_MEMORY.md``; the docstrings name which.
+``documents/audits/assessments/orchestrator-memory.md``; the docstrings name which.
 """
 
 from __future__ import annotations

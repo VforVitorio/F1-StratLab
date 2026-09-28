@@ -436,7 +436,7 @@ def _compound_to_id(compound: str, gp_name: str, year: int) -> int:
     # The keyspace trap: queried with the metadata name ('Miami Gardens') this missed and
     # returned _COMPOUND_FALLBACK, which for 2025 Miami is 1 where the answer is 3 (HARD)
     # and 3 where it is 4 (MEDIUM). SOFT happens to coincide, which is why a SOFT-only
-    # probe reported the site as healthy (PR3_GP_KEYSPACE_SWEEP.md).
+    # probe reported the site as healthy (../../documents/audits/implementation/pr3-gp-keyspace-sweep.md).
     year_data = TIRE_COMPOUNDS.get(str(year), {})
     cx_str = year_data.get(resolve_gp_key(year_data, gp_name), {}).get(compound.upper(), '')
     if cx_str and cx_str.startswith('C') and cx_str[1:].isdigit():

@@ -184,23 +184,23 @@ submodule bumps are manual today.
 
 Adding radiogate as a second submodule implies:
 
-- **Checkout**: `submodules: true` on the `test` job picks up radiogate automatically
+- Checkout: `submodules: true` on the `test` job picks up radiogate automatically
   (it initializes all `.gitmodules` entries). `lint` and `typecheck` continue to skip
   submodules; each submodule repo lints itself in its own CI.
-- **Size discipline**: both submodules are code-only, so plain checkout is fine. The
+- Size discipline: both submodules are code-only, so plain checkout is fine. The
   shallow-clone lesson (`--depth 1 --filter=blob:none` + cache keyed to the gitlink SHA,
   from the LexFlow bootstrap playbook) is the documented escape hatch IF a submodule
   ever grows heavy; the real answer is to never let data into a submodule (section 3).
-- **Contributors without the submodule must stay green**: the suite must pass on a clone
+- Contributors without the submodule must stay green: the suite must pass on a clone
   where `src/radiogate/` is empty. Tests that exercise radiogate integration skip with a
   clear reason when the path is uninitialized (same posture the suite already needs for
   the data-gated tests on CI runners). The collected-count floor in `ci.yml` stays valid
   because skipped tests still collect.
-- **Submodule bump automation**: add a `gitsubmodule` entry to `dependabot.yml` only
+- Submodule bump automation: add a `gitsubmodule` entry to `dependabot.yml` only
   AFTER radiogate's runtime API stabilizes. While the trust-signal interface churns,
   bumps stay manual and deliberate (a wrong auto-bump changes agent behavior silently).
   `F1_Telemetry_Manager` can adopt the same automation at the same time or stay manual.
-- **Cross-repo contract checks**: the core's CI does NOT test box-bot or gridmind.
+- Cross-repo contract checks: the core's CI does NOT test box-bot or gridmind.
   Instead, box-bot's CI runs a contract test against a pinned core release (schema of
   the SSE/newline-JSON stream), and gridmind's CI validates its LoRA against the pinned
   corpus revision. Failures surface in the repo that owns the dependency, which is the

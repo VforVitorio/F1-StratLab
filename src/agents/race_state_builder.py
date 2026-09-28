@@ -21,7 +21,7 @@ The drift that actually bit this codebase was LOGIC drift, not just
 literals: the #750 pace-delta axis, the #465 dead position default, the #633 gap
 zero-conflation. One implementation is the fix; a parity test was rejected because
 it cannot run where the drift originates. Full per-field decision record: issue
-#784 and ``documents/audits/DESIGN_race_state_single_contract.md``.
+#784 and ``documents/audits/designs/race-state-single-contract.md``.
 
 Leaf-module constraint (HARD): ``RaceState`` is imported LAZILY inside
 ``build_race_state`` because it lives in ``strategy_orchestrator``, which drags
@@ -64,7 +64,7 @@ logger = logging.getLogger(__name__)
 
 # Canonical defaults. Each literal below was measured on the shipped 2023-2025
 # parquets (70 races) before being chosen; the numbers are in the #784 decision
-# table and in documents/audits/DESIGN_race_state_single_contract.md (F10).
+# table and in documents/audits/designs/race-state-single-contract.md (F10).
 
 # Zero rows carry the literal "UNKNOWN" in any season, so it can never collide
 # with a real reading. The strings that DO appear when FastF1 has no compound are
@@ -96,7 +96,7 @@ UNKNOWN_TYRE_LIFE = 0
 # parquet carries them natively, and after the 2023 Spanish GP duplicate was
 # removed the medians read 24.7 / 35.5 over 2023+2024 and 24.6 / 34.7 over
 # 2023-2025. Do NOT read the pair below as a present-tense measurement; the
-# per-field record is in documents/audits/DESIGN_race_state_single_contract.md
+# per-field record is in documents/audits/designs/race-state-single-contract.md
 # (F10). What the choice was made AGAINST still stands: the CLI's old 40.0 track
 # default corresponded to nothing measured at all.
 #

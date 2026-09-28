@@ -1,22 +1,10 @@
-# Rival Agent: Design and Research Methodology (TFM forward design)
+# Rival Agent design for the TFM
 
-**Status: research design, forward plan. Plan only, no code, no commitments.**
+Status: proposal. The MUIIA master's work has not started, and this design has not been implemented.
 
-This document is the methodology design for the **Rival Agent**, the chosen TFM
-(Trabajo Fin de Master) for the MUIIA master (Master Universitario en Investigacion en
-Inteligencia Artificial, AEPIA-UIMP, Especialidad 1). It is a design-ahead plan: the
-master has not started yet, no coursework is mapped to concrete deliverables, and nothing
-here is implemented. The goal is to leave the whole problem thought through so that when
-the master begins, the work starts from a validated design instead of a blank page.
+The design extends the formal proposal at `C:\Users\victo\Desktop\Documents\Master\propuesta_master.md`. It specifies rival pit-decision labels, observable inputs, a model, integration with N31, and an evaluation plan.
 
-The formal proposal this document extends lives outside the repo at
-`C:\Users\victo\Desktop\Documents\Master\propuesta_master.md`. This design is consistent
-with it and deepens every section: the ground-truth reconstruction, the observability
-treatment, the model design, the integration path, and the evaluation protocol.
-
-Hard constraints honored throughout: design only, no code; `scripts/run_simulation_cli.py`,
-`src/agents/` internals, and `notebooks/**` are untouchable (the Rival Agent is strictly
-additive); LLM provider is OpenAI or LM Studio, never Anthropic.
+Implementation must remain additive. Do not modify `scripts/run_simulation_cli.py`, `src/agents/` internals, or `notebooks/**`. The LLM provider is OpenAI or LM Studio.
 
 ---
 
@@ -35,10 +23,10 @@ The Rival Agent is a new agent in the F1 StratLab architecture that **predicts t
 strategic move of each rival in the driver's environment** from the rival's public
 timing-screen data:
 
-- **Pit window**: probability the rival pits within the next 1 / 3 / 5 laps, and the
+- Pit window: probability the rival pits within the next 1 / 3 / 5 laps, and the
   distribution of the likely pit lap.
-- **Compound**: the probability distribution over the compound the rival will fit next.
-- **Undercut / overcut attempt**: probability the rival's stop is an attack on a specific
+- Compound: the probability distribution over the compound the rival will fit next.
+- Undercut / overcut attempt: probability the rival's stop is an attack on a specific
   car (including ours), and probability an overcut is being attempted against us.
 
 That prediction is injected as **anticipatory context** into the orchestrator, turning
@@ -74,7 +62,7 @@ pit wall could see.
 **The lap_state contract.** `RaceStateManager.get_lap_state(lap)` returns
 `{lap_number, driver, rivals, weather, session_meta}`. All seven existing agents consume
 this dict. The contract tolerates additive keys (confirmed by the P5 data-engineering
-audit, `documents/audits/AUDIT_P5_DATA_ENGINEERING.md`, finding F-15), which is the
+audit, `documents/audits/assessments/p5-data-engineering.md`, finding F-15), which is the
 channel through which richer rival gap data can flow without breaking anything.
 
 **The "2 drivers" mode.** The existing Head-to-Head mode (`scripts/f1_cli.py` option 2,
@@ -108,7 +96,7 @@ integration design:
 - Tire (N26), race situation (N27), pit strategy (N28) and RAG (N30) are LangGraph ReAct
   agents (built via `create_agent` with tools wrapping each ML model); pace (N25) is
   deliberately NOT. It has no qualitative judgment for an LLM to add, and its once-built
-  ReAct scaffold was formally retired in #781 (documents/audits/AUDIT_pace_agent_react_archaeology_779.md)
+  ReAct scaffold was formally retired in #781 (documents/audits/assessments/pace-agent-react-archaeology-779.md)
   after archaeology showed it was never wired. Radio (N29) is a different shape again: a
   deterministic NLP pipeline (RoBERTa/SetFit/BERT NER) followed by ONE
   `with_structured_output()` synthesis call, not a ReAct tool loop. The orchestrator itself
@@ -215,10 +203,10 @@ has shipped that shape before (N13/N14).
 
 Two scopes, used at different stages:
 
-- **Training and dataset**: the **full grid**, all 2024-2025 races. The P5 audit's open
+- Training and dataset: the **full grid**, all 2024-2025 races. The P5 audit's open
   question 7 already leans this way ("full grid for the data pack, let the TFM subset
   it"), and full-grid data is what makes the dataset a reusable, publishable artifact.
-- **Runtime (in the sim)**: the **strategic environment** of our driver, proposed as the
+- Runtime (in the sim): the **strategic environment** of our driver, proposed as the
   cars within one pit cycle of us: every rival whose `interval_to_driver_s` absolute
   value is below the circuit's total pit loss (physical stop plus
   `circuit_traversal_lookup`, roughly 18-28 s depending on the GP). That is typically 4-6
@@ -245,10 +233,9 @@ public information with timestamp up to the end of lap `L`: the rival's lap time
 
 ## 3. Ground-truth reconstruction
 
-This is the data core of the TFM and, per the proposal, the part that gives it thesis
-weight. The problem: nobody publishes "what each rival decided per lap". It has to be
-reconstructed from timing artifacts, with explicit operational definitions, validation
-against independent sources, and documented failure modes.
+The TFM needs a per-lap record of each rival's strategic decisions, which is not
+published. Reconstruct it from timing artifacts using explicit labels, independent
+validation, and documented failure modes.
 
 ### 3.1 Sources and their roles
 
@@ -262,13 +249,12 @@ against independent sources, and documented failure modes.
 | OpenF1 `/v1/position` | Tier 1, not yet ingested | Intra-lap position changes; densifies undercut outcome verification |
 | `data/tire_compounds_by_race.json` | On disk | Pirelli Cx allocation per GP/year; prior for compound-choice modeling and for tracking each rival's remaining allocation |
 
-The ingestion of the three Tier 1 endpoints follows the template the project already
-considers production-grade: `src/data_extraction/openf1/radio_dataset_builder.py`
-(class-based, retry session, idempotent resume, per-race layout). The P5 audit's Phase 4
-items 14-15 already plan exactly this build plus a "Rival readiness pack"; this design
-adopts those items as its M0 milestone (section 10) rather than re-planning them.
+Ingest the three Tier 1 endpoints using the project's established
+`src/data_extraction/openf1/radio_dataset_builder.py` pattern (class-based, retry
+session, idempotent resume, per-race layout). P5 audit Phase 4 items 14-15 already scope
+this work and the "Rival readiness pack"; they become M0 (section 10).
 
-**Race identity caveat.** Cross-season joins by folder name are unsafe today (P5 finding
+**Race identity.** Cross-season joins by folder name are unsafe (P5 finding
 F-01: `Miami` vs `Miami_Gardens`, the `2023/Spain` / `2023/Barcelona` duplicate, five
 naming schemes). The ground-truth build must resolve races through one identity mapping
 (ideally the P5 Phase 0 identity module once it lands; a local table inside the dataset
@@ -278,36 +264,36 @@ builder otherwise). This is a stated dependency, not a new design.
 
 Operational definition, per rival per race:
 
-- **In-lap**: lap `L` where `PitInTime` is non-null. The pit decision is attributed to
+- In-lap: lap `L` where `PitInTime` is non-null. The pit decision is attributed to
   lap `L` (the driver committed by entering the pit lane during lap `L`).
-- **Out-lap**: lap `L+1` where `PitOutTime` is non-null. Used for out-lap pace exclusion
+- Out-lap: lap `L+1` where `PitOutTime` is non-null. Used for out-lap pace exclusion
   in features and for validating stint arithmetic.
-- **Hazard label**: `y_j(L) = 1` if rival `j`'s next in-lap is `L+1` (for the per-lap
+- Hazard label: `y_j(L) = 1` if rival `j`'s next in-lap is `L+1` (for the per-lap
   hazard head); window labels `y_j^k(L) = 1` if any in-lap falls in `(L, L+k]`.
 
 Validation and edge handling:
 
-- **Cross-check** stop counts per driver per race across three views: non-null
+- Cross-check stop counts per driver per race across three views: non-null
   `PitInTime` rows in `laps.parquet`, rows in `pitstops.parquet`, and OpenF1 `/v1/pit`
   entries. Exact match expected; any delta gets a documented resolution (the P5
   verification protocol requires "exact match or documented delta" and this design keeps
   that bar).
-- **Stint arithmetic invariant**: `Stint` increments exactly at out-laps; `TyreLife`
+- Stint arithmetic invariant: `Stint` increments exactly at out-laps; `TyreLife`
   resets to 1 (or 0) at the out-lap and increments by 1 per lap otherwise. Violations
   flag the race for manual review (typical causes: red flag tyre changes, formation-lap
   oddities).
-- **Red flags**: tyre changes under red flag are free stops with no pit lane pass;
+- Red flags: tyre changes under red flag are free stops with no pit lane pass;
   `Stint` increments without `PitInTime`. These are labeled as a separate event class
   (`RED_FLAG_CHANGE`) and excluded from the pit-hazard positives (no in-lane decision was
   made), while still resetting tyre-age features.
-- **Retirements / DNFs**: rival-lap observations end at the last completed lap;
+- Retirements / DNFs: rival-lap observations end at the last completed lap;
   censored, not negative, in the survival framing.
-- **Drive-through / stop-go penalties**: pit lane passes without tyre change. Detected
+- Drive-through / stop-go penalties: pit lane passes without tyre change. Detected
   by pit lane pass with no compound/stint change (and, once `/v1/pit` is ingested,
   anomalously short or flagged stops). Labeled `PENALTY_PASS`, excluded from H1
   positives. Expected volume is small (a handful per season) but silently mislabeling
   them as strategic stops would inject exactly the wrong signal.
-- **Quality flags**: laps with `Deleted == True` or `IsAccurate == False` keep their
+- Quality flags: laps with `Deleted == True` or `IsAccurate == False` keep their
   event labels (a pit is a pit) but their lap-time-derived features are masked (the P5
   audit notes these flags exist everywhere and are consulted nowhere; this dataset is
   the first consumer).
@@ -323,7 +309,7 @@ for cross-race transfer.
 
 Edge handling:
 
-- **Wet compounds**: INTERMEDIATE / WET stints fall outside the system's dry-only
+- Wet compounds: INTERMEDIATE / WET stints fall outside the system's dry-only
   compound enum (`_COMPOUND_VALUES` in `strategy_orchestrator.py` is
   SOFT/MEDIUM/HARD, and N16 filters to `dry_compounds`). Proposal: races with any
   wet-affected stint window are kept in the dataset with a `wet_affected` flag; the v1
@@ -331,7 +317,7 @@ Edge handling:
   project. Whether wet races are excluded from H1 too is open question Q5 (leaning: keep
   them for H1, the pit-timing signal under rain is real and valuable, but report metrics
   split by dry/wet).
-- **Independent verification**: once OpenF1 `/v1/stints` is ingested, compare its
+- Independent verification: once OpenF1 `/v1/stints` is ingested, compare its
   compound-per-stint reconstruction against FastF1's. Divergences (both sources derive
   from FIA/broadcast data but through different pipelines) get logged; agreement rate is
   itself a useful data-quality statistic for the TFM's data chapter, and doubles as an
@@ -343,7 +329,7 @@ These are **pair events** and need operational definitions. The design reuses N1
 construction (its features and target already encode the project's definition of an
 undercut situation) and makes the attempt/success rules explicit:
 
-- **Undercut attempt by X on Y**: X pits on lap `L`; Y is the car directly ahead of X
+- Undercut attempt by X on Y: X pits on lap `L`; Y is the car directly ahead of X
   (or within `n_pos <= 2` positions) at end of lap `L-1`; the gap
   `gap(X -> Y)` at end of `L-1` is below the **undercut window** for that circuit; Y
   does not pit on lap `L` (if both pit the same lap it is a covered stop, labeled
@@ -353,13 +339,13 @@ undercut situation) and makes the attempt/success rules explicit:
   plus first flying lap, computed empirically from the reconstructed dataset. This
   replaces the simulator's global 1.5 s / fixed-window assumption with a data-derived,
   per-circuit quantity (the P5 audit explicitly names this as an enabled improvement).
-- **Undercut success**: at the first lap `L*` where both X and Y have completed their
+- Undercut success: at the first lap `L*` where both X and Y have completed their
   stops (Y's next stop after `L`), X is ahead of Y on track (Position comparison, with
   `is_lapped` sanity checks from intervals). If Y stays out so long the comparison
   becomes strategy-divergent (Y switched to a different stop count), the pair is labeled
   `DIVERGED` and excluded from success/failure counts, mirroring how N16's
   `undercut_clean.parquet` filters ambiguous pairs.
-- **Overcut attempt by Y on X**: X pits on lap `L` from within Y's undercut window; Y
+- Overcut attempt by Y on X: X pits on lap `L` from within Y's undercut window; Y
   stays out at least 2 more laps and pits by `L + 6`; attempt succeeds if Y emerges
   ahead of X at `L*` as above. The 2-and-6 lap bounds are initial values to be
   sensitivity-checked in M1 (open question Q2).
@@ -398,17 +384,17 @@ Three design consequences:
 
 ### 3.6 Splits and leakage discipline
 
-- **Temporal split, project precedent**: train on 2023-2024, test on 2025 (exactly how
+- Temporal split, project precedent: train on 2023-2024, test on 2025 (exactly how
   N15/N16 split). Within training, validation is the last N races of 2024, never a
   random row split: rows within a race are strongly dependent, so **all splits are by
   race**, never by row.
-- **No same-race leakage**: circuit-level aggregate features (circuit undercut rate,
+- No same-race leakage: circuit-level aggregate features (circuit undercut rate,
   median pit windows) are computed on training years only and joined as priors; they
   are never recomputed on test races.
-- **No target leakage through stint features**: `TyreLife` at lap `L` is legal (it is
+- No target leakage through stint features: `TyreLife` at lap `L` is legal (it is
   derivable from observed pit events); "laps until stint end" obviously is not.
-- **Regulation era**: 2023-2025 share the regulation cycle the TFG trained under; the
-  2026 rules break (documented in `AUDIT_2026_REG_CONCEPT_DRIFT.md`) means the TFM
+- Regulation era: 2023-2025 share the regulation cycle the TFG trained under; the
+  2026 rules break (documented in `../audits/assessments/2026-reg-concept-drift.md`) means the TFM
   should state clearly that models and conclusions are era-scoped to 2022-2025 style
   racing, with 2026 transfer as declared future work, not silently assumed.
 
@@ -425,10 +411,9 @@ citable artifact independent of the modeling results.
 
 ## 4. Observability limits: modeling hidden information as uncertainty
 
-The proposal's stated risk: "the rival's true compound and degradation are hidden
-information; they are modeled as uncertainty". This section makes that precise, because
-"hidden" has three different grades here and conflating them would either overclaim
-(pretending to see what is not observable) or underclaim (discarding data a real wall has).
+The proposal treats a rival's next compound and true degradation as hidden information.
+The three observability grades below distinguish unavailable signals from data a real
+pit wall can use.
 
 ### 4.1 The observability ladder
 
@@ -438,9 +423,9 @@ information; they are modeled as uncertainty". This section makes that precise, 
 | **Derived-observable** (public, reconstructable live) | Tyre age (count laps since the rival's observed out-lap), stint number, current compound (broadcast tyre detection), remaining tyre allocation (race allocation minus observed used sets), pit loss for this circuit | Used, but computed **from observed events**, never read from privileged columns; current compound carries a noise model |
 | **Latent** (hidden, not reconstructable) | True degradation state (wear, cliff proximity), fuel-corrected pace potential, team strategy intent, driver instructions | Never used as features; inferred only through their observable footprint (pace deltas, stint length vs compound norms); uncertainty carried in the output distributions |
 
-Two honest clarifications the TFM text must make:
+Two distinctions matter:
 
-- **Current compound is observable in the real world** (FIA tyre detection feeds the
+- Current compound is observable in the real world (FIA tyre detection feeds the
   timing screen, and the project's own boundary already gives rivals' `compound` and
   `tyre_life` to the timing-screen view in `race_state_manager.py`). What is hidden is
   the **next** compound (a prediction target, H2), the **true degradation** of the
@@ -449,7 +434,7 @@ Two honest clarifications the TFM text must make:
   therefore does not pretend compound is secret; it treats it as *noisily observable*
   (live detection can lag a lap or misread) and quantifies the noise using the
   FastF1-vs-OpenF1 stint agreement rate from section 3.3.
-- **`TyreLife` as a column is a replay artifact.** At inference inside the sim it is
+- `TyreLife` as a column is a replay artifact. At inference inside the sim it is
   legal (the replay's rival state carries it, and it equals what a wall would count),
   but the agent's feature builder must compute tyre age from observed pit events, so
   the same code is correct when the input is a live feed where the column does not
@@ -630,7 +615,7 @@ nothing the MC cannot draw from directly**.
 LLM-generated, in v1: the agent then works identically in the no-LLM path (the project
 maintains a hard no-LLM mode in the CLI and programmatic guardrails; an agent whose
 output depends on an LLM would break that parity). This is precisely the shape N25 (pace)
-was formalized into by #781 (documents/audits/AUDIT_pace_agent_react_archaeology_779.md):
+was formalized into by #781 (documents/audits/assessments/pace-agent-react-archaeology-779.md):
 a deterministic template-reasoning agent with no LLM step at all, once it was established
 the agent has no qualitative judgment for an LLM to add. Whether the Rival Agent instead
 gets an optional LLM synthesis layer like N26-N28/N30 (nicer prose, tool-calling ReAct
@@ -696,19 +681,19 @@ anticipatory extension adds, for each in-scope rival `j`:
 
 It also modifies the candidate scores:
 
-- **STAY_OUT** gains a threat term: for the rival(s) behind us within the undercut
+- STAY_OUT gains a threat term: for the rival(s) behind us within the undercut
   window, expected loss `- rivalpit_j_i * q_j * POS_GAP_S`, where `q_j` is the N16
   success probability evaluated **with roles swapped** (rival as attacker, us as
   defender): the existing calibrated model reused symmetrically, no new model needed
   for v1. This is the single most important behavioral change: staying out stops being
   free when a predicted attacker sits in our mirror.
-- **UNDERCUT** gains a preemption discount: our undercut draw only pays its bonus when
+- UNDERCUT gains a preemption discount: our undercut draw only pays its bonus when
   the target has not already pitted in the same window
   (`ucut_effective_i = ucut_i AND NOT (rivalpit_target_i AND rivallap_target_i <= our_stop_lap)`),
   and a cover discount via `p_covers_our_stop` (a covered undercut usually fails; the
   reconstructed dataset will quantify exactly how often, replacing this prose with a
   measured conditional probability).
-- **OVERCUT** stops assuming the rival's stop timing implicitly: it conditions on the
+- OVERCUT stops assuming the rival's stop timing implicitly: it conditions on the
   sampled `rivallap_j_i`, which is the quantity an overcut actually bets on.
 
 Everything stays in the existing scoring scheme (`score = alpha * E + (1 - alpha) * P10`
@@ -738,15 +723,15 @@ prompt-only integration measurably loses information does a schema field (e.g.
 
 ### 7.4 Runtime and surfaces
 
-- **Latency budget**: GBDT inference for about 6 rivals is sub-millisecond; the feature
+- Latency budget: GBDT inference for about 6 rivals is sub-millisecond; the feature
   builder is a per-lap incremental update over already-loaded frames. The rival agent
   adds no LLM call in its deterministic spine, so per-lap latency impact is negligible
   next to the existing sub-agent LLM calls.
-- **Surfaces**: the CLI ablation runner is the primary TFM surface. The Arcade rival
+- Surfaces: the CLI ablation runner is the primary TFM surface. The Arcade rival
   panel and the Streamlit/SPA views are natural consumers of `RivalContext` (the
   Head-to-Head mode finally gets a predictive column), but they are post-TFM polish,
   not evaluation infrastructure.
-- **Live-feed forward compatibility**: because features are built from events, not
+- Live-feed forward compatibility: because features are built from events, not
   replay-only columns (section 4.1), the agent is contract-compatible with the future
   OpenF1 WebSocket adapter that the `lap_state` design anticipates.
 
@@ -754,23 +739,22 @@ prompt-only integration measurably loses information does a schema field (e.g.
 
 ## 8. Evaluation and ablation
 
-Three levels, from component to system, plus the observability study. The protocol is
-fixed before training (this section is the pre-registration).
+The pre-registered protocol evaluates the predictor, the full system, and observability.
 
 ### 8.1 Level 1: predictor vs reconstructed ground truth
 
 Split: train 2023-2024, validate late 2024, test all of 2025 (never touched during
 development). Metrics per head:
 
-- **H1 pit timing**: AUC-PR for pit-within-3 (primary, with base-rate and lift
+- H1 pit timing: AUC-PR for pit-within-3 (primary, with base-rate and lift
   reported), same for within-1 and within-5; calibration (reliability curves, ECE);
   among true stops, MAE between predicted stop lap (p50) and the real one, and the
   hit rate of the [p10, p90] interval (target: about 80% empirical coverage, matching
   the interval's nominal meaning; N15's 70.5% coverage on P05-P95 shows the honest
   reporting style).
-- **H2 compound**: accuracy and log-loss conditional on a stop, against the
+- H2 compound: accuracy and log-loss conditional on a stop, against the
   "most common compound for that circuit/phase" baseline; confusion by race phase.
-- **H3/H4 undercut/overcut**: AUC-PR against attempt base rates; success-prediction
+- H3/H4 undercut/overcut: AUC-PR against attempt base rates; success-prediction
   checked against N16's shipped performance as a sanity anchor (the tasks overlap but
   are not identical: N16 predicts success given an attempt; H3 predicts the attempt).
 
@@ -792,14 +776,14 @@ protocol must allow it to surface rather than bury it.
 
 The core of the research question. Design:
 
-- **Arms**: (A) baseline, the untouched `run_strategy_orchestrator_from_state` (the
+- Arms: (A) baseline, the untouched `run_strategy_orchestrator_from_state` (the
   shipped TFG system); (B) anticipatory, the new entry point with rival-aware MC and
   prompt. Identical inputs per lap (same replay stream, same radio corpus, same seeds).
-- **Benchmarks**: the TFG-validated GPs (Hungary, Qatar, Australia, plus the documented
+- Benchmarks: the TFG-validated GPs (Hungary, Qatar, Australia, plus the documented
   divergence cases like the Qatar 2025 V7 SC scenario that produced the
   RCMContextResolver finding), and a held-out set of additional 2025 races never used
   in TFG validation, to guard against tuning-to-the-demo.
-- **Measures per decision point** (lap or windowed decision episode):
+- Measures per decision point (lap or windowed decision episode):
   1. Agreement with the **real wall's decision** (did the system's action match what
      the team actually did in the window?).
   2. Agreement with the **real outcome** (when the system diverged from the wall, did
@@ -812,52 +796,43 @@ The core of the research question. Design:
      within 3 laps: did arm B's recommendations and contingencies reference the threat
      before it happened, and did arm A miss it? This is where the mechanism, not just
      the aggregate, becomes visible; case cards for the TFM's qualitative chapter.
-- **LLM nondeterminism control**: temperature is already 0.0; additionally pin
+- LLM nondeterminism control: temperature is already 0.0; additionally pin
   provider/model per the project rule (OpenAI or LM Studio, never Anthropic), run
   `n >= 3` repeats per arm to bound residual variance, and run a **no-LLM sub-ablation**
   (MC argmax only, both arms) that isolates the rival effect on the decision layer with
   zero LLM variance. If the effect only exists with the LLM and not in the MC scores,
   that itself is a finding about where the anticipation acts.
-- **Statistics**: paired per-decision comparison across arms (same race, same lap),
+- Statistics: paired per-decision comparison across arms (same race, same lap),
   bootstrap CIs over races (races, not laps, are the independent units), and a
   pre-declared primary endpoint: agreement-with-outcome on divergence episodes.
 
 ### 8.3 Honest treatment of the references
 
-Neither reference is ground truth of optimality, and the TFM must say so plainly: the
-wall optimizes team-level objectives with private information (agreeing with it is
-evidence of plausibility, not of optimality), and the real outcome is one noisy sample
-from the race's stochastic process (a good decision can lose). The evaluation therefore
-reports both references, never merges them into one score, and leans on the divergence
-episodes, where the TFG already built the interpretive machinery, for the strongest
-claims.
+Neither reference establishes optimality. The wall has private, team-level objectives,
+so agreement supports plausibility, not optimality. A race outcome is one noisy sample;
+a good decision can lose. Report wall agreement and outcome agreement separately, with
+divergence episodes as the strongest evidence.
 
 ### 8.4 Level 3: observability and scope ablations
 
-- **Oracle ablation (the observability price tag)**: retrain the same architecture with
+- Oracle ablation: retrain the same architecture with
   privileged features (true `TyreLife`, `FreshTyre`, actual next compound as a
   cheating upper bound for H1 conditioning). The gap between oracle and public-info
-  performance **quantifies the cost of partial observability**, turning section 4 from
-  a disclaimer into a measured result. This is the design's answer to "model it as
-  uncertainty, do not pretend to observe it": show exactly what pretending would have
-  been worth.
-- **Scope ablation**: runtime rival set of 5-nearest vs pit-cycle-radius vs full grid;
+  performance **quantifies the cost of partial observability**.
+- Scope ablation: runtime rival set of 5-nearest vs pit-cycle-radius vs full grid;
   measures whether anticipating the whole grid adds anything over the strategic
   neighborhood (expectation: no, and that negative result cleanly justifies the scoped
   runtime design).
-- **Feature-family ablation**: drop F2 (gap dynamics), F5 (priors), etc., to attribute
+- Feature-family ablation: drop F2 (gap dynamics), F5 (priors), etc., to attribute
   predictive power; SHAP analysis for the interpretation chapter.
 
 ---
 
-## 9. Master course mapping (light, forward, caveated)
+## 9. Possible course connections
 
-**Status caveat, stated up front**: the master has not started. This mapping is an
-orientation of which course could exercise which piece, taken from the formal proposal;
-it is NOT a plan of record for any deliverable. Two standing gates from the project's
-own notes apply before any of this is acted on: (1) confirm whether the master has
-started and which pieces, if any, already exist; (2) before each course project,
-confirm the course brief actually allows a self-chosen dataset/problem.
+This mapping is provisional, not a deliverable plan. The master's work has not started.
+Before using it, check for existing work and confirm that each course allows a
+self-selected dataset and problem.
 
 | Course | Piece of this design it could serve |
 |---|---|
@@ -870,15 +845,12 @@ confirm the course brief actually allows a self-chosen dataset/problem.
 | Introduccion a la Investigacion (102463) | The methodological scaffolding: research question, pre-registered protocol (section 8), baselines. |
 | TFM (102484) | The integration plus the end-to-end evaluation: what no single course produces. |
 
-**CRITICAL academic caution (carried verbatim from the proposal, non-negotiable):** do
-NOT double-submit the same artifact to a course and to the TFM (self-plagiarism / double
-evaluation). Each course deliverable must be produced for that course (its own report,
-experiments, and scope), transparently declared as extending an open project. The TFM
-must contribute the **new integration, evaluation, and research** on top, not repackage
-course projects. Confirm the norms of each course and of the master with coordination
-(`master@aepia.org`) before relying on any of this mapping. Where a course fixes its own
-dataset, use the course's dataset for the deliverable and keep the F1 variant for the
-TFM.
+Coursework and the TFM need separate deliverables and scopes. Reusing one artifact for
+both would count as double submission. Each course report should disclose that the work
+extends an open project. The TFM must add integration and evaluation beyond those
+submissions. Confirm the rules with course staff and MUIIA coordination
+(`master@aepia.org`). If a course requires a specific dataset, use it for that course
+and reserve the F1 data for the TFM.
 
 ---
 
@@ -936,33 +908,32 @@ path.
 
 ## 11. Risks and limitations
 
-- **Label noise in intent labels (H3/H4).** Attempt labels are behavioral
+- Label noise in intent labels (H3/H4). Attempt labels are behavioral
   reconstructions; some "undercut attempts" are forced stops in disguise. Mitigations:
   situation-plus-outcome labeling (section 3.4), sensitivity analysis in M1, radio
   enrichment where available. Residual risk: H3/H4 metrics will be noisier than H1/H2;
   the TFM should stake its headline claims on H1/H2 and the system ablation.
-- **Rival behavior may be mostly schedule-driven.** If circuit-history heuristics get
+- Rival behavior may be mostly schedule-driven. If circuit-history heuristics get
   close to the model, the incremental value of learning is small. The protocol
   surfaces this (section 8.1); the TFM narrative must be robust to it (the interaction
   modeling and the system-level effect can still carry the thesis).
-- **Small positive counts bound model complexity.** About 2k stops across two seasons;
+- Small positive counts bound model complexity. About 2k stops across two seasons;
   the sequence challenger may lose (as N12B did). This is a planned-for outcome, not a
   failure mode.
-- **System-level effect may be diluted.** The orchestrator has guardrails, MC noise,
+- System-level effect may be diluted. The orchestrator has guardrails, MC noise,
   and an LLM in the loop; a good rival prediction can drown before reaching the
   decision. The no-LLM sub-ablation and the anticipation-specific probes (section 8.2)
   are designed to localize where the signal survives or dies. If the effect exists in
   MC scores but not in final recommendations, the finding is about the synthesis
   layer, and it is still a finding.
-- **Evaluation references are noisy** (section 8.3). Claims are phrased against both
-  references separately, with divergence episodes as the strongest evidence.
-- **Era scoping.** Everything is 2022-2025 regulation racing. The 2026 rules change
+- Evaluation references are noisy (section 8.3); report them separately.
+- Era scoping. Everything is 2022-2025 regulation racing. The 2026 rules change
   strategic behavior (documented in the 2026-reg audit); no claim transfers without
   retraining. State it; do not fight it inside the TFM.
-- **Repo-side dependencies.** M0 leans on P5 audit items (identity module, Tier 1
+- Repo-side dependencies. M0 leans on P5 audit items (identity module, Tier 1
   ingestion). If those have not landed when the TFM starts, M0 absorbs them (they are
   small and fully specified in the audit); the risk is schedule, not feasibility.
-- **Academic process risk.** The course-mapping cautions of section 9 (double
+- Academic process risk. The course-mapping cautions of section 9 (double
   submission, dataset freedom, coordination sign-off) are process risks with a simple
   mitigation: ask first, in writing.
 
@@ -1001,10 +972,9 @@ cost of mild era drift within the regulation cycle, or train strictly 2024, vali
 2024-late, test 2025? Recommended: include 2023 (matches N15/N16 precedent of training
 2023-2024).
 
-**Q7: Timing and the master gates.** Per the standing note: before mapping any piece to
-coursework or starting implementation, confirm (1) whether the master has started and
-(2) whether any piece already exists from summer work, then re-open section 9 with the
-actual course briefs in hand.
+**Q7: Timing and course mapping.** Before assigning work to a course, confirm the
+master's status, check for existing work and review the current course briefs. Then
+update section 9.
 
 ---
 
@@ -1012,10 +982,10 @@ actual course briefs in hand.
 
 - `C:\Users\victo\Desktop\Documents\Master\propuesta_master.md` (outside the repo): the
   formal TFM proposal this design deepens.
-- `documents/audits/AUDIT_P5_DATA_ENGINEERING.md`: data readiness (F-10 Tier 0/1, Phase
+- `documents/audits/assessments/p5-data-engineering.md`: data readiness (F-10 Tier 0/1, Phase
   4 items 13-15, open question 7), race identity (F-01), validation contracts.
-- `documents/audits/AUDIT_2026_REG_CONCEPT_DRIFT.md`: era scoping and drift program.
-- `documents/audits/AUDIT_ML_AGENTS_EVAL.md`: the evaluation-infrastructure backlog the
+- `documents/audits/assessments/2026-reg-concept-drift.md`: era scoping and drift program.
+- `documents/audits/assessments/ml-agents-eval.md`: the evaluation-infrastructure backlog the
   Level 2 protocol composes with.
 - `src/simulation/race_state_manager.py`, `src/simulation/replay_engine.py`: the
   boundary and the `lap_state` contract.

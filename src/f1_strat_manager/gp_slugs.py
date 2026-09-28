@@ -211,7 +211,7 @@ def resolve_gp_key(keys: Container[str], gp_name: str) -> str:
     consistently between them. Every consumer that queries one of those tables with a name
     from another keyspace misses and takes its fallback, silently: the 2025 Miami replay
     read the C1/C2 tyre bundle instead of C3/C4 in three agents at once (#448, #450, #797,
-    and the 2026-08-04 sweep in ``documents/audits/PR3_GP_KEYSPACE_SWEEP.md``).
+    and the 2026-08-04 sweep in ``documents/audits/implementation/pr3-gp-keyspace-sweep.md``).
 
     Resolving on the QUERY side rather than re-keying the table is deliberate: the pooled
     clustering artefacts hold BOTH ``'Miami'`` and ``'Miami Gardens'`` as separate rows, so

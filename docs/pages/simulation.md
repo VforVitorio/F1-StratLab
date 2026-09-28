@@ -55,8 +55,8 @@ This is the rule that a real timing screen follows, and skipping it produces dec
 
 Two habits follow from it, and both are worth copying into any new code that shapes race data:
 
-- **Absence beats a default.** If a value is unknown, leave it `None` and let the consumer filter. A number is a claim, and an invented one is a false claim that nothing downstream can distinguish from a reading.
-- **Never default to a value the code also searches by.** `Position` defaulting to `0` is how the leader found "the car ahead at position `pos - 1 == 0`" and got handed the car that had just crashed. Placeholders belong in sort keys, never in emitted data.
+- Absence beats a default. If a value is unknown, leave it `None` and let the consumer filter. A number is a claim, and an invented one is a false claim that nothing downstream can distinguish from a reading.
+- Never default to a value the code also searches by. `Position` defaulting to `0` is how the leader found "the car ahead at position `pos - 1 == 0`" and got handed the car that had just crashed. Placeholders belong in sort keys, never in emitted data.
 
 ## Gap computation
 

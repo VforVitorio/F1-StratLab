@@ -4,7 +4,7 @@ Captured 2026-08-07 from the live `src/arcade/dashboard/` against a real
 Melbourne 2025 session. **These are the acceptance reference for sprint 3**,
 which ports the AGENTS window 1:1. Do not port from memory; port from these
 plus Gate B's field-by-field inventory in
-`documents/audits/GATE_PITWALL_ARCH_B.md`.
+`documents/audits/gates/pitwall-arch-b.md`.
 
 | File | Window | Becomes |
 |---|---|---|
@@ -53,20 +53,20 @@ the design pass comes after, when there is something to compare against.
 
 ## What the strategy window contains
 
-- **Header**: `Melbourne · 2025` + driver code, and on the right a
+- Header: `Melbourne · 2025` + driver code, and on the right a
   `Connected` pill, `2.00x · PLAYING`, `L 24/57`.
-- **Left column**: the orchestrator card (action button, confidence bar,
+- Left column: the orchestrator card (action button, confidence bar,
   Pace/Risk pills, `Pit: L24 · Next: HARD · UCUT: RUS`, guardrail line),
   scenario bars (STAY / PIT / UCUT / OCUT with values, `--` when absent),
   and the reasoning tabs (ORCHESTRATOR / PACE / TIRE / SITUATION / RADIO /
   PIT) with a monospace body and the coloured
   `— why this call changed —` block.
-- **Right column**: a 3x2 grid of agent cards — PACE, TIRE, SITUATION, PIT,
+- Right column: a 3x2 grid of agent cards — PACE, TIRE, SITUATION, PIT,
   RADIO, RAG. Each has a status dot: **filled** when the agent ran this lap,
   **hollow** when it is idle, and an idle card shows its trigger condition
   instead of numbers ("triggers on cliff pressure, compound change, or
   problem radio"). PACE and TIRE own line charts.
-- **Status bar**: `lap 24 · streaming`.
+- Status bar: `lap 24 · streaming`.
 
 ## What the telemetry window contains
 

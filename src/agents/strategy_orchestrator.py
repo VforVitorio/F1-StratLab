@@ -138,7 +138,7 @@ class OrchestratorCFG:
     _get_orchestrator_llm warns when the request is dropped rather than papering
     over it. Do NOT read a surviving temperature as a promise of determinism
     either: it narrows sampling, it does not remove it.
-    See documents/audits/AUDIT_ORCHESTRATOR_MEMORY.md, section 1.1.
+    See documents/audits/assessments/orchestrator-memory.md, section 1.1.
     """
 
     # None means "whatever the layer default resolves to", so the value is read at
@@ -220,7 +220,7 @@ def _get_orchestrator_llm():
                 "orchestrator is sampling at the provider default, not running "
                 "deterministically: consecutive laps will disagree on confidence, "
                 "pit_lap_target and reasoning even when the prompt is identical. "
-                "See documents/audits/AUDIT_ORCHESTRATOR_MEMORY.md, section 1.1.",
+                "See documents/audits/assessments/orchestrator-memory.md, section 1.1.",
                 CFG.temperature, model_name,
             )
         # _LLMSynthesis only has the 3 fields the LLM actually fills.

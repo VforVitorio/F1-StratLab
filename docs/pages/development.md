@@ -6,9 +6,9 @@
 
 The three workflow guides below cover the entire development lifecycle:
 
-- **[Documentation maintenance](#/docs-maintenance)**, how the React SPA under `docs/` is previewed locally and published to GitHub Pages. Covers the `docs.yml` workflow: staging to `_site`, prerendering pages with `node scripts/prerender_docs.mjs`, injecting the release version, and publishing via `peaceiris/actions-gh-pages`.
-- **[CI/CD pipeline](#/ci-cd)**, every GitHub Action that runs on push and tag: lint, tests, wheel build, `release-please` automation, and the docs publish job.
-- **[CONTRIBUTING.md](https://github.com/VforVitorio/F1-StratLab/blob/main/CONTRIBUTING.md)**: PR conventions, branch naming, and where to start when adding a sub-agent or extending a notebook.
+- [Documentation maintenance](#/docs-maintenance), how the React SPA under `docs/` is previewed locally and published to GitHub Pages. Covers the `docs.yml` workflow: staging to `_site`, prerendering pages with `node scripts/prerender_docs.mjs`, injecting the release version, and publishing via `peaceiris/actions-gh-pages`.
+- [CI/CD pipeline](#/ci-cd), every GitHub Action that runs on push and tag: lint, tests, wheel build, `release-please` automation, and the docs publish job.
+- [CONTRIBUTING.md](https://github.com/VforVitorio/F1-StratLab/blob/main/CONTRIBUTING.md): PR conventions, branch naming, and where to start when adding a sub-agent or extending a notebook.
 
 ## Conventional Commits cheat sheet
 

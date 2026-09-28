@@ -118,12 +118,12 @@ answers has no other tab that can answer it.
 
 Four details that are not cosmetic:
 
-- **The sector columns are the lap in progress.** They blank at the line and
+- The sector columns are the lap in progress. They blank at the line and
   fill as the car crosses each sector, because `laps.parquet` records the
   instant of every crossing. A sector faster than the session's best paints
   purple immediately and joins the bests ranking only when the lap completes,
   which is what a broadcast does.
-- **The GAP and INT columns are quantised to the line**, and the header says so
+- The GAP and INT columns are quantised to the line, and the header says so
   with an `(L)`. They are the difference of two crossings, taken from the
   official timing table rather than from the replay's own interpolation, which
   means they can differ from the arcade's leaderboard beside them by a few

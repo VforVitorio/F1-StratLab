@@ -184,7 +184,7 @@ these safeguards trigger there. They are no-ops on POSIX.
 The pull-request gate runs the fast, hermetic part of the suite. Expensive
 measurements and external contracts run in separate scheduled workflows so a
 normal review gets a useful answer quickly without hiding the broader checks.
-See [`documents/dev_docs/TESTING_GUIDE.md`](documents/dev_docs/TESTING_GUIDE.md)
+See [`documents/dev_docs/testing-guide.md`](documents/dev_docs/testing-guide.md)
 for the full tier policy.
 
 Five jobs are defined in the parent workflow (`.github/workflows/ci.yml`):

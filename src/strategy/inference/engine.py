@@ -11,7 +11,7 @@ F1/F10) showed this drift is a real bug source: the ``_run_conditional_agents``
 ``--no-llm`` lap crashes (#166). This module is the single additive home the audit
 recommends (§7): CLI/Arcade/backend consume one ``run_lap`` instead of three copies.
 
-Design (per documents/audits/P2B_ENGINE_DESIGN.md, #169 Phases 1.1 + 1.2)
+Design (per documents/audits/designs/p2b-engine-design.md, #169 Phases 1.1 + 1.2)
 --------------------------------------------------------------------------
 ``run_lap`` dispatches on ``profile``:
   * ``rich``   — re-drives ``run_strategy_orchestrator_from_state``'s five-step

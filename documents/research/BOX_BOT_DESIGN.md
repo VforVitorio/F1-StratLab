@@ -63,26 +63,26 @@ anything a public feed cannot see, because those numbers never enter its input.
 
 ## 2. What box-bot consumes (the upstream contract)
 
-- **The stream.** The backend's live-session mode publishes the same event vocabulary
+- The stream. The backend's live-session mode publishes the same event vocabulary
   the simulate endpoint already froze: `start`, `lap`, `error`, `summary` (live
   consumer, section 5). Each `lap` event carries the lap-cadence payload derived from
   `lap_state` plus the orchestrator's `StrategyRecommendation` (the frozen
   `LapDecision`/`RunSummary` shapes; changes upstream are additive by rule). box-bot
   prefers the SSE form (it is a one-directional consumer and never needs to send); the
   client treats transport as a detail and the event schema as the contract.
-- **Session identity comes from the stream.** `session_meta` names the GP, session
+- Session identity comes from the stream. `session_meta` names the GP, session
   type, and "our" driver. box-bot carries no race configuration of its own; it narrates
   whatever session the core is running.
-- **Staleness metadata is honored.** The `session_meta.live` block (feed latency,
+- Staleness metadata is honored. The `session_meta.live` block (feed latency,
   per-rival staleness) gates posting: a card is never built from a payload flagged
   stale, and estimate-tier fields (for example `fuel_load`, a model estimate by
   construction) are either omitted or labeled "est." in rendered text, matching the
   pit-wall doc's observed/derived/estimate labeling discipline.
-- **Pinning.** box-bot pins a core release tag plus a stream schema version, and its CI
+- Pinning. box-bot pins a core release tag plus a stream schema version, and its CI
   runs a contract test against the exported schema (the ecosystem doc's Q5
   recommendation: export the existing Pydantic models; box-bot consumes that export).
   Opting into a new core release is an explicit, reviewable bump in box-bot's repo.
-- **No direct OpenF1 access.** box-bot reads only the core's stream. One source of
+- No direct OpenF1 access. box-bot reads only the core's stream. One source of
   truth; if the core is not live, box-bot has nothing to say by design.
 
 ---
@@ -133,18 +133,18 @@ a card that clears the gate is publishable on every platform without re-verifica
 
 Each platform implements one interface (described functionally, no code):
 
-- **Capability descriptor**: max text length, thread/reply support, rich-embed support,
+- Capability descriptor: max text length, thread/reply support, rich-embed support,
   media support, effective rate limits, and which priority classes and post types the
   platform subscribes to. The budgeter (section 4.4) and renderer read capabilities;
   they never special-case platform names.
-- **render(card)**: deterministic assembly of the card's verified pieces (numeric
+- render(card): deterministic assembly of the card's verified pieces (numeric
   slots, one of the color fields, fixed template text) into the platform's native shape
   (a 280-char post, a Discord embed). Rendering may TRUNCATE or OMIT verified pieces;
   it may never add, reformat, or recompute a number. This rule is what lets the gate
   run once (section 5.2).
-- **publish(rendered, idempotency_key)**: send, respecting the platform's own rate
+- publish(rendered, idempotency_key): send, respecting the platform's own rate
   limiter, recording to the shared sent-ledger (section 3.3).
-- **health()**: reachable/credentialed/limited; a sick publisher is skipped, never
+- health(): reachable/credentialed/limited; a sick publisher is skipped, never
   blocks the others.
 
 Concrete adapters at launch: **X** (section 6.1) and **Discord** (section 6.2).
@@ -153,15 +153,15 @@ upstream of the fan-out changes.
 
 ### 3.3 Fan-out, shared dedupe, idempotency
 
-- **Shared dedupe before the fan-out**: the dedupe keys (section 4.2) are evaluated
+- Shared dedupe before the fan-out: the dedupe keys (section 4.2) are evaluated
   once, on the card, so the same underlying event can never become two cards no matter
   how many platforms exist.
-- **Per-platform idempotency after the fan-out**: the sent-ledger records
+- Per-platform idempotency after the fan-out: the sent-ledger records
   `(card_id, platform)` before each send attempt and reconciles after. A retry
   following an ambiguous failure (timeout after send) consults the ledger and the
   platform's recent-posts state before re-sending, so a platform's retries can never
   double-post the same card, and one platform's retry storm cannot affect another.
-- **Independence**: publishers run concurrently and fail independently. X being
+- Independence: publishers run concurrently and fail independently. X being
   rate-limited does not delay Discord; Discord's webhook being revoked does not mute X.
   TTL expiry is evaluated per platform at send time (a card can make Discord's cheap
   limits but miss X's queue; that is correct behavior, not a bug).
@@ -355,53 +355,53 @@ Posture rules baked into the templates and the profiles:
 
 ### 6.1 X adapter
 
-- **Tier and cost reality** (as of this design's date; X pricing churns, re-verify at
+- Tier and cost reality (as of this design's date; X pricing churns, re-verify at
   implementation, open question Q1): Free tier is write-focused, roughly 500
   posts/month with a daily write cap around 17 posts per 24 h and negligible read
   allowance, at zero cost. Basic is around 200 USD/month for roughly 3,000 posts/month
   and unproblematic media upload.
-- **Decision: design to the Free tier and make it sufficient.** The X session budget
+- Decision: design to the Free tier and make it sufficient. The X session budget
   (12 in-session + a 4-post summary thread = 16) fits under the daily cap with the race
   as the only covered session that day; a month of race + sprint coverage stays well
   under the monthly cap. Basic becomes worth it only if coverage expands (quali + FP +
   media); that is a B5 decision, not a launch requirement.
-- **Auth and secrets**: the bot posts as its own dedicated account via OAuth
+- Auth and secrets: the bot posts as its own dedicated account via OAuth
   (user-context token). Keys live in the host's environment/secret store, never in the
   repo; the public repo ships an `.env.example` with names only.
-- **Compliance**: the account carries X's automated-account label, managed by a
+- Compliance: the account carries X's automated-account label, managed by a
   personal account (required by X automation policy); no duplicate content (dedupe
   layer); minimal mentions/hashtags; back off on 429s, never retry through limits.
   Suspension is an existential outage for this adapter (risk register).
-- **Rate limiter**: serialized sends, per-endpoint limits respected, TTL expiry empties
+- Rate limiter: serialized sends, per-endpoint limits respected, TTL expiry empties
   a backed-up queue naturally; nothing is posted late to "catch up".
 
 ### 6.2 Discord adapter
 
-- **Mechanism, decided**: an **incoming webhook** per target channel for v1. box-bot is
+- Mechanism, decided: an **incoming webhook** per target channel for v1. box-bot is
   post-only; a webhook needs no gateway connection, no privileged intents, no bot
   presence, and its rate limits (roughly 5 requests per 2 s per webhook, plus global
   limits) are far above the budget. A full bot application (slash commands, roles,
   subscriptions like "ping me on SC") is a deliberate later upgrade and does not change
   the pipeline, only this adapter.
-- **Where it posts**: the F1 StratLab community server (to be created; open question
+- Where it posts: the F1 StratLab community server (to be created; open question
   Q3), one channel per feed, suggested `#race-live` (P0/P1), `#race-color` (P2), and
   `#session-summaries`. Channel routing is part of the adapter's capability config.
-- **Render**: rich embeds (section 4.5): title, labeled numeric fields, urgency accent
+- Render: rich embeds (section 4.5): title, labeled numeric fields, urgency accent
   color, `color_long` description, chart image attachment from B4, footer disclaimer.
   No 280-char corset, so Discord is the surface that shows the model's full verified
   output.
-- **Secrets**: webhook URLs are credentials; same secret-store discipline as X tokens,
+- Secrets: webhook URLs are credentials; same secret-store discipline as X tokens,
   plus rotation on any suspicion (a leaked webhook lets anyone post to the channel).
-- **Cost**: zero. This is why Discord is also the launch-first, lower-stakes surface in
+- Cost: zero. This is why Discord is also the launch-first, lower-stakes surface in
   the roadmap (section 10).
 
 ### 6.3 Future adapters (each is just another `Publisher`)
 
-- **Bluesky**: AT Protocol, free API, ~300-char posts, media supported; closest to the
+- Bluesky: AT Protocol, free API, ~300-char posts, media supported; closest to the
   X render path.
-- **Mastodon**: free API per instance, 500-char default, media supported; X-like render
+- Mastodon: free API per instance, 500-char default, media supported; X-like render
   with more room.
-- **Threads**: Meta's API, OAuth app review required; evaluate only if audience data
+- Threads: Meta's API, OAuth app review required; evaluate only if audience data
   justifies the review cost.
 
 None of these change the pipeline, the card, or the gate; each is a capability
@@ -426,42 +426,42 @@ box-bot is a well-behaved service that is off far more than it is on. Five state
 | `DEGRADED` | Stream lost mid-session; silent, reconnecting | `LIVE` | stream back (to `LIVE`) or session-end timeout (to `COOLDOWN`) |
 | `COOLDOWN` | Session over: publish `SUMMARY` (if the session was actually covered), flush the audit log, disconnect | `LIVE`/`DEGRADED` | done, back to `DORMANT` |
 
-- **Calendar awareness.** Activation windows come from a season calendar file in
+- Calendar awareness. Activation windows come from a season calendar file in
   box-bot's own config (session date/times per GP, which sessions are covered),
   refreshed from a public calendar source at the start of each race week. The calendar
   only decides WHEN to arm; whether there is anything to narrate is decided solely by
   the core stream actually publishing a session. If the core is not running, `ARMED`
   times out back to `DORMANT` and posts nothing anywhere.
-- **Covered sessions v1**: races and sprint races only. Quali and FP coverage is a B5
+- Covered sessions v1: races and sprint races only. Quali and FP coverage is a B5
   expansion (more sessions is where X's daily cap starts binding).
-- **Stream-down behavior.** In `DEGRADED` the bot posts nothing and never extrapolates.
+- Stream-down behavior. In `DEGRADED` the bot posts nothing and never extrapolates.
   Exactly one operational post is allowed per platform: if the session had already been
   opened publicly and the outage exceeds a configured window, a single "coverage
   paused" note, so followers are not left mid-story. No data content, no guesses, no
   backfill of missed laps on reconnect.
-- **Per-platform health**: a sick publisher (revoked webhook, X rate-lock) is skipped
+- Per-platform health: a sick publisher (revoked webhook, X rate-lock) is skipped
   while the others continue; health transitions are logged, never posted about.
-- **Between weekends** the service is off (a scheduler starts it for the
+- Between weekends the service is off (a scheduler starts it for the
   armed window and stops it after cooldown). No idle polling, no idle connections.
 
 ---
 
 ## 8. Repo topology and deployment
 
-- **Repo**: independent public repo (working name `box-bot`) under a personal GitHub
+- Repo: independent public repo (working name `box-bot`) under a personal GitHub
   account, bootstrapped with the standard baseline (branch protection, CI, Dependabot, release
   automation). Its CI runs unit tests over triggers/budgets/renderers, the content lint
   suite, and the stream contract test against the pinned core release. The core repo is
   not touched: no submodule, no workflow, no import, no mention required (ecosystem
   checklist step 6).
-- **Branding rule**: the name carries no "f1stratlab", so the README, the X profile,
+- Branding rule: the name carries no "f1stratlab", so the README, the X profile,
   and the Discord server description must all state explicitly that box-bot is part of
   the F1 StratLab ecosystem, with links to the core repo and docs site. Same rule as
   gridmind/radiogate/pitlab.
-- **What it pins**: core release tag + stream schema version (contract), the
+- What it pins: core release tag + stream schema version (contract), the
   gridmind-published checker artifact version, and (when adopted) the gridmind LoRA
   revision served in LM Studio. Every pin bump is an explicit commit.
-- **Where it runs (v1 decision)**: co-located with the core live stack on the same GPU
+- Where it runs (v1 decision): co-located with the core live stack on the same GPU
   workstation during race weekends. Rationale: the core's live consumer and backend
   already run there during a session, LM Studio needs that GPU to serve the LoRA, and
   the bot only needs to exist while the stream does. The correlated-failure objection
@@ -474,26 +474,26 @@ box-bot is a well-behaved service that is off far more than it is on. Five state
 
 ## 9. Safety and reputation
 
-- **Disclaimers**: bio/server-level plus the automated-account label on X and the embed
+- Disclaimers: bio/server-level plus the automated-account label on X and the embed
   footer on Discord (section 5.4). No per-post disclaimer spam on X; the framing rules
   carry the posture in the text itself.
-- **No betting surface**: no odds, no tipping language, no "guaranteed", no engagement
+- No betting surface: no odds, no tipping language, no "guaranteed", no engagement
   with betting accounts or servers. Enforced by the content lint and by policy in the
   README.
-- **Being wrong in public, gracefully**: strategy calls will be wrong; the product
+- Being wrong in public, gracefully: strategy calls will be wrong; the product
   stance is to own it. Wrong calls are never deleted (the timeline is the record); the
   `SUMMARY` scorecard states what the model called and what actually happened, on both
   platforms. Honesty is the differentiator versus hype accounts and costs nothing but
   pride.
-- **Corrections**: a post that is wrong because of a BUG (wrong number shipped, wrong
+- Corrections: a post that is wrong because of a BUG (wrong number shipped, wrong
   driver tagged) is deleted/edited (Discord allows edits; X requires delete + repost)
   and followed by a correction note, and the incident goes to the audit log and an
   issue. Fabrication-class incidents (a number that should have been blocked)
   additionally freeze posting on all platforms until the gate failure is understood.
-- **Rate-limit and outage behavior**: back off, go quiet, never retry-spam (sections
+- Rate-limit and outage behavior: back off, go quiet, never retry-spam (sections
   3.3, 7). A silent race is a non-event; a spammy or hallucinating race is a
   reputation incident on every platform at once.
-- **The 2026 drift gate**: no recommendation posts from models the #189 retraining
+- The 2026 drift gate: no recommendation posts from models the #189 retraining
   pipeline has not re-validated for the current regulation. The bot can still open
   sessions and post observed-fact content (SC deployed, pit happened) in that window,
   but model-opinion post types stay disabled. This restates the ecosystem rule that
@@ -520,31 +520,31 @@ a real platform before the first tweet exists.
 
 ## 11. Risks
 
-- **X pricing/policy churn**: tiers, caps, and automation rules change on short notice.
+- X pricing/policy churn: tiers, caps, and automation rules change on short notice.
   Mitigation: X budget sized with margin under the Free cap; the tier decision
   revisited at B5; the adapter isolates the API surface; Discord carries the product
   regardless.
-- **Account suspension (X)**: the existential outage for that adapter. Mitigation:
+- Account suspension (X): the existential outage for that adapter. Mitigation:
   automation label, dedupe, conservative volume, posting-only (no engagement
   automation); Discord and future adapters keep the product alive.
-- **Verifier over-blocking mutes the bot**: a high block rate turns race coverage into
+- Verifier over-blocking mutes the bot: a high block rate turns race coverage into
   silence. Mitigation: gridmind's bot gate defines an operability threshold on block
   rate; the skeleton-first posture means most cards can ship without any LLM numbers to
   block; measured in B3 before anyone watches.
-- **Latency makes posts stale**: LLM + verify + queue exceeding TTLs on the laps that
+- Latency makes posts stale: LLM + verify + queue exceeding TTLs on the laps that
   matter most (SC, pit windows). Mitigation: TTL-drop rather than late posting;
   skeleton-only fast path for P0 if the color path is slow; latency measured in B3.
-- **Cross-platform double-posting or drift**: retries or renderer divergence showing
+- Cross-platform double-posting or drift: retries or renderer divergence showing
   different numbers per platform. Mitigation: one card, one gate, deterministic
   renders that may only omit; the sent-ledger idempotency (3.3).
-- **Correlated outage with the core host** (v1 co-location). Mitigation: accepted
+- Correlated outage with the core host (v1 co-location). Mitigation: accepted
   consciously; silence is safe; VPS upgrade path documented.
-- **Reputational blast radius of a loud wrong call**: mitigated by opinion framing, the
+- Reputational blast radius of a loud wrong call: mitigated by opinion framing, the
   scorecard habit, and never deleting honest misses.
-- **Trademark exposure**: "F1" and GP names in handles/server names invite platform or
+- Trademark exposure: "F1" and GP names in handles/server names invite platform or
   rights-holder friction. Mitigation: names avoid protected marks (Q2/Q3), profiles
   state unofficial status, content quotes public timing data only.
-- **Upstream drift**: the core's stream schema evolves additively by rule, but box-bot
+- Upstream drift: the core's stream schema evolves additively by rule, but box-bot
   must not lag forever on an old pin. Mitigation: contract test in CI plus a scheduled
   pin-bump review each season.
 
