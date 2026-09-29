@@ -17,8 +17,8 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 ### Features
 
 * **agents:** resolve the LLM model per layer from one place ([1b63266](https://github.com/VforVitorio/F1-StratLab/commit/1b63266800ea1d453f9840192e7ce2cfb2cc6e75)), closes [#264](https://github.com/VforVitorio/F1-StratLab/issues/264)
-* **arcade:** sleep strategy outside admissible laps ([b211b7b](https://github.com/VforVitorio/F1-StratLab/commit/b211b7b0a58a0bddd02a70f7ec24fc357eaff81a)), closes [#1201](https://github.com/VforVitorio/F1-StratLab/issues/1201)
-* **eval:** compare RAG chunking to the legacy baseline ([a6b72a4](https://github.com/VforVitorio/F1-StratLab/commit/a6b72a45dc163cc7fdcc87e0cddfe249f041fd88)), closes [#323](https://github.com/VforVitorio/F1-StratLab/issues/323)
+* **arcade:** sleep strategy outside admissible laps ([b211b7b](https://github.com/VforVitorio/F1-StratLab/commit/b211b7b0a58a0bddd02a70f7ec24fc357eaff81a)); rich-profile wake measurement remains open in [#1201](https://github.com/VforVitorio/F1-StratLab/issues/1201)
+* **eval:** add the legacy fixed-window 512/64 comparison arm ([a6b72a4](https://github.com/VforVitorio/F1-StratLab/commit/a6b72a45dc163cc7fdcc87e0cddfe249f041fd88)), references [#323](https://github.com/VforVitorio/F1-StratLab/issues/323)
 * **eval:** inventory 2025 pit entry purposes ([11c117d](https://github.com/VforVitorio/F1-StratLab/commit/11c117d7e007ab942afb11939958787388546b65))
 * **eval:** measure horizon and stop-shape effects ([c97e71d](https://github.com/VforVitorio/F1-StratLab/commit/c97e71d98e238f28075b3b1e0292e217caf46100))
 * **eval:** measure terminal tyre continuation ([748d884](https://github.com/VforVitorio/F1-StratLab/commit/748d884653e697f2bbec706fccee58cb7cd59914))
@@ -63,7 +63,6 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 ### Performance
 
-* **arcade:** hold a driver's race as columns instead of one object per sample ([b9c7cbe](https://github.com/VforVitorio/F1-StratLab/commit/b9c7cbe4975e343f81d2767445fccd1795c48353))
 * **arcade:** hold a driver's race as columns instead of one object per sample ([f91a3f3](https://github.com/VforVitorio/F1-StratLab/commit/f91a3f3d6de133fce0b9a64c083a0e0e93b1f7ea)), closes [#1118](https://github.com/VforVitorio/F1-StratLab/issues/1118)
 * **arcade:** merge a driver's telemetry once and slice it per lap ([1bee8cd](https://github.com/VforVitorio/F1-StratLab/commit/1bee8cdbb603f5f86447ac68895871d9c565edc0)), closes [#1121](https://github.com/VforVitorio/F1-StratLab/issues/1121)
 * **tests:** declare pytest-xdist and mark the last unmarked golden re-derivation ([c2954f3](https://github.com/VforVitorio/F1-StratLab/commit/c2954f33c72c61717161d2978ad6b2cfca9f33d2)), closes [#1204](https://github.com/VforVitorio/F1-StratLab/issues/1204)
