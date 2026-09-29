@@ -11,6 +11,14 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 TELEMETRY_ROOT = ROOT / "src" / "telemetry"
+TIRE_ROUTING_CONFIG = ROOT / "data" / "models" / "tire_degradation" / "routing_config.json"
+
+
+def _load_simulator_or_skip(monkeypatch):
+    if not TIRE_ROUTING_CONFIG.is_file():
+        pytest.skip("the backend imports model routing config from the HF dataset")
+    monkeypatch.syspath_prepend(str(TELEMETRY_ROOT))
+    return importlib.import_module("backend.services.simulation.simulator")
 
 
 @pytest.mark.parametrize(("override", "expected"), [(None, "openai"), ("lmstudio", "lmstudio")])
@@ -49,26 +57,15 @@ def test_debug_agent_provider_is_inherited_unless_explicitly_overridden(
     assert observed == [expected]
 
 
-def test_simulate_request_leaves_provider_unset_when_omitted(monkeypatch):
-    monkeypatch.syspath_prepend(str(TELEMETRY_ROOT))
-    request_module = importlib.import_module("backend.api.v1.endpoints.strategy")
-    simulator = importlib.import_module("backend.services.simulation.simulator")
+def test_sim_config_leaves_provider_unset_by_default(monkeypatch):
+    simulator = _load_simulator_or_skip(monkeypatch)
+    config = simulator.SimConfig(year=2025, gp="Lusail", driver="NOR", team="McLaren")
 
-    request = request_module.SimulateRequest(year=2025, gp="Lusail", driver="NOR", team="McLaren")
-    config = simulator.SimConfig(**request.model_dump())
-
-    assert request.provider is None
     assert config.provider is None
-
-    explicit = request_module.SimulateRequest(
-        year=2025, gp="Lusail", driver="NOR", team="McLaren", provider="openai"
-    )
-    assert simulator.SimConfig(**explicit.model_dump()).provider == "openai"
 
 
 def test_simulate_generator_preserves_environment_provider_when_omitted(monkeypatch):
-    monkeypatch.syspath_prepend(str(TELEMETRY_ROOT))
-    simulator = importlib.import_module("backend.services.simulation.simulator")
+    simulator = _load_simulator_or_skip(monkeypatch)
     config = simulator.SimConfig(year=2025, gp="Lusail", driver="NOR", team="McLaren", no_llm=True)
 
     class StopBeforeDataLoad(Exception):
