@@ -11,6 +11,13 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [2.7.1](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.0...v2.7.1) (2026-09-29)
+
+
+### Documentation
+
+* **rag:** update v2.7.0 promotion status ([3da23a9](https://github.com/VforVitorio/F1-StratLab/commit/3da23a9953703581b780087b15e65dbd6b94286d))
+
 ## [2.7.0](https://github.com/VforVitorio/F1-StratLab/compare/v2.6.1...v2.7.0) (2026-09-29)
 
 
