@@ -8,7 +8,7 @@
 > remains outside `src/agents/`; every change landed in `src/rag/`, `scripts/`,
 > tests, or the shared eval package.
 
-## Current status on `dev` (2026-09-29)
+## Current status after v2.7.0 promotion (2026-09-29)
 
 The July audit below records the original findings. The implementation has
 changed since then; these are the current boundaries.
@@ -22,9 +22,12 @@ changed since then; these are the current boundaries.
 | No-LLM display | The N30 no-result crash from #1251 was fixed in PR #1255. |
 | Fresh-environment build | `pypdf` is now declared in the project dependencies. |
 
-Replay scoping (#320) is in PR #1197, answer grounding (#322) in
-PR #1254, and the 2026 corpus and chunking work (#323) in PR #1249. All are on
-`dev`; the issues remain open until the v2.7.0 promotion to `main`.
+Replay scoping (#320, PR #1197), shared retrieval evaluation (#321, PR #1247),
+the index manifest (#1195, PR #1248), answer grounding (#322, PR #1254), and
+the 2026 corpus and chunking comparison (#323, PRs #1249 and #1266) are on
+`main` after promotion #1267. All five issues are closed. The 35-query
+comparison uses a historical fixed-window 512/64 baseline; it does not validate
+end-to-end application of conditional rules, which remains open as #826.
 
 The 30-query retrieval set is `data/rag_eval/queries_v2.json`; its report is
 `documents/eval_reports/rag.{md,json}`. The 2026 comparison adds five queries.
