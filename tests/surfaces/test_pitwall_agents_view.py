@@ -259,8 +259,13 @@ def test_no_llm_plan_timeline_explains_why_no_future_stint_is_drawn():
     assert all(not segment["planned"] for segment in timeline["segments"])
 
     llm_timeline = build_plan_timeline(
-        [], {"pit_lap_target": None, "compound_next": None}, {"total_laps": 57}, 23,
-        None, "#f59e0b", "Pit plan pending"
+        [],
+        {"pit_lap_target": None, "compound_next": None},
+        {"total_laps": 57},
+        23,
+        None,
+        "#f59e0b",
+        "Pit plan pending",
     )
     assert llm_timeline["empty_state"] is None
 

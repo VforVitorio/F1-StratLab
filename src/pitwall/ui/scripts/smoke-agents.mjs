@@ -594,40 +594,6 @@ check(
   "an LLM plan does not show the deterministic empty state",
 );
 
-const deterministicView = structuredClone(VIEW);
-deterministicView.plan_timeline = {
-  ...VIEW.plan_timeline,
-  segments: VIEW.plan_timeline.segments.filter((segment) => !segment.planned),
-  pit_lap: null,
-  pit_pct: null,
-  empty_state: "No future pit plan in deterministic mode",
-  caption: "stint continues · no pit window yet",
-};
-const deterministicPage = await ctx.newPage();
-watchPage(deterministicPage, failures);
-await deterministicPage.addInitScript((view) => {
-  window.pywebview = {
-    api: {
-      get_agents_view: async (sinceSeq) => (sinceSeq >= view.seq ? null : view),
-      get_tick: async () => null,
-      get_connection: async () => ({ label: "Connected", colour: "#10b981" }),
-    },
-  };
-}, deterministicView);
-await deterministicPage.goto(`http://127.0.0.1:${server.address().port}/agents.html`, {
-  waitUntil: "domcontentloaded",
-});
-const emptyState = deterministicPage.locator(".plan-empty-state");
-await emptyState.waitFor({ state: "visible", timeout: 5000 });
-check(
-  (await emptyState.innerText()) === deterministicView.plan_timeline.empty_state,
-  "deterministic mode explains why the future stint is blank",
-);
-check(
-  (await deterministicPage.locator(".plan-stint.is-planned").count()) === 0,
-  "the empty state does not invent a planned stint",
-);
-
 // The consoles, by rendered geometry rather than by class name: a card can
 // carry the right class and be placed in the wrong area.
 const grid = await page.evaluate(() => {
@@ -848,6 +814,40 @@ check(
 );
 await page.waitForTimeout(1800);
 check((await page.locator(".status-bar").innerText()).trim() === "", "the status bar auto-clears");
+
+const deterministicView = structuredClone(VIEW);
+deterministicView.plan_timeline = {
+  ...VIEW.plan_timeline,
+  segments: VIEW.plan_timeline.segments.filter((segment) => !segment.planned),
+  pit_lap: null,
+  pit_pct: null,
+  empty_state: "No future pit plan in deterministic mode",
+  caption: "stint continues · no pit window yet",
+};
+const deterministicPage = await ctx.newPage();
+watchPage(deterministicPage, failures);
+await deterministicPage.addInitScript((view) => {
+  window.pywebview = {
+    api: {
+      get_agents_view: async (sinceSeq) => (sinceSeq >= view.seq ? null : view),
+      get_tick: async () => null,
+      get_connection: async () => ({ label: "Connected", colour: "#10b981" }),
+    },
+  };
+}, deterministicView);
+await deterministicPage.goto(`http://127.0.0.1:${server.address().port}/agents.html`, {
+  waitUntil: "domcontentloaded",
+});
+const emptyState = deterministicPage.locator(".plan-empty-state");
+await emptyState.waitFor({ state: "visible", timeout: 5000 });
+check(
+  (await emptyState.innerText()) === deterministicView.plan_timeline.empty_state,
+  "deterministic mode explains why the future stint is blank",
+);
+check(
+  (await deterministicPage.locator(".plan-stint.is-planned").count()) === 0,
+  "the empty state does not invent a planned stint",
+);
 
 // --- Reachable without a mouse --------------------------------------------
 //
