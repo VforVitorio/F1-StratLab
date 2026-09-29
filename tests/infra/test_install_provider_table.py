@@ -45,8 +45,8 @@ _ROWS: dict[str, tuple[str, str, str]] = {
         "lmstudio",
     ),
     "backend `POST /simulate`": (
-        "src/telemetry/backend/api/v1/endpoints/strategy.py",
-        'provider: str = Field("lmstudio"',
+        "src/telemetry/backend/services/simulation/simulator.py",
+        'os.environ.get("F1_LLM_PROVIDER", "lmstudio")',
         "lmstudio",
     ),
 }
