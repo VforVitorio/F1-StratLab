@@ -179,6 +179,7 @@ const IDLE_VIEW: AgentsView = {
     cliff: null,
     current_lap: null,
     current_pct: null,
+    empty_state: null,
     caption: "Pit: — · Next: — · UCUT: —",
   },
   // Before the first tick there is no call, so the card's own "no call yet"
