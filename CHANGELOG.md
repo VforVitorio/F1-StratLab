@@ -11,6 +11,91 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [2.7.0](https://github.com/VforVitorio/F1-StratLab/compare/v2.6.1...v2.7.0) (2026-09-29)
+
+
+### Features
+
+* **agents:** resolve the LLM model per layer from one place ([1b63266](https://github.com/VforVitorio/F1-StratLab/commit/1b63266800ea1d453f9840192e7ce2cfb2cc6e75)), closes [#264](https://github.com/VforVitorio/F1-StratLab/issues/264)
+* **arcade:** sleep strategy outside admissible laps ([b211b7b](https://github.com/VforVitorio/F1-StratLab/commit/b211b7b0a58a0bddd02a70f7ec24fc357eaff81a)), closes [#1201](https://github.com/VforVitorio/F1-StratLab/issues/1201)
+* **eval:** compare RAG chunking to the legacy baseline ([a6b72a4](https://github.com/VforVitorio/F1-StratLab/commit/a6b72a45dc163cc7fdcc87e0cddfe249f041fd88)), closes [#323](https://github.com/VforVitorio/F1-StratLab/issues/323)
+* **eval:** inventory 2025 pit entry purposes ([11c117d](https://github.com/VforVitorio/F1-StratLab/commit/11c117d7e007ab942afb11939958787388546b65))
+* **eval:** measure horizon and stop-shape effects ([c97e71d](https://github.com/VforVitorio/F1-StratLab/commit/c97e71d98e238f28075b3b1e0292e217caf46100))
+* **eval:** measure terminal tyre continuation ([748d884](https://github.com/VforVitorio/F1-StratLab/commit/748d884653e697f2bbec706fccee58cb7cd59914))
+* **eval:** measure the circuit_cluster test-season leak ([b70919c](https://github.com/VforVitorio/F1-StratLab/commit/b70919ca48ae4f39839158a38c7dc69468b3e7eb)), closes [#376](https://github.com/VforVitorio/F1-StratLab/issues/376)
+* **eval:** reconcile 2025 pit evidence with race control ([3cd8d6f](https://github.com/VforVitorio/F1-StratLab/commit/3cd8d6fff76d6c4471df8578c451744265b98070))
+* **eval:** wire RAG retrieval benchmark ([9cf4943](https://github.com/VforVitorio/F1-StratLab/commit/9cf4943c84a7653f5788d19fc2981d174ae9c1e2))
+* **rag:** add index manifest compatibility ([974c8ec](https://github.com/VforVitorio/F1-StratLab/commit/974c8ecd892d23d4bef27952de99d7f9affa7348))
+* **rag:** ground agent citations in tool traces ([1a1996a](https://github.com/VforVitorio/F1-StratLab/commit/1a1996ab1e481dab54767c50fe468d1cf5dc99c7))
+* **rag:** refresh sporting rules for 2026 ([d589435](https://github.com/VforVitorio/F1-StratLab/commit/d589435daeaa5411453263ff9bf8ede3dd464ead))
+* **rag:** scope chat regulation lookup by season ([2e4468c](https://github.com/VforVitorio/F1-StratLab/commit/2e4468c15f7aa5790a4a356aa1efc9ec3957503f))
+
+
+### Bug Fixes
+
+* **agents:** preserve unknown circuit cluster sentinel ([4e960a3](https://github.com/VforVitorio/F1-StratLab/commit/4e960a3756fca4f50ab455b035efb55f1a8d1454))
+* **arcade:** let a driver's columns be sliced, not just indexed ([94b0da7](https://github.com/VforVitorio/F1-StratLab/commit/94b0da73d55741a9beac2bbcae837f5a1e1b93b8))
+* **backend:** preserve configured provider when omitted ([d53b866](https://github.com/VforVitorio/F1-StratLab/commit/d53b86652d8d5009abdfa3f78b756875232635d6))
+* **cli:** read the banner version from the package and order races by round ([c632f48](https://github.com/VforVitorio/F1-StratLab/commit/c632f489f425ef13f03aa4da5e7aea843b81e229)), closes [#233](https://github.com/VforVitorio/F1-StratLab/issues/233)
+* **deps:** update Jupyter Server to 2.21.1 ([5a6f7d1](https://github.com/VforVitorio/F1-StratLab/commit/5a6f7d15eabb44feb464d40903c699b97d37e0ea)), closes [#1269](https://github.com/VforVitorio/F1-StratLab/issues/1269)
+* **eval:** account for overlapping stop decisions ([bcb2dc8](https://github.com/VforVitorio/F1-StratLab/commit/bcb2dc84fcacf88be18cfa0086ee17719732781c))
+* **eval:** finalize penalty lifecycle report ([67615fb](https://github.com/VforVitorio/F1-StratLab/commit/67615fb03a8569d9b40887fdfd01433e8dbf674a))
+* **eval:** qualify OpenF1 evidence anchors ([20bdbf9](https://github.com/VforVitorio/F1-StratLab/commit/20bdbf9c6bf4fa23022668128eb3e4e6409c81b0))
+* **eval:** use sha256 for evidence ids ([ada8637](https://github.com/VforVitorio/F1-StratLab/commit/ada8637c551fb3bb929e0a8e83a31144e30a4f9c))
+* **llm:** share LM Studio host across clients ([88aef70](https://github.com/VforVitorio/F1-StratLab/commit/88aef70963df14c611df998456ae658808f05e80))
+* **nlp:** match repeated penalty confirmations by reason ([94a7720](https://github.com/VforVitorio/F1-StratLab/commit/94a7720398216e3f756dd3b921a14f3713691c38)), closes [#1222](https://github.com/VforVitorio/F1-StratLab/issues/1222)
+* **nlp:** preserve penalty lifecycle alongside event labels ([dcbc242](https://github.com/VforVitorio/F1-StratLab/commit/dcbc242b90ebd2c7647f20c6eeb0fa1a0d0c0c70))
+* **pitwall:** distinguish missing RAG output ([a9f9a4d](https://github.com/VforVitorio/F1-StratLab/commit/a9f9a4d2a0aeb6c663303b8fb0cc5de0fccbcfe5))
+* **pitwall:** explain the no-LLM plan gap ([c301c69](https://github.com/VforVitorio/F1-StratLab/commit/c301c69f89407ff030bac5fa05fbee4ea0de3e7c)), closes [#1200](https://github.com/VforVitorio/F1-StratLab/issues/1200)
+* **pitwall:** make trace evidence paths portable ([f076706](https://github.com/VforVitorio/F1-StratLab/commit/f076706cbbf420241b4584e59ca9172eda677207))
+* **rag:** annotate the scope filter conditions with qdrant's Condition union ([dc54b09](https://github.com/VforVitorio/F1-StratLab/commit/dc54b092d646520fa7e561e4874f18961dba65a1))
+* **rag:** harden 2026 index provenance ([748fb07](https://github.com/VforVitorio/F1-StratLab/commit/748fb0723d69390af8aaf1bac6e925ff7955fae0))
+* **rag:** preserve conditional Safety Car rules ([ab6cdd2](https://github.com/VforVitorio/F1-StratLab/commit/ab6cdd21b5c9f4d99eb680791257f571e498d13b))
+* **rag:** scope regulation retrieval to the season being raced ([675de3d](https://github.com/VforVitorio/F1-StratLab/commit/675de3dcd6bad5b8d2e09e2c388f725e5c30f742)), closes [#320](https://github.com/VforVitorio/F1-StratLab/issues/320)
+* **simulation:** default the replay engine to no sleep between laps ([4d79c2f](https://github.com/VforVitorio/F1-StratLab/commit/4d79c2fa706bce4ce2834d30909baf6835d10995)), closes [#1202](https://github.com/VforVitorio/F1-StratLab/issues/1202)
+* **stream:** handle invalid client descriptors on shutdown ([5ce15fb](https://github.com/VforVitorio/F1-StratLab/commit/5ce15fb97f3d876830eb48835ffafd59b3ae7c31))
+* **tests:** isolate arcade stream guards ([957583d](https://github.com/VforVitorio/F1-StratLab/commit/957583d11e962ff959f7d227d34e4e13ac743841))
+* **tests:** make arcade server shutdown portable ([5e8b33d](https://github.com/VforVitorio/F1-StratLab/commit/5e8b33dc52803a31c9a5882d35c1ae85ca7e7a35))
+* **tests:** read arcade guard source from disk ([dbd0f17](https://github.com/VforVitorio/F1-StratLab/commit/dbd0f172a75acc7249a71f1827279e3577c322be))
+* **tests:** repoint the Qatar smoke test at the RCM parquet that exists ([c6406e9](https://github.com/VforVitorio/F1-StratLab/commit/c6406e97141278e877872ff4909cbdbd4f5c30cb)), closes [#1172](https://github.com/VforVitorio/F1-StratLab/issues/1172)
+* **tests:** scope the replay sleep recorder to the calling thread ([0e0f8d1](https://github.com/VforVitorio/F1-StratLab/commit/0e0f8d15f7afa3e61b8170c839a4d67ecb7f6923))
+
+
+### Performance
+
+* **arcade:** hold a driver's race as columns instead of one object per sample ([b9c7cbe](https://github.com/VforVitorio/F1-StratLab/commit/b9c7cbe4975e343f81d2767445fccd1795c48353))
+* **arcade:** hold a driver's race as columns instead of one object per sample ([f91a3f3](https://github.com/VforVitorio/F1-StratLab/commit/f91a3f3d6de133fce0b9a64c083a0e0e93b1f7ea)), closes [#1118](https://github.com/VforVitorio/F1-StratLab/issues/1118)
+* **arcade:** merge a driver's telemetry once and slice it per lap ([1bee8cd](https://github.com/VforVitorio/F1-StratLab/commit/1bee8cdbb603f5f86447ac68895871d9c565edc0)), closes [#1121](https://github.com/VforVitorio/F1-StratLab/issues/1121)
+* **tests:** declare pytest-xdist and mark the last unmarked golden re-derivation ([c2954f3](https://github.com/VforVitorio/F1-StratLab/commit/c2954f33c72c61717161d2978ad6b2cfca9f33d2)), closes [#1204](https://github.com/VforVitorio/F1-StratLab/issues/1204)
+
+
+### Documentation
+
+* align diagrams with runtime contracts ([8642b24](https://github.com/VforVitorio/F1-StratLab/commit/8642b24b3000b2818317d59e99a262fc6d0dbabc))
+* **ci:** remove retired voice extra references ([4c46609](https://github.com/VforVitorio/F1-StratLab/commit/4c46609b960535543207c27c292ae54a4600efae))
+* clarify agent-managed project records ([abb708c](https://github.com/VforVitorio/F1-StratLab/commit/abb708c703474f9935b2bd2ed1be580739e960b9))
+* **contributing:** fix the setup command and the CI table ([bd6d680](https://github.com/VforVitorio/F1-StratLab/commit/bd6d6802f8bce1536d52c7ae5fc22cca981489e0)), closes [#254](https://github.com/VforVitorio/F1-StratLab/issues/254)
+* **diagrams:** align assets with current system contracts ([881df7f](https://github.com/VforVitorio/F1-StratLab/commit/881df7fe921f7d6ea4f066f9272429a3e22c023e))
+* **eval:** add doubtful pit-entry review ([4e0668e](https://github.com/VforVitorio/F1-StratLab/commit/4e0668e65d1ba33e924aabe8dcdc79d04a0d79ee))
+* **eval:** close the terminal liability evidence gate ([886abe9](https://github.com/VforVitorio/F1-StratLab/commit/886abe95ba12cccccccc1f45cb04f1689af02bdc))
+* **eval:** correct doubtful-case counts ([d425d52](https://github.com/VforVitorio/F1-StratLab/commit/d425d527edc76ad211beb653489c7e368311b30a)), closes [#1215](https://github.com/VforVitorio/F1-StratLab/issues/1215)
+* **eval:** fix audit report whitespace ([2f7b2e7](https://github.com/VforVitorio/F1-StratLab/commit/2f7b2e788bf22071d2f31c2f3fbdfc6ed1c50d94))
+* **eval:** record final stop-decision design ([38cb7cd](https://github.com/VforVitorio/F1-StratLab/commit/38cb7cd6853ee416520fda2fc91efd63c181754e))
+* **eval:** record first stop evidence adjudication ([6860ca8](https://github.com/VforVitorio/F1-StratLab/commit/6860ca87c4bac8ce85d4e013bea1f5780707aa03))
+* **eval:** record reproducible legacy RAG results ([a725682](https://github.com/VforVitorio/F1-StratLab/commit/a725682901dda274cf87c9fa832321b52ede9ee5))
+* **install:** add a per-surface LLM provider truth table ([881f27b](https://github.com/VforVitorio/F1-StratLab/commit/881f27b7f100f91218917c5e688a29800b538c42)), closes [#216](https://github.com/VforVitorio/F1-StratLab/issues/216)
+* **install:** describe provider override limits ([26a07bb](https://github.com/VforVitorio/F1-StratLab/commit/26a07bb0b3c57be4b0c3cd515595da7ad03c2f8f))
+* list every entry point and point at f1-prefetch ([60637e4](https://github.com/VforVitorio/F1-StratLab/commit/60637e4a9e45a62e1447a63121c9cfa199661bb9))
+* organize audit and research records ([445d369](https://github.com/VforVitorio/F1-StratLab/commit/445d369abe766dea4c26a6b8dc9e2dbfd8c79711))
+* **rag:** correct the benchmark's wrong-year failure case ([94b9e94](https://github.com/VforVitorio/F1-StratLab/commit/94b9e946c04894c9ca174eeec2c2d2f99cea8cb8))
+* **rag:** correct the bge-m3 limit in the chunk-size rationale ([7c1ca69](https://github.com/VforVitorio/F1-StratLab/commit/7c1ca698231eef4df81ec580648d99dae82aa3e4)), closes [#319](https://github.com/VforVitorio/F1-StratLab/issues/319)
+* **rag:** record legacy chunking baseline ([b87f29a](https://github.com/VforVitorio/F1-StratLab/commit/b87f29a1b56195277af9d662e1a63f393da07cff)), closes [#323](https://github.com/VforVitorio/F1-StratLab/issues/323)
+* **rag:** update corpus and current implementation status ([c9241a5](https://github.com/VforVitorio/F1-StratLab/commit/c9241a52e1ca0565a3811edae636c0b58382da55))
+* record final CI timing ([d5441e6](https://github.com/VforVitorio/F1-StratLab/commit/d5441e6e75057265559d16433fcb482467b27301))
+* record final diagram audit gate ([d5f295c](https://github.com/VforVitorio/F1-StratLab/commit/d5f295c6d9ebb07582893a939cae89438e93284a))
+* record measured CI test timings ([74925dd](https://github.com/VforVitorio/F1-StratLab/commit/74925dd144bc22c59b5624c5cafe9a19ebc4202c))
+* route radio output around strategy router ([11ea8aa](https://github.com/VforVitorio/F1-StratLab/commit/11ea8aaf024b7f6aab73e64da6c11aecd921929d))
+
 ## [2.6.1](https://github.com/VforVitorio/F1-StratLab/compare/v2.6.0...v2.6.1) (2026-09-03)
 
 
