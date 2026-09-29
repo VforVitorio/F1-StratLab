@@ -28,7 +28,7 @@
         </mxCell>
 
         <!-- ═══════════════════════════ RACE STATE MANAGER ═══════════════════════════ -->
-        <mxCell id="rsm" value="&lt;b&gt;RaceStateManager&lt;/b&gt;, iter_laps(parquet | live) → RaceState per lap · accumulates stint history · syncs radio/RCM window" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="rsm" value="&lt;b&gt;RaceStateManager.get_lap_state(lap)&lt;/b&gt; → lap_state dict · parquet replay now · live adapter planned" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="370" y="144" width="460" height="48" as="geometry" />
         </mxCell>
 
@@ -36,64 +36,64 @@
         <mxCell id="e_live_rsm" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="live" target="rsm" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
         <!-- ═══════════════════════════ RACE STATE ═══════════════════════════ -->
-        <mxCell id="rs" value="&lt;b&gt;RaceState&lt;/b&gt; (Pydantic BaseModel, validated before routing · context slice to all sub-agents)&lt;br/&gt;lap · driver · position · gaps · compound · tyre_life · stint_sequence · weather · fuel_load · radio_msgs · rcm_events · risk_tolerance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="60" y="212" width="1236" height="52" as="geometry" />
+        <mxCell id="rs" value="&lt;b&gt;Per-lap contracts&lt;/b&gt; · RSM lap_state dict: lap_number · driver (full telemetry) · rivals (timing-only) · weather · session_meta · stint_flags · rival_stop_pending&lt;br/&gt;build_race_state(lap_state) → Pydantic RaceState for N31; adapters: N25 dict, N27 RCM-enriched dict + laps_df, N26/N29 dict + laps_df&lt;br/&gt;RaceState: driver · lap · total_laps · position · compound · tyre_life · gap_ahead_s · pace_delta_s&lt;br/&gt;air_temp · track_temp · rainfall · radio_msgs · rcm_events · risk_tolerance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="212" width="1236" height="70" as="geometry" />
         </mxCell>
 
         <mxCell id="e_rsm_rs" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="rsm" target="rs" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
         <!-- ═══════════════════════════ ML MODELS, INDIVIDUAL BOXES ═══════════════════════════ -->
-        <mxCell id="lbl_models" value="ML MODELS &amp; TOOLS (one box per model → arrow to the agent that loads it as a tool)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=10;fontColor=#666666;" vertex="1" parent="1">
-          <mxGeometry x="60" y="276" width="620" height="18" as="geometry" />
+        <mxCell id="lbl_models" value="ML MODELS &amp; TOOLS (each arrow identifies the consuming agent)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=10;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="60" y="296" width="620" height="18" as="geometry" />
         </mxCell>
 
         <!-- ROW 1  y=296  h=64 -->
 
-        <mxCell id="m_xgb" value="&lt;b&gt;XGBoost N06&lt;/b&gt;&lt;br/&gt;delta lap time&lt;br/&gt;MAE 0.392 s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="60" y="296" width="160" height="64" as="geometry" />
+        <mxCell id="m_xgb" value="&lt;b&gt;XGBoost N06&lt;/b&gt;&lt;br/&gt;lap-time prediction&lt;br/&gt;PaceOutput · deltas / CI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="316" width="160" height="64" as="geometry" />
         </mxCell>
 
         <mxCell id="m_tcn" value="&lt;b&gt;TireDegTCN N09/N10&lt;/b&gt;&lt;br/&gt;MC Dropout · N=50&lt;br/&gt;cliff P10/P50/P90" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="230" y="296" width="170" height="64" as="geometry" />
+          <mxGeometry x="230" y="316" width="170" height="64" as="geometry" />
         </mxCell>
 
-        <mxCell id="m_lgbm12" value="&lt;b&gt;LightGBM N12&lt;/b&gt;&lt;br/&gt;overtake probability&lt;br/&gt;AUC-ROC 0.876" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="410" y="296" width="162" height="64" as="geometry" />
+        <mxCell id="m_lgbm12" value="&lt;b&gt;LightGBM N12&lt;/b&gt;&lt;br/&gt;overtake probability&lt;br/&gt;N27 feature model" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="410" y="316" width="162" height="64" as="geometry" />
         </mxCell>
 
-        <mxCell id="m_hist15" value="&lt;b&gt;HistGBT N15&lt;/b&gt;&lt;br/&gt;pit dur P05/P50/P95&lt;br/&gt;MAE 0.487 s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="582" y="296" width="162" height="64" as="geometry" />
+        <mxCell id="m_hist15" value="&lt;b&gt;HistGBT N15&lt;/b&gt;&lt;br/&gt;pit-stop duration&lt;br/&gt;quantiles P05/P50/P95 · N28" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="582" y="316" width="162" height="64" as="geometry" />
         </mxCell>
 
-        <mxCell id="m_whisper" value="&lt;b&gt;Whisper N18&lt;/b&gt;&lt;br/&gt;ASR · audio→text&lt;br/&gt;base model" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="784" y="296" width="114" height="64" as="geometry" />
+        <mxCell id="m_whisper" value="&lt;b&gt;Whisper N18&lt;/b&gt;&lt;br/&gt;radio ASR · audio to text&lt;br/&gt;N29 pipeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="784" y="316" width="114" height="64" as="geometry" />
         </mxCell>
 
-        <mxCell id="m_roberta" value="&lt;b&gt;RoBERTa N20&lt;/b&gt;&lt;br/&gt;sentiment&lt;br/&gt;87.5% acc" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="906" y="296" width="114" height="64" as="geometry" />
+        <mxCell id="m_roberta" value="&lt;b&gt;RoBERTa N20&lt;/b&gt;&lt;br/&gt;radio sentiment&lt;br/&gt;N29 pipeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="906" y="316" width="114" height="64" as="geometry" />
         </mxCell>
 
         <!-- Qdrant: tall box spanning rows 1+2, above N30 -->
-        <mxCell id="m_qdrant" value="&lt;b&gt;Qdrant local DB&lt;/b&gt;&lt;br/&gt;BAAI/bge-m3 1024-dim&lt;br/&gt;FIA Regs 2023-25&lt;br/&gt;2,279 chunks · k=5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="1082" y="296" width="214" height="134" as="geometry" />
+        <mxCell id="m_qdrant" value="&lt;b&gt;Qdrant local DB&lt;/b&gt;&lt;br/&gt;BAAI/bge-m3 · 1024 dimensions&lt;br/&gt;FIA Sporting Regulations&lt;br/&gt;year filter when supplied&lt;br/&gt;empty scope retries unscoped · top-k=5 default" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="316" width="214" height="134" as="geometry" />
         </mxCell>
 
         <!-- ROW 2  y=368  h=62 -->
 
-        <mxCell id="m_lgbm14" value="&lt;b&gt;LightGBM N14&lt;/b&gt;&lt;br/&gt;SC probability&lt;br/&gt;lift 1.67×" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="410" y="368" width="162" height="62" as="geometry" />
+        <mxCell id="m_lgbm14" value="&lt;b&gt;LightGBM N14&lt;/b&gt;&lt;br/&gt;safety-car probability&lt;br/&gt;N27 feature model" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="410" y="388" width="162" height="62" as="geometry" />
         </mxCell>
 
-        <mxCell id="m_lgbm16" value="&lt;b&gt;LightGBM N16&lt;/b&gt;&lt;br/&gt;undercut success&lt;br/&gt;AUC-ROC 0.771" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="582" y="368" width="162" height="62" as="geometry" />
+        <mxCell id="m_lgbm16" value="&lt;b&gt;LightGBM N16&lt;/b&gt;&lt;br/&gt;undercut success probability&lt;br/&gt;N28 tool" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="582" y="388" width="162" height="62" as="geometry" />
         </mxCell>
 
-        <mxCell id="m_setfit" value="&lt;b&gt;SetFit N21&lt;/b&gt;&lt;br/&gt;intent · 5-class&lt;br/&gt;ModernBERT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="784" y="368" width="114" height="62" as="geometry" />
+        <mxCell id="m_setfit" value="&lt;b&gt;SetFit N21&lt;/b&gt;&lt;br/&gt;intent · 5 classes&lt;br/&gt;ModernBERT · N29" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="784" y="388" width="114" height="62" as="geometry" />
         </mxCell>
 
-        <mxCell id="m_bert" value="&lt;b&gt;BERT-large N22&lt;/b&gt;&lt;br/&gt;NER · F1 0.42&lt;br/&gt;CoNLL-03" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="906" y="368" width="114" height="62" as="geometry" />
+        <mxCell id="m_bert" value="&lt;b&gt;BERT-large N22&lt;/b&gt;&lt;br/&gt;radio entity recognition&lt;br/&gt;CoNLL-03 · N29" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="906" y="388" width="114" height="62" as="geometry" />
         </mxCell>
 
         <!-- FIA PDF → Qdrant -->
@@ -101,27 +101,27 @@
 
         <!-- ═══════════════════════════ SUB-AGENTS ═══════════════════════════ -->
         <mxCell id="lbl_agents" value="SUB-AGENTS (LangGraph ReAct, except N25, direct XGBoost call, and N29, NLP-first)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=10;fontColor=#666666;" vertex="1" parent="1">
-          <mxGeometry x="60" y="444" width="560" height="18" as="geometry" />
+          <mxGeometry x="60" y="464" width="560" height="18" as="geometry" />
         </mxCell>
 
-        <mxCell id="n25" value="&lt;b&gt;N25, Pace Agent&lt;/b&gt;&#xa;Direct XGBoost call (no LLM)&#xa;───────────&#xa;No tools, no ReAct loop , &#xa;deterministic regression,&#xa;no judgment for an LLM to&#xa;add (#778/#780/#781)&#xa;───────────&#xa;Output: PaceOutput&#xa;lap_time_pred&#xa;ci_p10 / ci_p90&#xa;reasoning (f-string)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="60" y="464" width="160" height="176" as="geometry" />
+        <mxCell id="n25" value="&lt;b&gt;N25, Pace Agent&lt;/b&gt;&#xa;Direct XGBoost call (no LLM)&#xa;───────────&#xa;No tools or ReAct loop&#xa;Deterministic regression&#xa;───────────&#xa;Output: PaceOutput&#xa;lap_time_pred&#xa;delta_vs_prev · delta_vs_median&#xa;ci_p10 · ci_p90&#xa;reasoning → synthesis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="484" width="160" height="176" as="geometry" />
         </mxCell>
 
-        <mxCell id="n26" value="&lt;b&gt;N26, Tire Agent&lt;/b&gt;&#xa;LangGraph ReAct&#xa;───────────&#xa;@tool predict_tire_deg&#xa;@tool estimate_cliff&#xa;───────────&#xa;Output: TireOutput&#xa;cliff_lap · P10/P50/P90&#xa;warning_level&#xa;reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="230" y="464" width="170" height="176" as="geometry" />
+        <mxCell id="n26" value="&lt;b&gt;N26, Tire Agent&lt;/b&gt;&#xa;LangGraph ReAct&#xa;───────────&#xa;@tool predict_tire_deg&#xa;@tool estimate_cliff&#xa;───────────&#xa;Output: TireOutput&#xa;laps_to_cliff P10/P50/P90&#xa;OK / MONITOR / PIT_SOON&#xa;deg_cost_s · cumulative_deg_s&#xa;reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="230" y="484" width="170" height="176" as="geometry" />
         </mxCell>
 
-        <mxCell id="n27" value="&lt;b&gt;N27, Race Situation&lt;/b&gt;&#xa;LangGraph ReAct&#xa;───────────&#xa;@tool predict_overtake&#xa;@tool predict_sc&#xa;───────────&#xa;Output: RaceSituationOutput&#xa;overtake_prob&#xa;sc_prob_3lap&#xa;reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="410" y="464" width="162" height="176" as="geometry" />
+        <mxCell id="n27" value="&lt;b&gt;N27, Race Situation&lt;/b&gt;&#xa;LangGraph ReAct&#xa;───────────&#xa;@tool predict_overtake&#xa;@tool predict_sc&#xa;───────────&#xa;Output: RaceSituationOutput&#xa;overtake_prob · sc_prob_3lap&#xa;sc_currently_active · vsc_active&#xa;reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="410" y="484" width="162" height="176" as="geometry" />
         </mxCell>
 
         <mxCell id="n28" value="&lt;b&gt;N28, Pit Strategy&lt;/b&gt;&#xa;LangGraph ReAct&#xa;───────────&#xa;@tool predict_pit_dur&#xa;@tool score_undercut&#xa;@tool recommend_compound&#xa;───────────&#xa;Output: PitStrategyOutput&#xa;action · recommended_lap&#xa;compound_recommendation&#xa;p05/p50/p95 · undercut_prob&#xa;undercut_target · sc_reactive&#xa;reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="582" y="464" width="162" height="176" as="geometry" />
+          <mxGeometry x="582" y="484" width="162" height="176" as="geometry" />
         </mxCell>
 
-        <mxCell id="n29" value="&lt;b&gt;N29, Radio Agent&lt;/b&gt;&#xa;NLP-first + Pydantic v2&#xa;───────────&#xa;run_pipeline() → NLP JSON&#xa;RCM parser → events&#xa;_build_alerts() deterministic&#xa;structured_radio_llm&#xa;→ RadioSynthesis (Pydantic)&#xa;───────────&#xa;Output: RadioOutput&#xa;alerts · corrections&#xa;reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="784" y="464" width="236" height="176" as="geometry" />
+        <mxCell id="n29" value="&lt;b&gt;N29, Radio Agent&lt;/b&gt;&#xa;NLP-first + Pydantic v2&#xa;───────────&#xa;run_pipeline() → NLP JSON&#xa;RCM parser → events&#xa;_build_alerts() deterministic&#xa;structured_radio_llm&#xa;→ RadioSynthesis (Pydantic)&#xa;───────────&#xa;Output: RadioOutput&#xa;radio_events · rcm_events&#xa;alerts · corrections · reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="784" y="484" width="236" height="176" as="geometry" />
         </mxCell>
 
         <!-- MODEL → AGENT ARROWS -->
@@ -137,20 +137,20 @@
         <mxCell id="e_bert_n29"   style="edgeStyle=orthogonalEdgeStyle;strokeColor=#d6a070;" edge="1" source="m_bert"    target="n29" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="e_qdrant_n30" value="query_rag_tool" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#d6a070;fontColor=#a05000;fontSize=9;" edge="1" source="m_qdrant" target="n30" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
-        <!-- Cross-agent: N26 → N28 (laps_to_cliff) and N27 → N28 (sc_prob) -->
-        <mxCell id="e_n26_n28" value="TireOutput" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#FF6600;fontColor=#FF6600;fontSize=9;" edge="1" source="n26" target="n28" parent="1">
+        <!-- Cross-agent triggers: N26 PIT_SOON and N27 active SC/VSC -->
+        <mxCell id="e_n26_n28" value="PIT_SOON" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#FF6600;fontColor=#FF6600;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.3;entryY=1;entryDx=0;entryDy=0;" edge="1" source="n26" target="n28" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="315" y="812" />
-              <mxPoint x="663" y="812" />
+              <mxPoint x="315" y="680" />
+              <mxPoint x="631" y="680" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e_n27_n28" value="sc_prob_3lap" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#FF6600;fontColor=#FF6600;fontSize=9;" edge="1" source="n27" target="n28" parent="1">
+        <mxCell id="e_n27_n28" value="active SC/VSC" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#FF6600;fontColor=#FF6600;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" edge="1" source="n27" target="n28" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="491" y="824" />
-              <mxPoint x="663" y="824" />
+              <mxPoint x="491" y="708" />
+              <mxPoint x="703" y="708" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -160,46 +160,59 @@
           <mxGeometry x="60" y="658" width="990" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="n31_l1" value="&lt;b&gt;Layer 1, Dynamic MoE Routing&lt;/b&gt;&lt;br/&gt;Always: N25 + N26 + N27 + N29&lt;br/&gt;N29.alerts PROBLEM/WARNING → N28&lt;br/&gt;N26.warning_level == PIT_SOON → N28&lt;br/&gt;N27.sc_prob_3lap &gt; 0.3 → N30&lt;br/&gt;N29.alerts PENALTY/WARNING → N30&lt;br/&gt;N28 active → N30 (constraint check)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8d5f5;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
-          <mxGeometry x="62" y="682" width="295" height="136" as="geometry" />
+        <mxCell id="n31_l1" value="&lt;b&gt;Layer 1, Dynamic MoE Routing&lt;/b&gt;&lt;br/&gt;Always: N25 + N26 + N27 + N29&lt;br/&gt;N28: N26 PIT_SOON, N29 PROBLEM/WARNING, or active SC/VSC&lt;br/&gt;N30: N27 SC probability above configured threshold, N29 WARNING/RCM penalty, N28 active, or active SC/VSC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8d5f5;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="62" y="730" width="295" height="150" as="geometry" />
         </mxCell>
 
-        <mxCell id="n31_l2" value="&lt;b&gt;Layer 2, Monte Carlo Simulation&lt;/b&gt;&lt;br/&gt;N_SIM = 500 · per strategy candidate&lt;br/&gt;pace_i ~ N(N25.pred, σ_ci)&lt;br/&gt;cliff_i ~ Triangular(N26.p10/p50/p90)&lt;br/&gt;sc_i ~ Bernoulli(N27.sc_prob_3lap)&lt;br/&gt;pit_i ~ Triangular(N28.p05/p50/p95)&lt;br/&gt;score = α·E[S] + (1−α)·P10[S]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d8c5ed;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
-          <mxGeometry x="367" y="682" width="308" height="136" as="geometry" />
+        <mxCell id="n31_l2" value="&lt;b&gt;Layer 2, Monte Carlo Simulation&lt;/b&gt;&lt;br/&gt;500 shared draws for four candidates&lt;br/&gt;N26 cliff ~ Triangular(P10/P50/P90)&lt;br/&gt;N27 SC ~ Bernoulli(sc_prob_3lap)&lt;br/&gt;N28 pit ~ Triangular(P05/P50/P95); ucut ~ Bernoulli(prob)&lt;br/&gt;N25 pace_i sampled for RNG sequence, not scored&lt;br/&gt;score = α·E[S] + (1−α)·P10[S]&lt;br/&gt;finite gaps: positions gained + margin bonus&lt;br/&gt;fallback: time_delta / POS_GAP_S equivalent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d8c5ed;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="367" y="730" width="308" height="150" as="geometry" />
         </mxCell>
 
-        <mxCell id="n31_l3" value="&lt;b&gt;Layer 3, LLM Synthesis&lt;/b&gt;&lt;br/&gt;with_structured_output(StrategyRecommendation)&lt;br/&gt;Input: all sub-agent .reasoning fields&lt;br/&gt;+ MC scenario_scores&lt;br/&gt;+ N30.articles (hard constraint)&lt;br/&gt;N30 filters illegal options BEFORE LLM&lt;br/&gt;Output: Pydantic StrategyRecommendation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8b0e0;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
-          <mxGeometry x="685" y="682" width="328" height="136" as="geometry" />
+        <mxCell id="n31_l3" value="&lt;b&gt;Layer 3, LLM Synthesis&lt;/b&gt;&lt;br/&gt;with_structured_output(_LLMSynthesis), 12 LLM fields&lt;br/&gt;N31 attaches scenario_scores + regulation_context&lt;br/&gt;N30 supplies retrieved evidence; it does not filter actions&lt;br/&gt;Output: 14-field StrategyRecommendation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8b0e0;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="685" y="730" width="328" height="150" as="geometry" />
         </mxCell>
 
         <mxCell id="e_l1_l2" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#9673a6;" edge="1" source="n31_l1" target="n31_l2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="e_l2_l3" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#9673a6;" edge="1" source="n31_l2" target="n31_l3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
         <!-- N30 RAG Agent (beside N31) -->
-        <mxCell id="n30" value="&lt;b&gt;N30, RAG Agent&lt;/b&gt;&#xa;LangGraph ReAct&#xa;───────────&#xa;@tool query_rag&#xa;src/rag/retriever.py&#xa;───────────&#xa;Qdrant + BGE-M3&#xa;FIA Regs 2023-25&#xa;2,279 chunks&#xa;───────────&#xa;Output: RegulationContext&#xa;answer · articles[]&#xa;reasoning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="1082" y="682" width="214" height="192" as="geometry" />
+        <mxCell id="n30" value="&lt;b&gt;N30, RAG Agent&lt;/b&gt;&#xa;LangGraph ReAct&#xa;───────────&#xa;@tool query_rag&#xa;src/rag/retriever.py&#xa;───────────&#xa;Qdrant + BGE-M3 · top-k=5 default&#xa;Year filter when supplied&#xa;Empty scoped result retries unscoped&#xa;No year starts unscoped&#xa;───────────&#xa;Output: RegulationContext&#xa;question · answer · chunks · articles&#xa;citation_violations&#xa;No action filtering" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="730" width="214" height="192" as="geometry" />
         </mxCell>
 
-        <mxCell id="e_l1_n30" value="routes query" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#9673a6;fontColor=#9673a6;fontSize=9;" edge="1" source="n31_l1" target="n30" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e_n30_l3" value="hard constraint" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#9673a6;fontColor=#9673a6;fontSize=9;fontStyle=1;" edge="1" source="n30" target="n31_l3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_l1_n30" value="routes query" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#9673a6;fontColor=#9673a6;fontSize=9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n31_l1" target="n30" parent="1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="209" y="696"/><mxPoint x="1189" y="696"/></Array></mxGeometry></mxCell>
+        <mxCell id="e_n30_l3" value="context" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#9673a6;fontColor=#9673a6;fontSize=9;fontStyle=1;" edge="1" source="n30" target="n31_l3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
         <!-- Sub-agents → N31 -->
-        <mxCell id="e_n25_n31" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="n25" target="n31_l1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e_n26_n31" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="n26" target="n31_l1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e_n27_n31" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="n27" target="n31_l1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_n26_n31" style="edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n26" target="n31_l1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="230" y="696"/><mxPoint x="209" y="696"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_n27_n31" style="edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=0.85;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n27" target="n31_l1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="410" y="716"/><mxPoint x="313" y="716"/></Array>
+          </mxGeometry>
+        </mxCell>
         <mxCell id="e_n28_n31" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="n28" target="n31_l2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e_n29_n31" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="n29" target="n31_l1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_n25_mc" value="pace_i RNG draw only" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#d79b00;fontColor=#805000;fontSize=9;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=0.38;entryY=1;entryDx=0;entryDy=0;" edge="1" source="n25" target="n31_l2" parent="1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="44" y="616"/><mxPoint x="44" y="900"/><mxPoint x="484" y="900"/></Array></mxGeometry></mxCell>
+        <mxCell id="e_n25_synthesis" value="PaceOutput reasoning" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#d79b00;fontColor=#805000;fontSize=9;exitX=0;exitY=0.85;exitDx=0;exitDy=0;entryX=0.35;entryY=1;entryDx=0;entryDy=0;" edge="1" source="n25" target="n31_l3" parent="1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="26" y="634"/><mxPoint x="26" y="920"/><mxPoint x="800" y="920"/></Array></mxGeometry></mxCell>
+        <mxCell id="e_n29_n31" style="edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="n29" target="n31_l1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="784" y="724"/><mxPoint x="357" y="724"/><mxPoint x="357" y="805"/></Array>
+          </mxGeometry>
+        </mxCell>
 
         <!-- ═══════════════════════════ OUTPUT ═══════════════════════════ -->
-        <mxCell id="output" value="&lt;b&gt;StrategyRecommendation&lt;/b&gt; (Pydantic BaseModel)&#xa;action: STAY_OUT / PIT_NOW / UNDERCUT / OVERCUT / ALERT · reasoning (LLM narrative) · confidence · scenario_scores (MC) · regulation_context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="280" y="900" width="760" height="56" as="geometry" />
+        <mxCell id="output" value="&lt;b&gt;StrategyRecommendation&lt;/b&gt; · 14 fields&#xa;action · reasoning · confidence · pit execution · pace / risk&#xa;contingencies · key_risks · expected_stint_end · scenario_scores · regulation_context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="948" width="760" height="56" as="geometry" />
         </mxCell>
 
         <mxCell id="e_l3_out" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="n31_l3" target="output" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
         <!-- ═══════════════════════════ LEGEND ═══════════════════════════ -->
         <mxCell id="leg_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#cccccc;" vertex="1" parent="1">
-          <mxGeometry x="1336" y="296" width="274" height="340" as="geometry" />
+          <mxGeometry x="1336" y="296" width="274" height="372" as="geometry" />
         </mxCell>
         <mxCell id="leg_title" value="LEGEND" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#444444;" vertex="1" parent="1">
           <mxGeometry x="1348" y="304" width="80" height="18" as="geometry" />
@@ -207,7 +220,7 @@
         <mxCell id="leg_data" value="Data source / external storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" vertex="1" parent="1">
           <mxGeometry x="1346" y="328" width="252" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="leg_rs" value="RaceState (Pydantic BaseModel)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="1">
+        <mxCell id="leg_rs" value="lap_state dict + Pydantic RaceState" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="1">
           <mxGeometry x="1346" y="360" width="252" height="26" as="geometry" />
         </mxCell>
         <mxCell id="leg_model" value="ML Model / Tool (individual box per model)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9dbc8;strokeColor=#d6a070;fontSize=9;" vertex="1" parent="1">
@@ -225,17 +238,20 @@
         <mxCell id="leg_n31l1" value="N31 Layer 1: MoE routing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8d5f5;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1">
           <mxGeometry x="1346" y="520" width="252" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="leg_n31l3" value="N31 Layer 3: LLM synthesis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8b0e0;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1">
+        <mxCell id="leg_n31l2" value="N31 Layer 2: Monte Carlo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d8c5ed;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1">
           <mxGeometry x="1346" y="552" width="252" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="leg_dep_lbl" value="── ─ ─ → cross-agent dependency (N26/N27 → N28)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontColor=#FF6600;" vertex="1" parent="1">
-          <mxGeometry x="1346" y="586" width="252" height="18" as="geometry" />
+        <mxCell id="leg_n31l3" value="N31 Layer 3: LLM synthesis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8b0e0;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1346" y="584" width="252" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="leg_hard_lbl" value="────────→ hard constraint (N30 → N31 L3)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="1346" y="606" width="252" height="18" as="geometry" />
+        <mxCell id="leg_dep_lbl" value="── ─ ─ → cross-agent dependency (N26/N27 → N28)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontColor=#FF6600;" vertex="1" parent="1">
+          <mxGeometry x="1346" y="616" width="252" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_hard_lbl" value="────────→ regulation context (N30 → N31 L3)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1346" y="636" width="252" height="18" as="geometry" />
         </mxCell>
         <mxCell id="leg_fia_lbl" value="── ─ ─ → FIA PDFs → Qdrant (offline index build)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="1346" y="626" width="252" height="18" as="geometry" />
+          <mxGeometry x="1346" y="656" width="252" height="18" as="geometry" />
         </mxCell>
 
       </root>

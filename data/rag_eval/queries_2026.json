@@ -1,0 +1,67 @@
+[
+  {
+    "id": "Q31",
+    "year": 2026,
+    "query": "What message and panel signal mark the start of the Virtual Safety Car procedure in 2026?",
+    "category": "safety_car",
+    "source_pdf": "sporting_regs_2026.pdf",
+    "ground_truth": {
+      "article": "B5.12.1",
+      "section": "Deployment of VSC",
+      "expected_keywords": ["VSC DEPLOYED", "FIA light panels", "VSC"],
+      "rationale": "Article B5.12.1 defines the VSC deployment message and the FIA light-panel signal."
+    }
+  },
+  {
+    "id": "Q32",
+    "year": 2026,
+    "query": "What message and signals accompany a Safety Car deployment under the 2026 sporting regulations?",
+    "category": "safety_car",
+    "source_pdf": "sporting_regs_2026.pdf",
+    "ground_truth": {
+      "article": "B5.13.1",
+      "section": "Deployment of Safety Car",
+      "expected_keywords": ["SAFETY CAR DEPLOYED", "FIA light panels", "SC"],
+      "rationale": "Article B5.13.1 defines the Safety Car deployment message and panel signal."
+    }
+  },
+  {
+    "id": "Q33",
+    "year": 2026,
+    "query": "What penalty applies to an unsafe pit release during a 2026 total time classified session?",
+    "category": "pit_stops",
+    "source_pdf": "sporting_regs_2026.pdf",
+    "ground_truth": {
+      "article": "B1.6.2",
+      "section": "Pit Lane Safety",
+      "expected_keywords": ["unsafe condition", "Stopand-Go Penalty", "TTCS"],
+      "rationale": "Article B1.6.2ii applies a Stop-and-Go Penalty to an unsafe release during a TTCS."
+    }
+  },
+  {
+    "id": "Q34",
+    "year": 2026,
+    "query": "How is the resumption order established after a 2026 race suspension?",
+    "category": "flags_penalties",
+    "source_pdf": "sporting_regs_2026.pdf",
+    "ground_truth": {
+      "article": "B5.15.1",
+      "section": "Ordering of Cars",
+      "expected_keywords": ["Resumption Order", "last point at which it was possible to determine", "Pit Lane"],
+      "rationale": "Article B5.15.1 defines the resumption order and the last reliable position point."
+    }
+  },
+  {
+    "id": "Q35",
+    "year": 2026,
+    "query": "What components are adjusted when Driver Adjustable Bodywork is fully activated in 2026?",
+    "category": "drs",
+    "source_pdf": "sporting_regs_2026.pdf",
+    "ground_truth": {
+      "article": "B7.1.1",
+      "section": "General Principles",
+      "expected_keywords": ["Front Wing Profiles", "RW Flap", "Straight Mode"],
+      "rationale": "Article B7.1.1 distinguishes the Front Wing Profiles and RW Flap positions for full activation."
+    }
+  }
+]

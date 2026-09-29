@@ -1,0 +1,99 @@
+# 2025 pit-entry purpose evidence
+
+This is a retrospective evidence inventory for the decision-layer work.
+It does not change the scorer and it does not treat the team's observed
+pit entry as proof that the team's decision was optimal.
+
+- generated `2026-09-08T18:12:34+00:00`
+- races: 24
+- RAW lap rows: 26692
+- PitInTime entries: 841
+- entries in the current missed-pit-call green sample: 573
+- complete OpenF1 RCM rows: 2216
+- filtered local RCM rows: 1534
+- messages containing `PENALTY`: 77
+- penalty-text messages / served confirmations: 77 / 23
+- penalty-text messages classified as generic collisions: 22
+- non-null `LapStartDate` rows: 0
+- tyre metadata repair: 2 races, 308 ages made unknown
+- OpenF1 lap-anchor sessions: 24 (26265 rows, cached)
+- cache manifest: `data\processed\stop_purpose\2025\manifest.json`
+- LLM and private telemetry calls: none
+
+## What the local evidence says
+
+| primary label | entries |
+| --- | ---: |
+| `PENALTY_SERVICE` | 4 |
+| `REGULATION_REQUIRED_STOP` | 34 |
+| `STRATEGIC_TYRE_CHANGE` | 707 |
+| `UNKNOWN` | 96 |
+
+| telemetry set-change signal | entries |
+| --- | ---: |
+| `confirmed` | 709 |
+| `none_observed` | 2 |
+| `unknown` | 130 |
+
+The current data shows 709 entries with a
+telemetry set-change signal (compound change or age reset) after the pit
+entry, but that is only telemetry evidence. It does not prove the entry was
+strategic. Same-compound entries can mount a used set, and a drive-through
+can leave contradictory stint metadata.
+
+## Penalty lifecycle
+
+| status | penalties |
+| --- | ---: |
+| `ambiguous` | 1 |
+| `resolved` | 1 |
+| `resolved_with_conflict` | 1 |
+| `served_without_pit_assignment` | 20 |
+| `unresolved` | 27 |
+
+A served confirmation is retained as historical evidence. It is only linked
+to a pit entry when the award, car, temporal window, and service constraints
+leave a compatible candidate. Otherwise the lifecycle remains unresolved or
+ambiguous and cannot affect the comparable no-call denominator.
+
+## Measurement contract
+
+Each entry receives one primary label and keeps secondary causes, evidence IDs,
+timing discretion, source conflicts, and whether it belongs to the current
+green-flag sample. The clean comparison cohort is intentionally conservative:
+strategic candidate, no mixed purpose, no source conflict, and a discretionary
+timing decision. Entries with unknown timing discretion remain candidates for
+review, not confirmed ground truth.
+
+## Limitations that remain visible
+
+- The local RCM parquet is the filtered runtime mirror; the complete pass uses
+  cached OpenF1 race-control rows and keeps the local mirror only for coverage
+  comparison.
+- RAW `LapStartDate` is empty. OpenF1 lap starts reconstruct approximate UTC for
+  835/841 entries; OpenF1 documents `date_start` as approximate.
+  The remaining entries stay explicitly unanchored and are not silently
+  approximated.
+- Absence of a local message means no evidence in this corpus, not no penalty.
+- The generic event category is not a sanction ledger; the lifecycle output
+  preserves awarded, served, investigated, no-further-action, and unresolved
+  states separately.
+
+## Adjudication check
+
+Monaco 2025 Russell is deliberately retained as a conflict: local telemetry
+shows a compound transition on lap 53, while the official race-control record
+announces a drive-through and the official pit summary lists entries on laps 53,
+62, and 68. The inventory therefore labels lap 53 as `PENALTY_SERVICE` with
+`source_conflict=true`; it does not silently trust the tyre columns. Sources:
+[FIA decision](https://www.fia.com/system/files/decision-document/2025_monaco_grand_prix_-_infringement_-_car_63_-_leaving_the_track_and_gaining_an_advantage.pdf),
+[race-control messages](https://api.fia.com/sites/default/files/2025_08_mon_f1_r0_timing_raceracecontrolmessages_v01.pdf),
+and [pit-stop summary](https://www.fia.com/sites/default/files/2025_08_mon_f1_r0_timing_racepitstopsummary_v01.pdf).
+
+## Decision
+
+Do not connect these labels to the production scorer yet. The complete
+2025 OpenF1 race-control pass is now cached. The next required step is
+manual adjudication of penalties, conflicts, mixed-purpose entries, and a
+stratified sample of strategic candidates before recalculating the no-call
+denominator.

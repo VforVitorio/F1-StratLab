@@ -6,10 +6,18 @@ over the reference: a race-distance accumulator that actually accumulates, a
 `CACHE_VERSION` tag to invalidate stale pickles, and an `active` flag that
 stops DNF'd drivers from sitting as ghosts at their crash position.
 
-Output is a `SessionData` dataclass holding per-driver lists of `FrameData`
-plus the geometry of a single reference lap that `track.py` consumes for the
-circuit outline. All telemetry is kept in raw FastF1 units (1/10 mm for X/Y,
-km/h for speed, seconds for time); conversion happens at render boundaries.
+Output is a `SessionData` dataclass holding one `DriverFrames` per driver plus
+the geometry of a single reference lap that `track.py` consumes for the circuit
+outline. `DriverFrames` is columnar, fourteen parallel arrays, and it hands back
+a `FrameData` on indexing, so consumers read it as the list it replaced. All
+telemetry is kept in raw FastF1 units (1/10 mm for X/Y, km/h for speed, seconds
+for time); conversion happens at render boundaries.
+
+Contents:
+- `FrameData`: one 40 ms slice of one driver's state.
+- `DriverFrames`: one driver's whole race as columns.
+- `SessionData`: the cache payload, normalising lists into columns on the way in.
+- `SessionLoader`: fetch, resample, cache, and read back.
 """
 
 from __future__ import annotations
@@ -17,6 +25,7 @@ from __future__ import annotations
 import gc
 import logging
 import pickle
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from multiprocessing import Pool
 from pathlib import Path
@@ -75,6 +84,136 @@ class FrameData:
 
 
 @dataclass
+class DriverFrames:
+    """One driver's whole race held as columns rather than as one object per sample.
+
+    A race is 20 drivers of 124,000 to 154,000 samples, so the list of
+    `FrameData` this replaces was 2.5 to 3.1 million dataclass instances. Each
+    one costs 1,041 bytes with its `__dict__` and fourteen boxed values, which
+    is 4.1 GB of resident memory for a 322 MB cache file, and the pickle VM has
+    to construct every one of them on the way in. Fourteen arrays load as
+    fourteen buffer copies instead: measured on Las Vegas 2025, 10.2 s and
+    4,143 MB become 0.13 s and 260 MB.
+
+    Consumers index it the way they indexed the list, so `frames[i]`,
+    `frames[-1]`, `len(frames)` and iteration all still hand back a
+    `FrameData`. Code that wants a whole channel should read the array instead
+    (`frames.dist`), which is what `gaps.py` does: rebuilding one with
+    `np.fromiter` over the frames costs the object construction this exists to
+    avoid.
+
+    Every array is parallel and the field order matches `FrameData`. `t` is the
+    session timeline and is the SAME array object for every driver, so a single
+    `pickle.dump` stores it once and writes back-references for the other
+    nineteen.
+    """
+
+    t: np.ndarray
+    x: np.ndarray
+    y: np.ndarray
+    speed: np.ndarray
+    gear: np.ndarray
+    drs: np.ndarray
+    throttle: np.ndarray
+    brake: np.ndarray
+    lap: np.ndarray
+    dist: np.ndarray
+    rel_dist: np.ndarray
+    tyre: np.ndarray
+    tyre_life: np.ndarray
+    active: np.ndarray
+
+    @classmethod
+    def from_frames(cls, frames: "list[FrameData]") -> "DriverFrames":
+        """Build the columns from a list of frames, for callers that have one.
+
+        The loader never uses this, because it already holds the arrays before
+        it would build any frame. It exists for `SessionData.__post_init__`, so
+        that a caller assembling a race by hand (every fixture in `tests/`, and
+        any future producer) can keep passing a list and get the columnar form
+        without knowing it changed.
+
+        Args:
+            frames: the samples in replay order, which may be empty.
+
+        Returns:
+            Columns holding exactly those values, in that order.
+        """
+        count = len(frames)
+        columns = {
+            name: np.fromiter((getattr(frame, name) for frame in frames), dtype=dtype, count=count)
+            for name, dtype in _FRAME_COLUMN_DTYPES.items()
+        }
+        return cls(**columns)
+
+    def __len__(self) -> int:
+        return int(self.t.shape[0])
+
+    def __getitem__(self, index: int | slice) -> "FrameData | DriverFrames":
+        """One sample as a `FrameData`, or a slice of them as more columns.
+
+        Negative indices included. A frame is built on demand, so a caller
+        holding one is holding a copy: writing to it does not reach the
+        columns. Nothing in the replay mutates a frame, and the fixtures that
+        do mutate one do it to a plain list before it ever reaches
+        `SessionData`.
+
+        A slice stays columnar and comes back as a `DriverFrames` over numpy
+        views, which copies no data. `zip(frames, frames[1:])` is how the
+        real-data guards walk consecutive samples, so handing back frames one
+        at a time here would build a whole race twice to compare it with
+        itself.
+        """
+        if isinstance(index, slice):
+            return DriverFrames(
+                **{name: getattr(self, name)[index] for name in _FRAME_COLUMN_DTYPES}
+            )
+        return FrameData(
+            t=float(self.t[index]),
+            x=float(self.x[index]),
+            y=float(self.y[index]),
+            speed=float(self.speed[index]),
+            gear=int(self.gear[index]),
+            drs=int(self.drs[index]),
+            throttle=float(self.throttle[index]),
+            brake=float(self.brake[index]),
+            lap=int(self.lap[index]),
+            dist=float(self.dist[index]),
+            rel_dist=float(self.rel_dist[index]),
+            tyre=int(self.tyre[index]),
+            tyre_life=float(self.tyre_life[index]),
+            active=bool(self.active[index]),
+        )
+
+    def __iter__(self) -> "Iterator[FrameData]":
+        for index in range(len(self)):
+            yield self[index]
+
+
+# Field name to column dtype, in `FrameData` order. float64 and int64 hold every
+# value the loader computes without rounding, so a rebuilt cache is bit-identical
+# to what the per-frame form served. Narrower dtypes halve the payload again and
+# are deliberately NOT taken here: float32 moves x and y by up to 9.8e-4 raw
+# units, and whether that flips a rounded value on the wire has not been counted.
+_FRAME_COLUMN_DTYPES: dict[str, Any] = {
+    "t": np.float64,
+    "x": np.float64,
+    "y": np.float64,
+    "speed": np.float64,
+    "gear": np.int64,
+    "drs": np.int64,
+    "throttle": np.float64,
+    "brake": np.float64,
+    "lap": np.int64,
+    "dist": np.float64,
+    "rel_dist": np.float64,
+    "tyre": np.int64,
+    "tyre_life": np.float64,
+    "active": np.bool_,
+}
+
+
+@dataclass
 class SessionData:
     """Top-level cache payload consumed by `F1ArcadeWindow`.
 
@@ -97,7 +236,7 @@ class SessionData:
     # that touches disk must read it instead.
     location: str = ""
     year: int = 0
-    frames_by_driver: dict[str, list[FrameData]] = field(default_factory=dict)
+    frames_by_driver: dict[str, DriverFrames] = field(default_factory=dict)
     driver_colors: dict[str, tuple[int, int, int]] = field(default_factory=dict)
     min_lap_number: int = 1
     max_lap_number: int = 0
@@ -158,6 +297,26 @@ class SessionData:
     # and read by nothing. Empty dict means an older cache or a results
     # table FastF1 could not deliver.
     official_status: dict[str, str] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Accept a list of frames per driver and hold it as columns.
+
+        The loader hands columns straight in, so this is a no-op on the path
+        that matters. It exists for every other producer: a caller that
+        assembles a race by hand keeps writing `frames_by_driver={"NOR": [...]}`
+        and gets the columnar form without knowing about it, which is why the
+        change of representation needed no edit to any fixture.
+
+        This does NOT run when a session is unpickled, because pickle restores
+        `__dict__` directly instead of calling the constructor. A cache written
+        before `v18` therefore comes back holding the lists it was written with,
+        which is harmless: `load` compares `version` before anything reads a
+        frame, and an older tag sends it to a rebuild.
+        """
+        self.frames_by_driver = {
+            code: frames if isinstance(frames, DriverFrames) else DriverFrames.from_frames(frames)
+            for code, frames in self.frames_by_driver.items()
+        }
 
 
 def _pedal_multiplier(results: list[dict], channel: str) -> float:
@@ -326,19 +485,21 @@ def _nearest_sample(t: np.ndarray, timeline: np.ndarray) -> np.ndarray:
 
 # The eight forward gears plus neutral, and the validity test is ONE-SIDED because
 # 0 is a real reading rather than a sentinel: `session.car_data` for Melbourne 2025
-# carries 202,509 of them across the 20 drivers, and the PITWALL GEAR lane's [0, 9]
+# carries 315,550 of them across the 20 drivers, and the PITWALL GEAR lane's [0, 9]
 # range renders it.
 #
-# **None of them reaches a replay, and that is a property of the DATA, not a filter
-# here.** Every one of those 202,509 samples falls OUTSIDE every lap window: the
-# cars are stationary in the garage and on the grid, before lap 1 starts at 00:56:06
-# session time, while the laps run to 02:19:37. `_process_driver_data` reads
-# `lap.get_telemetry()`, so it only ever sees samples inside a lap, and across all
-# 1,059 laps of this race not one carries gear 0. Measured 2026-08-26 (#1094).
+# **Most of them never reach a replay, and that is a property of the DATA rather
+# than of a filter here.** The cars are stationary in the garage and on the grid,
+# outside every lap window, so the extraction never sees those samples. What does
+# reach a replay is a car stationary INSIDE a lap: Melbourne 2025 serves 1,400
+# gear-0 samples, 862 of them HAD's entire lap 1 and 506 of them DOO's.
 #
-# So a replay of this race legitimately serves no neutral frame. Do NOT widen the
-# predicate below to `< 1` on the strength of that: the reading is real, other
-# sessions can put a stationary car inside a lap window, and one-sided is the rule.
+# Do NOT widen the predicate below to `< 1`: the reading is real, a stationary car
+# inside a lap window is exactly the case that produces it, and one-sided is the
+# rule. An earlier version of this comment said no lap of the race carried gear 0
+# and put the session between 00:56:06 and 02:19:37. Both came from the pickle
+# labelled Melbourne that held Suzuka (#1119), whose race is 1h23 long against
+# Melbourne's 1h43. Re-measured on both extraction paths 2026-09-04 (#1094, #1121).
 def _concat_sorted_by_time(arrays: dict[str, list[np.ndarray]]) -> dict[str, np.ndarray]:
     """Flatten the per-lap arrays into one time-ordered block per channel.
 
@@ -432,18 +593,60 @@ def _drop_impossible_gears(gears: np.ndarray) -> np.ndarray:
     return repaired.ffill().bfill().to_numpy()
 
 
+def _merge_driver_channels(laps_driver) -> "fastf1.core.Telemetry | None":
+    """Position and car data for one driver, merged and integrated ONCE (#1121).
+
+    `Lap.get_telemetry()` does this per lap, and 5.29 s of the 6.6 s a driver
+    costs is the `add_driver_ahead()` it runs 57 times to produce `DriverAhead`
+    and `DistanceToDriverAhead`, two channels `_process_driver_data` never
+    reads. Doing the merge once and skipping that call is where the saving is.
+
+    Returns None when a driver has no usable position or car data, which the
+    caller treats the same way it treats an empty lap set.
+
+    --- WHERE TO CHANGE IF THIS CHANGES ---
+    The per-lap windows are still cut afterwards by `slice_by_lap`, so
+    `_concat_sorted_by_time` keeps its boundary ties and `_nearest_sample`
+    keeps its `<=` tie-break. Switching to `Laps.get_telemetry()` would drop
+    both: it interpolates an edge sample only at the driver's first lap start
+    and last lap end, so no sample sits on an internal lap line, the lap
+    increments up to eleven frames off, and 754 of 1,063 crossings move.
+    Measured on Lusail 2025: 5,343 of 129,084 served frames change the
+    leaderboard order and 736 change the leader.
+    """
+    try:
+        pos = laps_driver.get_pos_data(pad=1, pad_side="both")
+        car = laps_driver.get_car_data(pad=1, pad_side="both").add_distance()
+        merged = pos.merge_channels(car)
+    except (KeyError, ValueError, AttributeError):
+        return None
+    if merged is None or merged.empty:
+        return None
+    return merged
+
+
 def _process_driver_data(args: tuple) -> dict | None:
-    """Module-level worker: iterate a driver's laps and flatten telemetry.
+    """Module-level worker: flatten one driver's telemetry, lap by lap.
 
     Must stay at module scope so `multiprocessing.Pool` can pickle it by
-    qualified name on Windows spawn. Mirrors the reference per-driver loop
-    but actually increments the race-distance accumulator each lap."""
+    qualified name on Windows spawn.
+
+    The channels are merged once for the whole driver and then sliced per lap,
+    so `dist` is FastF1's own continuous race distance rather than a sum of
+    per-lap distances. The old accumulator dropped the span between a lap's
+    last sample and the line crossing, and re-deriving it over once-integrated
+    windows was measured and is worse: it reorders 106 served frames against
+    continuous distance's 87, and moves the leader on the grid frames."""
 
     driver_no, session, driver_code = args
     _enable_fastf1_cache()
 
     laps_driver = session.laps.pick_drivers(driver_no)
     if laps_driver.empty:
+        return None
+
+    merged = _merge_driver_channels(laps_driver)
+    if merged is None:
         return None
 
     arrays: dict[str, list[np.ndarray]] = {
@@ -463,12 +666,11 @@ def _process_driver_data(args: tuple) -> dict | None:
             "tyre_life",
         )
     }
-    total_dist_so_far = 0.0
     max_lap = 0
 
     for _, lap in laps_driver.iterlaps():
         try:
-            tel = lap.get_telemetry()
+            tel = merged.slice_by_lap(lap, interpolate_edges=True)
         except (KeyError, ValueError, AttributeError):
             continue
         if tel is None or tel.empty:
@@ -487,15 +689,17 @@ def _process_driver_data(args: tuple) -> dict | None:
         thr = tel["Throttle"].to_numpy().astype(float) if "Throttle" in tel.columns else np.zeros(n)
         brk = tel["Brake"].to_numpy().astype(float) if "Brake" in tel.columns else np.zeros(n)
 
-        d_lap = (
-            tel["Distance"].to_numpy().astype(float) if "Distance" in tel.columns else np.zeros(n)
-        )
+        # Continuous already: `add_distance()` integrated the whole driver span
+        # once, so the window carries race distance rather than lap distance and
+        # there is nothing to accumulate.
+        #
         # FastF1's `RelativeDistance` is deliberately NOT collected. The
         # resampler stopped consuming it when the fraction became a
         # derivation over the driver's own distance; extracting it was
         # three lines of work per lap per driver feeding nothing.
-        race_dist = total_dist_so_far + d_lap
-        total_dist_so_far += float(d_lap[-1]) if n else 0.0
+        race_dist = (
+            tel["Distance"].to_numpy().astype(float) if "Distance" in tel.columns else np.zeros(n)
+        )
 
         lap_no = int(lap.LapNumber) if not pd.isna(lap.LapNumber) else 0
         max_lap = max(max_lap, lap_no)
@@ -540,6 +744,35 @@ class SessionLoader:
         self.cache_dir = cache_dir
         self.pool_size = pool_size
 
+    @staticmethod
+    def _read_cache(cache_path: Path) -> SessionData:
+        """Unpickle one cache file, with the collector held off for the read.
+
+        The generational collector walks the container being filled, and a
+        session holds twenty arrays per driver that cannot become garbage while
+        the load runs, so walking them buys nothing. The guard was worth 15-34%
+        when the payload was 2.5 million `FrameData`; on the columnar payload
+        there is far less for the collector to find, and it is kept because the
+        read is still the largest allocation the arcade makes.
+
+        Args:
+            cache_path: the pickle to read, which the caller has checked exists.
+
+        Returns:
+            Whatever the file holds, with its `version` unread. Callers compare
+            that against `CACHE_VERSION` themselves.
+
+        Raises:
+            pickle.PickleError, EOFError, AttributeError: the file is not a
+                readable session, which the caller treats as a cache miss.
+        """
+        with cache_path.open("rb") as handle:
+            gc.disable()
+            try:
+                return pickle.load(handle)
+            finally:
+                gc.enable()
+
     def load(self, year: int, round_: int, gp_name: str) -> SessionData:
         """Fetch a race session, resample every driver to 25 Hz, and cache."""
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -547,16 +780,7 @@ class SessionLoader:
 
         if cache_path.exists():
             try:
-                with cache_path.open("rb") as f:
-                    # The generational collector walks the container it is in
-                    # the middle of filling, and this one ends up holding ~2.5
-                    # million FrameData objects, so it walks them repeatedly for
-                    # nothing: none of them can be garbage while the load runs.
-                    gc.disable()
-                    try:
-                        sd: SessionData = pickle.load(f)
-                    finally:
-                        gc.enable()
+                sd = self._read_cache(cache_path)
                 if sd.version == CACHE_VERSION:
                     logger.info(
                         "Loaded session from cache: %s (%s %d)",
@@ -616,7 +840,7 @@ class SessionLoader:
         official_status = self._extract_official_status(session, driver_codes)
 
         has_position = {
-            code: bool(len(frames)) and frames[-1].dist > frames[0].dist
+            code: bool(len(frames)) and frames.dist[-1] > frames.dist[0]
             for code, frames in frames_by_driver.items()
         }
 
@@ -673,10 +897,12 @@ class SessionLoader:
     def _process_all_drivers(
         self, session: Any, driver_nums: list, driver_codes: dict
     ) -> list[dict | None]:
-        # Serial by default: pickling a fully-loaded FastF1 session across N
-        # Windows spawn workers is heavy and has hung in prior sessions. Set
-        # `pool_size > 1` explicitly to opt into parallel extraction once the
-        # FastF1 cache is warm.
+        # Serial by default. The hang this comment used to assert is not
+        # established: the load audit went looking and could not reproduce it,
+        # and `config.POOL_SIZE` records the same correction. What is true is
+        # that pickling a fully-loaded FastF1 session across N Windows spawn
+        # workers is heavy and that raising the count has never been measured
+        # as a win. Set `pool_size > 1` explicitly to opt into it.
         args = [(n, session, driver_codes[n]) for n in driver_nums]
         if self.pool_size <= 1:
             return self._process_serial(args)
@@ -706,11 +932,11 @@ class SessionLoader:
         timeline: np.ndarray,
         global_t_min: float,
         circuit_length_m: float,
-    ) -> dict[str, list[FrameData]]:
+    ) -> dict[str, DriverFrames]:
         # Pedal scales are decided ONCE for the session, not per frame. See
         # `_pedal_multiplier`.
         multipliers = {name: _pedal_multiplier(results, name) for name in ("throttle", "brake")}
-        out: dict[str, list[FrameData]] = {}
+        out: dict[str, DriverFrames] = {}
         for r in results:
             t = r["data"]["t"] - global_t_min
             t_max_local = r["t_max"] - global_t_min
@@ -727,7 +953,7 @@ class SessionLoader:
         t_max_local: float,
         pedal_multipliers: dict[str, float],
         circuit_length_m: float,
-    ) -> list[FrameData]:
+    ) -> DriverFrames:
         cont = {k: np.interp(timeline, t, data[k]) for k in ("x", "y", "speed", "throttle", "dist")}
         nearest = _nearest_sample(t, timeline)
         disc = {k: data[k][nearest] for k in ("gear", "drs", "lap", "tyre", "brake", "tyre_life")}
@@ -745,28 +971,26 @@ class SessionLoader:
         cont["dist"] = np.maximum.accumulate(cont["dist"])
         lap_numbers = np.maximum(1, disc["lap"].astype(int))
         rel_dist = _lap_fraction_from_distance(cont["dist"], lap_numbers, circuit_length_m)
-        frames: list[FrameData] = []
-        for i, ti in enumerate(timeline):
-            active = ti <= t_max_local
-            frames.append(
-                FrameData(
-                    t=float(ti),
-                    x=float(cont["x"][i]),
-                    y=float(cont["y"][i]),
-                    speed=float(cont["speed"][i]),
-                    gear=int(disc["gear"][i]),
-                    drs=int(disc["drs"][i]),
-                    throttle=float(cont["throttle"][i]),
-                    brake=float(disc["brake"][i]),
-                    lap=int(lap_numbers[i]),
-                    dist=float(cont["dist"][i]),
-                    rel_dist=float(rel_dist[i]),
-                    tyre=int(disc["tyre"][i]),
-                    tyre_life=float(disc["tyre_life"][i]),
-                    active=active,
-                )
-            )
-        return frames
+        # Every channel is already an array here, so the columns ARE these. The
+        # loop this replaced boxed all fourteen into one `FrameData` per sample
+        # and cost 12.7 s per race on top of the 8.7 s `pickle.dump` then spent
+        # writing the objects out.
+        return DriverFrames(
+            t=timeline,
+            x=cont["x"],
+            y=cont["y"],
+            speed=cont["speed"],
+            gear=disc["gear"].astype(np.int64),
+            drs=disc["drs"].astype(np.int64),
+            throttle=cont["throttle"],
+            brake=disc["brake"],
+            lap=lap_numbers.astype(np.int64),
+            dist=cont["dist"],
+            rel_dist=rel_dist,
+            tyre=disc["tyre"].astype(np.int64),
+            tyre_life=disc["tyre_life"].astype(np.float64),
+            active=timeline <= t_max_local,
+        )
 
     def _resolve_driver_colors(
         self, session: Any, driver_codes: dict

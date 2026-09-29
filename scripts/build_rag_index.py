@@ -16,7 +16,7 @@ PDF naming convention (required):
     e.g.  sporting_regs_2025.pdf   technical_regs_2024.pdf
 
 Supported doc_types : sporting_regs, technical_regs
-Supported years     : 2023, 2024, 2025
+Supported years     : 2023, 2024, 2025, 2026
 """
 
 from __future__ import annotations
@@ -28,13 +28,23 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterator
+from typing import TYPE_CHECKING, Iterator
 
-import numpy as np
-import pypdf
-from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, PointStruct, VectorParams
-from sentence_transformers import SentenceTransformer
+if TYPE_CHECKING:
+    import numpy as np
+    from qdrant_client import QdrantClient
+    from sentence_transformers import SentenceTransformer
+
+from src.rag.index_manifest import (
+    CHUNKER_VERSION,
+    ManifestDocument,
+    build_manifest,
+    manifest_path,
+    sha256_file,
+    write_manifest,
+)
+
+LEGACY_CHUNKER_VERSION = "sliding_window_v1"
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -58,12 +68,14 @@ class IndexConfig:
         embedding_dim:    Output vector size of the embedding model. BGE-M3 produces
                           1024-dim vectors; changing the model requires updating this
                           value or Qdrant will reject the upsert silently.
-        chunk_size:       Sliding window size in characters. 512 chars ≈ 80–120 words,
-                          fitting comfortably inside BGE-M3's 512-token limit while
-                          keeping each chunk semantically coherent (one or two articles).
-        chunk_overlap:    Characters repeated at the start of each new window so that
-                          sentences at chunk boundaries appear complete in at least one
-                          chunk and are not truncated mid-article.
+        chunk_size:       Soft target size in characters. Article clauses stay intact
+                          even when one is longer than this target, because splitting a
+                          condition from its rule changes the regulation. 512 chars is
+                          roughly 80-120 words, or 100-170 bge-m3 tokens, so a chunk
+                          occupies a small fraction of the model's 8192-token window.
+        chunk_overlap:    Maximum characters of complete clauses repeated at the start
+                          of a new chunk. A clause larger than this is not split merely
+                          to manufacture overlap.
         embed_batch_size: Number of chunks embedded in a single encoder call. Larger
                           batches saturate the GPU better but consume more VRAM; 64 is
                           a safe default for an 8 GB card with BGE-M3.
@@ -152,10 +164,10 @@ class TextChunk:
         year:          Inherited from the parent ``PDFDocument``. Determines
                        which season's rules apply, critical when regulations
                        changed between years (e.g. cost-cap rules 2023 vs 2025).
-        article:       Article or section reference extracted by regex from the
-                       chunk text (e.g. ``"Article 48.3"``). Empty string when
-                       no reference is found. Stored in the Qdrant payload so
-                       the LLM can cite the exact article without re-parsing.
+        article:       Article reference inherited from the containing heading
+                       (e.g. ``"Article 48.3"``). Empty string when the source
+                       has no identifiable heading. It is never inferred from a
+                       cross-reference inside the clause.
         section_title: Nearest section heading found above this chunk in the
                        document, when available. Provides coarse context about
                        which part of the regulations the chunk belongs to.
@@ -209,6 +221,8 @@ def extract_text_from_pdf(path: Path) -> str:
         path: Path to the PDF file to read. Raises ``FileNotFoundError`` if
               the file does not exist: callers should validate the path first.
     """
+    import pypdf
+
     reader = pypdf.PdfReader(str(path))
     pages = [page.extract_text() or "" for page in reader.pages]
     return "\n".join(pages)
@@ -249,7 +263,64 @@ def load_pdf_documents(docs_dir: Path) -> list[PDFDocument]:
 # Text cleaning + chunking
 # ---------------------------------------------------------------------------
 
-_ARTICLE_RE = re.compile(r"Article\s+\d+[\.\d]*", re.IGNORECASE)
+_ARTICLE_HEADING_RE = re.compile(
+    r"(?m)^[ \t]*(?P<number>(?:B\d+|\d+)(?:\.\d+)*)(?:[ \t]+)"
+    r"(?P<title>[A-Za-z0-9][^\n]*?)\s*$"
+)
+_APPENDIX_HEADING_RE = re.compile(r"(?mi)^[ \t]*(?P<title>APPENDIX\s+\d+)\s*$")
+_CLAUSE_START_RE = re.compile(r"(?m)^[ \t]*(?:[a-hj-uw-z][.)])[ \t]+")
+_SENTENCE_BOUNDARY_RE = re.compile(r"(?<=[.!?])(?=\s+[A-Z0-9])")
+_CONDITION_MARKER_RE = re.compile(
+    r"\b(?:if|unless|except|only when|at such times|under such circumstances|provided)\b",
+    re.IGNORECASE,
+)
+_RULE_STARTERS = {
+    "a",
+    "an",
+    "any",
+    "all",
+    "at",
+    "after",
+    "before",
+    "during",
+    "each",
+    "except",
+    "for",
+    "from",
+    "if",
+    "in",
+    "no",
+    "on",
+    "once",
+    "other",
+    "should",
+    "subject",
+    "the",
+    "unless",
+    "upon",
+    "when",
+    "whilst",
+    "with",
+}
+_MONTH_NAMES = {
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+}
+_MAX_ATOMIC_RULE_SIZE = 8192
+_PAGE_METADATA_RE = re.compile(
+    r"(?:formula\s+1\s*:?\s+sporting\s+regulations|©|\d+/\d+)",
+    re.IGNORECASE,
+)
 _SECTION_HEAD_RE = re.compile(r"^\s{0,4}(\d+[\.\d]*\s+[A-Z][A-Z\s]{4,})\s*$", re.MULTILINE)
 
 
@@ -270,36 +341,194 @@ def clean_text(text: str) -> str:
 
 
 def extract_article_reference(text: str) -> str:
-    """Find the first FIA article reference in a chunk of text.
+    """Return the article declared by a heading in ``text``.
 
-    Searches for patterns like ``Article 48``, ``Article 48.3``, or
-    ``ARTICLE 28.6`` (case-insensitive). Returns only the first match because
-    a 512-character chunk rarely spans more than one article, and having a
-    single authoritative reference is more useful for citation than a list.
-    Returns an empty string when no reference is found so the field is always
-    a valid string and never ``None``.
+    A reference inside a clause may point to a different article, so it cannot
+    identify the clause's owner. This helper therefore only accepts a numbered
+    section heading. ``iter_chunks`` passes the containing heading directly and
+    does not fall back to references found in clause text.
 
     Args:
         text: The regulation chunk to search. Typically 512 characters but can
               be shorter for the last chunk of a document section.
     """
-    match = _ARTICLE_RE.search(text)
-    return " ".join(match.group(0).strip().split()) if match else ""
+    for match in _ARTICLE_HEADING_RE.finditer(text):
+        metadata = _article_heading_metadata(match)
+        if metadata is not None:
+            return metadata[0]
+    return ""
 
 
 def extract_section_title(text: str) -> str:
-    """Find the nearest section heading inside a chunk of text.
+    """Return the first valid numbered FIA heading found in ``text``.
 
-    Matches lines that look like numbered section headings in FIA documents:
-    a number followed by all-caps words, e.g. ``"48 SAFETY CAR PROCEDURE"``.
-    Returns the first match found, or an empty string when none is present.
-    This is a best-effort heuristic: not every chunk will have a heading.
+    The heading is preserved as metadata and as a prefix in every chunk from
+    that article, so a retrieved clause remains understandable on its own.
 
     Args:
         text: The regulation chunk to search.
     """
+    for match in _ARTICLE_HEADING_RE.finditer(text):
+        metadata = _article_heading_metadata(match)
+        if metadata is not None:
+            return metadata[1]
     match = _SECTION_HEAD_RE.search(text)
     return match.group(1).strip() if match else ""
+
+
+def _article_heading_metadata(match: re.Match[str]) -> tuple[str, str] | None:
+    """Normalise a numbered rule heading, rejecting repeated PDF page metadata."""
+    number = match.group("number")
+    title = " ".join(match.group("title").split())
+    line = f"{number} {title}"
+    first_word_match = re.match(r"[A-Za-z]+", title)
+    first_word = first_word_match.group(0).casefold() if first_word_match else ""
+    major_number = re.sub(r"^B", "", number.split(".", 1)[0])
+    if (
+        int(major_number) >= 1000
+        or len(title) < 3
+        or first_word in _MONTH_NAMES
+        or re.fullmatch(r"\d+(?:\s+\d+)+", title)
+        or _PAGE_METADATA_RE.search(line)
+    ):
+        return None
+    return f"Article {number}", line
+
+
+def _is_structural_heading(section_title: str) -> bool:
+    """Tell a short article heading from a numbered rule sentence."""
+    _, _, title = section_title.partition(" ")
+    first_word_match = re.match(r"[A-Za-z]+", title)
+    first_word = first_word_match.group(0).casefold() if first_word_match else ""
+    return (
+        first_word_match is not None
+        and len(title) <= 80
+        and title[-1:] not in ".!?:;"
+        and first_word not in _RULE_STARTERS
+    )
+
+
+def _iter_article_sections(text: str) -> Iterator[tuple[str, str, str]]:
+    """Yield ``(article, heading, body)`` sections from cleaned PDF text."""
+    article_headings = [
+        (match, metadata)
+        for match in _ARTICLE_HEADING_RE.finditer(text)
+        if (metadata := _article_heading_metadata(match)) is not None
+    ]
+    appendix_headings = list(_APPENDIX_HEADING_RE.finditer(text))
+    first_appendix = appendix_headings[0].start() if appendix_headings else len(text)
+    headings = [heading for heading in article_headings if heading[0].start() < first_appendix]
+    headings.extend(
+        (match, ("", " ".join(match.group("title").split()))) for match in appendix_headings
+    )
+    headings.sort(key=lambda item: item[0].start())
+
+    if not headings:
+        yield "", "", text.strip()
+        return
+
+    first_match = headings[0][0]
+    preamble = text[: first_match.start()].strip()
+    if preamble:
+        yield "", "", preamble
+
+    for index, (match, metadata) in enumerate(headings):
+        next_start = headings[index + 1][0].start() if index + 1 < len(headings) else len(text)
+        body = text[match.end() : next_start].strip()
+        yield metadata[0], metadata[1], body
+
+
+def _split_long_block(
+    text: str,
+    chunk_size: int,
+    preserve_condition: bool = True,
+) -> list[str]:
+    """Split oversized non-conditional prose without cutting a word."""
+    text = text.strip()
+    if len(text) <= chunk_size or (preserve_condition and _CONDITION_MARKER_RE.search(text)):
+        return [text] if text else []
+
+    pieces = [part.strip() for part in re.split(r"(?<=[.!?])(?=\s+)|(?=\n)", text) if part.strip()]
+    if len(pieces) == 1:
+        pieces = [part.strip() for part in text.splitlines() if part.strip()]
+    return pieces or [text]
+
+
+def _split_clause_blocks(
+    text: str,
+    chunk_size: int,
+    preserve_condition: bool = True,
+    split_clauses: bool = True,
+) -> list[str]:
+    """Split an article at clause markers without splitting a clause's sentences."""
+    if not split_clauses:
+        if preserve_condition and len(text) <= _MAX_ATOMIC_RULE_SIZE:
+            return [text.strip()] if text.strip() else []
+        return _split_long_block(text, chunk_size, preserve_condition=False)
+
+    markers = list(_CLAUSE_START_RE.finditer(text))
+    if not markers:
+        sentences = [part.strip() for part in _SENTENCE_BOUNDARY_RE.split(text) if part.strip()]
+        return [
+            piece
+            for sentence in sentences
+            for piece in _split_long_block(
+                sentence, chunk_size, preserve_condition=preserve_condition
+            )
+        ]
+
+    blocks: list[str] = []
+    preamble = text[: markers[0].start()].strip()
+    if preamble:
+        blocks.extend(
+            _split_long_block(preamble, chunk_size, preserve_condition=preserve_condition)
+        )
+    for index, marker in enumerate(markers):
+        end = markers[index + 1].start() if index + 1 < len(markers) else len(text)
+        block = text[marker.start() : end].strip()
+        if block:
+            blocks.extend(
+                _split_long_block(block, chunk_size, preserve_condition=preserve_condition)
+            )
+    return blocks
+
+
+def _pack_clause_blocks(
+    blocks: list[str],
+    chunk_size: int,
+    chunk_overlap: int,
+) -> Iterator[str]:
+    """Pack complete clauses into chunks, retaining whole-clause overlap."""
+    start = 0
+    while start < len(blocks):
+        current: list[str] = []
+        current_size = 0
+        end = start
+        while end < len(blocks):
+            block = blocks[end]
+            candidate_size = current_size + len(block) + (2 if current else 0)
+            if current and candidate_size > chunk_size:
+                break
+            current.append(block)
+            current_size = candidate_size
+            end += 1
+
+        yield "\n\n".join(current).strip()
+        if end == len(blocks):
+            return
+
+        next_start = end
+        overlap_size = 0
+        while next_start > start and chunk_overlap:
+            block = blocks[next_start - 1]
+            separator_size = 2 if overlap_size else 0
+            if overlap_size + separator_size + len(block) > chunk_overlap:
+                break
+            overlap_size += separator_size + len(block)
+            next_start -= 1
+        # A first chunk cannot overlap itself. Without this guard a short first
+        # clause would reset ``start`` to zero and repeat forever.
+        start = end if next_start == start else next_start
 
 
 def compute_hash(text: str) -> str:
@@ -324,45 +553,54 @@ def iter_chunks(
     chunk_size: int | None = None,
     chunk_overlap: int | None = None,
 ) -> Iterator[TextChunk]:
-    """Yield overlapping text chunks from a ``PDFDocument``.
+    """Yield article-aware chunks from a ``PDFDocument``.
 
-    Uses a sliding window over the cleaned document text. The overlap ensures
-    that regulation sentences which fall at a chunk boundary appear in full in
-    at least one chunk, preventing the retriever from returning a truncated
-    article mid-sentence. Each chunk carries its own article reference and
-    section title extracted by regex so retrieval results are self-contained.
+    The source is first separated by numbered article headings and then by
+    clause markers such as ``n)`` and ``o)``. Complete clauses are the atomic
+    unit, so a condition and the rule it qualifies cannot be separated by a
+    character window. A clause may exceed ``chunk_size`` when that is necessary
+    to preserve its meaning.
 
     Args:
         document:      The source document to chunk. Its ``doc_type`` and
                        ``year`` are inherited by every produced chunk.
-        chunk_size:    Window size in characters. Smaller windows give more
+        chunk_size:    Soft target size in characters. Smaller targets give more
                        precise retrieval but require more Qdrant storage and
-                       more embedding calls; 512 chars is a good default.
-        chunk_overlap: Number of characters to repeat at the start of each
-                       new window. Must be smaller than ``chunk_size``.
+                       more embedding calls; 512 chars is a useful default.
+        chunk_overlap: Maximum number of characters of complete clauses to repeat
+                       at the start of a new chunk. Must be smaller than
+                       ``chunk_size``.
     """
-    chunk_size = chunk_size or CFG.chunk_size
-    chunk_overlap = chunk_overlap or CFG.chunk_overlap
+    chunk_size = CFG.chunk_size if chunk_size is None else chunk_size
+    chunk_overlap = CFG.chunk_overlap if chunk_overlap is None else chunk_overlap
+    if chunk_size <= 0:
+        raise ValueError("chunk_size must be positive")
+    if chunk_overlap < 0 or chunk_overlap >= chunk_size:
+        raise ValueError("chunk_overlap must be non-negative and smaller than chunk_size")
 
     text = clean_text(document.text)
-    start = 0
-    stride = chunk_size - chunk_overlap
-
-    while start < len(text):
-        end = min(start + chunk_size, len(text))
-        chunk_text = text[start:end].strip()
-
-        if chunk_text:
+    for article, section_title, body in _iter_article_sections(text):
+        blocks = _split_clause_blocks(
+            body,
+            chunk_size,
+            preserve_condition=bool(article),
+            split_clauses=_is_structural_heading(section_title),
+        )
+        if not blocks and section_title:
+            blocks = [""]
+        for chunk_text in _pack_clause_blocks(blocks, chunk_size, chunk_overlap):
+            if not chunk_text and not section_title:
+                continue
+            if section_title:
+                chunk_text = f"{section_title}\n{chunk_text}" if chunk_text else section_title
             yield TextChunk(
                 text=chunk_text,
                 doc_type=document.doc_type,
                 year=document.year,
-                article=extract_article_reference(chunk_text),
-                section_title=extract_section_title(chunk_text),
+                article=article,
+                section_title=section_title,
                 chunk_hash=compute_hash(chunk_text),
             )
-
-        start += stride
 
 
 # ---------------------------------------------------------------------------
@@ -386,6 +624,8 @@ def ensure_collection(client: QdrantClient, name: str, dim: int) -> None:
         dim:    Embedding dimension. Must match the output size of the model
                 used during indexing: mismatches cause silent wrong results.
     """
+    from qdrant_client.models import Distance, VectorParams
+
     existing = {c.name for c in client.get_collections().collections}
     if name not in existing:
         client.create_collection(
@@ -430,6 +670,114 @@ def get_existing_hashes(client: QdrantClient, name: str) -> set[str]:
         offset = next_offset
 
     return hashes
+
+
+def _collection_vector_size(collection_info: object) -> int:
+    """Read the single-vector dimension from Qdrant's collection metadata."""
+    vectors = collection_info.config.params.vectors  # type: ignore[attr-defined]
+    size = getattr(vectors, "size", None)
+    if size is None:
+        raise RuntimeError("Qdrant collection does not expose a single vector size")
+    return int(size)
+
+
+def _indexed_years(client: QdrantClient, name: str) -> set[int]:
+    """Collect years from payloads without loading vectors into memory."""
+    years: set[int] = set()
+    offset = None
+    while True:
+        points, next_offset = client.scroll(
+            collection_name=name,
+            scroll_filter=None,
+            limit=1000,
+            offset=offset,
+            with_payload=["year"],
+            with_vectors=False,
+        )
+        years.update(int(point.payload["year"]) for point in points if point.payload.get("year"))
+        if next_offset is None:
+            return years
+        offset = next_offset
+
+
+def _legacy_sliding_hashes(document: PDFDocument) -> set[str]:
+    """Reproduce the pre-article-aware 512/64 chunk hashes for provenance checks."""
+    text = clean_text(document.text)
+    stride = CFG.chunk_size - CFG.chunk_overlap
+    return {
+        compute_hash(text[start : min(start + CFG.chunk_size, len(text))].strip())
+        for start in range(0, len(text), stride)
+        if text[start : min(start + CFG.chunk_size, len(text))].strip()
+    }
+
+
+def _detect_chunker(
+    documents: list[PDFDocument],
+    indexed_years: set[int],
+    indexed_hashes: set[str],
+) -> tuple[str, bool]:
+    """Identify the current or legacy chunker from stored payload hashes."""
+    if not indexed_hashes:
+        return "empty", False
+
+    source_documents = [document for document in documents if document.year in indexed_years]
+    current_hashes = {
+        chunk.chunk_hash for document in source_documents for chunk in iter_chunks(document)
+    }
+    if indexed_hashes == current_hashes:
+        return CHUNKER_VERSION, True
+
+    legacy_hashes = {
+        chunk_hash
+        for document in source_documents
+        for chunk_hash in _legacy_sliding_hashes(document)
+    }
+    if indexed_hashes == legacy_hashes:
+        return LEGACY_CHUNKER_VERSION, True
+    return "unknown", False
+
+
+def write_index_manifest(
+    client: QdrantClient,
+    documents: list[PDFDocument],
+    qdrant_path: Path,
+    indexed_hashes: set[str] | None = None,
+) -> Path:
+    """Write corpus and collection metadata without loading the embedding model."""
+    collection_info = client.get_collection(CFG.collection_name)
+    point_count = int(collection_info.points_count or 0)
+    indexed_years = _indexed_years(client, CFG.collection_name)
+    indexed_hashes = (
+        get_existing_hashes(client, CFG.collection_name)
+        if indexed_hashes is None
+        else indexed_hashes
+    )
+    chunker, chunking_verified = _detect_chunker(documents, indexed_years, indexed_hashes)
+    manifest = build_manifest(
+        collection_name=CFG.collection_name,
+        embedding_model=CFG.embedding_model,
+        embedding_dim=CFG.embedding_dim,
+        distance="Cosine",
+        chunker=chunker,
+        chunking_verified=chunking_verified,
+        chunk_size=CFG.chunk_size,
+        chunk_overlap=CFG.chunk_overlap,
+        documents=(
+            ManifestDocument(
+                filename=document.path.name,
+                doc_type=document.doc_type,
+                year=document.year,
+                sha256=sha256_file(document.path),
+            )
+            for document in documents
+        ),
+        indexed_years=indexed_years,
+        point_count=point_count,
+    )
+    path = manifest_path(Path(qdrant_path).parent)
+    write_manifest(path, manifest)
+    log.info("Wrote index manifest %s (%d points)", path, point_count)
+    return path
 
 
 # ---------------------------------------------------------------------------
@@ -492,6 +840,8 @@ def upsert_chunks(
     Returns:
         Number of points successfully upserted.
     """
+    from qdrant_client.models import PointStruct
+
     points = [
         PointStruct(
             id=id_offset + i,
@@ -520,6 +870,7 @@ def build_index(
     docs_dir: Path | None = None,
     qdrant_path: Path | None = None,
     force_rebuild: bool = False,
+    manifest_only: bool = False,
 ) -> None:
     """Orchestrate the full PDF → Qdrant pipeline.
 
@@ -534,9 +885,12 @@ def build_index(
         qdrant_path:   On-disk Qdrant storage directory. Created automatically
                        if it does not exist.
         force_rebuild: When ``True``, deletes and recreates the collection before
-                       indexing so all chunks are re-embedded from scratch. Use
-                       this when the embedding model changes or the chunking
-                       parameters are modified.
+                         indexing so all chunks are re-embedded from scratch. Use
+                         this when the embedding model changes or the chunking
+                         parameters are modified.
+        manifest_only: When ``True``, inspect the existing collection and PDFs and
+                       write ``data/rag/index_manifest.json`` without loading the
+                       embedding model or changing Qdrant points.
     """
     docs_dir = docs_dir or CFG.docs_dir
     qdrant_path = qdrant_path or CFG.qdrant_path
@@ -546,23 +900,40 @@ def build_index(
         sys.exit(1)
 
     qdrant_path.mkdir(parents=True, exist_ok=True)
+    from qdrant_client import QdrantClient
+
     client = QdrantClient(path=str(qdrant_path))
-    encoder = SentenceTransformer(CFG.embedding_model)
+    manifest_file = manifest_path(qdrant_path.parent)
+    existing_collections = {item.name for item in client.get_collections().collections}
+
+    if manifest_only and force_rebuild:
+        raise ValueError("--manifest-only cannot be combined with --force-rebuild")
 
     if force_rebuild:
-        existing = {c.name for c in client.get_collections().collections}
-        if CFG.collection_name in existing:
+        manifest_file.unlink(missing_ok=True)
+        if CFG.collection_name in existing_collections:
             client.delete_collection(CFG.collection_name)
             log.info("Deleted existing collection '%s' (--force-rebuild)", CFG.collection_name)
 
-    ensure_collection(client, CFG.collection_name, CFG.embedding_dim)
-    existing_hashes = get_existing_hashes(client, CFG.collection_name)
-    log.info("Existing indexed chunks: %d", len(existing_hashes))
+    if manifest_only:
+        if CFG.collection_name not in existing_collections:
+            raise RuntimeError(
+                f"Cannot write a manifest: Qdrant collection '{CFG.collection_name}' is missing"
+            )
+    else:
+        ensure_collection(client, CFG.collection_name, CFG.embedding_dim)
 
     documents = load_pdf_documents(docs_dir)
     if not documents:
         log.error("No valid PDFs loaded — check naming convention")
         sys.exit(1)
+
+    if manifest_only:
+        write_index_manifest(client, documents, qdrant_path)
+        return
+
+    existing_hashes = get_existing_hashes(client, CFG.collection_name)
+    log.info("Existing indexed chunks: %d", len(existing_hashes))
 
     # Counted in the same pass that collects them. The skipped total used to come
     # from a second `iter_chunks` over every document, which re-ran the sliding
@@ -580,9 +951,13 @@ def build_index(
     log.info("New chunks to index: %d  |  skipped (already indexed): %d", len(all_chunks), skipped)
 
     if not all_chunks:
+        write_index_manifest(client, documents, qdrant_path, indexed_hashes=existing_hashes)
         log.info("Nothing to do — index is up to date")
         return
 
+    from sentence_transformers import SentenceTransformer
+
+    encoder = SentenceTransformer(CFG.embedding_model)
     log.info("Embedding %d chunks with '%s'...", len(all_chunks), CFG.embedding_model)
     embeddings = embed_chunks(all_chunks, encoder)
 
@@ -591,6 +966,8 @@ def build_index(
 
     total = client.get_collection(CFG.collection_name).points_count or 0
     log.info("Done. Upserted: %d  |  Total in collection: %d", n_upserted, total)
+    final_hashes = existing_hashes | {chunk.chunk_hash for chunk in all_chunks}
+    write_index_manifest(client, documents, qdrant_path, indexed_hashes=final_hashes)
 
 
 def main() -> None:
@@ -609,11 +986,17 @@ def main() -> None:
         action="store_true",
         help="Delete and recreate the collection before indexing",
     )
+    parser.add_argument(
+        "--manifest-only",
+        action="store_true",
+        help="Write the index manifest without loading embeddings or changing points",
+    )
     args = parser.parse_args()
 
     build_index(
         docs_dir=args.docs_dir,
         force_rebuild=args.force_rebuild,
+        manifest_only=args.manifest_only,
     )
 
 

@@ -45,7 +45,9 @@ Nothing extra to run. `f1-arcade --strategy` (or `python -m src.arcade.main …
 The first launch of any given race builds its replay telemetry, which takes
 minutes, so the menu reports the stages while a worker thread does the work.
 `f1-prefetch --year 2025` runs that same preparation for a whole season ahead
-of time, and skips the rounds already cached.
+of time, and skips the rounds already cached. That skip tests for the file, not
+for its version, so after a release that changes the replay format the stale
+rounds read as cached; `--force` rebuilds them.
 
 To develop against an already-running arcade:
 
@@ -116,12 +118,12 @@ answers has no other tab that can answer it.
 
 Four details that are not cosmetic:
 
-- **The sector columns are the lap in progress.** They blank at the line and
+- The sector columns are the lap in progress. They blank at the line and
   fill as the car crosses each sector, because `laps.parquet` records the
   instant of every crossing. A sector faster than the session's best paints
   purple immediately and joins the bests ranking only when the lap completes,
   which is what a broadcast does.
-- **The GAP and INT columns are quantised to the line**, and the header says so
+- The GAP and INT columns are quantised to the line, and the header says so
   with an `(L)`. They are the difference of two crossings, taken from the
   official timing table rather than from the replay's own interpolation, which
   means they can differ from the arcade's leaderboard beside them by a few
@@ -201,15 +203,18 @@ arcade process                    pitwall process
   pyglet replay                     ArcadeStreamClient  (ONE socket)
   TelemetryStreamServer  ──TCP──▶     └─ latest payload slot
   127.0.0.1:9998                          │
-                                          ├─ window: DATA    ┐ js_api
-                                          ├─ window: AGENTS  ┘ get_tick(since_seq)
-                                          └─ loopback HTTP    /api/tick
+                                          ├─ window: DATA      get_tick(since_seq)
+                                          ├─ window: AGENTS    get_agents_view(since_seq)
+                                          └─ loopback HTTP    /api/tick · /api/agents
 ```
 
-**One client, however many consumers.** Both windows and any browser tab read
-through the same `get_tick(since_seq)`, and the sequence is what makes them
-agree: against a blind latest-payload slot, two pollers on independent 10 Hz
-timers were measured reading a different frame on 58% of polls.
+**One client, sibling views.** DATA reads the sequenced tick through
+`get_tick(since_seq)`. AGENTS reads `get_agents_view(since_seq)`, which builds
+its formatted view from a separate `get_tick` call. Both consume the same
+stream through the host, but the polls are independent and may observe different
+sequence numbers if a new payload arrives between them. Neither window feeds
+the other. The loopback routes preserve the split as `/api/tick` and
+`/api/agents`.
 
 **Closing one window does not blind the other.** The client belongs to the
 host, not to a window; a window closing only decrements a count, and the last

@@ -22,8 +22,8 @@ additive); the backend stays FastAPI; any web recommendation reuses the frontend
 stack (epic #25); LLM provider is OpenAI or LM Studio, never Anthropic.
 
 Documents this builds on (read, not re-planned): `documents/research/RIVAL_AGENT_DESIGN.md`,
-`documents/audits/AUDIT_P3_ARCADE.md`, `documents/audits/AUDIT_P2_LOADING.md`,
-`documents/audits/AUDIT_P2B_CORE_COMPUTE.md`, `documents/audits/AUDIT_P5_DATA_ENGINEERING.md`
+`documents/audits/assessments/p3-arcade.md`, `documents/audits/assessments/p2-loading.md`,
+`documents/audits/assessments/p2b-core-compute.md`, `documents/audits/assessments/p5-data-engineering.md`
 (via the Rival design's references), and the frontend migration plan in the submodule
 (`src/telemetry/docs/migration/MIGRATION_PLAN.md`, epic #25).
 
@@ -36,10 +36,10 @@ pit wall could not see (`src/simulation/race_state_manager.py:11-13` states this
 module docstring). That thesis has two halves that have never been written down as one
 model:
 
-- **The input half**: which rival signals are legitimately observable, which are
+- The input half: which rival signals are legitimately observable, which are
   derivable, and which are hidden and must be modeled as uncertainty. This
   decides the Rival Agent's feature space (TFM) and the honesty of the simulation.
-- **The output half**: what the product SHOWS. A pit-wall dashboard that renders hidden
+- The output half: what the product SHOWS. A pit-wall dashboard that renders hidden
   rival data as if it were real breaks the same thesis on screen that the boundary
   protects in the agents.
 
@@ -78,12 +78,12 @@ distinct physical channel; the taxonomy in 2.2 is built from them.
 Two consequences worth stating plainly, because they sharpen the usual "rivals are a
 black box" intuition in both directions:
 
-- **More is public than the strict timing-screen framing suggests.** Sector times,
+- More is public than the strict timing-screen framing suggests. Sector times,
   four speed measurements, stint compound and tyre age, and even coarse
   throttle/speed/gear traces of every car are in the distributed feeds (rows 2-4). The
   project's own data proves this: FastF1's laps and telemetry for ALL drivers, on disk
   today under `data/raw/<year>/<gp>/`, are reconstructions of those public feeds.
-- **Less is knowable than a replay dataset suggests.** What no feed ever carries for a
+- Less is knowable than a replay dataset suggests. What no feed ever carries for a
   rival: fuel load, ERS/engine modes, brake and steering traces at professional rate,
   measured tyre wear, the pit wall's plan. FastF1 columns that look privileged (for
   example post-hoc corrected times) must be treated per the replay-vs-live audit already
@@ -94,11 +94,11 @@ black box" intuition in both directions:
 The taxonomy separates OUR DRIVER (full pipe, row 1 plus everything shared) from EACH
 RIVAL (rows 2-9 only). Tier definitions:
 
-- **(a) Directly observed**: appears in a feed as a value; use as-is.
-- **(b) Derivable from observation**: computed from observed events plus public priors;
+- (a) Directly observed: appears in a feed as a value; use as-is.
+- (b) Derivable from observation: computed from observed events plus public priors;
   legal to use, but must be COMPUTED from observations, never read from privileged
   columns (the "derive, do not read" discipline of `RIVAL_AGENT_DESIGN.md` section 4.1).
-- **(c) Hidden**: never in any feed; modeled only as uncertainty, inferred only through
+- (c) Hidden: never in any feed; modeled only as uncertainty, inferred only through
   its observable footprint.
 
 **Our driver:**
@@ -267,13 +267,13 @@ tier-consistent once labeled.
 
 Improvements this design proposes:
 
-- **Tier labels on every rival element** (section 3.4): the timing tier renders plainly;
+- Tier labels on every rival element (section 3.4): the timing tier renders plainly;
   broadcast-tier traces carry a "broadcast data" chip; anything model-inferred (future
   Rival Agent output) renders as probability, never as fact.
-- **Enrich the rival panel with the derivable tier**: estimated stops so far, remaining
+- Enrich the rival panel with the derivable tier: estimated stops so far, remaining
   sets, in-window flags; all computable today from `lap_state` plus
   `tire_compounds_by_race.json` priors, no new data needed.
-- **The step from observation to anticipation stays the TFM's job**: the H2H mode is
+- The step from observation to anticipation stays the TFM's job: the H2H mode is
   display-level today (`RIVAL_AGENT_DESIGN.md` 1.3 makes this exact point); the
   `RivalContext` output (its section 6.5) is the future predictive column of both the
   CLI H2H table and the dashboard's rival intent panel (section 3.1, window 11).
@@ -315,8 +315,8 @@ render tiers (a)+(b); broadcast tier behind a label; tier (c) only ever as model
 | 4 | **Tyre/stint board** | Per driver: stint history, compound sequence, ages, estimated remaining sets | Partial: `tire_chart.py` for our driver; rivals' stints reconstructable from timing data | `src/arcade/dashboard/tire_chart.py:163-218` |
 | 5 | **Gap/interval evolution chart** ("race trace") | Cumulative gap lines per driver over laps; undercut windows visible as converging lines | Missing at runtime (the R2 provider is the source); Streamlit has a post-race version | `src/telemetry/frontend/components/race_analysis/gap_charts.py` |
 | 6 | **Pit window / pit-loss board** | Per rival: circuit pit loss, in-window flags, projected exit traffic | Missing; feature family F2 of the Rival design computes exactly this | `RIVAL_AGENT_DESIGN.md` section 5, F2 |
-| 7 | **Weather panel** | Air/track temp, wind, rain | Exists but renders hardcoded constants today ; real per-lap weather is P3 Phase B.1 | `src/arcade/app.py:648-656`, `AUDIT_P3_ARCADE.md` A2 |
-| 8 | **SC/flag status board** | Track status, SC/VSC/red spans, race control messages | Partial: live pill exists; timeline flag spans are dead (P3 A3); RCM feed not surfaced | `src/arcade/data.py:312`, `AUDIT_P3_ARCADE.md` A3 |
+| 7 | **Weather panel** | Air/track temp, wind, rain | Exists but renders hardcoded constants today ; real per-lap weather is P3 Phase B.1 | `src/arcade/app.py:648-656`, `../audits/assessments/p3-arcade.md` A2 |
+| 8 | **SC/flag status board** | Track status, SC/VSC/red spans, race control messages | Partial: live pill exists; timeline flag spans are dead (P3 A3); RCM feed not surfaced | `src/arcade/data.py:312`, `../audits/assessments/p3-arcade.md` A3 |
 | 9 | **Strategy board (agents)** | The six agent cards, orchestrator decision, scenario scores, reasoning | YES: the Qt strategy dashboard window | `src/arcade/dashboard/window.py` |
 | 10 | **Radio feed** | Own radio transcripts + NLP verdicts; rival radio (future radiogate corpus) | Partial: radio agent alerts in the cards; no dedicated feed panel | `src/arcade/dashboard/agent_formatters.py` (radio) |
 | 11 | **Rival intent panel** | Per tracked rival: p_pit windows, predicted stop lap quantiles, threat/cover probabilities | Future: renders `RivalContext` (TFM M4+) | `RIVAL_AGENT_DESIGN.md` section 6.5 |
@@ -325,21 +325,21 @@ render tiers (a)+(b); broadcast tier behind a label; tier (c) only ever as model
 
 **What exists today, verified:**
 
-- **The Arcade TCP broadcast**: `TelemetryStreamServer` (`src/arcade/stream.py:27-105`),
+- The Arcade TCP broadcast: `TelemetryStreamServer` (`src/arcade/stream.py:27-105`),
   newline-delimited JSON on 127.0.0.1:9998, throttled to ~10 Hz
   (`STREAM_BROADCAST_EVERY_N_FRAMES = 6` at 60 FPS, `src/arcade/config.py:168-174`).
   Payload (`src/arcade/app.py:426-488`): an `arcade` snapshot (per-driver
   lap/dist/speed/compound/tyre_life for ALL 20 cars, full traces for main + rival), a
   `strategy` snapshot (latest decision + 30-entry history tail), and a `playback` block
   (speed, paused, frame_index, total_frames), which is the replay's master clock.
-- **The backend SSE simulation stream**:
+- The backend SSE simulation stream:
   `POST /api/v1/strategy/simulate` (`src/telemetry/backend/api/v1/endpoints/strategy.py:898-925`)
   streams `start`/`lap`/`error`/`summary` events from a generator in
   `src/telemetry/backend/services/simulation/simulator.py`, whose own docstring says it
   exists "so the backend can stream ... to any SSE consumer (curl, Arcade, future
   dashboards)". Nothing consumes it yet (the Streamlit UI never calls it). The two
   threads being drawn together were already anticipated to converge here.
-- **The migration stack** (`src/telemetry/docs/migration/MIGRATION_PLAN.md`, epic #25):
+- The migration stack (`src/telemetry/docs/migration/MIGRATION_PLAN.md`, epic #25):
   React 19 + Vite + TypeScript strict + Tailwind v4 mapped to `tokens.css` + TanStack
   Router/Query + Zustand + Apache ECharts as the single chart lib + a custom canvas/rAF
   engine for the Comparison replay + `eventsource-parser` for SSE + GSAP and
@@ -366,7 +366,7 @@ by nature, and the plan already carries `eventsource-parser`).
 
 **A contract consequence**: the P3 audit explicitly deferred a schema for the TCP wire
 ("a Pydantic `BroadcastPayload` is worth it only if an external consumer appears",
-`AUDIT_P3_ARCADE.md:124-127`). The relay IS that external consumer. Phase 1 therefore
+`../audits/assessments/p3-arcade.md:124-127`). The relay IS that external consumer. Phase 1 therefore
 includes the minimal versioned payload schema P3 said to defer, which is an extension of
 P3's own trigger condition, not a contradiction of it.
 
@@ -487,10 +487,10 @@ schema, the tower, the boards and the cards all carry over unchanged.
 
 ### 3.5 The pit-wall dashboard design (v1, web)
 
-- **Where**: a new route in `webapp/` (the epic #25 SPA), styled by the same
+- Where: a new route in `webapp/` (the epic #25 SPA), styled by the same
   `tokens.css`-mapped Tailwind theme; it is a sibling of Dashboard/Strategy/Comparison,
   not a separate app.
-- **Layout** (all panels collapsible; presets like "Strategist" /
+- Layout (all panels collapsible; presets like "Strategist" /
   "Race engineer" / "Broadcast" select which panels are open):
   - Left rail: **timing tower** (window 1), full field, virtualized rows; compound +
     tyre-age chips per row (tier (a), per the correction in 1.2); pit flags.
@@ -504,18 +504,18 @@ schema, the tower, the boards and the cards all carry over unchanged.
     expandable to full reasoning; **radio/RCM feed** (window 10) as a ticker.
   - Future: **rival intent panel** (window 11) rendering `RivalContext` when the TFM
     lands; per-rival broadcast-tier trace popovers behind the "broadcast data" label.
-- **Tier discipline on screen** (the Topic 1 payoff): every rival element carries its
+- Tier discipline on screen (the Topic 1 payoff): every rival element carries its
   tier tag from R4. Timing tier renders plainly; derived values render with their
   staleness (for example tyre age shows "counted from pit observation" on hover);
   broadcast-tier traces are labeled; hidden-tier quantities NEVER render as data, only
   as model outputs with probability formatting. This turns the thesis's data-fidelity
   claim into a visible product feature, and it is cheap because the tags are metadata
   from the taxonomy, not new computation.
-- **Rendering discipline**: chart data flows imperatively into ECharts instances and the
+- Rendering discipline: chart data flows imperatively into ECharts instances and the
   rAF loop (refs), never through per-frame React state; React renders panel chrome and
   once-per-lap content. This is the web equivalent of the lesson P3's A6 teaches about
   the Qt dashboard, applied preemptively.
-- **Data**: bulk prefetch of per-driver arrays (O3; the P2 F-05 SoA cache is the ideal
+- Data: bulk prefetch of per-driver arrays (O3; the P2 F-05 SoA cache is the ideal
   payload, and the bulk endpoint can ship even before F-05 by converting the current
   pickle once server-side), plus the WS relay for clock/strategy/events (O1), plus the
   existing REST endpoints for static context (sessions, drivers, stints).
@@ -598,29 +598,29 @@ prototype and zero sunk-cost pressure.
 
 ## 5. Risks and limitations
 
-- **Two-surface UX friction in Phases 2-4** (arcade window + browser). Bounded (same
+- Two-surface UX friction in Phases 2-4 (arcade window + browser). Bounded (same
   follower topology as today) and mitigable with a launch flag; if it grates, that is
   itself evidence for unification at the gate.
-- **The broadcast schema becomes a real contract.** Once the relay ships, arcade-side
+- The broadcast schema becomes a real contract. Once the relay ships, arcade-side
   payload changes can break the web surface. The Phase 1 versioned schema plus a golden
   payload test (P3 Phase D already proposed the test) is the guard.
-- **P2 F-05 dependency softness.** The bulk endpoint's ideal payload is the SoA cache,
+- P2 F-05 dependency softness. The bulk endpoint's ideal payload is the SoA cache,
   which has not landed. Mitigation is in Phase 1's design: serve from the current cache
   format first, swap the storage transparently later.
-- **Replay-only assumptions.** Bulk prefetch (O3) is impossible in a future live mode;
+- Replay-only assumptions. Bulk prefetch (O3) is impossible in a future live mode;
   the dashboard must degrade to stream-only rendering (tower, gaps and boards work fine
   at lap/10 Hz cadence; only the smooth track map needs interpolation, which live GPS
   data supports anyway). Design the data hooks with both modes in mind from Phase 2.
-- **Broadcast-tier honesty is load-bearing for the thesis narrative.** If the labels are
+- Broadcast-tier honesty is load-bearing for the thesis narrative. If the labels are
   dropped for aesthetic reasons, the surface silently overclaims what a wall sees; R4's
   tags must survive design polish.
-- **Solo bandwidth.** Epic #25 is already 7-9 weeks solo; Phases 1-3 here add roughly
+- Solo bandwidth. Epic #25 is already 7-9 weeks solo; Phases 1-3 here add roughly
   2-3 sprints on top. The sequencing (pit-wall after S3) is chosen so the migration's
   own milestones are not delayed; if bandwidth forces a cut, Phase 0 and Phase 1 are the
   keep-at-all-costs core (they serve the TFM and every future surface regardless of UI
   decisions).
-- **Era scoping.** Everything here inherits the 2022-2025 regulation scope; the 2026
-  drift program (`AUDIT_2026_REG_CONCEPT_DRIFT.md`) governs retraining, and the
+- Era scoping. Everything here inherits the 2022-2025 regulation scope; the 2026
+  drift program (`../audits/assessments/2026-reg-concept-drift.md`) governs retraining, and the
   dashboard renders whatever the models of the era emit.
 
 ---
@@ -662,11 +662,11 @@ migration plan already reserves for Home-hero moments, never the working surface
 
 - `documents/research/RIVAL_AGENT_DESIGN.md`: the TFM design whose section 4 this
   document refines (see R6); its sections 5-8 consume the taxonomy directly.
-- `documents/audits/AUDIT_P3_ARCADE.md`: the Arcade findings register (A1-A19) and
+- `documents/audits/assessments/p3-arcade.md`: the Arcade findings register (A1-A19) and
   phases; Phase 3 here re-scopes its Phase D pending Q1.
-- `documents/audits/AUDIT_P2_LOADING.md`: F-05 SoA cache (the bulk payload), F-06
+- `documents/audits/assessments/p2-loading.md`: F-05 SoA cache (the bulk payload), F-06
   threaded load, F-11 path routing; the shared-cache architecture the data plane rides.
-- `documents/audits/AUDIT_P2B_CORE_COMPUTE.md`: the shared engine (`run_lap`) that
+- `documents/audits/assessments/p2b-core-compute.md`: the shared engine (`run_lap`) that
   produces the decisions every surface renders; F10/F11 shape what the strategy ribbon
   receives.
 - `src/simulation/race_state_manager.py`: the boundary (driver `:154-217`, rivals

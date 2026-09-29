@@ -172,9 +172,11 @@ def build_cards(latest: dict[str, Any] | None) -> dict[str, dict[str, Any]]:
 
     active = set(per.get("active") or [])
     radio_block = per.get("radio")
-    # `rag` is the structured payload; `regulation_context` stays as a
-    # legacy fallback for producers that have not been updated.
-    rag_block = per.get("rag") or per.get("regulation_context")
+    # Structured RAG data wins even when empty. The legacy string remains
+    # visible as context but has no source data for a RAG tooltip.
+    rag_block = per.get("rag")
+    if rag_block is None:
+        rag_block = per.get("regulation_context")
     # The ids come from the router's own roster, not from literals here. A
     # second place that knows "N28 means pit" is the twin this repository
     # produces most, and `test_pitwall_agents_view` pins this roster against
@@ -215,7 +217,7 @@ def build_cards(latest: dict[str, Any] | None) -> dict[str, dict[str, Any]]:
         # same tier and more of it than a dump would be.
         "rag": _card(
             format_rag(rag_block, active=rag_active),
-            rag_tooltip(rag_block) if rag_active else None,
+            rag_tooltip(rag_block) if rag_active and isinstance(rag_block, dict) else None,
         ),
     }
 
@@ -232,4 +234,17 @@ def build_status_bar(payload: dict[str, Any]) -> dict[str, Any]:
     if error:
         return {"text": f"pipeline: {error}", "transient": False}
     lap = (payload.get("arcade") or {}).get("lap", "?")
+    wake_state = strategy.get("wake_state")
+    if wake_state:
+        latest = strategy.get("latest") or {}
+        decision_lap = latest.get("lap_number")
+        last_decision = (
+            f" · last decision L{decision_lap}"
+            if str(wake_state).startswith("dormant") and decision_lap
+            else ""
+        )
+        return {
+            "text": f"lap {lap} · {wake_state}{last_decision}",
+            "transient": False,
+        }
     return {"text": f"lap {lap} · streaming", "transient": True}

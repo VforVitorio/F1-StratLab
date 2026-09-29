@@ -36,6 +36,7 @@ from src.arcade.config import (
     WARNING,
 )
 from src.f1_strat_manager.laps_augment import augment_featured_laps
+from src.strategy.inference.guard_rails import stop_is_admissible
 
 logger = logging.getLogger(__name__)
 
@@ -211,11 +212,21 @@ class StrategyState:
     history: list[LapDecisionDTO] = field(default_factory=list)
     error: str | None = None
     finished: bool = False
+    wake_state: str = ""
+    manual_override: bool = False
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
     def snapshot(self) -> tuple[LapDecisionDTO | None, str | None, bool]:
         with self._lock:
             return self.latest, self.error, self.finished
+
+    def toggle_manual_override(self) -> bool:
+        """Toggle the user override and return its new state."""
+        with self._lock:
+            self.manual_override = not self.manual_override
+            if self.manual_override:
+                self.wake_state = "awake · manual override"
+            return self.manual_override
 
     def snapshot_dict(self, history_tail: int = 30) -> dict:
         """JSON-serialisable view consumed by the dashboard over the TCP stream.
@@ -238,6 +249,7 @@ class StrategyState:
                 ],
                 "error": self.error,
                 "finished": self.finished,
+                "wake_state": self.wake_state,
             }
 
 
@@ -274,6 +286,7 @@ class SimConnector(threading.Thread):
         self._request = request
         self._state = state
         self._stop_event = threading.Event()
+        self._manual_wake_event = threading.Event()
         # Optional callback the arcade view supplies to publish the lap the
         # user is currently watching.  When set, the lap loop blocks until
         # arcade catches up before kicking the agents, so pausing the
@@ -305,6 +318,15 @@ class SimConnector(threading.Thread):
 
     def stop(self) -> None:
         self._stop_event.set()
+
+    def toggle_manual_override(self) -> bool:
+        """Toggle the override through the connector's serialized control path."""
+        enabled = self._state.toggle_manual_override()
+        if enabled:
+            self._manual_wake_event.set()
+        else:
+            self._manual_wake_event.clear()
+        return enabled
 
     def _wait_for_arcade(self, target_lap: int, poll_interval_s: float = 0.2) -> bool:
         """Block until the arcade replay's current lap reaches ``target_lap``.
@@ -339,6 +361,68 @@ class SimConnector(threading.Thread):
         if self._current_lap_provider is None:
             return False
         return self._current_lap_provider() > lap_num + self._STALE_LAP_TOLERANCE
+
+    def _wait_for_dormant_progress(self, lap_num: int, poll_interval_s: float = 0.2) -> bool:
+        """Wait for the replay to advance, or let a manual wake reuse this lap."""
+        if self._current_lap_provider is None:
+            return False
+        while self._current_lap_provider() <= lap_num:
+            if self._manual_wake_event.is_set():
+                return True
+            if self._stop_event.wait(poll_interval_s):
+                return False
+        return False
+
+    @staticmethod
+    def _track_neutralisation_is_visible(lap_state: dict[str, Any]) -> bool:
+        """Return whether raw own-car status conservatively signals SC or VSC."""
+        weather = lap_state.get("weather") or {}
+        track_status = str(weather.get("track_status") or "")
+        return "4" in track_status or "6" in track_status
+
+    def _wake_reason(
+        self,
+        lap_state: dict[str, Any],
+        total_laps: int,
+        *,
+        sc_active: bool,
+        manual_override: bool,
+    ) -> str | None:
+        """Return the reason to run this lap, or ``None`` for dormancy.
+
+        The early check forecasts only the deterministic lap and tyre-age
+        boundary. It never reads the next recorded row, so it cannot leak a
+        later stop or a later track event into the current lap.
+        """
+        if manual_override:
+            return "manual override"
+        if sc_active:
+            return "Safety Car/VSC tracker"
+        if self._track_neutralisation_is_visible(lap_state):
+            return "track neutralisation"
+
+        driver = lap_state.get("driver") or {}
+        lap = int(lap_state.get("lap_number") or 0)
+        compound = str(driver.get("compound") or "")
+        tyre_life = int(driver.get("tyre_life"))
+        if stop_is_admissible(lap, total_laps, compound, tyre_life):
+            return "stop admissible"
+        if lap < total_laps and stop_is_admissible(
+            lap + 1,
+            total_laps,
+            compound,
+            tyre_life + 1,
+        ):
+            return "early wake"
+        return None
+
+    def _set_wake_state(self, value: str) -> None:
+        with self._state._lock:
+            self._state.wake_state = value
+
+    def _manual_override_enabled(self) -> bool:
+        with self._state._lock:
+            return self._state.manual_override
 
     @staticmethod
     def _lap_time_from_state(lap_state: dict[str, Any], fallback: float) -> float:
@@ -423,14 +507,24 @@ class SimConnector(threading.Thread):
         self._emit_start(lap_start, lap_end, engine.total_laps)
         self._warmup_models()
         self._load_radio_corpus(laps_df)
+        if self._request.no_llm:
+            self._set_wake_state("dormant · awaiting admissible stop")
+        else:
+            self._set_wake_state("awake · rich profile ungated")
 
         prev_lap_time = 0.0
         for lap_state in engine.replay():
             if self._stop_event.is_set():
                 return
             lap_num = int(lap_state.get("lap_number") or 0)
-            if lap_num < lap_start or lap_num > lap_end:
+            if lap_num < lap_start:
+                try:
+                    self._collect_lap_context(lap_num)
+                except Exception as exc:
+                    logger.warning("Lap %d context preparation failed: %s", lap_num, exc)
                 continue
+            if lap_num > lap_end:
+                break
             # Block until the arcade replay reaches this lap.  Without this
             # gate the agent thread storms ahead of the visual replay (one
             # LLM call per lap, ~5-10 s), so pausing arcade in V2 used to
@@ -439,6 +533,13 @@ class SimConnector(threading.Thread):
             # (CLI / smoke tests preserve the as-fast-as-possible loop).
             if not self._wait_for_arcade(lap_num):
                 return
+            try:
+                radio_msgs, rcm_events = self._collect_lap_context(lap_num)
+            except Exception as exc:
+                logger.exception("Lap %d context preparation failed: %s", lap_num, exc)
+                with self._state._lock:
+                    self._state.error = f"lap {lap_num}: {exc}"
+                continue
             # Skip stale laps when the user has seeked the arcade well ahead
             # of where the agent loop sits.  Without this, a fast-forward
             # from V2 to V20 would burn ~17 LLM calls for laps the user
@@ -446,6 +547,7 @@ class SimConnector(threading.Thread):
             # so the next processed lap sees a sensible baseline.
             if self._should_skip_stale(lap_num):
                 prev_lap_time = self._lap_time_from_state(lap_state, prev_lap_time)
+                self._set_wake_state("dormant · stale lap")
                 continue
             # DNF + incomplete-lap guard (mirrors the CLI, run_simulation_cli.py
             # L1551-1584). Without it _build_race_state defaults an empty driver
@@ -455,9 +557,32 @@ class SimConnector(threading.Thread):
             skip_reason = self._lap_skip_reason(lap_state.get("driver", {}))
             if skip_reason is not None:
                 logger.info("Lap %d skipped (%s): no strategy pipeline call", lap_num, skip_reason)
+                self._set_wake_state(f"dormant · {skip_reason}")
                 continue
+            if self._request.no_llm:
+                wake_reason = self._wake_reason(
+                    lap_state,
+                    engine.total_laps,
+                    sc_active=self._sc_tracker.sc_active,
+                    manual_override=self._manual_override_enabled(),
+                )
+                if wake_reason is None:
+                    self._set_wake_state("dormant · no admissible stop")
+                    if not self._wait_for_dormant_progress(lap_num):
+                        continue
+                    if not self._manual_override_enabled():
+                        continue
+                    self._manual_wake_event.clear()
+                    wake_reason = "manual override"
+            else:
+                wake_reason = "rich profile ungated"
+            self._set_wake_state(f"awake · {wake_reason}")
+            lap_for_step = {
+                **lap_state,
+                "_arcade_context": (radio_msgs, rcm_events),
+            }
             try:
-                prev_lap_time = self._step_once(laps_df, lap_state, prev_lap_time)
+                prev_lap_time = self._step_once(laps_df, lap_for_step, prev_lap_time)
             except Exception as exc:
                 logger.exception("Lap %d pipeline failed: %s", lap_num, exc)
                 with self._state._lock:
@@ -601,6 +726,7 @@ class SimConnector(threading.Thread):
                 no_llm=self._request.no_llm,
                 provider=self._request.provider,
             )
+            self._state.wake_state = "inactive · starting"
             self._state.error = None
         logger.info(
             "Arcade strategy driver started: %s %d %s (laps %d-%d)",
@@ -677,27 +803,12 @@ class SimConnector(threading.Thread):
         """
         from src.agents.race_state_builder import build_race_state
 
-        lap_num = int(lap_state.get("lap_number", 1) or 1)
-        radio_msgs: list[dict] = []
-        rcm_events: list[dict] = []
-        if self._radio_runner is not None:
-            try:
-                radio_msgs, rcm_events = self._radio_runner.radios_for_lap(lap_num)
-            except (KeyError, ValueError, TypeError) as exc:
-                # radios_for_lap does plain pandas row indexing + int/str
-                # casts (see RadioPipelineRunner._radio_row_to_dict /
-                # _rcm_row_to_dict): a malformed lap_number or a missing
-                # column are the only realistic failure modes here.
-                logger.debug("radios_for_lap(%d) failed: %s", lap_num, exc)
-
-        # Re-assert an active Safety Car on the laps whose RCM window carries no
-        # fresh deploy message. Ingest only the laps actually processed here; a
-        # release landing on a skipped (stale) lap is bounded by the tracker's
-        # safety valve rather than pinning the override (#398, mirrors
-        # the CLI wiring in run_simulation_cli).
-        self._sc_tracker.ingest(lap_num, rcm_events)
-        if self._sc_tracker.should_inject(lap_num):
-            rcm_events = list(rcm_events) + [self._sc_tracker.synthetic_event()]
+        prepared = lap_state.get("_arcade_context")
+        if prepared is None:
+            lap_num = int(lap_state.get("lap_number", 1) or 1)
+            radio_msgs, rcm_events = self._collect_lap_context(lap_num)
+        else:
+            radio_msgs, rcm_events = prepared
 
         return build_race_state(
             lap_state,
@@ -705,6 +816,22 @@ class SimConnector(threading.Thread):
             radio_msgs=radio_msgs,
             rcm_events=rcm_events,
         )
+
+    def _collect_lap_context(self, lap_num: int) -> tuple[list[dict], list[dict]]:
+        """Read this lap's radio context and advance the RCM tracker once."""
+        radio_msgs: list[dict] = []
+        rcm_events: list[dict] = []
+        if self._radio_runner is not None:
+            try:
+                radio_msgs, rcm_events = self._radio_runner.radios_for_lap(lap_num)
+            except (KeyError, ValueError, TypeError) as exc:
+                # A malformed lap or missing corpus column must not end the run.
+                logger.debug("radios_for_lap(%d) failed: %s", lap_num, exc)
+
+        self._sc_tracker.ingest(lap_num, rcm_events)
+        if self._sc_tracker.should_inject(lap_num):
+            rcm_events = list(rcm_events) + [self._sc_tracker.synthetic_event()]
+        return radio_msgs, rcm_events
 
 
 # --- Helpers exposed to the panel ----------------------------------------

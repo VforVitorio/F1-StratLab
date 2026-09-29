@@ -44,7 +44,7 @@ both drop ``contingencies`` entirely, and the backend derives ``pit_lap_target``
 from N28 on the no-llm branch and from the LLM on the rich one, so a DTO-sourced
 memory would mean two different things on one surface.
 
-Evidence for every field choice: documents/audits/AUDIT_ORCHESTRATOR_MEMORY.md.
+Evidence for every field choice: documents/audits/assessments/orchestrator-memory.md.
 """
 
 from __future__ import annotations

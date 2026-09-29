@@ -523,8 +523,8 @@ class PaceAgent:
         t_id = self.team_id.get(team, 0)
         # `circuit_cluster` is keyed by the parquet slug; the replay path queries with the
         # metadata name. Miami 2025 missed and took the default, which happens to be its
-        # real cluster - a coincidence, not correctness (PR3_GP_KEYSPACE_SWEEP.md).
-        cluster = self.circuit_cluster.get(resolve_gp_key(self.circuit_cluster, gp_name), 1)
+        # real cluster - a coincidence, not correctness (../../documents/audits/implementation/pr3-gp-keyspace-sweep.md).
+        cluster = self.circuit_cluster.get(resolve_gp_key(self.circuit_cluster, gp_name), -1)
         return c_id, t_id, cluster
 
     def _compute_derived(
@@ -817,7 +817,7 @@ class PaceAgent:
         """
         # The parquet spells this race 'Miami'; the replay path asks for 'Miami Gardens'.
         # Unresolved, the mask was empty for the whole race and N31 lost delta_vs_median
-        # on every lap (PR3_GP_KEYSPACE_SWEEP.md).
+        # on every lap (../../documents/audits/implementation/pr3-gp-keyspace-sweep.md).
         stored_name = resolve_gp_key(self._reference_gp_names, gp_name)
         mask = (
             (self.laps_ref["GP_Name"] == stored_name)

@@ -8,8 +8,9 @@ Two layers, because the raw races are not in git:
    carries an n, every interval brackets its point estimate, and the undercut
    band decays with distance instead of wandering.
 
-2. A regeneration check that reruns the script and asserts the committed file is
-   byte-identical. It needs ``data/raw`` and skips without it.
+2. A regeneration check that reruns the script into a temporary directory and
+   asserts the generated JSON is byte-identical to the committed file. It needs
+   ``data/raw`` and skips without it.
 """
 
 from __future__ import annotations
@@ -31,8 +32,7 @@ _skip_no_raw = pytest.mark.skipif(
 # The undercut band is measured from a holdout the published dataset does not carry
 # (#798). Without it a fresh measurement writes `"available": false` for that whole
 # table, so the committed-versus-fresh comparison fails on a checkout that is simply
-# incomplete, and the run also LEAVES the emptied file behind in the worktree, one
-# `git add -A` away from committing the loss of a measured table.
+# incomplete.
 _HAS_UNDERCUT_HOLDOUT = (
     ROOT / "data" / "processed" / "undercut_labeled" / "undercut_clean.parquet"
 ).exists()
@@ -196,22 +196,36 @@ def test_the_neutralisation_rate_is_keyed_by_circuit_slugs_agents_can_query(tabl
 # ---------------------------------------------------------------------------
 
 
+# `data` as well as the two skipifs: the skipifs decide whether this CAN run, the
+# marker is what lets a fast loop opt out with `-m "not slow"` while the full
+# measurement remains available in the scheduled tier.
+@pytest.mark.data
+@pytest.mark.slow
 @_skip_no_raw
 @_skip_no_undercut
-def test_the_committed_tables_match_a_fresh_measurement():
+def test_the_committed_tables_match_a_fresh_measurement(tmp_path):
     import subprocess
     import sys
 
     before = TABLES_PATH.read_text(encoding="utf-8")
+    json_out = tmp_path / "mc_measured_v1.json"
+    eval_dir = tmp_path / "eval"
     result = subprocess.run(
-        [sys.executable, str(ROOT / "scripts" / "measure_mc_tables.py")],
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "measure_mc_tables.py"),
+            "--json-out",
+            str(json_out),
+            "--eval-dir",
+            str(eval_dir),
+        ],
         capture_output=True,
         text=True,
         cwd=ROOT,
     )
     assert result.returncode == 0, f"measurement script failed:\n{result.stderr}"
 
-    after = TABLES_PATH.read_text(encoding="utf-8")
+    after = json_out.read_text(encoding="utf-8")
     assert after == before, (
         "data/mc_measured_v1.json drifted from what the script produces. Either the "
         "raw data changed (rerun and commit) or the file was edited by hand (do not)."

@@ -109,6 +109,7 @@ class AgentsViewBuilder:
                 tire.get("cliff"),
                 tire["cliff_colour"],
                 orchestrator["plan"],
+                no_llm=(strategy.get("start") or {}).get("no_llm") is True,
             ),
             # The action goes in with the scores: a guardrail can veto the
             # Monte Carlo winner, and a panel that does not know which plan

@@ -56,6 +56,7 @@ the circuit slug the agents query with (``session_meta.gp_name``).
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import math
@@ -1073,7 +1074,12 @@ def _clean_air_rows(tables: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
-def _write_twin(stem: str, title: str, rows: list[dict[str, Any]]) -> None:
+def _write_twin(
+    stem: str,
+    title: str,
+    rows: list[dict[str, Any]],
+    eval_dir: Path,
+) -> None:
     """Write the CSV (dot decimal) and Markdown (comma decimal) twins for one table.
 
     Mirrors the existing ``data/eval`` convention: the CSV is pandas-loadable for
@@ -1082,9 +1088,9 @@ def _write_twin(stem: str, title: str, rows: list[dict[str, Any]]) -> None:
     if not rows:
         return
 
-    EVAL_DIR.mkdir(parents=True, exist_ok=True)
+    eval_dir.mkdir(parents=True, exist_ok=True)
     frame = pd.DataFrame(rows)
-    frame.to_csv(EVAL_DIR / f"{stem}.csv", index=False)
+    frame.to_csv(eval_dir / f"{stem}.csv", index=False)
 
     def _format(value: Any) -> str:
         if value is None:
@@ -1100,23 +1106,43 @@ def _write_twin(stem: str, title: str, rows: list[dict[str, Any]]) -> None:
         for row in frame.itertuples(index=False)
     ]
     markdown = "\n".join([f"## {title}", "", header, divider, *body, ""])
-    (EVAL_DIR / f"{stem}.md").write_text(markdown, encoding="utf-8")
+    (eval_dir / f"{stem}.md").write_text(markdown, encoding="utf-8")
 
 
-def write_outputs(tables: dict[str, Any]) -> None:
+def write_outputs(
+    tables: dict[str, Any],
+    json_out: Path = JSON_OUT,
+    eval_dir: Path = EVAL_DIR,
+) -> None:
     """Write the versioned JSON and the human-readable eval twins."""
-    JSON_OUT.write_text(json.dumps(tables, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    logger.info("wrote %s", JSON_OUT.relative_to(ROOT))
+    json_out.parent.mkdir(parents=True, exist_ok=True)
+    json_out.write_text(json.dumps(tables, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    logger.info("wrote %s", json_out)
 
-    _write_twin("mc_sc_window", "Neutralisation window (W=5)", _sc_window_rows(tables))
-    _write_twin("mc_gap_density", "Seconds between consecutive cars", _gap_density_rows(tables))
-    _write_twin("mc_undercut_band", "Undercut success by gap to target", _undercut_rows(tables))
-    _write_twin("mc_clean_air", "What clean air is worth, by circuit", _clean_air_rows(tables))
+    _write_twin("mc_sc_window", "Neutralisation window (W=5)", _sc_window_rows(tables), eval_dir)
+    _write_twin(
+        "mc_gap_density", "Seconds between consecutive cars", _gap_density_rows(tables), eval_dir
+    )
+    _write_twin(
+        "mc_undercut_band", "Undercut success by gap to target", _undercut_rows(tables), eval_dir
+    )
+    _write_twin(
+        "mc_clean_air", "What clean air is worth, by circuit", _clean_air_rows(tables), eval_dir
+    )
 
 
-def main() -> int:
-    """Load every raw race, measure the six tables, write the artefacts."""
+def main(argv: list[str] | None = None) -> int:
+    """Measure raw races and write the tables to the requested output paths.
+
+    The optional paths make regeneration tests hermetic: callers can direct
+    generated JSON and evaluation extracts to a temporary directory while the
+    normal command keeps the committed production defaults.
+    """
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    parser = argparse.ArgumentParser(description="Measure projection Monte Carlo tables.")
+    parser.add_argument("--json-out", type=Path, default=JSON_OUT)
+    parser.add_argument("--eval-dir", type=Path, default=EVAL_DIR)
+    args = parser.parse_args(argv)
 
     races = load_races()
     if not races:
@@ -1125,7 +1151,7 @@ def main() -> int:
 
     logger.info("loaded %d races (%s)", len(races), ", ".join(str(y) for y in YEARS))
     tables = build_tables(races)
-    write_outputs(tables)
+    write_outputs(tables, json_out=args.json_out, eval_dir=args.eval_dir)
 
     sc_stats = tables["sc_window"]["by_kind"][SAFETY_CAR]
     logger.info(

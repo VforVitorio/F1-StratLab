@@ -78,9 +78,9 @@ window.PAGES = [
     title: "Backend API",
     section: "Surfaces",
     file: "pages/backend-api.md",
-    description: "FastAPI routers, telemetry, chat, voice, strategy.",
+    description: "FastAPI routers, telemetry, chat, and strategy.",
     eyebrow: "FastAPI",
-    tags: ["api", "fastapi", "telemetry", "chat", "voice", "mcp", "rag", "pydantic"],
+    tags: ["api", "fastapi", "telemetry", "chat", "mcp", "rag", "pydantic"],
   },
   {
     slug: "webapp",
@@ -197,6 +197,15 @@ window.PAGES = [
     tags: ["dev", "git", "release", "github-actions", "uv"],
   },
   {
+    slug: "testing",
+    title: "Testing & QA",
+    section: "Development",
+    file: "pages/testing.md",
+    description: "Test tiers, fast gates, scheduled checks, and review rules.",
+    eyebrow: "Quality",
+    tags: ["dev", "testing", "github-actions", "uv"],
+  },
+  {
     slug: "tags",
     title: "Tags index",
     section: "Development",
@@ -259,6 +268,7 @@ window.TAG_LABELS = {
   uv: "uv",
   release: "release",
   "github-actions": "github-actions",
+  testing: "testing",
 };
 
 // Section order

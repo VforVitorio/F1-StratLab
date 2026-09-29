@@ -286,7 +286,7 @@ def _run_rag(lap_state: dict, laps_df: pd.DataFrame, args: argparse.Namespace) -
     from src.agents.rag_agent import run_rag_agent
 
     query = args.query or f"What are the safety car regulations for the {args.gp_name} GP?"
-    out = run_rag_agent(query)
+    out = run_rag_agent(query, year=args.year)
     _print_output(out)
 
 
@@ -380,9 +380,9 @@ def _parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--provider",
-        default="lmstudio",
+        default=None,
         choices=["lmstudio", "openai"],
-        help="LLM provider: 'lmstudio' (default, localhost:1234) or 'openai' (real API, needs OPENAI_API_KEY)",
+        help="Override the provider; if omitted, use F1_LLM_PROVIDER or the orchestrator's lmstudio default",
     )
     return p.parse_args()
 
@@ -392,7 +392,8 @@ def main() -> None:
 
     # Propagate provider to agents via env var BEFORE any agent module is imported
     # (singletons like _get_orchestrator_llm check this on first call)
-    os.environ["F1_LLM_PROVIDER"] = args.provider
+    if args.provider is not None:
+        os.environ["F1_LLM_PROVIDER"] = args.provider
 
     _header(
         f"Debug — {args.agent.upper()} agent  |  "

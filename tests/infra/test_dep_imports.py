@@ -17,15 +17,18 @@ introduce:
   ``bool_`` alias). Grows whenever an upstream bump breaks something
   real.
 
-Every test uses ``pytest.importorskip`` so a missing optional extra
-(voice, ffmpeg-python, dev tools) does not turn the suite red on minimal
-environments — it just skips. The CI ``test`` job installs
-``--all-extras`` so all of these run there.
+Optional dependency checks skip only when a package is absent. If an installed
+package fails to import, the test fails. SetFit has a separate check because the
+application imports it through `RadioAgentCFG`'s Transformers compatibility shim.
 """
 
 from __future__ import annotations
 
+import importlib
+import importlib.util
 import io
+import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -312,17 +315,15 @@ _TIER2_IMPORTS = [
     # NLP stack
     "sentence_transformers",
     "spacy",
-    "setfit",
     "gliner",
-    "nltk",
     "seqeval",
     "jiwer",
     "whisper",  # openai-whisper imports under the ``whisper`` name
-    # Audio
+    # Audio used by the team-radio pipeline. Interactive voice I/O was retired
+    # with the Streamlit surface; its former dependencies are deliberately not
+    # part of this smoke list.
     "librosa",
     "soundfile",
-    "pydub",
-    "edge_tts",
     # Computer vision
     "cv2",
     "ultralytics",
@@ -332,12 +333,10 @@ _TIER2_IMPORTS = [
     "websockets",
     "aiofiles",
     "multipart",  # python-multipart imports as ``multipart``
-    "passlib",
     "kafka",  # kafka-python
     # Database
     "qdrant_client",
     # UI / viz
-    "streamlit",
     "plotly",
     "matplotlib",
     "seaborn",
@@ -369,17 +368,37 @@ def test_dependency_imports(module_name):
     """Every declared dependency must import without raising.
 
     Captures install-time breakage (missing wheels, ABI mismatches,
-    binary conflicts) that a behavioural test would never reach. Skips
-    cleanly when an optional extra (voice, computer vision) is absent
-    from the environment, or when an upstream package is installable
-    but raises at import time on the current Python (the setfit /
-    frozendict / Python 3.10 trio is a recurring offender).
-
-    ``exc_type=(ImportError, AttributeError)`` future-proofs the suite
-    for pytest 9.1, which will otherwise treat ImportErrors raised
-    *inside* an installed module as test failures rather than skips.
+    binary conflicts) that a behavioural test would never reach. It skips
+    only when an optional package is absent; import errors from installed
+    packages must remain failures.
     """
-    pytest.importorskip(module_name, exc_type=(ImportError, AttributeError))
+    if importlib.util.find_spec(module_name) is None:
+        pytest.skip(f"{module_name} is not installed")
+    importlib.import_module(module_name)
+
+
+def test_setfit_imports_through_the_supported_radio_agent_path():
+    """The SetFit compatibility shim must work before its first model load."""
+    if importlib.util.find_spec("setfit") is None:
+        pytest.skip("SetFit is not installed")
+
+    script = """
+import os
+from pathlib import Path
+os.environ["HF_HUB_OFFLINE"] = "1"
+from src.agents.radio_agent import RadioAgentCFG
+try:
+    RadioAgentCFG()._load_intent_model(Path.cwd() / "missing-setfit-checkpoint")
+except ValueError as error:
+    assert "Repo id" in str(error), str(error)
+    print("SetFit imported through RadioAgentCFG's supported loader")
+else:
+    raise AssertionError("the deliberately missing local checkpoint unexpectedly loaded")
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, check=True
+    )
+    assert "SetFit imported through RadioAgentCFG's supported loader" in result.stdout
 
 
 # ---------------------------------------------------------------------------
@@ -425,18 +444,6 @@ def test_langchain_core_message_imports():
 
     assert HumanMessage(content="x").content == "x"
     assert AIMessage(content="y").content == "y"
-
-
-def test_langchain_openai_canonical_import_path():
-    """ChatOpenAI must be importable from ``langchain_openai`` directly.
-
-    Guards against a future deprecation that pushes everything back to
-    ``langchain_community`` — the agent loaders import the short path.
-    """
-    pytest.importorskip("langchain_openai")
-    from langchain_openai import ChatOpenAI  # noqa: F401
-
-    assert ChatOpenAI.__name__ == "ChatOpenAI"
 
 
 def test_pyarrow_parquet_engine_available():

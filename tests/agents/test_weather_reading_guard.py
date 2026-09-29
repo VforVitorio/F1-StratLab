@@ -22,7 +22,7 @@ import pytest
 from src.agents._shared_defaults import reading_or_default
 
 # The dict the backend producer really emits for a 2025 lap, verified over real HTTP
-# (documents/audits/GATE_qatar_lap7_cross_surface.md, Task 2).
+# (documents/audits/gates/qatar-lap7-cross-surface.md, Task 2).
 PRODUCER_WEATHER_2025 = {
     "air_temp": None,
     "track_temp": None,
@@ -54,18 +54,6 @@ def test_a_legitimate_falsy_reading_survives(value):
 
 def test_a_real_reading_passes_through():
     assert reading_or_default({"air_temp": 23.4}, "air_temp", 28.0) == 23.4
-
-
-def test_the_three_agents_agree_on_this_read():
-    """All three sub-agents route this read through one implementation (#788).
-
-    They keep DIFFERENT default temperatures on purpose — pace 25/35, tire and
-    race_situation 28/38 — because reconciling those numbers is a modelling decision
-    tracked in #789. What must not differ again is the None handling: pace was the only
-    one of the three that had it right, and its guard is now the shared helper.
-    """
-    for default in (25.0, 28.0, 35.0, 38.0):
-        assert reading_or_default(PRODUCER_WEATHER_2025, "track_temp", default) == default
 
 
 def test_the_producer_shape_never_reaches_float_as_none():

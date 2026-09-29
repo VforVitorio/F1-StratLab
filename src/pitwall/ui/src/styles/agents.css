@@ -269,6 +269,11 @@
   color: var(--qt-fg-2);
   font-size: 12px;
 }
+.plan-empty-state {
+  margin: 0;
+  color: var(--qt-fg-3);
+  font-size: 11px;
+}
 
 /* --- The agent grid -------------------------------------------------------
  *

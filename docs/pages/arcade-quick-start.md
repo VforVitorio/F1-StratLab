@@ -14,11 +14,11 @@ One command launches everything. The arcade process owns the simulation loop and
 
 ## Prerequisites
 
-- **Python**: 3.10 or newer. The project pins dependencies with `uv`.
-- **Dependencies**: run `uv sync` from the repo root. The lockfile pulls `arcade`, `pywebview`, `fastf1`, `langchain-openai`, the model stack (`xgboost`, `lightgbm`, `torch`), and the NLP stack (`transformers`, `sentence-transformers`, `setfit`). No manual install steps required beyond `uv sync`.
-- **LLM credentials**: either set `OPENAI_API_KEY` in a repo-root `.env` (the canonical TFG setup) or run LM Studio locally on `http://localhost:1234/v1` and pass `--provider lmstudio` on the command line (the arcade's own flag; its default is `openai`, independent of the `F1_LLM_PROVIDER` env var the backend and CLI read). Only the wording of the orchestrator's reasoning changes.
-- **Race data cache**: the replay reads `data/raw/{year}/{Location}/laps.parquet` and optionally `weather.parquet`. The parquet files are produced by FastF1 on first run. Expect a 20-40 second delay on the first launch of a round.
-- **Vector store (optional)**: the N30 RAG agent reads a local Qdrant index under `data/rag/`. If missing, the orchestrator degrades gracefully, regulation lookups return an empty context. Run `python scripts/build_rag_index.py` once to build it.
+- Python: 3.10 or newer. The project pins dependencies with `uv`.
+- Dependencies: run `uv sync` from the repo root. The lockfile pulls `arcade`, `pywebview`, `fastf1`, `langchain-openai`, the model stack (`xgboost`, `lightgbm`, `torch`), and the NLP stack (`transformers`, `sentence-transformers`, `setfit`). No manual install steps required beyond `uv sync`.
+- LLM credentials: the arcade reads `F1_LLM_PROVIDER` from a repo-root `.env` and falls back to `openai`, so `OPENAI_API_KEY` is required unless that variable is set to `lmstudio` with LM Studio serving on `http://localhost:1234/v1`. The `f1-arcade --provider` flag is parsed and never read, so it selects nothing (#201). Per-surface table in [INSTALL.md](https://github.com/VforVitorio/F1-StratLab/blob/main/INSTALL.md#llm-provider-per-surface). Only the wording of the orchestrator's reasoning changes.
+- Race data cache: the replay reads `data/raw/{year}/{Location}/laps.parquet` and optionally `weather.parquet`. The parquet files are produced by FastF1 on first run. Expect a 20-40 second delay on the first launch of a round.
+- Vector store (optional): the N30 RAG agent reads a local Qdrant index under `data/rag/`. If missing, the orchestrator degrades gracefully, regulation lookups return an empty context. Run `python scripts/build_rag_index.py` once to build it.
 
 ## One-command launch
 
@@ -120,10 +120,10 @@ table replaced the two cards the same crossing happened at about 652.
 
 ## Known limitations
 
-- **First-lap warmup**: the orchestrator runs cold for the first ~15 seconds while agent models load.
-- **Cold FastF1 cache**: the first time a given round is requested, FastF1 downloads the session. Expect roughly 30 seconds on cold cache.
-- **Port 9998**: the TCP broadcaster binds `127.0.0.1:9998`. If another process holds the port, the dashboard cannot connect.
-- **Strategy mode requires year 2025**: the multi-agent pipeline only ships with 2025-season features. Running `--strategy` against 2023 or 2024 falls back to arcade-only replay.
+- First-lap warmup: the orchestrator runs cold for the first ~15 seconds while agent models load.
+- Cold FastF1 cache: the first time a given round is requested, FastF1 downloads the session. Expect roughly 30 seconds on cold cache.
+- Port 9998: the TCP broadcaster binds `127.0.0.1:9998`. If another process holds the port, the dashboard cannot connect.
+- Strategy mode requires year 2025: the multi-agent pipeline only ships with 2025-season features. Running `--strategy` against 2023 or 2024 falls back to arcade-only replay.
 
 ## Troubleshooting
 

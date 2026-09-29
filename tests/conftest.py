@@ -18,9 +18,21 @@ information, not duplication.
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
+
+if sys.platform == "win32":
+    # The arcade tests do not exercise gamepad input. Disabling pyglet's
+    # process-wide XInput polling thread keeps it out of later test teardown.
+    try:
+        import pyglet
+    except ImportError:
+        pass
+    else:
+        pyglet.options["win32_disable_xinput"] = True
+        pyglet.options["audio"] = ("silent",)
 
 ROOT = Path(__file__).parent.parent
 

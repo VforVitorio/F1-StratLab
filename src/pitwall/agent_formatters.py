@@ -793,7 +793,7 @@ def rag_tooltip(r: dict[str, Any] | None) -> dict[str, Any] | None:
     character cap is gone with the markup: clamping is the renderer's job
     now, and the whole reason to open this is to read the passage.
     """
-    if r is None:
+    if not isinstance(r, dict):
         return None
     chunks = r.get("chunks") or []
     answer = str(r.get("answer") or "").strip()
@@ -848,12 +848,10 @@ def format_rag(rag: dict[str, Any] | str | None, active: bool) -> Formatted:
     it - and the function that says otherwise is this one. It also named
     ``rag_tooltip_html``, which no longer exists.
 
-    The parameter is typed permissively (``dict | str | None``) because
-    the upstream wire historically carried only the answer string; when
-    a bare string is received it is wrapped as ``{"answer": rag}`` so
-    legacy producers do not break the card. The structured form
-    (``question`` / ``answer`` / ``articles`` / ``chunks``) is what
-    populates the article-refs line and the tooltip.
+    A missing result is distinct from an inactive route. Retrieved passages
+    without an answer remain available in the tooltip but are marked WATCH.
+    A legacy string is shown as unstructured context because it has no source
+    data for that tooltip.
     """
     if not active:
         return (
@@ -863,15 +861,31 @@ def format_rag(rag: dict[str, Any] | str | None, active: bool) -> Formatted:
             STATUS_IDLE,
         )
     if isinstance(rag, str):
-        rag = {"answer": rag}
-    rag = rag or {}
+        legacy_text = rag.strip()
+        if not legacy_text:
+            return ("routed, no RAG result", TEXT_TERTIARY, [], STATUS_IDLE)
+        return (
+            "legacy regulation context",
+            TEXT_PRIMARY,
+            [(_escaped(legacy_text), TEXT_SECONDARY)],
+            STATUS_WATCH,
+        )
+    if rag is None:
+        return ("routed, no RAG result", TEXT_TERTIARY, [], STATUS_IDLE)
     text = (rag.get("answer") or "").strip()
     if not text:
+        if rag.get("chunks"):
+            return (
+                "retrieved context, no RAG answer",
+                TEXT_PRIMARY,
+                [("source passages available in tooltip", TEXT_SECONDARY)],
+                STATUS_WATCH,
+            )
         return (
-            "regulation loaded",
-            TEXT_PRIMARY,
-            [("(empty context)", TEXT_TERTIARY)],
-            STATUS_OK,
+            "routed, no RAG result",
+            TEXT_TERTIARY,
+            [],
+            STATUS_IDLE,
         )
     body: list[Line] = [(_escaped(text), TEXT_SECONDARY)]
     refs = _format_article_refs(rag.get("articles"))

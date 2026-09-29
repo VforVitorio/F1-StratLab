@@ -48,6 +48,7 @@ def test_registry_reconciles_pace_divergence():
     assert any(e.value == pytest.approx(0.392) for e in superseded), "0.392 kept for provenance"
 
 
+@pytest.mark.slow
 def test_calibration_flags_pit_coverage_drift():
     """The pit P05-P95 coverage surfaces and is flagged as drift.
 
@@ -69,21 +70,41 @@ def test_calibration_flags_pit_coverage_drift():
     Before that, 177/252: the alias fix in #629 was checked against it and moved it by
     exactly nothing (it moved P50 MAE by -0.0045 s instead).
     """
-    from src.strategy.eval.calibration import collect_results
+    from src.strategy.eval.calibration import _pit_quantile_coverage
 
-    pit = [
-        r for r in collect_results() if r.model == "pit_duration" and r.metric == "p05_p95_coverage"
-    ]
+    pit = [r for r in _pit_quantile_coverage() if r.model == "pit_duration"]
     assert len(pit) == 1
     assert pit[0].value == pytest.approx(176 / 252, abs=1e-6)
     assert pit[0].status == "drift", "coverage below 0.90 nominal must flag drift"
 
 
+@pytest.mark.slow
 def test_reproduction_matches_overtake_auc_pr():
     """Overtake AUC-PR re-derives to the published 0.5491 within tolerance."""
-    from src.strategy.eval.reproduce import collect_results
+    from src.strategy.eval.reproduce import _overtake_auc_pr
 
-    overtake = [r for r in collect_results() if r.model == "overtake" and r.metric == "auc_pr_test"]
-    assert len(overtake) == 1
-    assert overtake[0].status == "reproduced"
-    assert overtake[0].reproduced == pytest.approx(0.5491, abs=0.01)
+    result = _overtake_auc_pr()
+    assert result.status == "reproduced"
+    assert result.reproduced == pytest.approx(0.5491, abs=0.01)
+
+
+def test_calibration_collection_preserves_component_wiring(monkeypatch):
+    from src.strategy.eval import calibration
+
+    pieces = [
+        [calibration.CalibrationResult("overtake", "ece", 0.1, None, "ok", "stub")],
+        [calibration.CalibrationResult("safety_car", "ece", 0.2, None, "ok", "stub")],
+        [calibration.CalibrationResult("undercut", "ece", 0.3, None, "ok", "stub")],
+        [calibration.CalibrationResult("pit_duration", "coverage", 0.4, None, "ok", "stub")],
+        [calibration.CalibrationResult("tire_degradation", "sigma", 0.5, None, "ok", "stub")],
+    ]
+    monkeypatch.setattr(calibration, "_overtake_calibration", lambda: pieces[0])
+    monkeypatch.setattr(
+        calibration,
+        "_classifier_calibration",
+        lambda model, loader: pieces[1 if model == "safety_car" else 2],
+    )
+    monkeypatch.setattr(calibration, "_pit_quantile_coverage", lambda: pieces[3])
+    monkeypatch.setattr(calibration, "_tcn_mc_sigma", lambda: pieces[4])
+
+    assert calibration.collect_results() == [result for piece in pieces for result in piece]

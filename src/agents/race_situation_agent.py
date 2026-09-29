@@ -34,7 +34,9 @@ from src.agents._shared_defaults import (
     DEFAULT_TOTAL_LAPS,
     DEFAULT_TRACK_TEMP_C,
     LLM_MAX_RETRIES,
+    lm_studio_base_url,
     reading_or_default,
+    subagent_model,
 )
 
 # ── Repo root (with root-stop guard for uv tool install) ─────────────────────
@@ -200,7 +202,6 @@ class RaceSituationConfig:
             fires on 13.59% of laps.
     """
 
-    model_name: str = "gpt-4.1-mini"
 
     high_overtake: float = 0.65
     medium_overtake: float = 0.40
@@ -296,7 +297,7 @@ class RaceSituationConfig:
         `sc_rate_for` above already resolves ONE keyspace for this same config; the cluster
         map next to it did not, which is the one-copy-fixed-its-twin-not pattern this repo
         keeps producing. Four spellings need both resolvers, not just the slug one
-        (PR3_GP_KEYSPACE_SWEEP.md).
+        (../../documents/audits/implementation/pr3-gp-keyspace-sweep.md).
         """
         return self.circuit_cluster_map.get(
             resolve_gp_key(self.circuit_cluster_map, gp_name), default
@@ -413,7 +414,7 @@ def _abs_compound(relative: str, gp_name: str, year: int) -> str:
 
     The fifth consumer of this JSON, and the one the earlier keyspace sweeps missed. Its
     failure mode is the loudest of the three: unresolved it returns the RELATIVE name
-    ('HARD') where the caller expects a Cx string (PR3_GP_KEYSPACE_SWEEP.md).
+    ('HARD') where the caller expects a Cx string (../../documents/audits/implementation/pr3-gp-keyspace-sweep.md).
     """
     year_data = TIRE_COMPOUNDS.get(str(year), {})
     gp_data = year_data.get(resolve_gp_key(year_data, gp_name), {})
@@ -1515,8 +1516,8 @@ class RaceSituationAgent:
     def get_react_agent(
         self,
         provider: str = None,
-        model_name: str = "gpt-4.1-mini",
-        base_url: str = "http://localhost:1234/v1",
+        model_name: str = None,
+        base_url: str | None = None,
         api_key: str = "lm-studio",
     ):
         """Return the LangGraph ReAct agent, creating it on the first call (lazy).
@@ -1526,8 +1527,9 @@ class RaceSituationAgent:
 
         Args:
             provider: 'lmstudio' (default) or 'openai'.
-            model_name: Model identifier for ChatOpenAI.
-            base_url: Base URL for LM Studio (ignored when provider='openai').
+            model_name: Model identifier for ChatOpenAI. Defaults to
+                ``subagent_model()``, which reads ``F1_LLM_MODEL_AGENTS``.
+            base_url: Optional base URL for LM Studio. Defaults to ``LM_STUDIO_HOST``.
             api_key: API key; use 'lm-studio' for local server.
 
         Returns:
@@ -1549,11 +1551,13 @@ class RaceSituationAgent:
 
         if provider is None:
             provider = os.environ.get("F1_LLM_PROVIDER", "lmstudio")
+        if model_name is None:
+            model_name = subagent_model()
 
         if provider == "lmstudio":
             llm = ChatOpenAI(
                 model=model_name,
-                base_url=base_url,
+                base_url=base_url or lm_studio_base_url(),
                 api_key=api_key,
                 temperature=0,
                 timeout=120,

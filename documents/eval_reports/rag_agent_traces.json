@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "traces": [
+    {
+      "trace_id": "rag-20260923-pit-lane-speed",
+      "source": "live LangGraph run; tool-result hash matched by local query replay",
+      "question": "What is the pit lane speed limit under the 2025 Formula 1 Sporting Regulations?",
+      "year": 2025,
+      "model": "gpt-4.1-mini",
+      "answer": "Under the 2025 Formula 1 Sporting Regulations, a speed limit of 80 km/h is imposed in the pit lane during the whole Competition, but this limit may be amended by the Race Director following a recommendation from the Safety Delegate (Article 34.7). Penalties apply if a driver exceeds this limit during free practice, qualifying, sprint qualifying, sprint sessions, or the race.",
+      "answer_article_references": ["Article 34.7"],
+      "retrieved_articles": ["Article 34.7", "Article 55.5", "Article 44.4", "Article 26.7", "Article 51.1"],
+      "citation_violations": [],
+      "citation_faithful": true,
+      "tool_call": {
+        "id": "call_PTejRXibyWTR9ZdpiH56Veme",
+        "name": "query_rag_tool",
+        "arguments": {
+          "question": "What is the pit lane speed limit under the 2025 Formula 1 Sporting Regulations?"
+        }
+      },
+      "tool_result": {
+        "tool_call_id": "call_PTejRXibyWTR9ZdpiH56Veme",
+        "name": "query_rag_tool",
+        "content_sha256": "363d453fd663c23a0526421a0ab8c99edc2d5af5af14880e589015e799edbcea",
+        "matched_local_query_replay": true,
+        "article_headers": [
+          {"year": 2025, "article": "Article 34.7", "score": 0.726},
+          {"year": 2025, "article": "Article 55.5", "score": 0.631},
+          {"year": 2025, "article": "Article 44.4", "score": 0.626},
+          {"year": 2025, "article": "Article 26.7", "score": 0.616},
+          {"year": 2025, "article": "Article 51.1", "score": 0.613}
+        ],
+        "article_34_7_excerpt": "34.7 A speed limit of 80km/h will be imposed in the pit lane during the whole Competition."
+      },
+      "tool_messages": 1,
+      "model_requests": 2,
+      "input_tokens": 2111,
+      "output_tokens": 113,
+      "estimated_cost_upper_bound_usd": 0.0010252
+    }
+  ]
+}

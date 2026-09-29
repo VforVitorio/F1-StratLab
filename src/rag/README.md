@@ -3,7 +3,8 @@
 **Status: Active**, imported by N30 and N31.
 
 Provides runtime retrieval-augmented generation (RAG) over FIA regulation PDFs.
-The Qdrant index must be built once with `scripts/build_rag_index.py` before any query.
+The Qdrant index and its `data/rag/index_manifest.json` metadata must exist before
+any query. Older indexes without a manifest remain readable with a warning.
 
 ---
 
@@ -11,18 +12,18 @@ The Qdrant index must be built once with `scripts/build_rag_index.py` before any
 
 | Symbol | Type | Description |
 |---|---|---|
-| `RagConfig` | dataclass | Centralised config: collection name, embedding model, top-k, derived paths |
+| `RagConfig` | dataclass | Centralised config: collection name, embedding model, dimension, top-k, derived paths |
 | `CFG` | `RagConfig` | Module-level singleton config; edit this to change defaults |
 | `RegulationChunk` | dataclass | Single retrieved passage with `text`, `article`, `doc_type`, `year`, `score`, `section_title` |
 | `RagRetriever` | class | Holds Qdrant client + sentence encoder; call `.query()` per request |
 | `get_retriever()` | function | Returns the process-level `RagRetriever` singleton (lazy init, loads model once) |
-| `query_rag_tool` | `@tool` | LangGraph-compatible tool wrapper; returns formatted string for the LLM |
+| `query_rag_tool` | `@tool` | LangGraph-compatible tool wrapper; returns formatted string for the LLM. Takes the season from the RunnableConfig key `configurable.season`, never as a tool argument, so the model cannot choose which rulebook it reads |
 
 ### `RagRetriever` methods
 
-- `__init__(qdrant_path, collection_name, embedding_model, top_k)`, loads encoder (~1-2 s); raises `RuntimeError` if collection missing
-- `query(question, top_k=None) -> list[RegulationChunk]`, cosine similarity search, ordered by descending score
-- `health_check() -> dict`, returns `{collection, vector_count, embedding_model, qdrant_path}` for diagnostics
+- `__init__(qdrant_path, collection_name, embedding_model, top_k, embedding_dim)`, validates the manifest before loading the encoder; raises `RuntimeError` for a present but incompatible manifest
+- `query(question, top_k=None, year=None, doc_type=None) -> list[RegulationChunk]`, cosine similarity search, ordered by descending score. `year` restricts the search to one season's rulebook; a season the index does not hold falls back to an unscoped search with one warning rather than returning nothing
+- `health_check() -> dict`, returns collection, vector count, vector dimension, indexed years, manifest status/hash, and paths for diagnostics
 
 ---
 
@@ -37,10 +38,15 @@ result_str = query_rag_tool.invoke({"question": "pit lane speed limit"})
 # Direct retrieval (N30 RAG agent, diagnostics)
 retriever = get_retriever()
 chunks = retriever.query("safety car restart procedure", top_k=10)
+
+# Scoped to one season. The same article is renumbered and reworded between
+# rulebooks, so an unscoped query mixes them: 43 of 75 top-5 hits on the tracked
+# gold set come from a season other than the one asked about.
+chunks = retriever.query("safety car restart procedure", year=2025)
 for c in chunks:
     print(c.article, c.score, c.text[:80])
 
-# Startup health check
+# Startup health check. A valid manifest reports the corpus years and hash.
 print(retriever.health_check())
 ```
 
@@ -62,7 +68,27 @@ The Qdrant collection must exist before calling `get_retriever()`:
 python scripts/build_rag_index.py
 ```
 
+To create or refresh only the metadata, without loading BGE-M3 or changing
+Qdrant points:
+
+```bash
+uv run python scripts/build_rag_index.py --manifest-only
+```
+
+The manifest records the source PDF hashes, collection, embedding model and
+dimension, distance, chunker identity, chunking parameters, indexed years, point
+count, and build time. Startup also compares the manifest point count with the
+actual Qdrant collection, so a stale database is rejected before BGE-M3 loads.
+Manifests from the first schema-1 release without `chunking_verified` remain
+readable but are marked unverified. A missing manifest is a compatibility
+warning. A present mismatch stops startup so a stale or wrong-model index
+cannot be used silently.
+
 FIA PDFs are downloaded by `scripts/download_fia_pdfs.py` into `data/rag/documents/`.
+The maintained Sporting Regulations corpus currently covers 2023-2026. The 2026
+PDF uses `B5.13.1`-style article identifiers; the builder preserves those
+identifiers instead of treating them as page metadata. The source is the
+[official FIA regulations page](https://www.fia.com/regulations/category/110).
 
 ---
 

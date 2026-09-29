@@ -1,12 +1,12 @@
 # PITWALL v2 architecture (v2.6.0, "Arcade, modernized")
 
-**Status: design, agreed 2026-08-07. NO code written.**
+**Status: architecture decision, agreed 2026-08-07. This records the design decision, not implementation status; check current code and issues before treating any item as open.**
 **This document SUPERSEDES `PITWALL_REALISM_AND_TELEMETRY_SURFACE.md` sections 3 to 6 and the
 phase decomposition of epic #281.** Its Topic 1 (the observability model, sections 1 to 2) stands
 and is unaffected.
 
 Companion documents: `documents/research/PITWALL_REALISM_AND_TELEMETRY_SURFACE.md` (Topic 1),
-`documents/audits/AUDIT_P3_ARCADE.md` (the A1-A19 register this re-scopes), and the session's
+`documents/audits/assessments/p3-arcade.md` (the A1-A19 register this re-scopes), and the session's
 reasoning chain in `~/.claude/plans/pitwall-design.md`.
 
 ---
@@ -215,12 +215,12 @@ The original wording, kept because the reasoning below it still holds: the JS si
 `pywebview.api.get_tick()` on its own cadence; the Python host returns whatever is in the latest
 payload slot, which the TCP client thread overwrites.
 
-- **Why pull and not push.** Natural backpressure: the UI never receives faster than it renders, and
+- Why pull and not push. Natural backpressure: the UI never receives faster than it renders, and
   the cadence becomes a UI concern rather than a wire concern. It is also the laziest thing that
   works, and 10 Hz of RPC over an in-process bridge is nothing.
-- **Rejected: `window.evaluate_js` push.** Marshals JSON into JavaScript source text and evals it,
+- Rejected: `window.evaluate_js` push. Marshals JSON into JavaScript source text and evals it,
   twice per tick (two windows), 10 times a second.
-- **Rejected for v1, named as the upgrade path: an in-process WebSocket server** inside the PITWALL
+- Rejected for v1, named as the upgrade path: an in-process WebSocket server inside the PITWALL
   host. Cleanest data flow and an idiomatic `onmessage` on the JS side, but it adds a dependency and
   a port to solve a problem not yet measured. Revisit only if the pull model is measured to hurt.
 
@@ -344,7 +344,7 @@ Applies `~/.claude/CLEAN_CODE.md`. The project-specific points that matter here:
   syntax-highlighted text areas and a full chart rebuild 10 times a second for content that changes
   once per lap, applied before it happens rather than after.
 - React renders panel chrome and once-per-lap content. The tick loop touches refs.
-- **Animate the entrance, never the data update.** The repo already encodes this contract in
+- Animate the entrance, never the data update. The repo already encodes this contract in
   `src/telemetry/webapp/src/charts/useFirstPaintAnimation.ts`; port it, do not reinvent it.
 - Named intermediates over compound expressions, exactly as on the Python side.
 
@@ -427,8 +427,8 @@ forward rather than closing it with the relay.
 
 ## 10. Gate outcomes (2026-08-07)
 
-Two adversarial gates, distinct lenses, reports at `documents/audits/GATE_PITWALL_ARCH_A.md`
-(data plane and runtime correctness) and `GATE_PITWALL_ARCH_B.md` (repo fit and blast radius).
+Two adversarial gates, distinct lenses, reports at `documents/audits/gates/pitwall-arch-a.md`
+(data plane and runtime correctness) and `../audits/gates/pitwall-arch-b.md` (repo fit and blast radius).
 The P0s were independently re-verified before being accepted here.
 
 | Section 8 risk | Verdict |
@@ -446,11 +446,11 @@ The P0s were independently re-verified before being accepted here.
 
 Neither is in the A1-A19 P3 register. PITWALL would inherit both.
 
-- **Retired cars broadcast as if running.** `FrameData.active` is computed (`data.py:404`) and
+- Retired cars broadcast as if running. `FrameData.active` is computed (`data.py:404`) and
   dropped from the broadcast (`app.py:449`). Melbourne: six retirements, three on lap 1, each
   transmitting frozen lap-1 telemetry for 56 laps. Invisible today because the Qt dashboard renders
   two cars; a 20-row tower and the ring would render them alive. Fixed by shipping `active` (3.3b).
-- **The only gap computation divides by a hardcoded constant.** `overlays.py:326-336` assumes
+- The only gap computation divides by a hardcoded constant. `overlays.py:326-336` assumes
   `55.56` m/s for every car (+57% error under Safety Car, -13.5% on a fastest lap), applied to a
   distance term that double-counts a lap per lap of difference (`overlays.py:502-511`).
   **Warrants its own issue before being fixed**, per the repo's bug-first rule.

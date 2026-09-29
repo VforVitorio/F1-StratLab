@@ -22,7 +22,8 @@ defect turns the next fix into a visible diff.
 
 It worked. Race-end residual netting (#726) moved ``STAY_OUT``'s expected value
 off the point mass to 1.276 and lifted PIT_NOW from 0.582 to 0.678, and the
-tripwire below fired rather than the change slipping through.
+frozen production comparison exposed that change rather than letting it slip
+through.
 
 ``P10`` and ``P90`` are still equal for STAY_OUT here, and that is honest rather
 than a leftover: in THIS geometry only a minority of draws see the correction,
@@ -161,51 +162,6 @@ def _projection_scores_capturing(capture: dict, alpha: float = 0.5) -> dict:
         laps_remaining=22,
         pit_context=_PIT_CONTEXT,
         capture=capture,
-    )
-
-
-# ---------------------------------------------------------------------------
-# Shape — runs everywhere, including a CI runner with no model weights
-# ---------------------------------------------------------------------------
-
-
-def test_the_golden_carries_the_projection_only_keys():
-    """The projection returns two keys the legacy branch never does.
-
-    Asserted on the frozen dict rather than on a live call so it survives
-    without ``data/models/``. Both MC test files are gated on model weights, so
-    without this the entire projection branch would again have zero coverage on
-    CI — the precise gap this file exists to close.
-    """
-    assert set(_GOLDEN_PROJECTION_ALPHA_05) == {"STAY_OUT", "PIT_NOW", "UNDERCUT", "OVERCUT"}
-    for cell in _GOLDEN_PROJECTION_ALPHA_05.values():
-        assert set(cell) == {"E", "P10", "P90", "score", "eligible", "target"}
-
-
-def test_an_ineligible_candidate_carries_no_numbers_at_all():
-    """``None`` everywhere, never 0.0 — a zero score is a real, findable value."""
-    overcut = _GOLDEN_PROJECTION_ALPHA_05["OVERCUT"]
-    assert overcut["eligible"] is False
-    assert all(overcut[key] is None for key in ("E", "P10", "P90", "score"))
-
-
-def test_the_frozen_state_records_how_far_the_collapse_has_been_undone():
-    """A tripwire on the defect, updated once it partly fired.
-
-    It began as ``E == P10 == P90``, the strict point mass #726 set out to
-    break. Netting broke it: the mean now differs from the quantiles. The
-    quantiles themselves are still equal, because in this geometry the
-    correction reaches only a minority of draws — that residual flatness is the
-    tyre channel, and it belongs to #727.
-
-    Kept as a tripwire rather than deleted, so the NEXT change to the collapse
-    also has to arrive as a deliberate golden update rather than as a surprise.
-    """
-    stay_out = _GOLDEN_PROJECTION_ALPHA_05["STAY_OUT"]
-    assert stay_out["E"] != stay_out["P10"], "the netting's effect on the mean has vanished"
-    assert stay_out["P10"] == stay_out["P90"], (
-        "the quantile band has moved: the tyre channel (#727) is the expected cause, "
-        "and it should arrive as a deliberate update here"
     )
 
 

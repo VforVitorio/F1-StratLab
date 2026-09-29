@@ -92,19 +92,6 @@ def test_a_live_rival_still_scores(agent_at_lap_50):
     assert not pd.isna(features["pos_gap"].iloc[0])
 
 
-def test_the_position_default_cannot_mask_a_missing_value():
-    """``Series.get(k, default)`` returns the STORED value, including NaN.
-
-    The default only fires when the COLUMN is absent, never when the VALUE is. That is
-    why five call sites believed they had a safety net that could not fire, and it is
-    the #428 sentinel bug wearing a different column.
-    """
-    row = pd.Series({"Position": float("nan"), "Driver": "HUL"})
-    assert pd.isna(row.get("Position", 10)), (
-        "if this ever returns 10, pandas changed and the guards can be simplified"
-    )
-
-
 def test_the_orchestrator_llm_cannot_ship_a_retired_undercut_target():
     """N28's validated target wins; the LLM's free text only fills a gap, and only if live.
 

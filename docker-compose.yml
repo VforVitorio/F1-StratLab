@@ -17,6 +17,7 @@ services:
       - ./src/telemetry/backend:/app/backend
       - ./src:/app/src:ro
       - ./data:/app/data:ro
+      - ./data/cache/fastf1:/app/data/cache/fastf1:rw
       - ./data/rag:/app/data/rag:rw
       - backend_cache:/root/.cache
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload

@@ -1,7 +1,7 @@
 """Every race directory resolves in every gp_name-keyed lookup.
 
 The fourth occurrence of one defect (#448, #450, #797, and the 2026-08-04 sweep in
-`documents/audits/PR3_GP_KEYSPACE_SWEEP.md`): a GP is spelled four ways across this project
+`documents/audits/implementation/pr3-gp-keyspace-sweep.md`): a GP is spelled four ways across this project
 and a lookup keyed by one of them is queried with another, so it misses and takes its
 fallback without a word. Each previous fix repaired the site that hurt and left the rest.
 

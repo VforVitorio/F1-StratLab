@@ -445,7 +445,6 @@ def test_the_leader_who_pits_early_ranks_closer_than_the_screen_suggests():
     ]
     ranked = rank_targets(rivals, config, our_pit_loss_s=22.0)
     assert ranked[0].driver == "LEADER"
-    assert abs(ranked[0].projected_gap_s) < abs(ranked[0].current_gap_s) + 1e-9 or True
     leader = next(target for target in ranked if target.driver == "LEADER")
     assert leader.projected_gap_s == pytest.approx(-1.5, abs=0.01), (
         "both cars pay the same pit loss, so the gap survives the cycle intact"

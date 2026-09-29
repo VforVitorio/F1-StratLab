@@ -5,8 +5,8 @@ memory updated, and a handoff prompt written for the next session. Nothing here 
 the sequencing contract.
 
 Reads with: `documents/research/PITWALL_V2_ARCHITECTURE.md` (the design, including the sections the
-gates refuted), `documents/audits/GATE_PITWALL_ARCH_A.md` (data plane, 15 findings),
-`documents/audits/GATE_PITWALL_ARCH_B.md` (repo fit, 8 findings, plus two inventories that are
+gates refuted), `documents/audits/gates/pitwall-arch-a.md` (data plane, 15 findings),
+`documents/audits/gates/pitwall-arch-b.md` (repo fit, 8 findings, plus two inventories that are
 deliverables in their own right).
 
 ---
@@ -298,7 +298,7 @@ bests need.
 
 Two rules that must be written into the code, not assumed:
 
-- **The reveal is per driver and strict**: reveal driver *d*'s lap *L* iff
+- The reveal is per driver and strict: reveal driver *d*'s lap *L* iff
   `L <= wire.drivers[d].laps_completed`. **Not `lap`**, which is a rounded interpolation of a
   step function: measured non-monotone on 101 frames of 2.49 M, so it flickers a lap open a tick
   early at the line, and it never opens a finisher's final lap.
@@ -306,7 +306,7 @@ Two rules that must be written into the code, not assumed:
   Gate A measured that at **96% of instants the running field spans 2 or 3 different laps**, and the
   tick carries only the main driver's lap. Masking everyone at the main driver's lap lags the
   leaders by a lap and leaks 1-2 laps of look-ahead for cars behind, simultaneously.
-- **`race_order` is meaningless until every car has completed a lap.** On frame 0 the field is
+- `race_order` is meaningless until every car has completed a lap. On frame 0 the field is
   ordered by millimetres of accumulated distance (measured: HUL "leads" by 6 mm), and through
   lap 1 each car's fraction is normalised by its OWN first-lap length, which biases the back of
   the grid (measured: a car starting P7 reads P2). `gaps.py` says so - "excluding the opening
@@ -319,10 +319,10 @@ Two rules that must be written into the code, not assumed:
   the live wire at lap 23 - three of twenty drivers under one lap, and all three OUT. A chip that
   is permanently lit marks nothing. The test is over the cars that can still contribute a
   classification, which a stopped one never will (#922).
-- **A rewind UN-reveals.** `laps_completed` falls when the clock goes back, so a lap that was
+- A rewind UN-reveals. `laps_completed` falls when the clock goes back, so a lap that was
   open must close again; a reveal cache keyed only on "seen once" leaks the whole future after
   one seek to the end.
-- **The bests panel RECOMPUTES from the revealed subset; it does not trust `IsPersonalBest`.**
+- The bests panel RECOMPUTES from the revealed subset; it does not trust `IsPersonalBest`.
   **This rule used to sit in the sprint-6 paragraph below**, which owns band 3, but the bests
   panel is band 2, so sprint 5 either applies it or ships trusting the flag and sprint 6
   "corrects" a panel it does not build. The column is safe under masking (Gate A: a running flag,
@@ -334,7 +334,7 @@ Two rules that must be written into the code, not assumed:
   generated`: a deleted time does not count, and a generated row has no time at all. The column
   also holds a literal `None` alongside True/False, so it never crosses the bridge as a third
   state.
-- **The gap column is lap-quantised and says so on screen.** Take it from the BULK reader over `laps.parquet`, labelled
+- The gap column is lap-quantised and says so on screen. Take it from the BULK reader over `laps.parquet`, labelled
   as at-the-line. **Two API names this line used to give are dead ends**: `get_rival_states` is a
   simulation-layer method PITWALL cannot reach, and `overlays._gap_value` no longer exists (#844
   removed it). The lap-quantised intent survives both.
@@ -515,7 +515,7 @@ one that would not have been found by a doc sweep is
 `tests/agents/test_overtake_domain.py:231`, which imports `format_situation` from the dashboard
 package for a **domain** test. Also: `tests/surfaces/test_arcade_dashboard_imports.py` (13 modules),
 `src/arcade/app.py:332`, `src/arcade/stream.py:6` (docstring), `docs/pages/arcade-quick-start.md:34`,
-two drawio diagrams, and `documents/audits/AUDIT_P2_LOADING.md:71`.
+two drawio diagrams, and `documents/audits/assessments/p2-loading.md:71`.
 
 **Packaging has zero precedent** (Gate B, finding H). CI has never run a Node build step, package
 data covers only yaml/yml/json, and the repo already has a scar from that same mechanism leaking
@@ -574,22 +574,22 @@ Full directives in `PITWALL_V2_ARCHITECTURE.md` section 6. The five that will ac
 Per sprint, not at the end. The Qt surface's coverage today is one import-smoke file (P3 A18); the
 bar is low and easy to clear.
 
-- **Sprint 1**: sample continuity across a speed change and across a seek; the golden payload; the
+- Sprint 1: sample continuity across a speed change and across a seek; the golden payload; the
   lapped-car gap case (#844's cause 2 is largest exactly there).
-- **Sprint 2**: token drift across ALL copies; every `js_api` method returns JSON-serialisable data
+- Sprint 2: token drift across ALL copies; every `js_api` method returns JSON-serialisable data
   (a numpy scalar or a `Timestamp` fails silently across the bridge, which is the worst kind);
   `frameClock` truncation.
-- **Sprint 3**: the formatter layer, which is dict-in/string-out and was never tested.
-- **Sprints 4-6**: the masking rule, per driver and strict, including a lapped car and a lap-1
+- Sprint 3: the formatter layer, which is dict-in/string-out and was never tested.
+- Sprints 4-6: the masking rule, per driver and strict, including a lapped car and a lap-1
   retirement.
-- **Sprint 7**: a wheel built, installed clean, and run.
+- Sprint 7: a wheel built, installed clean, and run.
 
 Assert the **effect**, never the constant. A test that asserts `CFG.x == 0.2335` passed for a year
 over a threshold that could never fire.
 
 ## 9. Carried forward, unresolved
 
-- **Race control messages: RESOLVED 2026-08-09.** They already exist. `SessionData.events` is a
+- Race control messages: RESOLVED 2026-08-09. They already exist. `SessionData.events` is a
   dead field and being empty says nothing about them; the messages come from `src/nlp/radio_runner.py`
   (out of `rcm.parquet`) as `RaceState.rcm_events`, and the **Radio card already renders them**
   in its body and tooltip, so PITWALL's AGENTS window shows them today, alongside the radio
@@ -598,7 +598,7 @@ over a threshold that could never fire.
   (`track_status`, already on the wire); the message TEXT already has a home. If the DATA window
   wants its own ticker, that is one additive wire field from an existing producer, not a pipeline.
   Full source map: `PITWALL_SPRINT4_SOURCES.md`.
-- **A driver whose telemetry drops mid-race under-reveals** (OBS-4). An officially-Finished car
+- A driver whose telemetry drops mid-race under-reveals (OBS-4). An officially-Finished car
   with a dropout gets its flag crossing at the dropout frame, so `laps_completed` stops there and
   the reveal withholds that driver's later parquet laps. Data-honest - the replay has no telemetry
   to place them - and unreachable on Melbourne, where all twenty run to the line. Written down so
@@ -626,8 +626,8 @@ over a threshold that could never fire.
   start/finish line, 92.3 s and 90.7 s of active frames, while speed and gear kept moving. About
   two drivers a race. `kind="stable"` takes all of it to zero.
   Band 4's own defence stays (`traceBuffer.ts`, #1066): it guards against an older producer.
-- **#199 Phase D.3 gains weight.** `snapshot_dict` re-runs a recursive `asdict` over the 30-entry
+- #199 Phase D.3 gains weight. `snapshot_dict` re-runs a recursive `asdict` over the 30-entry
   tail ten times a second with a blocking `sendall`, so one stalled subscriber can hitch the pyglet
   frame loop. Inherited, not introduced, but the wire is now load-bearing.
-- **#283 must not be closed wholesale.** Its relay premise is void, but its gap-provider bullet
+- #283 must not be closed wholesale. Its relay premise is void, but its gap-provider bullet
   (`intervals.parquet`) is exactly what the timing table's live gaps need once `global_t_min` ships.

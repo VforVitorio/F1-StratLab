@@ -225,6 +225,8 @@ export interface PlanTimelineView {
   } | null;
   current_lap: number | null;
   current_pct: number | null;
+  /** Why no future stint is drawn in deterministic mode. */
+  empty_state: string | null;
   /** The orchestrator's plan line, verbatim; may carry the compound pill. */
   caption: string;
 }

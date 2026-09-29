@@ -184,3 +184,30 @@ def apply_guard_rails(
         )
 
     return action, None
+
+
+def stop_is_admissible(
+    lap: int,
+    total_laps: int,
+    compound: str,
+    tyre_life: int,
+    sc_active: bool = False,
+    *,
+    cliff_p10: float | None = None,
+) -> bool:
+    """Return whether a PIT action survives the existing deterministic rails.
+
+    The optional cliff percentile preserves the late-race exception when the
+    tyre model has already produced it. A caller without that model input gets
+    the conservative no-cliff assumption instead of a fabricated emergency.
+    """
+    action, _ = apply_guard_rails(
+        "PIT_NOW",
+        lap,
+        total_laps,
+        compound,
+        tyre_life,
+        cliff_p10=99.0 if cliff_p10 is None else cliff_p10,
+        sc_active=sc_active,
+    )
+    return action == "PIT_NOW"

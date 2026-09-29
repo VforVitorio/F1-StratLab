@@ -196,3 +196,53 @@ def test_the_regulation_example_still_cites_no_hardcoded_article(prompt: str) ->
     echoed into the output and is wrong for two seasons out of three.
     """
     assert "30.5(" not in prompt
+
+
+@pytest.mark.unit
+def test_retrieved_regulation_passage_outvotes_an_untrusted_summary(race_state) -> None:
+    """Layer 3 must see the condition that N30 could omit from its paraphrase."""
+    from src.agents.strategy_orchestrator import (
+        _build_orchestrator_prompt,
+        _format_regulation_sources,
+    )
+
+    sources = _format_regulation_sources(
+        {
+            "chunks": [
+                {
+                    "article": "Article 30.5",
+                    "section_title": "30.5 Use of Tyres",
+                    "text": (
+                        "n) If the formation lap starts behind the safety car or the race "
+                        "is resumed, wet-weather tyres are compulsory. A penalty applies "
+                        "at such times."
+                    ),
+                }
+            ]
+        }
+    )
+    prompt = _build_orchestrator_prompt(
+        race_state,
+        {},
+        "PIT_NOW",
+        regulation_context="Changing tyre specification under any Safety Car is forbidden.",
+        regulation_sources=sources,
+    )
+
+    assert sources in prompt
+    assert "N30 SUMMARY (untrusted paraphrase" in prompt
+    assert "apply a rule only when its quoted condition holds" in prompt
+    assert prompt.index("REGULATION EVIDENCE") < prompt.index("N30 SUMMARY")
+
+
+@pytest.mark.unit
+def test_safety_car_question_keeps_the_tyre_case_and_its_exceptions() -> None:
+    """The retrieval query must not solve the bug by changing the question."""
+    from src.agents.strategy_orchestrator import _build_rag_question
+
+    question = _build_rag_question(True, None, "MEDIUM")
+
+    assert "pit lane" in question
+    assert "tyre specifications" in question
+    assert "wet formation-lap start" in question
+    assert "race resumption" in question

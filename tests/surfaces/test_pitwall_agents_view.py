@@ -221,6 +221,7 @@ def test_the_plan_timeline_invents_nothing_it_was_not_told():
         "current_lap": None,
         "current_pct": None,
         "caption": "Pit plan pending",
+        "empty_state": None,
     }
 
     # An unknown compound: neutral, and it says so by carrying no name.
@@ -237,6 +238,48 @@ def test_the_plan_timeline_invents_nothing_it_was_not_told():
     )
     assert [s for s in nameless["segments"] if s["planned"]] == []
     assert nameless["pit_lap"] == 24, "the marker still shows; only the bar is withheld"
+
+
+def test_no_llm_plan_timeline_explains_why_no_future_stint_is_drawn():
+    """The deterministic profile has no pit forecast, not a missing-data failure."""
+    from src.pitwall.agents_view.timeline import build_plan_timeline
+
+    timeline = build_plan_timeline(
+        [{"lo": 1, "hi": 23, "compound": "MEDIUM"}],
+        {"pit_lap_target": None, "compound_next": None},
+        {"total_laps": 57},
+        23,
+        None,
+        "#f59e0b",
+        "stint continues · no pit window yet",
+        no_llm=True,
+    )
+
+    assert timeline["empty_state"] == "No future pit plan in deterministic mode"
+    assert all(not segment["planned"] for segment in timeline["segments"])
+
+    llm_timeline = build_plan_timeline(
+        [],
+        {"pit_lap_target": None, "compound_next": None},
+        {"total_laps": 57},
+        23,
+        None,
+        "#f59e0b",
+        "Pit plan pending",
+    )
+    assert llm_timeline["empty_state"] is None
+
+
+def test_agents_view_uses_the_run_profile_for_the_plan_empty_state():
+    latest = _latest()
+    latest["pit_lap_target"] = None
+    latest["compound_next"] = None
+    payload = _payload(latest=latest)
+    payload["strategy"]["start"]["no_llm"] = True
+
+    timeline = _host(payload).get_agents_view(-1)["plan_timeline"]
+
+    assert timeline["empty_state"] == "No future pit plan in deterministic mode"
 
 
 def test_the_last_lap_lands_on_the_flag():
@@ -635,6 +678,7 @@ def test_the_tooltips_return_data_and_never_markup():
         "`None` rather than an empty string: a falsy value that is also a legitimate "
         "rendering is the sentinel shape this repo keeps paying for"
     )
+    assert rag_tooltip("") is None, "unstructured wire text is never a source tooltip"
 
     chunks = [
         {"article": f"Article {n}", "doc_type": "Sporting Regulations", "year": 2025, "text": "t"}
@@ -985,6 +1029,115 @@ def test_the_view_is_what_the_qt_window_renders_line_for_line():
     assert cards["pit"]["headline"] == "stop 22.40s → HARD"
     assert cards["radio"]["headline"] == "quiet"
     assert cards["rag"]["headline"] == "regulation loaded"
+
+
+def test_active_rag_without_a_result_is_not_rendered_as_loaded():
+    latest = _latest()
+    latest["per_agent"].update(
+        active=["N28", "N30"],
+        rag=None,
+        regulation_context="",
+    )
+
+    card = _host(_payload(latest=latest)).get_agents_view(-1)["cards"]["rag"]
+
+    assert card["headline"] == "routed, no RAG result"
+    assert card["status"] == "IDLE"
+    assert card["lines"] == []
+    assert card["tooltip"] is None
+
+
+def test_empty_structured_rag_is_not_rendered_as_loaded():
+    for structured_result in ({}, {"answer": "", "chunks": []}):
+        latest = _latest()
+        latest["per_agent"].update(
+            active=["N28", "N30"],
+            rag=structured_result,
+            regulation_context="",
+        )
+
+        card = _host(_payload(latest=latest)).get_agents_view(-1)["cards"]["rag"]
+
+        assert card["headline"] == "routed, no RAG result"
+        assert card["status"] == "IDLE"
+        assert card["lines"] == []
+        assert card["tooltip"] is None
+
+
+def test_retrieved_rag_context_without_an_answer_is_not_rendered_as_loaded():
+    latest = _latest()
+    latest["per_agent"].update(
+        active=["N28", "N30"],
+        rag={
+            "question": "What happens under the Safety Car?",
+            "answer": "",
+            "chunks": [
+                {
+                    "article": "55.17",
+                    "doc_type": "Sporting Regulations",
+                    "year": 2025,
+                    "text": "The race will end behind the safety car.",
+                }
+            ],
+        },
+        regulation_context="",
+    )
+
+    card = _host(_payload(latest=latest)).get_agents_view(-1)["cards"]["rag"]
+
+    assert card["headline"] == "retrieved context, no RAG answer"
+    assert card["status"] == "WATCH"
+    assert card["tooltip"]["sections"][0]["title"] == "Question"
+    assert card["tooltip"]["sections"][-1]["title"].endswith("55.17")
+
+
+def test_legacy_rag_text_is_visible_but_not_mistaken_for_a_structured_answer():
+    latest = _latest()
+    legacy_context = "Article 55.17 applies while the Safety Car is deployed."
+    latest["per_agent"].update(
+        active=["N28", "N30"],
+        rag=None,
+        regulation_context=legacy_context,
+    )
+
+    card = _host(_payload(latest=latest)).get_agents_view(-1)["cards"]["rag"]
+
+    assert card["headline"] == "legacy regulation context"
+    assert card["status"] == "WATCH"
+    assert [line["text"] for line in card["lines"]] == [legacy_context]
+    assert card["tooltip"] is None
+
+
+def test_structured_rag_answer_keeps_its_question_and_source_tooltip():
+    latest = _latest()
+    latest["per_agent"].update(
+        active=["N28", "N30"],
+        rag={
+            "question": "What happens if the Safety Car stays out?",
+            "answer": "The race ends behind the Safety Car.",
+            "chunks": [
+                {
+                    "article": "55.17",
+                    "doc_type": "Sporting Regulations",
+                    "year": 2025,
+                    "text": "The race will end behind the safety car.",
+                }
+            ],
+        },
+        regulation_context="must not replace the structured payload",
+    )
+
+    card = _host(_payload(latest=latest)).get_agents_view(-1)["cards"]["rag"]
+
+    assert card["headline"] == "regulation loaded"
+    assert card["status"] == "OK"
+    assert card["tooltip"]["sections"][0] == {
+        "title": "Question",
+        "rows": [{"lead": "", "text": "What happens if the Safety Car stays out?"}],
+    }
+    source_title = card["tooltip"]["sections"][-1]["title"]
+    assert source_title.startswith("Sporting Regulations 2025")
+    assert source_title.endswith("55.17")
 
 
 def test_the_situation_card_says_out_of_range_and_never_zero_per_cent():

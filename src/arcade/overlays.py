@@ -1104,6 +1104,7 @@ class ControlsLegend:
         ("A", "Toggle all 20 cars"),
         ("D", "Toggle DRS zones"),
         ("B", "Toggle progress bar"),
+        ("W", "Toggle strategy wake override"),
         ("C", "Toggle this list"),
         ("ESC", "Close"),
     )

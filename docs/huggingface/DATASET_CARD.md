@@ -30,11 +30,17 @@ Links:
 - Source code: https://github.com/VforVitorio/F1-StratLab
 - Models: https://huggingface.co/VforVitorio/f1-strategy-models
 
-## Coverage
+## Training coverage
 
-- 70 Grand Prix, 2023 to 2025 seasons.
+- 70 Grand Prix from the 2023 to 2025 seasons.
 - Sources: FastF1 and OpenF1 public APIs.
 - Per-lap telemetry, tire compound and age, stint structure, gaps and race-control events.
+
+## FIA regulations for retrieval
+
+The separate `data/rag/documents/` corpus contains FIA Sporting Regulations from 2023,
+2024, 2025, and 2026. F1 StratLab uses these PDFs for regulation retrieval. They are not
+additional telemetry seasons or model-training data.
 
 ## Intended use
 

@@ -390,7 +390,7 @@ def test_the_reference_is_taken_from_the_stints_early_laps_and_not_from_all_of_t
 # `lap_time_pct_of_race_fastest` -- already a TCN input feature, so no new
 # data is needed -- cuts the deg_cost_s error bound's mean absolute error from
 # 0.650 to 0.434 s/lap and its signed bias from +0.351 to +0.139 s/lap
-# (documents/audits/MEASURE_fresh_reference_quality_gate.md).
+# (documents/audits/measurements/fresh-reference-quality-gate.md).
 
 
 @pytest.mark.skipif(

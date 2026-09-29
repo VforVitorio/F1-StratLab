@@ -20,9 +20,9 @@ F1 StratLab ecosystem.
 
 | Topic | Owner |
 |---|---|
-| Stages 1-2 of the pipeline (ingestion, merge/join): race identity module, schema manifests and `f1-data verify`, the data-manager facade (`status()`, `ensure(profile)`, `ensure_race`, `ensure_radio_corpus`, `build_race_dataset`), bronze/silver/gold layering, HF Hub governance and org migration | **AUDIT_P5_DATA_ENGINEERING.md** (epic #242), especially its Phase 5, which freezes the Studio stage 1-2 contract |
-| Stages 3-7 of the pipeline (feature engineering, EDA, encoding/split, NLP labeling, retrain/registry): the per-model training extraction into `src/strategy/training/` (Fase 0), the export contract, manifests v2 with `era` field, calibration and drift monitors, retrain triggers, era-refresh checklist, adaptation techniques (RevIN, year-embedding, ShifTS) | **AUDIT_2026_REG_CONCEPT_DRIFT.md** (epic #189), especially its section 6 (the `pitlab` contract) and Phases 0-4 |
-| Download progress UX, full-calendar picker, cache unification | **AUDIT_P2_LOADING.md** (epic #170) |
+| Stages 1-2 of the pipeline (ingestion, merge/join): race identity module, schema manifests and `f1-data verify`, the data-manager facade (`status()`, `ensure(profile)`, `ensure_race`, `ensure_radio_corpus`, `build_race_dataset`), bronze/silver/gold layering, HF Hub governance and org migration | **../audits/assessments/p5-data-engineering.md** (epic #242), especially its Phase 5, which freezes the Studio stage 1-2 contract |
+| Stages 3-7 of the pipeline (feature engineering, EDA, encoding/split, NLP labeling, retrain/registry): the per-model training extraction into `src/strategy/training/` (Fase 0), the export contract, manifests v2 with `era` field, calibration and drift monitors, retrain triggers, era-refresh checklist, adaptation techniques (RevIN, year-embedding, ShifTS) | **../audits/assessments/2026-reg-concept-drift.md** (epic #189), especially its section 6 (the `pitlab` contract) and Phases 0-4 |
+| Download progress UX, full-calendar picker, cache unification | **../audits/assessments/p2-loading.md** (epic #170) |
 | NLP auto-labeling itself (weak supervision, LLM-judge, corpus) | **RADIOGATE_DECEPTION_AND_AUTOLABELING.md** (the Studio only gets a QA viewport over its outputs) |
 | **The experiment-tracker decision, the Studio screens and UX, the job orchestration layer, the local-first artifact flow, the pitlab roadmap** | **THIS document** |
 
@@ -142,25 +142,25 @@ This is a reasoned departure from FUTURE.md 6.2's ClearML lean, pending ratifica
 **Recommendation: pitlab is a SEPARATE local web app, not a section of the telemetry
 SPA.** Same stack, different process and lifecycle:
 
-- **Stack reuse (per the frontend migration plan):** React 19 + Vite + TypeScript
+- Stack reuse (per the frontend migration plan): React 19 + Vite + TypeScript
   strict, Tailwind mapped 1:1 to the existing `tokens.css` design system, TanStack
   Router + Query, Zustand for UI state, Apache ECharts as the single chart library.
   Calm Linear/Vercel register throughout: pitlab is all "working screens", so none of
   the expressive GSAP/Three.js budget applies. Charts and tables stay crisp, blur only
   on chrome, dark-first.
-- **Why separate:** (a) different cadence and audience: the telemetry SPA is the
+- Why separate: (a) different cadence and audience: the telemetry SPA is the
   race-analysis product, pitlab is the maintenance workshop, and coupling their release
   cycles couples a demo surface to an ops surface; (b) long-running GPU training jobs
   should not share a backend process with the race-analysis API; (c) the telemetry UI
   lives in the `F1_Telemetry_Manager` submodule while the training code (Fase 0) is
   core in-repo, and threading pitlab through the submodule would put its backend on the
   wrong side of that boundary.
-- **Backend:** a small dedicated FastAPI service (backend stays FastAPI, per the hard
+- Backend: a small dedicated FastAPI service (backend stays FastAPI, per the hard
   constraint) that imports `src/strategy/training/` and the #242 data-manager facade
   directly, embeds the job runner (section 6), and proxies tracker queries. Own port,
   reverse-proxied to its SPA the same way the migration serves the telemetry app, so
   no CORS and no compose churn.
-- **Where the code lives (proposal):** start in the core repo (a `src/pitlab/` service
+- Where the code lives (proposal): start in the core repo (a `src/pitlab/` service
   plus a pitlab frontend directory), because v1 is import-coupled to Fase 0 and the
   facade. Extraction into the dedicated `pitlab` repository (independent repo consumed
   as a submodule, matching the radiogate ruling) is deferred to the pending
@@ -338,24 +338,24 @@ to the monitoring experiment that Home reads.
 
 ## 7. Local-first posture and the HF flow
 
-- **One machine, no cloud.** Everything runs on a single Windows 11 machine with the
+- One machine, no cloud. Everything runs on a single Windows 11 machine with the
   uv-managed environment and the CUDA-pinned torch build. Mandatory external surface:
   none. Optional external surface: exactly one, Hugging Face Hub, and only when pulling
   data or publishing artifacts. The tracker store, job DB, logs and artifacts all live
   under the user data root (gitignored; nothing of this enters git).
-- **Pull side.** Datasets and models arrive through the existing `data_cache` machinery
+- Pull side. Datasets and models arrive through the existing `data_cache` machinery
   against the `f1stratlab` org (post #242 Phase 3 migration), era-structured, at pinned
   revisions per release. pitlab's Data screen is a UI over that, not a second
   downloader.
-- **Push side.** Publishing a promoted artifact set to HF is an explicit Registry
+- Push side. Publishing a promoted artifact set to HF is an explicit Registry
   action (proposed: manual, never automatic on promotion, open question 4): upload the
   export-contract artifact set, tag the revision, update the dataset/model card with
   the era coverage note (#189 F-15). Local promotion and HF publication are decoupled
   on purpose: the machine can run ahead of the Hub.
-- **No LLM in pitlab.** The Studio needs no LLM to function. If a convenience LLM
+- No LLM in pitlab. The Studio needs no LLM to function. If a convenience LLM
   feature ever appears (run summaries, config explanation), it uses OpenAI or LM Studio
   per the provider rule, is optional, and degrades to nothing when absent.
-- **Offline degradation.** With no network: ingest of new races fails loudly (expected),
+- Offline degradation. With no network: ingest of new races fails loudly (expected),
   everything else (train, evaluate, promote, monitor, explore) works fully on local
   data. This is a design requirement, not an accident.
 
@@ -386,29 +386,29 @@ better than running `f1-train` by hand plus the MLflow UI, stop and reassess bre
 
 ## 9. Risks and limitations (candid)
 
-- **Fase 0 is the real bottleneck, and it is not this project.** `src/strategy/training/`
+- Fase 0 is the real bottleneck, and it is not this project. `src/strategy/training/`
   is empty today; every screen above is a wrapper over code that does not yet exist.
   pitlab slipping is free; starting it early is the only real failure mode.
-- **UI surface creep.** Nine screens is a lot of frontend for one maintainer. The
+- UI surface creep. Nine screens is a lot of frontend for one maintainer. The
   mitigation is structural: the MLflow UI escape hatch means pitlab only ever needs to
   build panels that are F1-specific (compound editor, cluster pooling, gate verdicts,
   era health), and S2's stop-and-reassess gate is explicit.
-- **Wrapper drift.** If a screen grows pipeline logic (a join fixup here, a
+- Wrapper drift. If a screen grows pipeline logic (a join fixup here, a
   threshold default there), the #189/#242 ownership boundary erodes and two sources of
   truth appear. Rule: pipeline behavior changes are PRs against the owning layer, and
   the Studio version-pins the contracts it consumes (manifests v2 schema, facade
   signatures, registry schema).
-- **Manifest-driven UI depends on manifests v2 landing** (#189). Until the era field
+- Manifest-driven UI depends on manifests v2 landing (#189). Until the era field
   and schemas exist, the Dataset Builder cannot safely edit anything; S4 must not start
   early against the v1 pseudo-schema JSONs.
-- **Single-machine GPU contention.** A training job and an Arcade replay or a sim run
+- Single-machine GPU contention. A training job and an Arcade replay or a sim run
   compete for the same GPU. The queue serializes pitlab's own jobs but cannot see
   external processes; the pragmatic posture is documentation (train between sessions),
   not enforcement.
-- **Tracker bet.** MLflow-local is low risk (boring, huge community), but if the
+- Tracker bet. MLflow-local is low risk (boring, huge community), but if the
   gridmind LoRA work later wants cloud GPUs and queues, the ClearML fallback means a
   service-layer swap. Acceptable because screens never touch the tracker directly.
-- **Windows specifics.** Process-group cancellation, long path names and file locking
+- Windows specifics. Process-group cancellation, long path names and file locking
   behave differently on Windows; the job runner design must be validated there first,
   since it is the only deployment target.
 
@@ -441,12 +441,12 @@ better than running `f1-train` by hand plus the MLflow UI, stop and reassess bre
 
 ## 11. Internal references
 
-- `documents/audits/AUDIT_2026_REG_CONCEPT_DRIFT.md` (epic #189): stages 3-7 owner,
+- `documents/audits/assessments/2026-reg-concept-drift.md` (epic #189): stages 3-7 owner,
   Fase 0 contract (its section 6), monitors and triggers (its section 5), phased plan.
-- `documents/audits/AUDIT_P5_DATA_ENGINEERING.md` (epic #242): stages 1-2 owner,
+- `documents/audits/assessments/p5-data-engineering.md` (epic #242): stages 1-2 owner,
   identity module, schema contracts, data-manager facade, HF governance (its Phase 3),
   the frozen Studio ingestion contract (its Phase 5).
-- `documents/audits/AUDIT_P2_LOADING.md` (epic #170): download progress and cache UX.
+- `documents/audits/assessments/p2-loading.md` (epic #170): download progress and cache UX.
 - `documents/research/RADIOGATE_DECEPTION_AND_AUTOLABELING.md`: the NLP labeling
   automation the Radio QA screen will front.
 - `FUTURE.md` (repo root, not versioned): sections 6 (Studio, the 7-stage pipeline and

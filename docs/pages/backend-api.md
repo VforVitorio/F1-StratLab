@@ -20,17 +20,17 @@ There is no `auth` router. Authentication is a single ASGI middleware wrapping e
 
 Two more mount points sit outside the router list:
 
-- **`GET /`** and **`GET /health`**, unauthenticated liveness endpoints, registered directly on the `FastAPI` app in `main.py`.
-- **`/mcp`**, the FastMCP Streamable-HTTP server, mounted only when `F1_MCP_ENABLED=true` (off by default). The chat pipeline reaches the same tools in-process regardless of this flag, so leaving it unmounted removes an open network surface, not a feature. See "Authentication" and "MCP-Driven Tool Routing" below.
+- `GET /` and **`GET /health`**, unauthenticated liveness endpoints, registered directly on the `FastAPI` app in `main.py`.
+- `/mcp`, the FastMCP Streamable-HTTP server, mounted only when `F1_MCP_ENABLED=true` (off by default). The chat pipeline reaches the same tools in-process regardless of this flag, so leaving it unmounted removes an open network surface, not a feature. See "Authentication" and "MCP-Driven Tool Routing" below.
 
 ## Authentication
 
 Every router (and the `/mcp` mount, when enabled) sits behind a single shared-secret ASGI middleware, `ApiKeyMiddleware` (`backend/core/auth.py`, Security A1 / issue #224). It is intentionally pure ASGI rather than `BaseHTTPMiddleware`, because the latter buffers the whole response body and would break the SSE streams (`/chat/tool-message-stream`, `/simulate`).
 
-- **Header**: `X-API-Key`, compared against the `F1_API_KEY` env var with `hmac.compare_digest`.
-- **Open paths**: `/` and `/health` always pass unauthenticated (uptime probes). `OPTIONS` (CORS preflight) always passes.
-- **Safe-by-default when unset**: if `F1_API_KEY` is not set, every other request also passes, this is the local-dev default. The dangerous combination is a non-loopback bind (`F1_HOST` other than `127.0.0.1`/`localhost`/`::1`) with no key set: `enforce_startup_security()` refuses to boot in that case rather than come up open on the network.
-- **WebSocket**: gated the same way; an unauthorized WS handshake gets a policy-violation close (code 1008) instead of a 401 body.
+- Header: `X-API-Key`, compared against the `F1_API_KEY` env var with `hmac.compare_digest`.
+- Open paths: `/` and `/health` always pass unauthenticated (uptime probes). `OPTIONS` (CORS preflight) always passes.
+- Safe-by-default when unset: if `F1_API_KEY` is not set, every other request also passes, this is the local-dev default. The dangerous combination is a non-loopback bind (`F1_HOST` other than `127.0.0.1`/`localhost`/`::1`) with no key set: `enforce_startup_security()` refuses to boot in that case rather than come up open on the network.
+- WebSocket: gated the same way; an unauthorized WS handshake gets a policy-violation close (code 1008) instead of a 401 body.
 
 This means `F1_API_KEY` and `F1_HOST` (see [Setup and deployment](#/setup)) are the two env vars that decide whether the backend is safe to expose beyond localhost.
 
@@ -132,7 +132,7 @@ The frontend mints a UUID, sends it on every chat request via the `X-Request-Id`
 
 ## Voice endpoints (retired)
 
-The `/api/v1/voice` router (STT, TTS and the STT to LLM to TTS pipeline) was retired in v2: it came from a course requirement and the web app ships without it. The implementation remains available in git history and in the `legacy_version` branch (the legacy Streamlit app was removed from the repo, #551).
+The `/api/v1/voice` router (STT, TTS and the STT to LLM to TTS pipeline) was retired in v2: it came from a course requirement and the web app ships without it. The complete pre-retirement implementation is preserved in the [`legacy_version` branch](https://github.com/VforVitorio/F1_Telemetry_Manager/tree/legacy_version) of the `F1_Telemetry_Manager` submodule. It is separate from the team-radio transcript pipeline, which remains active.
 
 ## Strategy endpoints (N25-N31)
 
@@ -148,7 +148,7 @@ Streams per-lap strategy decisions as Server-Sent Events, rate-limited to 3 requ
 
 ```python
 class SimulateRequest(BaseModel):
-    year: int = 2025            # 2023-2025
+    year: int = 2025  # 2023-2025
     gp: str
     driver: str
     team: str
@@ -156,8 +156,8 @@ class SimulateRequest(BaseModel):
     lap_range: Optional[tuple[int, int]] = None
     risk_tolerance: float = 0.5  # 0-1
     no_llm: bool = False
-    provider: str = "lmstudio"   # "lmstudio" | "openai"
-    interval_s: float = 0.0      # 0-10, artificial delay between laps
+    provider: str = "lmstudio"  # "lmstudio" | "openai"
+    interval_s: float = 0.0  # 0-10, artificial delay between laps
 ```
 
 Event stream: one `start` event, then one `lap` (or `error`) event per processed lap, closed with a `summary` event. A blank SSE comment (`:\n\n`) is sent every 15 `lap` events as a heartbeat so long runs survive proxy idle timeouts.
@@ -217,30 +217,39 @@ Every POST endpoint above (plus `/pace-range` and `/tire-range`) sits behind its
 class PaceRequest(BaseModel):
     lap_state: Dict[str, Any]
 
+
 class TireRequest(BaseModel):
     lap_state: Dict[str, Any]
+
 
 class SituationRequest(BaseModel):
     lap_state: Dict[str, Any]
 
+
 class PitRequest(BaseModel):
     lap_state: Dict[str, Any]
+
 
 class RadioRequest(BaseModel):
     lap_state: Dict[str, Any]
     radio_msgs: List[Dict[str, Any]] = []
     rcm_events: List[Dict[str, Any]] = []
 
+
 class PaceRangeRequest(BaseModel):
     """Shared by /pace-range and /tire-range."""
+
     year: int = 2025
     gp: str
     driver: str
     lap_start: int
     lap_end: int
 
+
 class RagRequest(BaseModel):
     question: str
+    year: Optional[int] = None  # None = search every indexed regulation season
+
 
 class RecommendRequest(BaseModel):
     lap_state: Dict[str, Any]
@@ -263,7 +272,7 @@ All agent endpoints return the generic `StrategyResponse` envelope. Swagger also
 
 ```python
 class StrategyResponse(BaseModel):
-    agent: str       # e.g. "pace", "tire", "radio", "orchestrator"
+    agent: str  # e.g. "pace", "tire", "radio", "orchestrator"
     result: Dict[str, Any]
 ```
 

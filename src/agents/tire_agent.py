@@ -38,7 +38,9 @@ from src.agents._shared_defaults import (
     DEFAULT_TOTAL_LAPS,
     DEFAULT_TRACK_TEMP_C,
     LLM_MAX_RETRIES,
+    lm_studio_base_url,
     reading_or_default,
+    subagent_model,
 )
 from src.agents.race_state_builder import UNKNOWN_TYRE_LIFE, normalise_compound
 from src.agents.tire_parsing import parse_tool_outputs
@@ -257,9 +259,8 @@ class TireAgentConfig:
             training-season laps: gating at 1.10 cuts the deg_cost_s error bound's
             mean absolute error from 0.650 to 0.434 s/lap and its signed bias from
             +0.351 to +0.139, at the cost of 49 of 1714 stints (2.9%) losing their
-            reference entirely and falling back to ``None`` (``scripts/
-            measure_deg_error_bound.py``, ``documents/audits/MEASURE_fresh_reference_
-            quality_gate.md``).
+            reference entirely and falling back to ``None`` (``scripts/measure_deg_error_bound.py``,
+            ``documents/audits/measurements/fresh-reference-quality-gate.md``).
         deg_cost_floor_s / deg_cost_ceiling_s: Bounds on the referenced wear, in
             seconds per lap. MEASURED, not chosen: they are the 1st and 99th
             percentiles over 31,624 training-season laps
@@ -276,7 +277,6 @@ class TireAgentConfig:
 
     n_mc: int = 50
     mc_seed: int = 42
-    model_name: str = "gpt-4.1-mini"
     cliff_pit_soon_laps: int = 3
     cliff_monitor_laps: int = 7
     fresh_reference_tyre_life: int = 3
@@ -388,7 +388,7 @@ class TireAgentConfig:
         metadata name ('Miami Gardens'). Today that particular query still lands, but only
         because the pooled clustering artefact carries the race TWICE under both spellings
         (25 rows for 24 circuits) - a duplicate PR 6 removes, at which point an unresolved
-        query would start defaulting silently. See PR3_GP_KEYSPACE_SWEEP.md.
+        query would start defaulting silently. See ../../documents/audits/implementation/pr3-gp-keyspace-sweep.md.
         """
         return self.circuit_cluster_map.get(
             resolve_gp_key(self.circuit_cluster_map, gp_name), default
@@ -915,7 +915,7 @@ def _compound_name_to_id(compound_name: str, gp_name: str, year: int) -> str:
     year_data = alloc.get(str(year), {})
     # The JSON is keyed by the parquet slug. Queried with the metadata name, 2025 Miami
     # missed and took the fallback, routing MEDIUM/HARD stints to the C2/C1 TCN bundle
-    # instead of C4/C3 for the whole race (PR3_GP_KEYSPACE_SWEEP.md).
+    # instead of C4/C3 for the whole race (../../documents/audits/implementation/pr3-gp-keyspace-sweep.md).
     gp_data = year_data.get(resolve_gp_key(year_data, gp_name), {})
     return gp_data.get(compound_name.upper(), fallback.get(compound_name.upper(), "C3"))
 
@@ -1085,7 +1085,8 @@ class TireAgent:
         chased. A pooled constant cannot normalise 2,343 different zero points, and
         measurement put it at Spearman +0.188 against +0.191 for having no reference
         at all. This one measures +0.308 and 73.9% non-negative
-        (``scripts/measure_tyre_reference.py``, ``documents/audits/MEASURE_744a_*``).
+        (``scripts/measure_tyre_reference.py``,
+        ``documents/audits/measurements/744a-tyre-reference.md``).
 
         Returns ``None``, never 0.0, when the stint has no lap at the reference tyre
         life: a replay that starts mid-stint. Zero is a legitimate reading of the
@@ -1464,8 +1465,8 @@ class TireAgent:
     def get_react_agent(
         self,
         provider: str = None,
-        model_name: str = "gpt-4.1-mini",
-        base_url: str = "http://localhost:1234/v1",
+        model_name: str = None,
+        base_url: str | None = None,
         api_key: str = "lm-studio",
     ):
         """Return the LangGraph ReAct agent, creating it on the first call (lazy).
@@ -1475,8 +1476,9 @@ class TireAgent:
 
         Args:
             provider: 'lmstudio' (default) or 'openai'.
-            model_name: Model identifier for ChatOpenAI.
-            base_url: Base URL for LM Studio (ignored when provider='openai').
+            model_name: Model identifier for ChatOpenAI. Defaults to
+                ``subagent_model()``, which reads ``F1_LLM_MODEL_AGENTS``.
+            base_url: Optional base URL for LM Studio. Defaults to ``LM_STUDIO_HOST``.
             api_key: API key; use 'lm-studio' for local server.
 
         Returns:
@@ -1501,11 +1503,13 @@ class TireAgent:
 
         if provider is None:
             provider = os.environ.get("F1_LLM_PROVIDER", "lmstudio")
+        if model_name is None:
+            model_name = subagent_model()
 
         if provider == "lmstudio":
             llm = ChatOpenAI(
                 model=model_name,
-                base_url=base_url,
+                base_url=base_url or lm_studio_base_url(),
                 api_key=api_key,
                 temperature=0,
                 timeout=120,
@@ -1563,10 +1567,10 @@ class TireAgent:
             # within a cluster), and a race's own mean is a per-race number that
             # happens to have the same units.
             "cluster_mean_lap_s": TireAgentConfig._TRAINED_CLUSTER_MEAN_LAP_S.get(
-                self.cfg.cluster_for(gp_name, 0), 0.0
+                self.cfg.cluster_for(gp_name, -1), 0.0
             ),
             "total_laps": int(session.total_laps),
-            "cluster_id": self.cfg.cluster_for(gp_name, 0),
+            "cluster_id": self.cfg.cluster_for(gp_name, -1),
             "team_id": _encode_team_id(self.cfg.team_id_map, stint_state.get("team", "Unknown")),
             "year": stint_state.get("year", 2025),
             "AirTemp": float(_weather.get("AirTemp", DEFAULT_AIR_TEMP_C)),
@@ -1646,10 +1650,10 @@ class TireAgent:
             # above: this race's own mean lap time is a different quantity wearing the
             # same units.
             "cluster_mean_lap_s": TireAgentConfig._TRAINED_CLUSTER_MEAN_LAP_S.get(
-                self.cfg.cluster_for(gp_name, 0), 0.0
+                self.cfg.cluster_for(gp_name, -1), 0.0
             ),
             "total_laps": total_laps,
-            "cluster_id": self.cfg.cluster_for(gp_name, 0),
+            "cluster_id": self.cfg.cluster_for(gp_name, -1),
             "team_id": _encode_team_id(self.cfg.team_id_map, team),
             "year": year,
             # reading_or_default, not .get(key, default): the producers report an

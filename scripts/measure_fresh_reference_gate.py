@@ -2,9 +2,9 @@
 
 `deg_cost_s = pred(now) - pred(fresh reference)`, both from the TCN. Its TRUE
 counterpart is the same difference taken on N04's own target column, and the
-error is the difference of the two differences -- the same bound
-`scripts/measure_deg_error_bound.py` (branch `feat/deferral-tyre-liability`,
-issue #763) measured at 0.650 s/lap mean absolute, +0.351 s/lap signed bias.
+error is the difference of the two differences. The current reproducible
+instrument is this script; an older branch-only name was removed from the
+reference because that file is no longer present.
 
 That investigation traced the growth to a small number of STINTS whose
 fresh-reference lap (`TyreLife <= FRESH_MAX_TYRE_LIFE`) was itself a

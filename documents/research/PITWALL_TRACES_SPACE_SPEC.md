@@ -1,6 +1,6 @@
 # PITWALL · DATA - the traces, the slack, and the radio: the space spec
 
-**Status: SPEC, awaiting sign-off on the questions in section 8. Nothing here is built.**
+**Status: design spec; the questions in section 8 still need sign-off. Related PITWALL components exist in the codebase, but this document has not been verified as fully implemented.**
 
 Sprint 9's elevate pass shipped (#987-#996) and skipped the three items the agreed layout drawing
 had explicitly assigned to it. Two of them are visible in the shipped window: an empty gap at the
@@ -41,7 +41,7 @@ plus the radio squeeze, checked line by line against the drawing agreed on 2026-
   750 with 150 empty; `.traces-grid` 533 x 666, cells 262 x 328; `.radio-feed` 260 x 404, 42
   events ~10 visible; ring SVG 200). Every one of those numbers was re-derived here from the
   shipped CSS and matches to within 4 px; the derivations are shown inline in section 4.
-- **Executed fresh for this spec** on `data/cache/arcade/Melbourne_2025_race.pkl` (the real
+- Executed fresh for this spec on `data/cache/arcade/Melbourne_2025_race.pkl` (the real
   session the producer serves): `circuit_length_m = 5219.98`; 154,173 frames x 20 drivers; NOR's
   gear distribution spans **1-8, all eight values present** (gear 1: 1,309 frames); NOR's raw
   `drs` codes are dominated by 0/1/8 with the open set `{10, 12, 14}` totalling **555 frames,
@@ -264,14 +264,14 @@ open set `{10, 12, 14}` occurs (555 frames) so the DRS lane is real, and it is r
 
 ### 5.2 Every axis rule carried over, one rule new
 
-- **X**: `[0, circuit_length_m]` with the `MIN_CREDIBLE_CIRCUIT_M` guard and `FALLBACK_X_MAX`,
+- X: `[0, circuit_length_m]` with the `MIN_CREDIBLE_CIRCUIT_M` guard and `FALLBACK_X_MAX`,
   unchanged. **Only lane 6 renders tick labels and the axis name** ("Distance (m)", `1k`-form
   labels, `nameGap 20`); lanes 1-5 hide `axisLabel` and `axisTick`. This is where the height
   comes from: the 2x2 paints four 36-px axis bands, the stack paints one 34-px band.
-- **Y**: locked per lane, bounds unlabelled, interior ticks at 10 px - the shipped `valueAxis`
+- Y: locked per lane, bounds unlabelled, interior ticks at 10 px - the shipped `valueAxis`
   behaviour, applied per grid. GEAR labels integers only; DRS hides y labels entirely (a binary
   lane's label row and readout carry the meaning).
-- **All six grids share `left: 44, right: 12`** so the lanes align and the cursor is one straight
+- All six grids share `left: 44, right: 12` so the lanes align and the cursor is one straight
   line. Lane plot width: `533 - 56 = 477 px` at 1485 (today: 206 per cell), `313 - 56 = 257 px`
   at 1265 (today: ~152 per cell, "the plot is 152 px, the axis about 120").
 
@@ -294,7 +294,7 @@ Unchanged semantics, restated for the stacked form:
 
 ### 5.4 The shared cursor and its readout
 
-- **The cursor is the car's live lap position**: `drivers[driver_main].rel_dist * xMax`, exactly
+- The cursor is the car's live lap position: `drivers[driver_main].rel_dist * xMax`, exactly
   today's source (the DRIVERS block, never the span tail). Rendered as **ONE absolutely
   positioned overlay div** - 1 px, solid, `CURSOR_LINE #9ca3af` (`TEXT_TERTIARY`, the taken
   stroke) - spanning from lane 1's top to lane 6's bottom at
@@ -302,7 +302,7 @@ Unchanged semantics, restated for the stacked form:
   across the gaps, and cannot shimmer (the solid-not-dashed lesson is inherited). The transform
   is linear against a locked axis, so the duplication risk is two constants (44, 12) already
   owned by the option builder.
-- **Per-lane readout** (MoTeC/AiM convention, sections 3.1 and 3.6): each lane carries a 12-px label row
+- Per-lane readout (MoTeC/AiM convention, sections 3.1 and 3.6): each lane carries a 12-px label row
   inside its own height - left: the channel name + unit in the lane's colour
   (`SPEED km/h · Δ TIME s · THROTTLE % · BRAKE % · GEAR · DRS`); right: the current value from
   the newest main-span sample, 10 px mono (`287 · +0.42 · 100 · 0 · 7 · OPEN/CLOSED`). The
@@ -334,7 +334,7 @@ AFTER (stack, same 533 x 666 box):
   height spent on data: 602 of 666
 ```
 
-- **Height returned to the column: 0 - by design.** The drawing draws the traces at full column
+- Height returned to the column: 0 - by design. The drawing draws the traces at full column
   height and says "the traces are not oversized". What the stack returns is INTERNAL:
   **78 px of chrome converted to data** (142 -> 64), **two new channels** (gear 82 + DRS 38 =
   120 px, paid for by that chrome plus the four original lanes each giving up height), and
@@ -612,21 +612,21 @@ borderline at 200 px).
 
 ## Summary
 
-- **Deviations found (agreed drawing vs shipped): 10 catalogued; 3 are real unbuilt work**
+- Deviations found (agreed drawing vs shipped): 10 catalogued; 3 are real unbuilt work
   (BESTS at 153 vs 302 · the 2x2 vs the stacked form · gear+DRS absent), **1 is a transposed
   pair in the drawing itself** (the radio's "417 x 260" - shipped is 13 px off the internally
   consistent reading, not 157), the rest are documented consequences of the 630-px column and
   the tab strip. Plus one docs over-claim (`PITWALL_DELIVERY_PLAN.md:393` says "stacked" shipped).
-- **Height returned to the column by the stacked form: 0, by design** - the drawing draws the
+- Height returned to the column by the stacked form: 0, by design - the drawing draws the
   traces at full column height. The return is internal: 78 px of axis/title chrome converted to
   data, two new channels (gear 82 px + DRS 38 px) riding on it, x-resolution per channel 2.3x
   (206 -> 477 px at 1485; 152 -> 257 at 1265), four chart instances collapsed to one. The left
   column's 150 px is filled by BESTS ranking to depth 10 (272 of 303, 31 px of air); the radio
   keeps its agreed 260-px home and gets #986's chips + duplicate collapse + a visible-fold count.
-- **Producer change: one, priced**: `drs_open` decoded in `_frame_to_telemetry`
+- Producer change: one, priced: `drs_open` decoded in `_frame_to_telemetry`
   (`src/arcade/app.py:162`) from a `DRS_OPEN_CODES` constant promoted to `src/arcade/config.py`,
   ~80 bytes/tick, no schema bump, two wire tests move with it.
-- **Decisions still open: Q1** (full-height stack per the drawing, recommended, vs
+- Decisions still open: Q1 (full-height stack per the drawing, recommended, vs
   compact stack + a full-width 825 x 230 radio band at the wide client) **and Q3** (BESTS fills
   its 302 with depth-10 ranks - recommended - vs a RaceX-style Bests-Speed block). Q2 (lane
   order) and Q4 (the 417) are one-line follow-ups either way.

@@ -29,38 +29,39 @@ graph TD
     ORCH --> N27
     ORCH --> N29
 
-    N26 -->|tire_warning == PIT_SOON| N28
+    N26 -->|warning_level == PIT_SOON| N28
     N29 -->|PROBLEM or WARNING alert| N28
-    N27 -->|sc_prob > 0.30| N30
+    N27 -->|SC probability above configured threshold| N30
     N29 -->|WARNING intent, or an RCM RED_FLAG / TIME_PENALTY| N30
     N28 -->|always when N28 active| N30
     N27 -->|sc_currently_active, overrides every threshold| N28
     N27 -->|sc_currently_active, overrides every threshold| N30
 
     subgraph "Layer 2: Monte Carlo simulation"
-        MC[500 draws x 4 candidates<br/>STAY_OUT / PIT_NOW / UNDERCUT / OVERCUT<br/>score = alpha * E + 1-alpha * P10]
+        MC[500 shared draws x 4 candidates<br/>N26 cliff / N27 SC / N28 pit and undercut<br/>N25 pace_i draw retained for RNG order, not scored<br/>STAY_OUT / PIT_NOW / UNDERCUT / OVERCUT<br/>score = alpha * E + 1-alpha * P10]
     end
 
     subgraph "Layer 3: LLM synthesis"
-        LLM[ChatOpenAI.with_structured_output<br/>StrategyRecommendation]
+        LLM[ChatOpenAI.with_structured_output<br/>_LLMSynthesis, 12 fields]
     end
 
-    N25 --> MC
-    N26 --> MC
-    N27 --> MC
-    N28 --> MC
+    N25 -->|pace_i draw only, not scored| MC
+    N26 -->|cliff distribution| MC
+    N27 -->|SC distribution| MC
+    N28 -->|pit and undercut distributions| MC
     MC --> LLM
     N29 --> LLM
     N30 --> LLM
-    LLM --> REC[StrategyRecommendation]
+    LLM -->|N31 adds MC scores + N30 context| REC[StrategyRecommendation, 14 fields]
 ```
 
 **Routing rules (text equivalent of the diagram above):**
 
 - The orchestrator always runs the four always-on agents: N25 Pace, N26 Tire, N27 Race Situation and N29 Radio.
-- N28 Pit Strategy activates when N26 reports `tire_warning == PIT_SOON`, when N29 raises a PROBLEM or WARNING alert, or when N27 reports an active Safety Car.
-- N30 RAG activates when N27 reports `sc_prob > 0.30`, when N28 is active, or under an active Safety Car.
-- Monte Carlo then draws 500 samples over four candidates (STAY_OUT, PIT_NOW, UNDERCUT, OVERCUT), scoring `score = α·E + (1−α)·P10`, and the LLM synthesises the final `StrategyRecommendation`. Since the projection redesign the score is measured in **projected track position**, not in seconds, see [What the Monte Carlo actually scores](#/multi-agent) below.
+- In the RSM `*_from_state` adapter, N25 and N27 run in parallel; N26 and N29 run sequentially. N25 receives `lap_state`; N27 receives a copy enriched with RCM events plus `laps_df`; N26 and N29 receive `lap_state` plus `laps_df`. The Pydantic `RaceState` is N31 context, not a substitute for these adapter arguments.
+- N28 Pit Strategy activates when N26 reports `warning_level == PIT_SOON`, when N29 raises a PROBLEM or WARNING alert, or when N27 reports an active SC or VSC.
+- N30 RAG activates when N27's SC probability exceeds its configured threshold, when N29 reports a qualifying warning or RCM penalty, when N28 is active, or under an active SC or VSC.
+- Monte Carlo scores four candidates (STAY_OUT, PIT_NOW, UNDERCUT, OVERCUT) on 500 shared draws. N26 cliff, N27 SC and N28 pit/undercut samples enter the payoff. N25's pace sample is retained for the seeded RNG sequence but is not scored. The formula is `score = α·E[S] + (1−α)·P10[S]`. With finite rival gaps, `S` is terminal positions gained plus a small margin-weighted tie-break. Without usable gaps, the legacy path converts `time_delta / POS_GAP_S` into position-equivalent units (`POS_GAP_S = 1.5 s/position`), not seconds or absolute positions. See [What the Monte Carlo actually scores](#/multi-agent) below.
 
 ## Three-window arcade
 
@@ -70,7 +71,7 @@ Since Phase 3.5 Proceso B (April 2026), the `python -m src.arcade.main ... --str
 graph LR
     subgraph arcade["Arcade process (pyglet)"]
         REPLAY[F1ArcadeView<br/>race replay]
-        PIPE[StrategyPipeline<br/>local N31 copy]
+        PIPE[StrategyPipeline<br/>shared run_lap engine]
         STREAM[TelemetryStreamServer<br/>TCP 127.0.0.1:9998]
     end
 
@@ -92,7 +93,7 @@ Four properties are load-bearing:
 
 1. **The arcade owns the `TelemetryStreamServer`.** `src/arcade/stream.py` exposes the merged arcade + strategy snapshot; every other window is a subscriber, never the source of truth.
 2. **One subprocess hosts both windows.** The arcade spawns a single `subprocess.Popen`. Two windows in one process is cheaper than two, and it is what lets them share a single stream reader.
-3. **The two windows share ONE stream reader.** `PitwallHost` owns a single `ArcadeStreamClient` and both windows poll it by sequence number, so they cannot disagree about which frame they are showing - a blind latest-payload slot had them differing on 58% of polls. Closing one window only decrements a count; it does not blind the other.
+3. **The two windows share one stream client, not a synchronized poll.** `PitwallHost` owns a single `ArcadeStreamClient`. DATA calls `get_tick()` and AGENTS calls `get_agents_view()`, which reads through `get_tick()` independently. A new payload can arrive between those polls, so their sequence numbers can differ. Closing one window only decrements a count; it does not blind the other.
 4. **Arcade runs the strategy pipeline in-process.** `src/arcade/strategy_pipeline.py` delegates to the shared engine (`src/strategy/inference/engine.py::run_lap`), so the arcade does not depend on the FastAPI backend at runtime and does not carry its own copy of the orchestrator. It used to; that copy drifted and crashed (#166), which is why the engine exists.
 
 See [Arcade strategy pipeline](#/arcade-strategy-pipeline) for the shared engine and its profiles, and [PITWALL windows](#/pitwall) for the follower architecture.
@@ -103,25 +104,25 @@ See [Arcade strategy pipeline](#/arcade-strategy-pipeline) for the shared engine
 
 Wraps the N06 XGBoost delta-lap-time model. Returns predicted lap time, delta signals against previous lap and session median, and bootstrap confidence intervals (N=200 draws with 2% Gaussian noise on continuous features).
 
-- **Model**: XGBoost fitted on 2023-2024 lap data, with **2025 held out**. This line used to read "2023-2025", which folded the test season into the training set: the feature manifest's own row counts are 22,106 train and 23,256 validation, exactly the 2023 and 2024 featured parquets, and every operating bound below is measured on those two seasons for the same reason.
-- **Output**: `PaceOutput` (lap_time_pred, delta_vs_prev, delta_vs_median, ci_p10, ci_p90)
-- **Circuit feature**: `mean_sector_speed` is a property of the track, one value per GP, looked up from the featured parquet. A bug substituted the speed trap reading on every call through the `RaceStateManager` path instead; see the operating-envelope section under N28 for how that surfaced.
-- **No LLM step**: unlike its tire/pit/race-situation siblings below, pace calls the XGBoost model directly: `reasoning` is a deterministic f-string, not LLM output. Pace is the one always-on agent with no qualitative judgment to make (no `warning_level`/`action`/`threat_level` category alongside its numbers), so a `pace_agent.py` once carried a complete but never-wired LangGraph ReAct scaffold; it was formally retired in #781 after the #778/#779/#780 archaeology and decision. See [agents-api.md](#/agents-api) for the full record.
+- Model: XGBoost fitted on 2023-2024 lap data, with **2025 held out**. This line used to read "2023-2025", which folded the test season into the training set: the feature manifest's own row counts are 22,106 train and 23,256 validation, exactly the 2023 and 2024 featured parquets, and every operating bound below is measured on those two seasons for the same reason.
+- Output: `PaceOutput` (lap_time_pred, delta_vs_prev, delta_vs_median, ci_p10, ci_p90)
+- Circuit feature: `mean_sector_speed` is a property of the track, one value per GP, looked up from the featured parquet. A bug substituted the speed trap reading on every call through the `RaceStateManager` path instead; see the operating-envelope section under N28 for how that surfaced.
+- No LLM step: unlike its tire/pit/race-situation siblings below, pace calls the XGBoost model directly: `reasoning` is a deterministic f-string, not LLM output. Pace is the one always-on agent with no qualitative judgment to make (no `warning_level`/`action`/`threat_level` category alongside its numbers), so a `pace_agent.py` once carried a complete but never-wired LangGraph ReAct scaffold; it was formally retired in #781 after the #778/#779/#780 archaeology and decision. See [agents-api.md](#/agents-api) for the full record.
 
 ### N26: Tire Agent (`tire_agent.py`)
 
 Wraps per-compound TireDegTCN models (N09/N10) with MC Dropout inference. Answers: how many laps remain before the degradation cliff?
 
-- **Model**: Causal TCN per compound + Platt calibration
-- **Output**: `TireOutput` (laps_to_cliff_p10/p50/p90, warning_level, deg_rate)
-- **Warning levels**: OK, MONITOR, PIT_SOON (derived from `laps_to_cliff_p10` against circuit-cluster-aware thresholds; there is no CRITICAL level)
+- Model: Causal TCN per compound + Platt calibration
+- Output: `TireOutput` (laps_to_cliff_p10/p50/p90, warning_level, deg_rate)
+- Warning levels: OK, MONITOR, PIT_SOON (derived from `laps_to_cliff_p10` against circuit-cluster-aware thresholds; there is no CRITICAL level)
 
 ### N27: Race Situation Agent (`race_situation_agent.py`)
 
 Combines N12 (overtake probability via LightGBM) and N14 (safety car probability via LightGBM) into a single threat assessment per lap.
 
-- **Models**: LightGBM overtake (AUC-PR 0.5491) + LightGBM SC (AUC-PR 0.0723)
-- **Output**: `RaceSituationOutput` (overtake_prob, sc_prob_3lap, threat_level, **sc_currently_active**, **vsc_active**)
+- Models: LightGBM overtake (AUC-PR 0.5491) + LightGBM SC (AUC-PR 0.0723)
+- Output: `RaceSituationOutput` (overtake_prob, sc_prob_3lap, threat_level, **sc_currently_active**, **vsc_active**)
 
 #### RCM Safety Car override
 
@@ -133,9 +134,9 @@ The N14 LightGBM was trained to predict a *future* SC, not to recognise one alre
 
 Wraps N15 (physical pit stop duration P05/P50/P95 via HistGBT) and N16 (undercut success probability via LightGBM). Recommends when to pit, what compound to fit, and whether to undercut.
 
-- **Models**: HistGBT quantile pit duration + LightGBM undercut
-- **Output**: `PitStrategyOutput` (action, compound_recommendation, stop_duration_p05/p50/p95, undercut_prob, sc_reactive)
-- **Activation**: conditional, runs when tire_warning is PIT_SOON, radio flags PROBLEM/WARNING, **or N27 reports `sc_currently_active = True`** (the RCM-override path)
+- Models: HistGBT quantile pit duration + LightGBM undercut
+- Output: `PitStrategyOutput` (action, compound_recommendation, stop_duration_p05/p50/p95, undercut_prob, sc_reactive)
+- Activation: conditional, runs when tire_warning is PIT_SOON, radio flags PROBLEM/WARNING, **or N27 reports `sc_currently_active = True`** (the RCM-override path)
 
 #### Honoring an active Safety Car
 
@@ -213,7 +214,7 @@ Both columns are the six races the tier sampled when the comparison was made, so
 >
 > The table above is deliberately **not** that comparison. It used to read "54 to 66", pairing a pre-#829 number with a post-#829 one, so two variables moved inside the one sentence written to attribute an effect to the bounds. Both of its columns are now measured on the fixed inputs; only the constants differ. The `min_stint` and scored counts happen to be identical either way (17 and 54 under the old bounds, with or without the input fix), which is why the arithmetic half of the old claim survived, but that was luck, not the argument.
 >
-> Read them as the **deterministic** layer, `profile="no-llm"`: the Monte Carlo plus the guard rails, with the LLM synthesis off. Twelve of the fourteen recommendation fields the multi-agent system emits are written by the LLM, so this is not a measurement of the system this page describes end to end.
+> Read them as the deterministic `profile="no-llm"` output: Monte Carlo plus guardrails. This profile skips N28, N30 and LLM synthesis. The rich profile has the LLM write 12 of 14 recommendation fields, so these results do not measure the full rich pipeline.
 
 `documents/eval_reports/stint_lengths.md` regenerates these shares from the live constants on every run, so the report always grades what is actually shipping rather than what was shipping when it was written.
 
@@ -225,8 +226,8 @@ An `OperatingEnvelope` (`src/strategy/inference/envelope.py`) names the input ra
 
 Two are declared today:
 
-- **N15** (pit duration) declares the 50-lap tyre-life ceiling it was trained under. The clip that keeps it inside that range is unchanged; what the envelope adds is that hitting it stops being silent.
-- **N06** (lap time) declares eleven feature ranges measured from its own training seasons. It has no clip at all, so the label is the entire mechanism.
+- N15 (pit duration) declares the 50-lap tyre-life ceiling it was trained under. The clip that keeps it inside that range is unchanged; what the envelope adds is that hitting it stops being silent.
+- N06 (lap time) declares eleven feature ranges measured from its own training seasons. It has no clip at all, so the label is the entire mechanism.
 
 The envelope earns its keep by what it surfaced rather than by what it prevents. Wiring it to N06 exposed that `mean_sector_speed` was carrying the **speed trap** on every real call, because the agent substituted `prev_speed_st` whenever no mean sector speed was supplied and nothing ever supplied one. Those are different physical quantities, 256.8 against 303.0 km/h on average, and the model had been reading the wrong one throughout. The value is a property of the circuit and was on disk all along; it is now looked up per GP, and a circuit that does not resolve reaches the model as missing rather than as a substituted reading.
 
@@ -236,29 +237,30 @@ It also surfaced something not yet fixed: N06 is asked to predict on the opening
 
 Two-stream NLP pipeline. Driver radio goes through RoBERTa-base sentiment, SetFit intent classification, and BERT-large NER. Race Control Messages go through a deterministic rule-based parser. Alerts are built deterministically from NLP is_alert flags, the LLM cannot miss or hallucinate alerts.
 
-- **Models**: RoBERTa-base, SetFit, BERT-large-conll03 (radio); rule parser (RCM)
-- **Output**: `RadioOutput` (radio_events, rcm_events, alerts, corrections)
+- Models: RoBERTa-base, SetFit, BERT-large-conll03 (radio); rule parser (RCM)
+- Output: `RadioOutput` (radio_events, rcm_events, alerts, corrections)
 
 ### N30: RAG Agent (`rag_agent.py`)
 
 Answers regulation questions by retrieving relevant FIA Sporting Regulation passages from a local Qdrant vector store (built by `scripts/build_rag_index.py`), using BGE-M3 embeddings and a LangGraph ReAct agent.
 
-- **Retriever**: Qdrant + BGE-M3 embeddings
-- **Output**: `RegulationContext` (answer, articles, chunks)
-- **Activation**: conditional, only runs when sc_prob > 0.30, N28 is active, **or N27 reports `sc_currently_active = True`** (so the orchestrator pulls the SC pit-lane regulation snippet into the recommendation context)
+- Retriever: Qdrant + BGE-M3 embeddings
+- Output: `RegulationContext` (answer, articles, chunks)
+- Activation: conditional, runs when N27's SC probability exceeds the configured threshold, N29 reports a qualifying WARNING or RCM penalty, N28 is active, or N27 reports `sc_currently_active = True`.
+- Season scope: applies when a year is supplied. An empty scoped search retries unscoped; a missing year starts unscoped.
 
 ### N31: Strategy Orchestrator (`strategy_orchestrator.py`)
 
 Three-layer pipeline:
 
 1. **MoE Routing**: deterministic if-else rules decide which conditional agents (N28, N30) to activate based on always-on agent outputs.
-2. **Monte Carlo Simulation**: draws 500 samples from sub-agent probability distributions and evaluates four strategy candidates (STAY_OUT, PIT_NOW, UNDERCUT, OVERCUT). Score = alpha * E[S] + (1-alpha) * P10[S], where S is a **projected track position** (see below).
-3. **LLM Synthesis**: structured-output LLM aggregates all reasoning strings and MC scores into a `StrategyRecommendation`.
+2. **Monte Carlo Simulation**: scores four strategy candidates on 500 shared draws. N26 cliff, N27 SC and N28 pit/undercut draws enter the payoff. N25 pace is sampled to preserve RNG order but does not enter the payoff. The score is `alpha * E[S] + (1-alpha) * P10[S]`. With finite rival gaps, `S` is terminal positions gained plus a small margin-weighted tie-break. Otherwise, the legacy fallback uses `time_delta / POS_GAP_S` in position-equivalent units (`POS_GAP_S = 1.5 s/position`).
+3. **LLM Synthesis**: `with_structured_output` validates the 12-field `_LLMSynthesis`; N31 attaches `scenario_scores` and `regulation_context` to produce the final 14-field `StrategyRecommendation`.
 
-- **Output**: `StrategyRecommendation` (action, reasoning, confidence, scenario_scores, contingencies)
-- **Action values**: STAY_OUT, PIT_NOW, UNDERCUT, OVERCUT, ALERT
-- **Pace modes**: PUSH, NEUTRAL, MANAGE, LIFT_AND_COAST
-- **Risk levels**: AGGRESSIVE, BALANCED, DEFENSIVE
+- Output: `StrategyRecommendation` (action, reasoning, confidence, scenario_scores, contingencies)
+- Action values: STAY_OUT, PIT_NOW, UNDERCUT, OVERCUT, ALERT
+- Pace modes: PUSH, NEUTRAL, MANAGE, LIFT_AND_COAST
+- Risk levels: AGGRESSIVE, BALANCED, DEFENSIVE
 
 ## What the Monte Carlo actually scores
 
@@ -323,9 +325,9 @@ The layer used to score in generic seconds divided by a flat 1.5 s/position, ove
 
 Scoring now runs on a per-rival gap projection (`src/agents/position_projection.py`). Each candidate moves every gap by the difference between what a rival loses and what we lose; a gap crossing zero is a car changing sides, so counting the cars projected ahead gives the position directly. Three behaviours that used to need special cases now fall out of that arithmetic:
 
-- **Rejoining into traffic** is automatic, every rival within our pit loss behind us is a place lost, counted by name.
-- **The mandatory-stop cancellation** (Art. 30.5(m) (2024-25 numbering; it was 30.5(n) in 2023)) happens only when the rival stops too. Where the old model argued in a comment that the pit-lane traversal cancels, the projection charges it per car and lets it cancel when it actually does.
-- **The Art. 55.17 endgame**, a race finishing behind the Safety Car, emerges from the measured racing-lap count dropping to zero: fresh tyres have nothing left to pay themselves back over, so staying out wins on the numbers. This is the case a deleted guard-rail used to force, and it now needs no rail.
+- Rejoining into traffic is automatic, every rival within our pit loss behind us is a place lost, counted by name.
+- The mandatory-stop cancellation (Art. 30.5(m) (2024-25 numbering; it was 30.5(n) in 2023)) happens only when the rival stops too. Where the old model argued in a comment that the pit-lane traversal cancels, the projection charges it per car and lets it cancel when it actually does.
+- The Art. 55.17 endgame, a race finishing behind the Safety Car, emerges from the measured racing-lap count dropping to zero: fresh tyres have nothing left to pay themselves back over, so staying out wins on the numbers. This is the case a deleted guard-rail used to force, and it now needs no rail.
 
 A **terminal liability** replaces the flat Safety Car bonus with option value: a still-owed stop costs the cars it will release behind us, discounted by the measured probability that a later neutralisation covers it cheaply.
 
@@ -358,8 +360,8 @@ Every agent exposes two entry points: one that expects populated module globals 
 **They are not uniform.** The shapes below come from `inspect.signature`, and three of them differ from what the pattern would suggest:
 
 ```python
-run_pace_agent_from_state(lap_state)                                  # no laps_df, unlike every other adapter
-run_tire_agent(stint_state)                                           # a stint state, not a lap state
+run_pace_agent_from_state(lap_state)  # no laps_df, unlike every other adapter
+run_tire_agent(stint_state)  # a stint state, not a lap state
 run_tire_agent_from_state(lap_state, laps_df)
 run_race_situation_agent_from_state(lap_state, laps_df)
 run_pit_strategy_agent_from_state(lap_state, laps_df)
@@ -368,7 +370,7 @@ run_rag_agent_from_state(lap_state, laps_df=None)
 run_strategy_orchestrator_from_state(race_state, laps_df, lap_state=None)
 ```
 
-That last argument is the one worth remembering: without `lap_state` the orchestrator never sees the rival gaps, so the Monte Carlo falls back to the legacy seconds path instead of scoring in projected track position. See [agents-api.md](#/agents-api) for the full per-agent reference.
+That last argument is the one worth remembering: without `lap_state` the orchestrator never sees the rival gaps, so Monte Carlo uses the time-based fallback converted into position-equivalent units instead of scoring positions gained from projected rival gaps. See [agents-api.md](#/agents-api) for the full per-agent reference.
 
 ## Decision memory: three surfaces, not five
 
@@ -394,14 +396,14 @@ One consequence worth knowing before debugging a call: **the effect does not sho
 
 ## LLM configuration
 
-| Layer | Model | Provider |
-|---|---|---|
-| Sub-agents N26-N29 | gpt-4.1-mini | OpenAI or LM Studio |
-| Orchestrator N31 | gpt-5.4-mini | OpenAI or LM Studio |
+| Layer | Model | Environment variable | Provider |
+|---|---|---|---|
+| Sub-agents N26-N30 | gpt-4.1-mini | `F1_LLM_MODEL_AGENTS` | OpenAI or LM Studio |
+| Orchestrator N31 | gpt-5.4-mini | `F1_LLM_MODEL_ORCHESTRATOR` | OpenAI or LM Studio |
 
-N25 (pace) is not in this table because it never calls an LLM. See the "No LLM step" note under [N25: Pace Agent](#/multi-agent#n25-pace-agent-paceagentpy) above.
+N30 (rag) shares the sub-agent model. N25 (pace) is not in this table because it never calls an LLM. See the "No LLM step" note under [N25: Pace Agent](#/multi-agent#n25-pace-agent-paceagentpy) above.
 
-Set `F1_LLM_PROVIDER=openai` env var to use the real OpenAI API. Default is LM Studio at `http://localhost:1234/v1`.
+Setting `F1_LLM_PROVIDER=openai` selects the OpenAI API on every surface. The fallback when it is unset differs per surface, LM Studio at `http://localhost:1234/v1` for the CLI and the backend, OpenAI for the arcade. Full table in [INSTALL.md](https://github.com/VforVitorio/F1-StratLab/blob/main/INSTALL.md#llm-provider-per-surface).
 
 ## Data flow
 
