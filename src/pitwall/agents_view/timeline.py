@@ -66,6 +66,7 @@ def build_plan_timeline(
     cliff: dict[str, Any] | None,
     cliff_colour: str,
     caption: str,
+    no_llm: bool = False,
 ) -> dict[str, Any]:
     """The whole PLAN module, ready to place.
 
@@ -80,6 +81,8 @@ def build_plan_timeline(
             cannot drift onto two different ambers.
         caption: the orchestrator's plan line, verbatim, including its
             empty-state branches.
+        no_llm: whether the run uses the deterministic profile, which does not
+            forecast a pit stop.
     """
     try:
         total_laps = int(arcade.get("total_laps") or 0)
@@ -100,6 +103,7 @@ def build_plan_timeline(
             "current_lap": None,
             "current_pct": None,
             "caption": caption,
+            "empty_state": None,
         }
 
     segments = [
@@ -115,6 +119,8 @@ def build_plan_timeline(
     compound_next = latest.get("compound_next") if latest else None
     if isinstance(pit_lap, int) and compound_next:
         segments.append(_segment(pit_lap, total_laps, str(compound_next), total_laps, planned=True))
+
+    has_planned_stint = any(segment["planned"] for segment in segments)
 
     band = None
     if cliff and cliff.get("lo") is not None and cliff.get("hi") is not None:
@@ -146,4 +152,7 @@ def build_plan_timeline(
         if isinstance(current_lap, int)
         else None,
         "caption": caption,
+        "empty_state": "No future pit plan in deterministic mode"
+        if no_llm and not has_planned_stint
+        else None,
     }

@@ -221,6 +221,7 @@ def test_the_plan_timeline_invents_nothing_it_was_not_told():
         "current_lap": None,
         "current_pct": None,
         "caption": "Pit plan pending",
+        "empty_state": None,
     }
 
     # An unknown compound: neutral, and it says so by carrying no name.
@@ -237,6 +238,43 @@ def test_the_plan_timeline_invents_nothing_it_was_not_told():
     )
     assert [s for s in nameless["segments"] if s["planned"]] == []
     assert nameless["pit_lap"] == 24, "the marker still shows; only the bar is withheld"
+
+
+def test_no_llm_plan_timeline_explains_why_no_future_stint_is_drawn():
+    """The deterministic profile has no pit forecast, not a missing-data failure."""
+    from src.pitwall.agents_view.timeline import build_plan_timeline
+
+    timeline = build_plan_timeline(
+        [{"lo": 1, "hi": 23, "compound": "MEDIUM"}],
+        {"pit_lap_target": None, "compound_next": None},
+        {"total_laps": 57},
+        23,
+        None,
+        "#f59e0b",
+        "stint continues · no pit window yet",
+        no_llm=True,
+    )
+
+    assert timeline["empty_state"] == "No future pit plan in deterministic mode"
+    assert all(not segment["planned"] for segment in timeline["segments"])
+
+    llm_timeline = build_plan_timeline(
+        [], {"pit_lap_target": None, "compound_next": None}, {"total_laps": 57}, 23,
+        None, "#f59e0b", "Pit plan pending"
+    )
+    assert llm_timeline["empty_state"] is None
+
+
+def test_agents_view_uses_the_run_profile_for_the_plan_empty_state():
+    latest = _latest()
+    latest["pit_lap_target"] = None
+    latest["compound_next"] = None
+    payload = _payload(latest=latest)
+    payload["strategy"]["start"]["no_llm"] = True
+
+    timeline = _host(payload).get_agents_view(-1)["plan_timeline"]
+
+    assert timeline["empty_state"] == "No future pit plan in deterministic mode"
 
 
 def test_the_last_lap_lands_on_the_flag():

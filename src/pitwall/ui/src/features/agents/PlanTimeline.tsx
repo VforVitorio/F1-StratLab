@@ -86,6 +86,8 @@ export function PlanTimeline({ view }: { view: PlanTimelineView }) {
         </div>
       </div>
 
+      {view.empty_state ? <p className="plan-empty-state">{view.empty_state}</p> : null}
+
       {/* The orchestrator's own plan line, verbatim, including the compound
           pill it can carry - an HTML span built and escaped in
           `src/arcade/palette.py`.
@@ -119,6 +121,7 @@ function planLabel(view: PlanTimelineView): string {
   const planned = view.segments.find((segment) => segment.planned);
   const parts = [`Lap ${view.current_lap ?? "?"} of ${view.total_laps}`, ...stints];
   if (planned) parts.push(`planned ${planned.compound} from lap ${planned.lo}`);
+  if (view.empty_state) parts.push(view.empty_state);
   if (view.cliff) parts.push(`cliff between laps ${view.cliff.lo} and ${view.cliff.hi}`);
   return parts.join(", ");
 }
