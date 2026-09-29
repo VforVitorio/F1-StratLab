@@ -44,7 +44,7 @@ fails when a value here stops matching the code.
 | `f1-strat` | repo root, for `OPENAI_API_KEY` only (`scripts/f1_cli.py`) | the wizard's LLM-mode pick, which highlights "No LLM" | the wizard, always forwarded to `f1-sim` as `--provider` or `--no-llm` (`scripts/cli/runner.py`) | as `f1-sim` |
 | `f1-arcade`, `f1-pitwall` | repo root, source checkout only (`src/arcade/main.py`) | `openai` (`src/arcade/app.py`) | `F1_LLM_PROVIDER`, or `--no-llm` | as `f1-sim` |
 | `f1-webapp` chat tab | repo root, then `src/telemetry/.env` as an override (`src/telemetry/backend/core/config.py`) | `lmstudio` (`src/telemetry/backend/services/chatbot/llm_service.py`) | `F1_LLM_PROVIDER`, then a bare `LLM_PROVIDER` | `gpt-5.4-mini`, or `OPENAI_CHAT_MODEL` |
-| backend `POST /simulate` | as the chat tab | `lmstudio` (`src/telemetry/backend/api/v1/endpoints/strategy.py`) | the request body's `provider` field, which is written over `.env` on every call (#1192) | as `f1-sim` |
+| backend `POST /simulate` | as the chat tab | `F1_LLM_PROVIDER`, then `lmstudio` | optional request `provider`; process-wide, not isolated per request (#1192, #1261) | as `f1-sim` |
 
 Four things the table cannot fit:
 
@@ -52,7 +52,11 @@ Four things the table cannot fit:
 `override=True` except the second one in
 `src/telemetry/backend/core/config.py`, so an exported `F1_LLM_PROVIDER`
 beats the repo-root `.env` everywhere. For the backend only, a
-`src/telemetry/.env` beats both.
+`src/telemetry/.env` beats both. An omitted `provider` in `POST /simulate`
+leaves the resolved value alone. An explicit value changes the process
+environment, and N31 caches one client per process. Concurrent requests with
+different explicit providers are not isolated; use one provider for the backend
+process until #1261 is addressed.
 
 **A wheel install reads no `.env` at all.** `f1-sim` and `f1-arcade` locate
 the file by walking up from the source tree for a `.git` directory. After

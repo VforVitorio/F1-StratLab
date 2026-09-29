@@ -208,23 +208,28 @@ def test_simulate_endpoint_streams_sse_frames():
 
 @_skip_no_backend
 def test_simulate_request_schema_defaults():
-    """SimulateRequest must default to ``no_llm=False`` with lmstudio provider.
+    """SimulateRequest leaves provider selection to the configured environment.
 
     Protects the public API contract documented in ``project_sim_sse_endpoint_plan.md``:
     callers posting the minimum payload (year + gp + driver + team) must get a
     well-formed request with the expected defaults — ``risk_tolerance=0.5``,
-    ``provider="lmstudio"``, ``interval_s=0.0``. Changing any default here is a
-    breaking change for Arcade and the manual curl probes.
+    ``provider=None``, ``interval_s=0.0``. This keeps the API from overwriting
+    ``F1_LLM_PROVIDER`` when the request omits a provider.
     """
     _ensure_backend_on_path()
     from backend.api.v1.endpoints.strategy import SimulateRequest
 
     req = SimulateRequest(year=2025, gp="Melbourne", driver="NOR", team="McLaren")
     assert req.no_llm is False
-    assert req.provider == "lmstudio"
+    assert req.provider is None
     assert req.risk_tolerance == 0.5
     assert req.interval_s == 0.0
     assert req.lap_range is None
+
+    explicit = SimulateRequest(
+        year=2025, gp="Melbourne", driver="NOR", team="McLaren", provider="openai"
+    )
+    assert explicit.provider == "openai"
 
 
 @_skip_no_backend
