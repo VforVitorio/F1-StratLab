@@ -9,11 +9,16 @@ candidate is adopted only when it improves the retrieval contract on the same
 from __future__ import annotations
 
 import gc
+import re
 import tempfile
 from pathlib import Path
 from typing import Any
 
 from scripts.build_rag_index import (
+    PDFDocument,
+    TextChunk,
+    clean_text,
+    compute_hash,
     embed_chunks,
     ensure_collection,
     iter_chunks,
@@ -33,8 +38,13 @@ from src.strategy.eval.report import build_header, write_report
 
 REPORT_NAME = "rag_2026"
 CANDIDATE_COLLECTION = "fia_regulations_article_aware_1024_v1"
+LEGACY_COLLECTION = "fia_regulations_fixed_window_512_v1"
 CANDIDATE_CHUNK_SIZE = 1024
 CANDIDATE_CHUNK_OVERLAP = 128
+LEGACY_CHUNK_SIZE = 512
+LEGACY_CHUNK_OVERLAP = 64
+LEGACY_ARTICLE_RE = re.compile(r"Article\s+\d+[\.\d]*", re.IGNORECASE)
+LEGACY_SECTION_HEAD_RE = re.compile(r"^\s{0,4}(\d+[\.\d]*\s+[A-Z][A-Z\s]{4,})\s*$", re.MULTILINE)
 
 
 class _SharedQdrantRetriever:
@@ -87,6 +97,35 @@ class _SharedQdrantRetriever:
         ]
 
 
+def legacy_fixed_window_chunks(document: PDFDocument) -> list[TextChunk]:
+    """Reproduce v2.6.1's fixed 512/64 windows and first-match metadata.
+
+    The legacy arm uses the previous character slicing and article regex so
+    issue #323 can compare the shipped article-aware chunks with their actual
+    baseline on the same PDF text.
+    """
+    text = clean_text(document.text)
+    stride = LEGACY_CHUNK_SIZE - LEGACY_CHUNK_OVERLAP
+    chunks = []
+    for start in range(0, len(text), stride):
+        chunk_text = text[start : start + LEGACY_CHUNK_SIZE].strip()
+        if not chunk_text:
+            continue
+        article_match = LEGACY_ARTICLE_RE.search(chunk_text)
+        section_match = LEGACY_SECTION_HEAD_RE.search(chunk_text)
+        chunks.append(
+            TextChunk(
+                text=chunk_text,
+                doc_type=document.doc_type,
+                year=document.year,
+                article=" ".join(article_match.group(0).split()) if article_match else "",
+                section_title=section_match.group(1).strip() if section_match else "",
+                chunk_hash=compute_hash(chunk_text),
+            )
+        )
+    return chunks
+
+
 def _build_candidate(documents: list[Any], qdrant_path: Path) -> tuple[Any, Any, int]:
     """Build the candidate collection in a temporary local Qdrant store."""
     from qdrant_client import QdrantClient
@@ -107,6 +146,15 @@ def _build_candidate(documents: list[Any], qdrant_path: Path) -> tuple[Any, Any,
     embeddings = embed_chunks(chunks, encoder)
     upsert_chunks(client, CANDIDATE_COLLECTION, chunks, embeddings)
     return client, encoder, len(chunks)
+
+
+def _build_legacy_baseline(client: Any, documents: list[PDFDocument], encoder: Any) -> int:
+    """Build the legacy fixed-window retrieval arm in the temporary store."""
+    chunks = [chunk for document in documents for chunk in legacy_fixed_window_chunks(document)]
+    ensure_collection(client, LEGACY_COLLECTION, CFG.embedding_dim)
+    embeddings = embed_chunks(chunks, encoder)
+    upsert_chunks(client, LEGACY_COLLECTION, chunks, embeddings)
+    return len(chunks)
 
 
 def _stored_chunk_keys(client: Any, collection_name: str) -> set[tuple[int, str]]:
@@ -172,6 +220,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="f1-rag-323-") as temp_dir:
         candidate_path = Path(temp_dir) / "qdrant_local"
         candidate_client, encoder, candidate_chunks = _build_candidate(documents, candidate_path)
+        legacy_chunks = _build_legacy_baseline(candidate_client, documents, encoder)
         from qdrant_client import QdrantClient
 
         production_client = QdrantClient(path=str(CFG.qdrant_path))
@@ -183,14 +232,20 @@ def main() -> int:
             candidate_retriever = _SharedQdrantRetriever(
                 candidate_client, CANDIDATE_COLLECTION, encoder
             )
+            legacy_retriever = _SharedQdrantRetriever(candidate_client, LEGACY_COLLECTION, encoder)
+            legacy_config = RagEvalConfig("Legacy fixed-window 512/64", True)
             baseline_config = RagEvalConfig("Production article-aware 512/64", True)
             candidate_config = RagEvalConfig("Candidate article-aware 1024/128", True)
+            legacy_rows = evaluate_retriever(
+                legacy_retriever, queries, config=legacy_config, top_k=10
+            )
             baseline_rows = evaluate_retriever(
                 baseline_retriever, queries, config=baseline_config, top_k=10
             )
             candidate_rows = evaluate_retriever(
                 candidate_retriever, queries, config=candidate_config, top_k=10
             )
+            legacy = summarise_rows(legacy_rows, legacy_config.name)
             baseline = summarise_rows(baseline_rows, baseline_config.name)
             candidate = summarise_rows(candidate_rows, candidate_config.name)
         finally:
@@ -199,6 +254,7 @@ def main() -> int:
             del encoder
             gc.collect()
 
+    legacy_decision = _decision(legacy, baseline)
     decision = _decision(baseline, candidate)
     header = build_header(
         dataset="RAG queries_v2 + 2026 delta, 35 FIA regulation queries",
@@ -206,11 +262,14 @@ def main() -> int:
         artifacts={name: path for name, path in zip(("queries_v2", "queries_2026"), query_paths)},
     )
     body = (
-        f"{_markdown_table((baseline, candidate))}\n\n"
+        f"{_markdown_table((legacy, baseline, candidate))}\n\n"
         "## Experiment contract\n\n"
+        f"- Legacy fixed-window chunks built: {legacy_chunks}\n"
+        f"- Article-aware result against legacy baseline: **{legacy_decision}**\n"
         f"- Candidate chunks built: {candidate_chunks}\n"
         f"- Decision: **{decision}**\n"
-        "- The production collection is the baseline. The candidate uses the same BGE-M3 model, PDF corpus, season filters, top-k, and query set; only the article-aware soft target changes from 512/64 to 1024/128.\n"
+        "- The legacy arm reproduces v2.6.1's fixed 512/64 windows and first-match article labels. It uses the same PDFs, query set, BGE-M3 model, season filters, and top-k as the article-aware arms.\n"
+        "- The 1024/128 candidate is compared with the production article-aware 512/64 index; only its article-aware soft target changes.\n"
         "- A candidate is adopted only when P@5, MRR, and retrieval-level citation match do not regress, at least one quality metric improves, and wrong-year rate does not increase.\n"
         "- This experiment does not call an LLM and does not modify the production Qdrant collection.\n"
     )
@@ -220,6 +279,10 @@ def main() -> int:
         body,
         {
             "query_count": len(queries),
+            "legacy_chunk_count": legacy_chunks,
+            "legacy_decision": legacy_decision,
+            "legacy_baseline": legacy,
+            "legacy_baseline_rows": legacy_rows,
             "decision": decision,
             "candidate_chunks": candidate_chunks,
             "baseline": baseline,
