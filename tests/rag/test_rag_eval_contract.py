@@ -6,7 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from scripts.benchmark_rag_chunking import _decision
+from scripts.benchmark_rag_chunking import _decision, legacy_fixed_window_chunks
+from scripts.build_rag_index import PDFDocument, _legacy_sliding_hashes, iter_chunks
 from src.strategy.eval.rag import load_queries
 
 
@@ -18,6 +19,26 @@ def test_2026_query_delta_has_verified_prefixed_articles() -> None:
     assert len(queries) == 5
     assert {query.year for query in queries} == {2026}
     assert all(query.article.startswith("B") for query in queries)
+
+
+@pytest.mark.unit
+def test_legacy_chunk_baseline_reproduces_the_v261_window_and_first_article_label() -> None:
+    document = PDFDocument(
+        path=Path("sporting_regs_2025.pdf"),
+        doc_type="sporting_regs",
+        year=2025,
+        text=(
+            "30.5 USE OF TYRES\nIf the formation lap is started behind the safety car "
+            "in accordance with Article 49.1a, a penalty under Article 54.3d) applies.\n"
+        ),
+    )
+
+    legacy = legacy_fixed_window_chunks(document)
+    article_aware = list(iter_chunks(document))
+
+    assert {chunk.chunk_hash for chunk in legacy} == _legacy_sliding_hashes(document)
+    assert legacy[0].article == "Article 49.1"
+    assert article_aware[0].article == "Article 30.5"
 
 
 @pytest.mark.unit
