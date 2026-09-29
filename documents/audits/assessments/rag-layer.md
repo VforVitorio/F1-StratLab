@@ -8,31 +8,38 @@
 > remains outside `src/agents/`; every change landed in `src/rag/`, `scripts/`,
 > tests, or the shared eval package.
 
-## Current status
+## Current status on `dev` (2026-09-29)
 
-Phase 3 is implemented in `src/strategy/eval/rag.py` and exposed as
-`uv run f1-eval rag`. The canonical 30-query set is
-`data/rag_eval/queries_v2.json`; the generated report is
-`documents/eval_reports/rag.{md,json}`. The benchmark measures the production
-season-scoped retriever and keeps an unscoped control for wrong-year regression.
-The report now includes a separate answer-citation match rate over versioned
-real LangGraph traces in `documents/eval_reports/rag_agent_traces.json`; it is
-not inferred from retrieval alone. The current trace set is `n=1`, an initial
-observation rather than a general quality estimate. Phase 4 is being completed
-under #322. Phase 5 now ingests the
-official 2026 Sporting Regulations, supports `B5.13.1`-style headings, and
-records a 35-query A/B result in `documents/eval_reports/rag_2026.{md,json}`.
+The July audit below records the original findings. The implementation has
+changed since then; these are the current boundaries.
 
-The detailed findings and phase plan below are the historical snapshot from
-2026-07-07. The current implementation status above takes precedence for
-Phases 3, 4, and 5; Phases 1 and 2 remain separate work unless their status is
-changed.
+| Area | Current state |
+|---|---|
+| Replay retrieval | N30 passes the race year to both retrievals. If the index has no points for that year, retrieval warns and falls back across indexed years. |
+| Chat retrieval | `query_regulations` and `POST /api/v1/strategy/rag` accept an optional year. Omitting it keeps the historical unscoped lookup. |
+| Index and evaluation | The manifest covers 2023-2026. Production uses article-aware 512/64 chunks and preserves headings such as `B5.13.1`. The 35-query A/B in `documents/eval_reports/rag_2026.{md,json}` rejected 1024/128 because P@5 and MRR were lower. |
+| Answer grounding | N30 returns the passages from its actual tool trace, applies the similarity floor, and reports citations absent from the retrieved articles. The trace report is `documents/eval_reports/rag_agent_traces.json`; its `n=1`, 1/1 result is a path check, not a general answer-quality estimate. |
+| No-LLM display | The N30 no-result crash from #1251 was fixed in PR #1255. |
+| Fresh-environment build | `pypdf` is now declared in the project dependencies. |
+
+Replay scoping (#320) is in PR #1197, answer grounding (#322) in
+PR #1254, and the 2026 corpus and chunking work (#323) in PR #1249. All are on
+`dev`; the issues remain open until the v2.7.0 promotion to `main`.
+
+The 30-query retrieval set is `data/rag_eval/queries_v2.json`; its report is
+`documents/eval_reports/rag.{md,json}`. The 2026 comparison adds five queries.
+
+The chat default is still unscoped when callers omit `year`. The builder and
+downloader remain source-checkout tools, while installed runs consume the
+Hub-provided data root. Local Qdrant remains single-process. These limits are
+not evidence that the season filter is absent from replay or explicitly scoped
+chat requests.
 
 ---
 
-## 1. Executive summary
+## 1. Baseline executive summary (2026-07-07)
 
-The RAG layer is small, clean, and well-documented at the function level: one retriever class, one build script, one downloader, a single Qdrant collection (`fia_regulations`, bge-m3, 1024-dim, cosine), and a LangGraph `@tool` wrapper consumed by N30. The code style is the best in the repo. The problems are all systemic, not local:
+At the audit date, N30 used the LangGraph `@tool` wrapper `query_rag_tool` over one Qdrant collection (`fia_regulations`) with BGE-M3 embeddings. The findings below describe that baseline, not the current implementation.
 
 1. **Season correctness is enforced nowhere at query time.** The index mixes 2023/2024/2025 chunks in one collection; `RagRetriever.query()` (`src/rag/retriever.py:208-255`) has no `year` or `doc_type` filter, even though the `RegulationChunk` docstring promises callers can filter by both (`retriever.py:106-113`). The orchestrator never passes the race's season into `_build_rag_question` (`strategy_orchestrator.py:717-738`), and the N30 system prompt hardcodes "Always prefer the most recent regulation year (2025)" (`rag_agent.py`, `_SYSTEM_PROMPT`). A 2023 replay can be answered with 2025 rules, and vice versa when a 2023 chunk simply scores higher. This is the query-time half of the 2026-reg audit's F-10 (which covers the ingest half: `download_fia_pdfs.py:68` caps `supported_years` at 2023-2025).
 2. **Citation grounding is structurally loose.** `run_rag_agent` (`rag_agent.py:175-210`) lets the ReAct agent retrieve with its own rewritten queries, then re-queries the retriever with the *original* question to populate `RegulationContext.chunks/articles`. The chunks attached as evidence are not necessarily the passages the LLM actually read, so `ctx.articles` and the article numbers inside `ctx.answer` can diverge silently. There is also no similarity floor: `query_rag_tool` returns the top-5 whatever their scores, so an off-topic question still feeds five weak passages to a model instructed to cite articles.
@@ -40,16 +47,16 @@ The RAG layer is small, clean, and well-documented at the function level: one re
 4. **Retrieval quality had one one-shot, unwired measurement.** N30B (15 queries, P@k/MRR, manual ground truth) existed as a notebook only, and the three canned production question shapes were not in it. Issue #321 now provides the shared `src/strategy/eval/` implementation and a 30-query set; the notebook remains a historical comparison.
 5. **The build is broken on a fresh env and the docstrings have drifted.** `pypdf` is imported (`build_rag_index.py:34`) but not declared (DevEx DX-05, P1 there; cross-referenced, not re-owned). `extract_text_from_pdf`'s docstring says "using PyMuPDF" (`build_rag_index.py:201`), `ensure_collection`'s says the embeddings come from "all-MiniLM-L6-v2" (`build_rag_index.py:376`); both are relics of earlier model choices and will mislead the next maintainer.
 
-Good news worth stating: idempotent hash-based incremental indexing works (`chunk_hash` + `get_existing_hashes`), the collection-existence check fails loudly with an actionable message (`retriever.py:187-192`), the `lru_cache` singleton correctly avoids Qdrant's local-mode double-open lock (`retriever.py:284-297`), the downloader has a sane scraper + known-URLs fallback design, and only Sporting Regulations are indexed by deliberate, documented choice (`download_fia_pdfs.py:92-96`).
+The baseline already used `chunk_hash` and `get_existing_hashes` for incremental indexing. A missing collection raised an actionable error, and `lru_cache` kept the local Qdrant client from opening the same store twice in one process. The downloader had a known-URL fallback, and the indexer intentionally included Sporting Regulations only.
 
 ---
 
-## 2. How the layer hangs together (for orientation)
+## 2. Baseline data flow
 
 ```
 download_fia_pdfs.py            build_rag_index.py                 retriever.py
 FIA site scrape + known URLs -> sporting_regs_<year>.pdf ->        RagRetriever.query()
-(years capped 2023-2025, F-10)  512-char windows, 64 overlap,      top_k=5, cosine, NO filters
+(2023-2025 at audit opening)    512-char windows, 64 overlap,      top_k=5, cosine
                                 regex article/section tags,   ->   query_rag_tool (@tool, string out)
                                 sha256 dedup, upsert to                 |
                                 data/rag/qdrant_local              rag_agent.py (N30, ReAct, 1 tool)
@@ -63,7 +70,7 @@ Consumers: N30's `run_rag_agent` / `run_rag_agent_from_state`; N31 attaches the 
 
 ---
 
-## 3. Findings register
+## 3. Findings recorded at audit opening
 
 | ID | Prio | Finding | Why it matters / size |
 |---|---|---|---|
@@ -77,11 +84,11 @@ Consumers: N30's `run_rag_agent` / `run_rag_agent_from_state`; N31 attaches the 
 | **RAG-08** | **P3** | **Qdrant local mode is single-process.** The embedded client holds a file lock; the `lru_cache` singleton (`retriever.py:284-297`) protects one process only, so backend + CLI + Streamlit running simultaneously against the same `qdrant_local/` raise `AlreadyLocked` for the latecomers. Undocumented in README/INSTALL. | Confusing failure the day two surfaces run at once; document now, consider a served Qdrant only if it ever actually bites. **S** |
 | **RAG-09** | **P3** | **Docstring drift + minor ingest nits.** (a) "using PyMuPDF" (`build_rag_index.py:201`) vs actual `pypdf`; (b) "all-MiniLM-L6-v2" (`build_rag_index.py:376`) vs bge-m3; (c) `RegulationChunk` promises doc_type/year filtering that does not exist (RAG-01); (d) within-batch duplicate hashes are not deduped (`get_existing_hashes` covers only pre-existing points, `build_rag_index.py:565-569`), so the same passage in two PDFs indexed in one run creates two points; (e) sequential point IDs from `points_count` (`build_rag_index.py:583`) collide if points are ever deleted individually. | Cheap truth-restoring fixes; (d)/(e) matter only when the corpus grows. **S** |
 
-No P0: nothing crashes the shipped flows or leaks data (the injection-path P1s live in the Security audit). The two P1s are silent-correctness risks on a headline feature.
+At the July audit date, no P0 had been found. The later no-LLM crash was tracked separately as #1251 and fixed on `dev` through PR #1255.
 
 ---
 
-## 4. Phased plan (each phase = one future sub-issue)
+## 4. Original phased plan
 
 **Phase 1 - Truth and build integrity (S).**
 Verify #251/DX-05 landed `pypdf` (else this phase carries it); fix the three drifted docstrings (RAG-09 a-c); delete or implement the phantom `--force` in `download_fia_pdfs.py` (prefer implement: re-download replaces the file); add within-batch hash dedup. Acceptance: `python scripts/build_rag_index.py --help` works on a fresh `uv sync`; no docstring names a component the code does not use.
@@ -111,13 +118,13 @@ Order rationale: 1 unblocks everything; 2 kills the silent wrong-season class be
 
 ---
 
-## 5. Open questions
+## 5. Open design questions
 
-1. **Season default for chat:** the orchestrator knows the replay season, but the chat `query_regulations` tool has no race context. Default to latest indexed year, or require an explicit year in the tool schema?
+1. **Season default for chat:** the chat `query_regulations` tool accepts an optional year but has no race context. Omitted years still search all indexed seasons. Decide whether to preserve that behavior or use the latest indexed year.
 2. **Technical Regulations:** deliberately excluded (`download_fia_pdfs.py:92-96`) yet half-supported everywhere (filename regex, title patterns, doc_type payloads). Keep the latent support or strip it?
-3. **Similarity floor value:** bge-m3 cosine scores on this corpus cluster high; pick the threshold from the Phase 3 score distributions, not a priori. Who signs it off?
-4. **HF index vs local build:** should the Hub-shipped prebuilt index be the *only* supported path for end users (build script demoted to maintainer tool), simplifying RAG-07?
-5. **Ingestion trust policy** (Security #223 Q5): formally state that only operator-vetted FIA PDFs enter `data/rag/documents/`, in `src/rag/README.md`?
+3. **Build and runtime paths:** the index builder and PDF downloader use the source checkout's `data/rag/`; installed runs resolve data through `F1_STRAT_DATA_ROOT` and use the Hub artifact. Keep the scripts maintainer-only or make them share the runtime resolver?
+4. **Qdrant processes:** local mode locks the store to one process. Keep the single-process limit documented or move to a Qdrant server if concurrent surfaces become a real use case?
+5. **Ingestion trust policy** (Security #223 Q5): state in `src/rag/README.md` that only operator-vetted FIA PDFs belong in `data/rag/documents/`?
 
 ---
 
@@ -132,4 +139,4 @@ Order rationale: 1 unblocks everything; 2 kills the silent wrong-season class be
 
 ---
 
-*Audit opened 2026-07-07; Phase 5 status refreshed 2026-09-19. Cross-references: F-10 (`2026-reg-concept-drift.md`), E-11/R-9 + #205 (`ml-agents-eval.md`), S-2/S-9/D1 + #223 (`security.md`), DX-05 + #251 (`devex.md`).*
+*Audit opened 2026-07-07. Current status refreshed 2026-09-29. Cross-references: F-10 (`2026-reg-concept-drift.md`), E-11/R-9 + #205 (`ml-agents-eval.md`), S-2/S-9/D1 + #223 (`security.md`), DX-05 + #251 (`devex.md`).*
