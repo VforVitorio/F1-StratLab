@@ -234,7 +234,7 @@ jobs:
         if: steps.changes.outputs.ui != 'true'
         run: echo "No PITWALL UI changes; skipping the bundle build and smoke."
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         if: steps.changes.outputs.ui == 'true'
         with:
           node-version: "24"
