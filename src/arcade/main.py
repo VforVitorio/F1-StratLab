@@ -34,7 +34,7 @@ def main() -> None:
     if args.viewer:
         _show_viewer_directly(window, args)
     else:
-        _show_menu(window)
+        _show_menu(window, provider=args.provider)
     arcade.run()
 
 
@@ -54,7 +54,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--strategy", action="store_true", help="Enable strategy overlay (requires year 2025)."
     )
-    parser.add_argument("--provider", choices=("lmstudio", "openai"), default="openai")
+    parser.add_argument("--provider", choices=("lmstudio", "openai"), default=None)
     parser.add_argument(
         "--no-llm",
         action="store_true",
@@ -68,10 +68,10 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _show_menu(window: arcade.Window) -> None:
+def _show_menu(window: arcade.Window, *, provider: str | None = None) -> None:
     from src.arcade.views import MenuView
 
-    window.show_view(MenuView(window))
+    window.show_view(MenuView(window, provider=provider))
 
 
 def _show_viewer_directly(window: arcade.Window, args: argparse.Namespace) -> None:
@@ -92,7 +92,7 @@ def _show_viewer_directly(window: arcade.Window, args: argparse.Namespace) -> No
     # string would now surface as "driver must be 3 letters". The menu's own
     # default stands instead, and `_show_replay` still swaps in a driver the
     # session really has if that one is absent from it.
-    cfg = LaunchConfig(year=args.year, round_=args.round, team=args.team)
+    cfg = LaunchConfig(year=args.year, round_=args.round, team=args.team, provider=args.provider)
     if args.driver:
         cfg.driver_main = args.driver.upper()
     cfg.mode_two_drivers = bool(args.driver2)
