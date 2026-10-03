@@ -47,7 +47,11 @@ Rounds already cached are skipped without being loaded, so re-running it costs o
 
 `f1-eval` and `f1-pitwall` are developer tools rather than end-user surfaces. The first writes versioned markdown and JSON reports under `documents/eval_reports/` (`f1-eval registry`, `f1-eval rag`, `f1-eval calibration`, `f1-eval all`, ...); the second opens the PITWALL windows against an arcade process that is already running, which is how the UI is developed without restarting the replay.
 
-First boot triggers a one-time download of the cached models and reference data into `~/.f1-strat/`. Subsequent runs are offline.
+The first boot downloads cached models and reference data. A source checkout
+stores them under `data/`; a global tool install uses `~/.f1-strat/data/`.
+`F1_STRAT_DATA_ROOT` overrides the location. Cached files are reused on later
+runs, though the first run that needs radio data for another GP may download
+that GP's corpus.
 
 ## 2. Clone the repo for development
 
@@ -90,7 +94,13 @@ No, but it helps. `uv sync` pulls the CUDA-routed wheel **on Windows only**; Lin
 
 ### Why is the first run slow?
 
-The first boot triggers a one-time download of the cached models and reference data into `~/.f1-strat/`; subsequent runs are offline. The simulation also pre-warms Whisper and the agents before lap 1, so a cold start takes a while, pass `--no-llm` for a fast headless run.
+The first boot downloads cached models and reference data. A source checkout
+stores them under `data/`; a global tool install uses `~/.f1-strat/data/`,
+unless `F1_STRAT_DATA_ROOT` overrides it. Cached files are reused, but the
+first run that needs radio data for another GP may download that GP's corpus.
+The simulation also pre-warms Whisper and the agents before lap 1, so a cold
+start takes a while. Pass `--no-llm` for a fast headless run or
+`--no-real-radios` to skip real radio ingestion.
 
 ### Which LLM providers are supported?
 

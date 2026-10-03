@@ -2,8 +2,8 @@
 
 ## Prerequisites
 
-- Python 3.10+
-- Node.js 18+ (for the React web app build / dev server)
+- Python 3.10-3.12
+- Node.js 20.19+ or 22.12+ and npm (for the React and PITWALL builds / dev servers)
 - Docker and Docker Compose (for containerized deployment)
 - LM Studio or OpenAI API key (for LLM-powered agents)
 
@@ -22,7 +22,16 @@ uv sync --all-extras
 
 ### 2. Data
 
-The project requires pre-computed data artifacts. Download from HuggingFace:
+The CLI bootstraps the required data and model assets on first use with
+`ensure_setup()`. In a source checkout, the default location is `data/`;
+`F1_STRAT_DATA_ROOT` overrides it. Docker Compose does not bootstrap these
+assets, so run the setup on the host before starting the web app:
+
+```bash
+uv run python -c "from src.f1_strat_manager.data_cache import ensure_setup; ensure_setup(show_progress=True)"
+```
+
+Manual download is also supported:
 
 ```
 https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset
@@ -111,12 +120,15 @@ graph TD
     API -->|F1_LLM_PROVIDER| LLM[["OpenAI, or LM Studio<br/>on the host"]]
 
     V1["./src:/app/src :ro"] --> API
-    V2["./data:/app/data :ro"] --> API
-    V3["./data/rag :rw<br/>Qdrant writes its on-disk index here"] --> API
-    V4["backend_cache:/root/.cache<br/>named volume, survives a rebuild"] --> API
+    V2["./data:/app/data :ro<br/>dataset and model assets"] --> API
+    V3["./data/cache/fastf1 :rw<br/>FastF1 session cache"] --> API
+    V4["./data/rag :rw<br/>Qdrant writes its on-disk index here"] --> API
+    V5["backend_cache:/root/.cache<br/>named volume, survives a rebuild"] --> API
 ```
 
-Two things are worth reading off that. **Qdrant is not a service:** it runs on-disk inside the backend process, which is why `data/rag` is the one mount that is read-write. And the browser only ever talks to `:8501`; `/api` is reverse-proxied, so there is no second origin and no CORS to configure.
+Qdrant runs on disk inside the backend process. FastF1 writes session data to
+`data/cache/fastf1`; Compose mounts both that cache and `data/rag` as writable.
+The browser only talks to `:8501`; nginx reverse-proxies `/api` to the backend.
 
 `f1-webapp` wraps `docker compose up` on this file. `F1_STRAT_DATA_ROOT=/app/data` is what makes the container agree with a local checkout about where data lives.
 
@@ -130,7 +142,10 @@ docker-compose up --build
 
 Services:
 
-- backend: FastAPI on port 8000. Volumes: `./src:/app/src:ro` (read-only source, agents import from here), `./data:/app/data:ro` (read-only data), `./data/rag:/app/data/rag:rw` (writable RAG index, N30 may write here).
+- backend: FastAPI on port 8000. Volumes: `./src:/app/src:ro` (read-only source,
+  agents import from here), `./data:/app/data:ro` (data and model assets),
+  `./data/cache/fastf1:/app/data/cache/fastf1:rw` (FastF1 session cache), and
+  `./data/rag:/app/data/rag:rw` (writable RAG index, N30 may write here).
 - webapp: React SPA served by nginx on port 8501; `/api` is reverse-proxied to `backend`, so the browser stays same-origin. Depends on `backend`.
 
 `uv run f1-webapp` wraps this compose invocation and prints the URLs.
