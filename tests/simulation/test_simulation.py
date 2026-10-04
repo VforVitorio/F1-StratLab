@@ -337,15 +337,13 @@ def test_tire_range_uses_the_current_raw_compound_for_stint_selection(monkeypatc
     different value from the raw label (`MEDIUM`).
     """
     _ensure_backend_on_path()
-    from types import SimpleNamespace
+    import sys
+    from types import ModuleType, SimpleNamespace
 
     import pandas as pd
     from backend.api.v1.endpoints import strategy
     from fastapi import FastAPI
     from starlette.testclient import TestClient
-
-    import src.agents.tire_agent as tire_agent_module
-    from src.agents.tire_agent import TireAgent
 
     laps = pd.DataFrame(
         {
@@ -361,6 +359,31 @@ def test_tire_range_uses_the_current_raw_compound_for_stint_selection(monkeypatc
     )
     selected_laps = []
 
+    class Agent:
+        def _get_driver_stint(self, driver, tyre_life):
+            driver_laps = self.laps_df[self.laps_df["Driver"] == driver]
+            compound = self.session_meta.get(
+                f"{driver}_compound",
+                driver_laps["Compound"].iloc[-1] if not driver_laps.empty else "MEDIUM",
+            )
+            mask = (
+                (self.laps_df["Driver"] == driver)
+                & (self.laps_df["Compound"] == compound)
+                & (self.laps_df["TyreLife"] <= tyre_life)
+            )
+            current_stint = self.session_meta.get(f"{driver}_stint")
+            if current_stint is not None:
+                mask &= self.laps_df["Stint"] == current_stint
+            current_lap = self.session_meta.get("current_lap")
+            if current_lap is not None:
+                mask &= self.laps_df["LapNumber"] <= current_lap
+            stint = self.laps_df[mask].sort_values("LapNumber")
+            return stint if not stint.empty else None
+
+        def _build_stint_tensor(self, stint, _compound_id, _session_meta):
+            selected_laps.append(stint["LapNumber"].tolist())
+            return object()
+
     class Model:
         def eval(self):
             return self
@@ -368,22 +391,19 @@ def test_tire_range_uses_the_current_raw_compound_for_stint_selection(monkeypatc
         def __call__(self, _tensor):
             return SimpleNamespace(item=lambda: 0.123)
 
-    agent = object.__new__(TireAgent)
+    agent = Agent()
     agent.cfg = SimpleNamespace(cluster_for=lambda _gp, _default: 0, team_id_map={})
     agent.bundles = {compound: {"model": Model()} for compound in ("C2", "C3")}
 
-    def build_tensor(stint, _compound_id, _session_meta):
-        selected_laps.append(stint["LapNumber"].tolist())
-        return object()
-
-    agent._build_stint_tensor = build_tensor
     monkeypatch.setattr(strategy, "get_laps_df", lambda _year: laps)
-    monkeypatch.setattr(tire_agent_module, "_get_default_tire_agent", lambda: agent)
-    monkeypatch.setattr(
-        tire_agent_module,
-        "_compound_name_to_id",
-        lambda name, *_args: {"MEDIUM": "C2", "SOFT": "C3"}.get(name, "C2"),
-    )
+    tire_agent_module = ModuleType("src.agents.tire_agent")
+    tire_agent_module.TireAgentConfig = SimpleNamespace(_TRAINED_CLUSTER_MEAN_LAP_S={})
+    tire_agent_module._get_default_tire_agent = lambda: agent
+    tire_agent_module._compound_name_to_id = lambda name, *_args: {
+        "MEDIUM": "C2",
+        "SOFT": "C3",
+    }.get(name, "C2")
+    monkeypatch.setitem(sys.modules, "src.agents.tire_agent", tire_agent_module)
 
     app = FastAPI()
     app.include_router(strategy.router, prefix="/api/v1")
