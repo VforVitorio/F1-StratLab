@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "0 3 * * 1-5"
   workflow_dispatch:
+    inputs:
+      run_data_tier:
+        description: "Download the curated 7-8 GB HF setup and run the real Melbourne CLI smoke."
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -34,3 +40,13 @@ jobs:
 
       - name: Run full suite
         run: uv run pytest -v -n 4 --dist=loadfile --cov=src --cov-report=term-missing
+
+      - name: Prepare real CLI smoke data
+        if: github.event_name == 'workflow_dispatch' && inputs.run_data_tier
+        run: uv run python -c "from src.f1_strat_manager.data_cache import ensure_setup; ensure_setup(races=[(2025, 'Melbourne')])"
+
+      - name: Run real CLI data-tier smoke
+        if: github.event_name == 'workflow_dispatch' && inputs.run_data_tier
+        env:
+          F1_REQUIRE_DATA_TIER: "1"
+        run: uv run pytest -v tests/surfaces/test_cli_no_llm.py
