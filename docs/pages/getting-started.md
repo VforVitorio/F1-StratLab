@@ -24,13 +24,17 @@ After install, seven console entry points are available:
 f1-strat       # interactive launcher (recommended starting point)
 f1-sim         # headless CLI simulation against a saved race
 f1-arcade      # pyglet 2D replay plus the two PITWALL windows
-f1-webapp      # post-race web app (wraps `docker compose up`)
+f1-webapp      # post-race web app; requires a source checkout and Docker
 f1-prefetch    # fill the arcade replay cache ahead of time
 f1-eval        # regenerate the evaluation reports (registry, calibration, RAG, hygiene, projection, ...)
 f1-pitwall     # attach the two PITWALL windows to an arcade already running
 ```
 
-The first four are what a new user actually runs.
+The wheel includes the `f1-webapp` command, but it cannot launch the web app
+by itself because the wheel does not include `docker-compose.yml`. The entry
+point wraps `docker compose up`; `uv run f1-webapp` starts the stack from a
+source checkout with its submodule initialized. Compose also requires the
+repository-root `.env` file; copy `.env.example` before starting the stack.
 
 `f1-prefetch` exists because the first launch of any given race builds its replay telemetry, which takes minutes. It runs the same preparation the arcade menu runs, for a whole season or a rounds spec, so the wait can be paid in advance rather than while somebody is waiting to watch:
 
@@ -47,18 +51,26 @@ Rounds already cached are skipped without being loaded, so re-running it costs o
 
 `f1-eval` and `f1-pitwall` are developer tools rather than end-user surfaces. The first writes versioned markdown and JSON reports under `documents/eval_reports/` (`f1-eval registry`, `f1-eval rag`, `f1-eval calibration`, `f1-eval all`, ...); the second opens the PITWALL windows against an arcade process that is already running, which is how the UI is developed without restarting the replay.
 
-The first boot downloads cached models and reference data. A source checkout
-stores them under `data/`; a global tool install uses `~/.f1-strat/data/`.
-`F1_STRAT_DATA_ROOT` overrides the location. Cached files are reused on later
-runs, though the first run that needs radio data for another GP may download
-that GP's corpus.
+The CLI bootstraps models and common reference data on first use. Arcade reads
+those model files from the local cache and fetches race and radio data as
+needed. On a fresh cache, run a one-lap `f1-sim` command with `--no-llm` and
+`--no-real-radios` before enabling `--strategy` in Arcade. Arcade does not
+download model weights. A source checkout stores assets under `data/`; a
+global tool install uses `~/.f1-strat/data/`.
+  `F1_STRAT_DATA_ROOT` overrides the data directory. For the first-run Hub
+  download, its final path component must be named `data` (for example
+  `/mnt/f1/data`), because the downloaded files retain the repository's
+  `data/...` paths. Both Compose files bind the checkout's `data/` directory to
+  `/app/data` and set that container path explicitly, so a host override in
+  `.env` does not relocate the Compose cache. Compose does not run the bootstrap;
+  prepare the dataset and models before starting `f1-webapp`.
 
 ## 2. Clone the repo for development
 
 To edit the code, run the notebooks or contribute back:
 
 ```bash
-git clone https://github.com/VforVitorio/F1-StratLab.git
+git clone --recurse-submodules https://github.com/VforVitorio/F1-StratLab.git
 cd F1-StratLab
 uv sync --all-extras
 ```
@@ -94,17 +106,16 @@ No, but it helps. `uv sync` pulls the CUDA-routed wheel **on Windows only**; Lin
 
 ### Why is the first run slow?
 
-The first boot downloads cached models and reference data. A source checkout
-stores them under `data/`; a global tool install uses `~/.f1-strat/data/`,
-unless `F1_STRAT_DATA_ROOT` overrides it. Cached files are reused, but the
-first run that needs radio data for another GP may download that GP's corpus.
-The simulation also pre-warms Whisper and the agents before lap 1, so a cold
-start takes a while. Pass `--no-llm` for a fast headless run or
-`--no-real-radios` to skip real radio ingestion.
+The CLI downloads models and reference data on first use. Arcade loads model
+files from the cache and fetches replay data and the selected GP's radio corpus
+when needed. Docker Compose does not bootstrap these assets. The simulation
+also warms Whisper and the agents before lap 1. `--no-llm` skips the LLM path;
+`--no-real-radios` skips the real radio corpus and Whisper transcription, while
+`--radio-every` can still generate synthetic messages.
 
 ### Which LLM providers are supported?
 
-OpenAI and LM Studio, the system is provider-agnostic and does not depend on a single vendor. Setting `F1_LLM_PROVIDER=openai` selects the OpenAI API everywhere. The fallback when it is unset is per surface, a local LM Studio server at `http://localhost:1234/v1` for the CLI and the backend, OpenAI for the arcade, listed in [INSTALL.md](https://github.com/VforVitorio/F1-StratLab/blob/main/INSTALL.md#llm-provider-per-surface).
+OpenAI and LM Studio are supported, and the default differs by surface. The `f1-strat` wizard defaults to **No LLM** and forwards its selected provider to `f1-sim`. Other surfaces resolve `F1_LLM_PROVIDER` according to their own configuration. The per-surface defaults and overrides are listed in [INSTALL.md](https://github.com/VforVitorio/F1-StratLab/blob/main/INSTALL.md#llm-provider-per-surface).
 
 ### Do I need an API key?
 
