@@ -26,12 +26,11 @@ PITWALL UI before installing the tool.
   (recommended) or plain `pip`. `uv` resolves the CUDA-specific PyTorch
   wheel automatically via the `[tool.uv.sources]` table in
   `pyproject.toml`.
-- **First-run budget**: models and race data download lazily from Hugging
-  Face on first use (~7-8 GB over a session; keep ~15-20 GB free disk). The
-  first launch also spends ~30 s warming imports before the first panel
-  paints, and the first GP replay may fetch an extra ~1.5 GB Whisper
-  checkpoint. Cached assets are reused; a different GP may still fetch its
-  radio corpus on first use.
+- **First-run budget**: the CLI bootstrap downloads models and reference data
+  from Hugging Face (about 7-8 GB over a session; keep ~15-20 GB free). Arcade
+  reads model files from that cache and fetches race data and radio assets as
+  needed. The first replay may also fetch an extra ~1.5 GB Whisper checkpoint.
+  Cached assets are reused; another GP may need its radio corpus on first use.
 
 ---
 
@@ -67,10 +66,8 @@ checkout, `f1-sim` and `f1-strat` load the repo-root file. `f1-arcade` uses
 python-dotenv's default search from its module path. Set variables in the
 process environment for a global install; `f1-sim` also accepts `--provider`.
 
-**The fallback is not the same on every surface**, LM Studio for the CLI and
-the backend, OpenAI for the arcade. That is issue #264; this table records
-the current behaviour rather than resolving it. Setting `F1_LLM_PROVIDER`
-explicitly makes the difference irrelevant.
+The CLI and backend default to LM Studio. Arcade defaults to OpenAI.
+`F1_LLM_PROVIDER` selects a provider explicitly on surfaces that read it.
 
 The model names in the table are defaults. `F1_LLM_MODEL_AGENTS` and
 `F1_LLM_MODEL_ORCHESTRATOR` override the strategy models. `OPENAI_CHAT_MODEL`
@@ -115,6 +112,8 @@ cd src/pitwall/ui
 npm ci && npm run build
 cd ../../..
 uv tool install .
+# First run: populate the model cache used by Arcade strategy mode.
+f1-sim Suzuka VER "Red Bull Racing" --year 2025 --no-llm --no-real-radios --laps 1-1
 f1-arcade --viewer --year 2025 --round 3 --driver VER --team "Red Bull Racing" --driver2 LEC --strategy
 ```
 

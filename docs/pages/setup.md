@@ -2,7 +2,8 @@
 
 ## Prerequisites
 
-- Python 3.10-3.12
+- Python 3.10-3.12 for the root project. The standalone telemetry submodule
+  requires Python 3.11-3.12.
 - Node.js 20.19+ or 22.12+ and npm (for the React and PITWALL builds / dev servers)
 - Docker and Docker Compose (for containerized deployment)
 - LM Studio or OpenAI API key (for LLM-powered agents)
@@ -60,34 +61,39 @@ Create a `.env` file at the repo root:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `BACKEND_URL` | no | `http://localhost:8000` | Backend URL, read by the frontend |
 | `FRONTEND_URL` | no | `http://localhost:8501` | Frontend URL, read by the backend for CORS |
 | `F1_LLM_PROVIDER` | no | per surface, see [INSTALL.md](https://github.com/VforVitorio/F1-StratLab/blob/main/INSTALL.md#llm-provider-per-surface) | Set to `openai` for OpenAI API |
 | `OPENAI_API_KEY` | if provider=openai |, | OpenAI API key |
-| `F1_STRAT_DATA_ROOT` | no | repo `data/` | Override data directory |
+| `F1_STRAT_DATA_ROOT` | no | repo `data/` | Override the data directory. For first-run Hub downloads, the directory must end in `data/` because downloaded paths retain that prefix. |
 | `F1_API_KEY` | no | unset | Shared secret for the `X-API-Key` header. Unset = unauthenticated (safe only on a loopback bind, see `F1_HOST` below) |
-| `F1_HOST` | no | `127.0.0.1` | The host uvicorn binds to. A non-loopback bind (e.g. `0.0.0.0`) with `F1_API_KEY` unset refuses to start |
+| `F1_HOST` | no | `127.0.0.1` | Host expected by the startup auth guard and used by the backend Dockerfile. It must match any Uvicorn `--host` override |
 | `F1_MCP_ENABLED` | no | `false` | Mount the external `/mcp` Streamable-HTTP endpoint. The chat pipeline uses the same tools in-process regardless |
 | `F1_CHAT_MAX_TOKENS` | no | `2048` | Server-side cap on completion tokens per chat turn |
 | `F1_RATE_LIMIT_OFF` | no | unset | Set to `1` to disable the per-route rate limiter (load tests only) |
+
+The webapp client does not read `BACKEND_URL`. Its optional `VITE_API_BASE`
+setting is read by Vite from the webapp build environment, not from the
+repository-root `.env`. Leave it empty for the same-origin `/api` route; the
+Vite dev proxy targets `http://localhost:8000` and nginx proxies `/api` in
+Compose.
 
 See [Backend API reference → Authentication](#/backend-api) for how `F1_API_KEY` and `F1_HOST` interact.
 
 ### 4. Run the backend
 
 ```bash
-cd src/telemetry
-uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
+uv run --project src/telemetry python -m uvicorn backend.main:app --app-dir src/telemetry --host 127.0.0.1 --port 8000 --reload
 ```
 
 Verify at `http://localhost:8000/docs` (Swagger UI).
 
-> **Bind to loopback, not `0.0.0.0`.** `enforce_startup_security()` refuses to
-> start a keyless backend on a non-loopback address, but it reads the `F1_HOST`
-> setting, not the address uvicorn was actually given on the command line. So
-> `--host 0.0.0.0` with `F1_HOST` left at its default sails past the guard and
-> puts an unauthenticated API on the network. Binding wider requires setting
-> `F1_HOST` to match and giving it an `F1_API_KEY`.
+> **Keep the Compose stack on a trusted host.**
+> `enforce_startup_security()` reads `F1_HOST`, not Uvicorn's actual command-line
+> `--host`. Both Compose files pass `--host 0.0.0.0` and publish the backend and
+> web app ports on all host interfaces. They leave `F1_HOST` at its loopback
+> default. With `F1_API_KEY` unset, that configuration bypasses the guard and
+> exposes an unauthenticated API on the published ports. The local command
+> above binds directly to loopback.
 
 ### 5. Run the web app
 
@@ -137,7 +143,7 @@ Two equivalent compose files exist, one at the repo root and one path-relative c
 ### Root `docker-compose.yml`
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 Services:
@@ -156,7 +162,7 @@ The `:ro` mounts mean agents must handle `OSError` / `PermissionError` gracefull
 
 ```bash
 cd src/telemetry
-docker-compose up --build
+docker compose up --build
 ```
 
 Same two services, with paths relative to `src/telemetry/` instead of the repo root. The cutover (#43) is done: the **webapp** owns `:8501` in both compose files and the Streamlit service is gone (the legacy Streamlit app was later removed from the repo entirely, #551).

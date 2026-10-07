@@ -479,6 +479,19 @@
   </div>
 </li>
 
+<li class="rl-item">
+  <div class="rl-dot done"></div>
+  <div class="rl-card">
+    <div class="rl-header">
+      <span class="rl-version"><span class="sr-only">Version: </span>v2.7.0</span>
+      <span class="rl-date"><span class="sr-only">Date: </span>2026-09-29</span>
+      <span class="rl-badge done-badge"><span class="sr-only">Status: </span>Shipped</span>
+    </div>
+    <p class="rl-title">Provider handling, RAG refresh and replay fixes</p>
+    <p class="rl-summary">No-LLM PLAN now distinguishes an absent future stop from an unknown plan. Requests that omit <code>provider</code> keep the configured default, and the FIA retrieval corpus covers the 2026 rules. The deterministic scorer and both five-lap horizons are unchanged after the #715/#724 evidence review. The <a href="https://github.com/VforVitorio/F1-StratLab/releases/tag/v2.7.0" target="_blank" rel="noopener noreferrer">release notes</a> list the complete changes.</p>
+  </div>
+</li>
+
 </ul>
 
 <p class="rl-section-label">Planned milestones</p>
@@ -513,30 +526,30 @@
 
 ---
 
-## Side repos
+## Post-TFG project proposals
 
-These four projects ship independently of the core release train. Each is a dedicated public repository under the `f1stratlab` GitHub organisation. They share the F1 StratLab domain and Hugging Face org but have their own versioning and release cadence.
+The post-TFG plan proposes four projects outside the core release train. Their repository boundaries and release cadence are not committed.
 
 <div class="rl-side-grid">
 
 <div class="rl-side-card">
   <p class="rl-repo">gridmind</p>
-  <p class="rl-repo-desc">Unsloth LoRA fine-tune of a Gemma-family LLM on an F1 text corpus for F1-specific strategy reasoning.</p>
+  <p class="rl-repo-desc">Proposed Unsloth LoRA fine-tune of a Gemma-family LLM on an F1 text corpus for F1-specific strategy reasoning.</p>
 </div>
 
 <div class="rl-side-card">
   <p class="rl-repo">radiogate</p>
-  <p class="rl-repo-desc">Large-scale F1 team-radio NLP corpus with auto-labelling and a novel deception and bluffing signal detector.</p>
+  <p class="rl-repo-desc">Proposed large-scale F1 team-radio NLP corpus with auto-labelling and a deception and bluffing signal detector.</p>
 </div>
 
 <div class="rl-side-card">
   <p class="rl-repo">pitlab</p>
-  <p class="rl-repo-desc">Button-driven MLOps studio: download, merge, inspect, retrain. Clustering-aware and progressive per-GP.</p>
+  <p class="rl-repo-desc">Proposed MLOps studio for downloading, merging, inspecting and retraining data, with clustering-aware per-GP workflows.</p>
 </div>
 
 <div class="rl-side-card">
   <p class="rl-repo">box-bot</p>
-  <p class="rl-repo-desc">Automated X account narrating the orchestrator live during a Grand Prix.</p>
+  <p class="rl-repo-desc">Proposed automated X account that narrates the orchestrator during a Grand Prix.</p>
 </div>
 
 </div>
