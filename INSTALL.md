@@ -43,7 +43,7 @@ fails when a value here stops matching the code.
 
 | Surface | Reads `.env` | Provider when nothing is set | Overridden by | Model |
 |---|---|---|---|---|
-| `f1-sim` | repo root, source checkout only (`scripts/run_simulation_cli.py`) | `lmstudio` (`src/agents/strategy_orchestrator.py`) | `--provider openai\|lmstudio`, or `--no-llm` to skip the step | sub-agents `gpt-4.1-mini` (`F1_LLM_MODEL_AGENTS`), orchestrator `gpt-5.4-mini` (`F1_LLM_MODEL_ORCHESTRATOR`) |
+| `f1-sim` | repo root, source checkout only (`scripts/f1_sim.py`, then `scripts/run_simulation_cli.py`) | `lmstudio` (`src/agents/strategy_orchestrator.py`) | `--provider openai\|lmstudio`, or `--no-llm` to skip the step | sub-agents `gpt-4.1-mini` (`F1_LLM_MODEL_AGENTS`), orchestrator `gpt-5.4-mini` (`F1_LLM_MODEL_ORCHESTRATOR`) |
 | `f1-strat` | repo root in a source checkout (`scripts/f1_cli.py`) | the wizard's LLM-mode pick, which highlights "No LLM" | the wizard, always forwarded to `f1-sim` as `--provider` or `--no-llm` (`scripts/cli/runner.py`) | as `f1-sim` |
 | `f1-arcade`, `f1-pitwall` | `f1-arcade` uses python-dotenv's search from `src/arcade/main.py`; `f1-pitwall` inherits its process environment | `openai` for Arcade (`src/arcade/app.py`); PITWALL has no separate provider | `F1_LLM_PROVIDER`, or `--no-llm` for Arcade | as `f1-sim` for Arcade; none for PITWALL |
 | `f1-webapp` chat tab | repo root, then `src/telemetry/.env` as an override (`src/telemetry/backend/core/config.py`) | `lmstudio` (`src/telemetry/backend/services/chatbot/llm_service.py`) | `F1_LLM_PROVIDER`, then a bare `LLM_PROVIDER` | `gpt-5.4-mini`, or `OPENAI_CHAT_MODEL` |
@@ -84,9 +84,11 @@ f1-strat
 
 This guide uses `f1-strat` (the interactive wizard with race, driver, lap,
 provider and rival pickers) and `f1-sim` (the headless argparse form). The
-wizard auto-resolves the team from
-`laps_featured_2025.parquet`, shells out to `f1-sim` under the hood and
-turns Ctrl+C into a clean italic *Interrupted.* notice.
+wizard filters the driver and rival lists to the selected race and resolves
+each team from `laps_featured_2025.parquet`. Lap selections must be positive,
+ascending, and within the driver's recorded race data. The headless entry
+checks lap syntax and range before loading the simulation runner. Both commands
+support `--version`.
 
 Prefer the scripted form for demos and CI:
 

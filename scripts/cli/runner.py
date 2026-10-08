@@ -28,6 +28,7 @@ from rich.panel import Panel
 from rich.rule import Rule
 
 from .pickers import (
+    max_lap_for_driver,
     pick_driver,
     pick_laps,
     pick_provider,
@@ -56,7 +57,7 @@ def build_sim_cmd(
     if script_dir is None:
         script_dir = Path(__file__).resolve().parent.parent  # scripts/
 
-    sim_script = str(script_dir / "run_simulation_cli.py")
+    sim_script = str(script_dir / "f1_sim.py")
     cmd = [sys.executable, sim_script, race, driver, team, "--year", str(year)]
 
     if provider == "no-llm":
@@ -94,8 +95,8 @@ def run_subprocess(cmd: list[str]) -> int:
 def run_single(races: list[str], repo_root: Path, script_dir: Path) -> None:
     """Collect params for one driver and delegate to run_simulation_cli.py."""
     race = pick_race(races)
-    drv, team = pick_driver("Driver", repo_root)
-    laps = pick_laps()
+    drv, team = pick_driver("Driver", repo_root, race)
+    laps = pick_laps(max_lap_for_driver(repo_root, race, drv))
     provider = pick_provider()
 
     console.print()
@@ -126,9 +127,11 @@ def run_h2h(races: list[str], repo_root: Path, script_dir: Path) -> None:
     )
 
     race = pick_race(races)
-    drv1, tm1 = pick_driver("Driver 1  (full simulation)", repo_root)
-    drv2 = pick_rival_code(repo_root)
-    laps = pick_laps()
+    drv1, tm1 = pick_driver("Driver 1  (full simulation)", repo_root, race)
+    drv2 = pick_rival_code(repo_root, race, drv1)
+    if not drv2:
+        return
+    laps = pick_laps(max_lap_for_driver(repo_root, race, drv1))
     provider = pick_provider()
 
     console.print()

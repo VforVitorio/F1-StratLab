@@ -65,7 +65,7 @@ _COMPACT = (
 )
 
 
-def _package_version() -> str:
+def package_version() -> str:
     """The installed distribution version, or ``"dev"`` from an uninstalled checkout.
 
     Returns:
@@ -81,7 +81,7 @@ def _package_version() -> str:
 
 
 # Both branches of make_banner() render this, so the subtitle has one source.
-_SUBTITLE = f"Multi-Agent Race Intelligence System · v{_package_version()}"
+_SUBTITLE = f"Multi-Agent Race Intelligence System · v{package_version()}"
 
 
 def make_banner() -> Panel:
