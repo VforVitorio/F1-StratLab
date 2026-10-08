@@ -1,4 +1,26 @@
-"""Lightweight validation and version entry point for the headless simulator."""
+"""Headless CLI simulation demo that runs the shared inference engine lap by lap.
+
+Usage
+-----
+    f1-sim <gp_name> <driver> <team> [options]
+
+Examples
+--------
+    # No LLM synthesis, prints Monte Carlo scores only
+    f1-sim Melbourne NOR McLaren --no-llm
+
+    # Laps 15-25 with LLM synthesis (LM Studio must be running unless
+    # .env or --provider selects OpenAI)
+    f1-sim Sakhir NOR McLaren --laps 15-25 --provider lmstudio
+
+    # Custom data paths
+    f1-sim Monaco LEC Ferrari --raw-dir data/raw/2025 \\
+        --featured data/processed/laps_featured_2025.parquet
+
+Output columns
+--------------
+    Lap | Cmpd | Life | Action | Conf | STAY / PIT / UDCT / OVCT | Reasoning
+"""
 
 from __future__ import annotations
 
@@ -71,24 +93,80 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         prog="f1-sim",
         description="F1 StratLab headless race simulation",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
     )
     parser.add_argument("gp_name", help="Grand Prix folder name, such as Melbourne")
     parser.add_argument("driver", help="FIA three-letter driver code, such as NOR")
     parser.add_argument("team", help="Team name stored in the laps parquet")
-    parser.add_argument("--year", type=int, default=2025, help="Season year (default: 2025)")
-    parser.add_argument("--raw-dir", help="Base directory for raw race parquets")
-    parser.add_argument("--featured", help="Path to the featured laps parquet")
-    parser.add_argument("--no-first-run", action="store_true", help="Skip first-run Hub checks")
-    parser.add_argument("--laps")
-    parser.add_argument("--no-llm", action="store_true", help="Skip LLM synthesis")
     parser.add_argument(
-        "--provider", choices=["lmstudio", "openai"], help="Override the LLM provider"
+        "--year",
+        type=int,
+        default=2025,
+        help="Season year used for compound allocation lookup (default: 2025)",
     )
-    parser.add_argument("--interval", type=float, default=0.0, metavar="SECONDS")
-    parser.add_argument("--radio-every", type=int, default=0, metavar="N")
-    parser.add_argument("--no-real-radios", action="store_true", help="Skip the real radio corpus")
-    parser.add_argument("--whisper-model", default="turbo", metavar="NAME")
-    parser.add_argument("--rival", metavar="CODE", help="FIA code to track as a rival")
+    parser.add_argument(
+        "--raw-dir",
+        default=None,
+        help="Base directory for raw race parquets (default: <data_root>/raw/<year>)",
+    )
+    parser.add_argument(
+        "--featured",
+        default=None,
+        help="Path to featured parquet for agent RSM adapters (default: <data_root>/processed/laps_featured_<year>.parquet)",
+    )
+    parser.add_argument(
+        "--no-first-run",
+        action="store_true",
+        help="Skip the first-run Hugging Face Hub check, useful for CI or a populated data cache",
+    )
+    parser.add_argument(
+        "--laps",
+        default=None,
+        help="Lap range to simulate, e.g. 15-40 (default: all laps)",
+    )
+    parser.add_argument(
+        "--no-llm",
+        action="store_true",
+        help="Skip LLM synthesis and print Monte Carlo scores only (no LM Studio required)",
+    )
+    parser.add_argument(
+        "--provider",
+        default=None,
+        choices=["lmstudio", "openai"],
+        help="LLM provider, overriding F1_LLM_PROVIDER from .env. Unset uses .env or the lmstudio default.",
+    )
+    parser.add_argument(
+        "--interval",
+        type=float,
+        default=0.0,
+        metavar="SECONDS",
+        help="Pause between laps in seconds (default: 0.0, no pause). For example, --interval 2.0 pauses 2 seconds after each lap.",
+    )
+    parser.add_argument(
+        "--radio-every",
+        type=int,
+        default=0,
+        metavar="N",
+        help="Simulate a radio/RCM event every N laps. 0 disables it; the real radio corpus suppresses it when available.",
+    )
+    parser.add_argument(
+        "--no-real-radios",
+        action="store_true",
+        help="Skip the OpenF1 radio corpus and Whisper. Falls back to synthetic --radio-every events.",
+    )
+    parser.add_argument(
+        "--whisper-model",
+        default="turbo",
+        metavar="NAME",
+        help="Whisper model name passed to RadioPipelineRunner (default: turbo)",
+    )
+    parser.add_argument(
+        "--rival",
+        default=None,
+        metavar="CODE",
+        help="FIA three-letter code of a driver to track as a rival",
+    )
     parser.add_argument("--verbose", action="store_true", help="Print full per-lap tracebacks")
     parser.add_argument(
         "--version",

@@ -127,6 +127,9 @@ def test_f1_sim_version_and_bad_laps_exit_before_simulation_import():
     assert version.stdout.startswith("f1-sim ")
     assert help_output.returncode == 0
     assert "--no-llm" in help_output.stdout
+    assert "--interval SECONDS" in help_output.stdout
+    assert "--radio-every N" in help_output.stdout
+    assert "f1-sim Sakhir NOR McLaren --laps 15-25" in help_output.stdout
     assert malformed.returncode == 2
     assert "--laps must be a positive lap number" in malformed.stderr
     assert "Traceback" not in malformed.stderr
