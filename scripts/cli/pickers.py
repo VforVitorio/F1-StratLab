@@ -487,8 +487,12 @@ def pick_laps(max_lap: int | None = None) -> str | None:
             )
             continue
 
-        start = int(match.group(1))
-        end = int(match.group(2) or start)
+        try:
+            start = int(match.group(1))
+            end = int(match.group(2) or start)
+        except ValueError:
+            console.print("  [yellow]Lap numbers are too large.[/yellow]")
+            continue
         if end < start:
             console.print(
                 "  [yellow]The last lap must be greater than or equal to the first.[/yellow]"

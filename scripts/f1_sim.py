@@ -24,11 +24,46 @@ def _parse_laps(value: str | None, parser: argparse.ArgumentParser) -> tuple[int
     match = re.fullmatch(r"([1-9]\d*)(?:-([1-9]\d*))?", value)
     if match is None:
         parser.error("--laps must be a positive lap number or ascending range, such as 5-7")
-    start = int(match.group(1))
-    end = int(match.group(2) or start)
+    try:
+        start = int(match.group(1))
+        end = int(match.group(2) or start)
+    except ValueError:
+        parser.error("lap numbers are too large")
     if end < start:
         parser.error("the last lap must be greater than or equal to the first")
     return start, end
+
+
+def _runner_arguments(args: argparse.Namespace) -> list[str]:
+    """Rebuild validated arguments with FIA codes in the runner's canonical case."""
+    result = [args.gp_name, args.driver.upper(), args.team]
+    if args.year != 2025:
+        result.extend(["--year", str(args.year)])
+    if args.raw_dir:
+        result.extend(["--raw-dir", args.raw_dir])
+    if args.featured:
+        result.extend(["--featured", args.featured])
+    if args.no_first_run:
+        result.append("--no-first-run")
+    if args.laps:
+        result.extend(["--laps", args.laps])
+    if args.no_llm:
+        result.append("--no-llm")
+    if args.provider:
+        result.extend(["--provider", args.provider])
+    if args.interval:
+        result.extend(["--interval", str(args.interval)])
+    if args.radio_every:
+        result.extend(["--radio-every", str(args.radio_every)])
+    if args.no_real_radios:
+        result.append("--no-real-radios")
+    if args.whisper_model != "turbo":
+        result.extend(["--whisper-model", args.whisper_model])
+    if args.rival:
+        result.extend(["--rival", args.rival.upper()])
+    if args.verbose:
+        result.append("--verbose")
+    return result
 
 
 def main() -> None:
@@ -81,6 +116,7 @@ def main() -> None:
 
     from scripts.run_simulation_cli import main as simulation_main
 
+    sys.argv = [sys.argv[0], *_runner_arguments(args)]
     simulation_main()
 
 

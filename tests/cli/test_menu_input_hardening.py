@@ -60,7 +60,7 @@ def test_lap_bound_comes_from_raw_race_data(tmp_path, monkeypatch):
 
 
 def test_pick_laps_reprompts_for_malformed_reversed_and_out_of_range_values(monkeypatch, capsys):
-    answers = iter(["oops", "40-15", "9-11", "5-7"])
+    answers = iter(["oops", "40-15", "9-11", "9" * 4301, "5-7"])
     monkeypatch.setattr(pickers.Prompt, "ask", lambda *_args, **_kwargs: next(answers))
 
     assert pickers.pick_laps(max_lap=10) == "5-7"
@@ -68,6 +68,7 @@ def test_pick_laps_reprompts_for_malformed_reversed_and_out_of_range_values(monk
     assert "positive lap" in output
     assert "greater than or equal" in output
     assert "ends at lap 10" in output
+    assert "too large" in output
 
 
 @pytest.mark.parametrize(("answer", "expected"), [("7", "7"), ("all", None), ("", None)])
@@ -131,6 +132,15 @@ def test_f1_sim_version_and_bad_laps_exit_before_simulation_import():
     assert "Traceback" not in malformed.stderr
 
 
+def test_f1_sim_rejects_lap_numbers_beyond_python_integer_limit():
+    parser = f1_sim.argparse.ArgumentParser(prog="f1-sim")
+
+    with pytest.raises(SystemExit) as exc:
+        f1_sim._parse_laps("9" * 4301, parser)
+
+    assert exc.value.code == 2
+
+
 def test_f1_sim_rejects_ranges_outside_driver_data(monkeypatch, capsys):
     parser = f1_sim.argparse.ArgumentParser(prog="f1-sim")
     lap_range = f1_sim._parse_laps("8-11", parser)
@@ -166,6 +176,40 @@ def test_f1_sim_rejects_ranges_outside_driver_data(monkeypatch, capsys):
     assert exc.value.code == 2
     assert lookups[0][4] == Path("custom-raw")
     assert "this driver's data ends at lap 10" in capsys.readouterr().err
+
+
+def test_f1_sim_normalizes_driver_and_rival_codes_before_delegation():
+    args = f1_sim.argparse.Namespace(
+        gp_name="Melbourne",
+        driver="nor",
+        team="McLaren",
+        year=2025,
+        raw_dir=None,
+        featured=None,
+        no_first_run=True,
+        laps="5",
+        no_llm=True,
+        provider=None,
+        interval=0.0,
+        radio_every=0,
+        no_real_radios=True,
+        whisper_model="turbo",
+        rival="ver",
+        verbose=False,
+    )
+
+    assert f1_sim._runner_arguments(args) == [
+        "Melbourne",
+        "NOR",
+        "McLaren",
+        "--no-first-run",
+        "--laps",
+        "5",
+        "--no-llm",
+        "--no-real-radios",
+        "--rival",
+        "VER",
+    ]
 
 
 def test_f1_sim_rejects_driver_missing_from_raw_race(monkeypatch, capsys):
