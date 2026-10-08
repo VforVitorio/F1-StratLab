@@ -208,6 +208,8 @@ def main() -> None:
 
     raw_dir = Path(args.raw_dir) if args.raw_dir else None
     driver_data = _load_driver_data(_REPO_ROOT, args.gp_name, args.year, raw_dir)
+    if driver_data is None:
+        parser.error(f"cannot read raw lap data for {args.gp_name}; check --raw-dir")
     if args.driver.upper() not in driver_data:
         parser.error(f"driver {args.driver.upper()} is not present at {args.gp_name}")
 

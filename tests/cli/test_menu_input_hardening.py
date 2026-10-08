@@ -304,3 +304,28 @@ def test_f1_sim_rejects_driver_missing_from_raw_race(monkeypatch, capsys):
 
     assert exc.value.code == 2
     assert "driver ZZZ is not present at Miami_Gardens" in capsys.readouterr().err
+
+
+def test_f1_sim_reports_missing_raw_data_without_traceback(monkeypatch, capsys):
+    monkeypatch.setattr(pickers, "_load_driver_data", lambda *_args: None)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "f1-sim",
+            "Melbourne",
+            "NOR",
+            "McLaren",
+            "--raw-dir",
+            "missing-raw-root",
+            "--laps",
+            "5",
+        ],
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        f1_sim.main()
+
+    assert exc.value.code == 2
+    output = capsys.readouterr().err
+    assert "cannot read raw lap data for Melbourne" in output
+    assert "Traceback" not in output
