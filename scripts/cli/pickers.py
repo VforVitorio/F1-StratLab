@@ -252,65 +252,56 @@ def discover_races(repo_root: Path, year: int = 2025) -> list[str]:
 # Driver → team auto-mapping
 # ─────────────────────────────────────────────────────────────────────────────
 
-_DRIVER_DATA_CACHE: dict[tuple[str, str], dict[str, str]] = {}
-
-
-def _resolve_laps_parquet_path(repo_root: Path, year: int = 2025) -> Path:
-    """Resolve the featured-laps parquet path, preferring ``get_data_root``.
-
-    Routes through ``get_data_root`` when the f1_strat_manager package is
-    importable so ``uv tool install`` cached layouts work; otherwise falls
-    back to the repo-relative path for bare dev checkouts (e.g. running
-    ``scripts/f1_cli.py`` before ``uv sync``).
-    """
-    try:
-        from src.f1_strat_manager.data_cache import get_data_root
-
-        return get_data_root() / "processed" / f"laps_featured_{year}.parquet"
-    except ImportError:
-        return repo_root / "data" / "processed" / f"laps_featured_{year}.parquet"
+_DRIVER_DATA_CACHE: dict[tuple[str, str], dict[str, tuple[str, frozenset[int]]] | None] = {}
 
 
 def _load_driver_data(
     repo_root: Path,
     gp_name: str,
     year: int = 2025,
-    parquet_path: Path | None = None,
-) -> dict[str, str]:
-    """Return each selected-race participant's team from the featured parquet.
+    raw_dir: Path | None = None,
+) -> dict[str, tuple[str, frozenset[int]]] | None:
+    """Return participants, teams and lap limits from the selected raw race parquet.
 
-    Best-effort only: any failure to read or parse the parquet (file
-    missing, corrupt parquet, unexpected schema) degrades to an empty map
-    rather than raising, so the pickers can retain their manual fallback.
+    A driver is selectable only when at least one lap has the position,
+    tyre-life and lap-time values the replay pipeline needs. Read failures
+    return ``None`` so callers can report a friendly preflight error.
     """
-    from src.f1_strat_manager.gp_slugs import normalise_gp_key
-
-    parquet = parquet_path or _resolve_laps_parquet_path(repo_root, year)
-    gp_key = normalise_gp_key(gp_name)
-    cache_key = (str(parquet), gp_key)
+    parquet = _resolve_raw_laps_path(repo_root, gp_name, year, raw_dir)
+    cache_key = (str(parquet), gp_name)
     if cache_key in _DRIVER_DATA_CACHE:
         return _DRIVER_DATA_CACHE[cache_key]
     try:
         import pandas as pd
 
-        if parquet.exists():
-            df = pd.read_parquet(parquet, columns=["GP_Name", "Driver", "Team"])
-            df = df.dropna(subset=["GP_Name"])
-            df = df[df["GP_Name"].map(normalise_gp_key) == gp_key]
-            df = df.dropna(subset=["Driver", "Team"])
+        if parquet.is_file():
+            df = pd.read_parquet(
+                parquet,
+                columns=["Driver", "Team", "LapNumber", "LapTime", "Position", "TyreLife"],
+            )
+            df = df.dropna(subset=["Driver", "Team", "LapNumber"])
             df["Driver"] = df["Driver"].astype(str).str.strip().str.upper()
             df["Team"] = df["Team"].astype(str).str.strip()
-            _DRIVER_DATA_CACHE[cache_key] = (
-                df.drop_duplicates("Driver", keep="last").set_index("Driver")["Team"].to_dict()
-            )
+            df["LapNumber"] = pd.to_numeric(df["LapNumber"], errors="coerce")
+            df = df.dropna(subset=["LapNumber"])
+            teams = df.drop_duplicates("Driver", keep="last").set_index("Driver")["Team"]
+            complete = df.dropna(subset=["LapTime", "Position", "TyreLife"])
+            valid_laps: dict[str, set[int]] = {}
+            for code, lap in complete[["Driver", "LapNumber"]].itertuples(index=False, name=None):
+                valid_laps.setdefault(code, set()).add(int(lap))
+            _DRIVER_DATA_CACHE[cache_key] = {
+                code: (str(team), frozenset(valid_laps[code]))
+                for code, team in teams.items()
+                if code in valid_laps
+            }
         else:
-            _DRIVER_DATA_CACHE[cache_key] = {}
+            _DRIVER_DATA_CACHE[cache_key] = None
     except Exception:
         # pandas/pyarrow raise a wide, version-dependent set of types for a
         # malformed or unreadable parquet (OSError variants, pyarrow's own
         # ArrowInvalid/ArrowIOError, KeyError on an unexpected schema) - not
         # worth enumerating for a best-effort convenience lookup.
-        _DRIVER_DATA_CACHE[cache_key] = {}
+        _DRIVER_DATA_CACHE[cache_key] = None
     return _DRIVER_DATA_CACHE[cache_key]
 
 
@@ -329,31 +320,6 @@ def _resolve_raw_laps_path(
         except ImportError:
             raw_dir = repo_root / "data" / "raw" / str(year)
     return raw_dir / gp_name / "laps.parquet"
-
-
-def max_lap_for_driver(
-    repo_root: Path,
-    gp_name: str,
-    driver: str,
-    year: int = 2025,
-    raw_dir: Path | None = None,
-) -> int | None:
-    """Return the driver's last raw replay lap, 0 if absent, or None if unreadable."""
-    parquet = _resolve_raw_laps_path(repo_root, gp_name, year, raw_dir)
-    if not parquet.is_file():
-        return None
-    try:
-        import pandas as pd
-
-        df = pd.read_parquet(parquet, columns=["Driver", "LapNumber"])
-        code = driver.strip().upper()
-        rows = df[df["Driver"].astype(str).str.strip().str.upper() == code]
-        if rows.empty:
-            return 0
-        laps = pd.to_numeric(rows["LapNumber"], errors="coerce").dropna()
-        return int(laps.max()) if not laps.empty else None
-    except Exception:
-        return None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -393,9 +359,9 @@ def pick_driver(
     drivers = _load_driver_data(repo_root, gp_name) if repo_root is not None and gp_name else {}
     if drivers:
         codes = sorted(drivers)
-        options = [f"{code}  ·  {drivers[code]}" for code in codes]
+        options = [f"{code}  ·  {drivers[code][0]}" for code in codes]
         code = codes[_arrow_pick(f"{label} available at {gp_name}:", options)]
-        team = drivers[code]
+        team = drivers[code][0]
     else:
         console.print("  [dim]Race participants are unavailable; enter the driver manually.[/dim]")
         code = _prompt_driver_code(label)
@@ -444,7 +410,7 @@ def pick_rival_code(
     if drivers:
         codes = [code for code in sorted(drivers) if code != (driver_code or "").upper()]
         if codes:
-            options = [f"{code}  ·  {drivers[code]}" for code in codes]
+            options = [f"{code}  ·  {drivers[code][0]}" for code in codes]
             code = codes[_arrow_pick(f"Rival at {gp_name}:", options)]
         else:
             console.print(
@@ -459,7 +425,7 @@ def pick_rival_code(
             code = _prompt_driver_code("Rival driver")
 
     if drivers:
-        team = drivers[code]
+        team = drivers[code][0]
         if team:
             console.print(
                 f"  [dim]Team →[/dim] [{F1_WHITE}]{team}[/{F1_WHITE}]  "
@@ -469,7 +435,10 @@ def pick_rival_code(
     return code
 
 
-def pick_laps(max_lap: int | None = None) -> str | None:
+def pick_laps(
+    max_lap: int | None = None,
+    valid_laps: frozenset[int] | set[int] | None = None,
+) -> str | None:
     """Ask for all laps, one positive lap, or an inclusive ascending range."""
     while True:
         console.print()
@@ -500,6 +469,9 @@ def pick_laps(max_lap: int | None = None) -> str | None:
             continue
         if max_lap is not None and end > max_lap:
             console.print(f"  [yellow]This driver's data ends at lap {max_lap}.[/yellow]")
+            continue
+        if valid_laps is not None and not any(start <= lap <= end for lap in valid_laps):
+            console.print("  [yellow]This range contains no complete lap for this driver.[/yellow]")
             continue
         return f"{start}-{end}" if match.group(2) else str(start)
 

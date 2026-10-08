@@ -85,7 +85,7 @@ f1-strat
 This guide uses `f1-strat` (the interactive wizard with race, driver, lap,
 provider and rival pickers) and `f1-sim` (the headless argparse form). The
 wizard filters the driver and rival lists to the selected race and resolves
-each team from `laps_featured_2025.parquet`. Lap selections must be positive,
+each team from `data/raw/<year>/<gp>/laps.parquet`. Lap selections must be positive,
 ascending, and within the driver's recorded race data. The headless entry
 checks lap syntax and range before loading the simulation runner. Both commands
 support `--version`.

@@ -2,9 +2,9 @@
 
 Interactive arrow-key wrapper around `scripts/f1_sim.py`, which validates the
 arguments before delegating to `scripts/run_simulation_cli.py`. Driver and rival
-menus use participants from the selected race in
-`data/processed/laps_featured_2025.parquet`; lap input is checked against the
-selected driver's recorded range. No simulation logic lives here.
+menus use participants from the selected race's
+`data/raw/<year>/<gp>/laps.parquet`; team and lap limits come from those same
+rows. No simulation logic lives here.
 
 ## How to run
 

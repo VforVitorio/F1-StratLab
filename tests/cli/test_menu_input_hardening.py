@@ -16,12 +16,33 @@ def test_driver_and_rival_pickers_use_the_selected_race(tmp_path, monkeypatch):
     parquet.touch()
     frame = pd.DataFrame(
         [
-            {"GP_Name": "Miami", "Driver": "NOR", "Team": "McLaren"},
-            {"GP_Name": "Miami", "Driver": "PIA", "Team": "McLaren"},
-            {"GP_Name": "Silverstone", "Driver": "VER", "Team": "Red Bull"},
+            {
+                "Driver": "DOO",
+                "Team": "Alpine",
+                "LapNumber": 1,
+                "LapTime": None,
+                "Position": None,
+                "TyreLife": 1,
+            },
+            {
+                "Driver": "NOR",
+                "Team": "McLaren",
+                "LapNumber": 3,
+                "LapTime": 90.0,
+                "Position": 1,
+                "TyreLife": 3,
+            },
+            {
+                "Driver": "PIA",
+                "Team": "McLaren",
+                "LapNumber": 5,
+                "LapTime": 91.0,
+                "Position": 2,
+                "TyreLife": 5,
+            },
         ]
     )
-    monkeypatch.setattr(pickers, "_resolve_laps_parquet_path", lambda *_args: parquet)
+    monkeypatch.setattr(pickers, "_resolve_raw_laps_path", lambda *_args: parquet)
     monkeypatch.setattr(pd, "read_parquet", lambda *_args, **_kwargs: frame.copy())
     selections = []
 
@@ -32,8 +53,12 @@ def test_driver_and_rival_pickers_use_the_selected_race(tmp_path, monkeypatch):
     monkeypatch.setattr(pickers, "_arrow_pick", choose)
 
     assert pickers.pick_driver("Driver", tmp_path, "Miami_Gardens") == ("PIA", "McLaren")
-    assert pickers.pick_rival_code(tmp_path, "Miami_Gardens", "NOR") == "PIA"
-    assert selections == [["NOR  ·  McLaren", "PIA  ·  McLaren"], ["PIA  ·  McLaren"]]
+    assert "DOO" not in pickers._load_driver_data(tmp_path, "Miami_Gardens")
+    assert pickers.pick_rival_code(tmp_path, "Miami_Gardens", "PIA") == "NOR"
+    assert selections == [
+        ["NOR  ·  McLaren", "PIA  ·  McLaren"],
+        ["NOR  ·  McLaren"],
+    ]
 
 
 def test_lap_bound_comes_from_raw_race_data(tmp_path, monkeypatch):
@@ -42,9 +67,38 @@ def test_lap_bound_comes_from_raw_race_data(tmp_path, monkeypatch):
     (race_dir / "laps.parquet").touch()
     raw_laps = pd.DataFrame(
         [
-            {"Driver": "NOR", "LapNumber": 52},
-            {"Driver": "NOR", "LapNumber": 53},
-            {"Driver": "VER", "LapNumber": 53},
+            {
+                "Driver": "NOR",
+                "Team": "McLaren",
+                "LapNumber": 52,
+                "LapTime": 92.0,
+                "Position": 3,
+                "TyreLife": 7,
+            },
+            {
+                "Driver": "NOR",
+                "Team": "McLaren",
+                "LapNumber": 53,
+                "LapTime": 93.0,
+                "Position": 3,
+                "TyreLife": 8,
+            },
+            {
+                "Driver": "NOR",
+                "Team": "McLaren",
+                "LapNumber": 54,
+                "LapTime": None,
+                "Position": None,
+                "TyreLife": 9,
+            },
+            {
+                "Driver": "VER",
+                "Team": "Red Bull",
+                "LapNumber": 53,
+                "LapTime": 91.0,
+                "Position": 1,
+                "TyreLife": 8,
+            },
         ]
     )
     parquet_reads = []
@@ -54,21 +108,27 @@ def test_lap_bound_comes_from_raw_race_data(tmp_path, monkeypatch):
         lambda path, columns: parquet_reads.append((path, columns)) or raw_laps.copy(),
     )
 
-    assert pickers.max_lap_for_driver(tmp_path, "Suzuka", "NOR", raw_dir=race_dir.parent) == 53
-    assert pickers.max_lap_for_driver(tmp_path, "Suzuka", "ZZZ", raw_dir=race_dir.parent) == 0
+    drivers = pickers._load_driver_data(tmp_path, "Suzuka", raw_dir=race_dir.parent)
+
+    assert max(drivers["NOR"][1]) == 53
+    assert max(drivers["VER"][1]) == 53
+    assert drivers["NOR"][1] == frozenset({52, 53})
+    assert "ZZZ" not in drivers
+    assert "NOR" in drivers
     assert parquet_reads[0][0] == race_dir / "laps.parquet"
 
 
 def test_pick_laps_reprompts_for_malformed_reversed_and_out_of_range_values(monkeypatch, capsys):
-    answers = iter(["oops", "40-15", "9-11", "9" * 4301, "5-7"])
+    answers = iter(["oops", "40-15", "9-11", "9" * 4301, "8-9", "5-7"])
     monkeypatch.setattr(pickers.Prompt, "ask", lambda *_args, **_kwargs: next(answers))
 
-    assert pickers.pick_laps(max_lap=10) == "5-7"
+    assert pickers.pick_laps(max_lap=10, valid_laps=frozenset({1, 3, 5, 7, 10})) == "5-7"
     output = capsys.readouterr().out
     assert "positive lap" in output
     assert "greater than or equal" in output
     assert "ends at lap 10" in output
     assert "too large" in output
+    assert "no complete lap" in output
 
 
 @pytest.mark.parametrize(("answer", "expected"), [("7", "7"), ("all", None), ("", None)])
@@ -151,13 +211,11 @@ def test_f1_sim_rejects_ranges_outside_driver_data(monkeypatch, capsys):
 
     lookups = []
 
-    monkeypatch.setattr(pickers, "_load_driver_data", lambda *_args: {"NOR": "McLaren"})
-
-    def max_lap(*args):
+    def load_driver_data(*args):
         lookups.append(args)
-        return 10
+        return {"NOR": ("McLaren", frozenset({1, 5, 10}))}
 
-    monkeypatch.setattr(pickers, "max_lap_for_driver", max_lap)
+    monkeypatch.setattr(pickers, "_load_driver_data", load_driver_data)
     monkeypatch.setattr(
         "sys.argv",
         [
@@ -177,8 +235,26 @@ def test_f1_sim_rejects_ranges_outside_driver_data(monkeypatch, capsys):
         f1_sim.main()
 
     assert exc.value.code == 2
-    assert lookups[0][4] == Path("custom-raw")
+    assert lookups[0][3] == Path("custom-raw")
     assert "this driver's data ends at lap 10" in capsys.readouterr().err
+
+
+def test_f1_sim_rejects_ranges_without_a_complete_lap(monkeypatch, capsys):
+    monkeypatch.setattr(
+        pickers,
+        "_load_driver_data",
+        lambda *_args: {"NOR": ("McLaren", frozenset({1, 3, 10}))},
+    )
+    monkeypatch.setattr(
+        "sys.argv",
+        ["f1-sim", "Melbourne", "NOR", "McLaren", "--laps", "8-9"],
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        f1_sim.main()
+
+    assert exc.value.code == 2
+    assert "contains no complete lap" in capsys.readouterr().err
 
 
 def test_f1_sim_normalizes_driver_and_rival_codes_before_delegation():
@@ -216,11 +292,15 @@ def test_f1_sim_normalizes_driver_and_rival_codes_before_delegation():
 
 
 def test_f1_sim_rejects_driver_missing_from_raw_race(monkeypatch, capsys):
-    monkeypatch.setattr(pickers, "_load_driver_data", lambda *_args: {"NOR": "McLaren"})
-    monkeypatch.setattr("sys.argv", ["f1-sim", "Miami_Gardens", "DOO", "Alpine"])
+    monkeypatch.setattr(
+        pickers,
+        "_load_driver_data",
+        lambda *_args: {"NOR": ("McLaren", frozenset({1, 57}))},
+    )
+    monkeypatch.setattr("sys.argv", ["f1-sim", "Miami_Gardens", "ZZZ", "Alpine"])
 
     with pytest.raises(SystemExit) as exc:
         f1_sim.main()
 
     assert exc.value.code == 2
-    assert "driver DOO is not present at Miami_Gardens" in capsys.readouterr().err
+    assert "driver ZZZ is not present at Miami_Gardens" in capsys.readouterr().err

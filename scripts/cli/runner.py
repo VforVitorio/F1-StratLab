@@ -28,7 +28,7 @@ from rich.panel import Panel
 from rich.rule import Rule
 
 from .pickers import (
-    max_lap_for_driver,
+    _load_driver_data,
     pick_driver,
     pick_laps,
     pick_provider,
@@ -96,13 +96,15 @@ def run_single(races: list[str], repo_root: Path, script_dir: Path) -> None:
     """Collect params for one driver and delegate to run_simulation_cli.py."""
     race = pick_race(races)
     drv, team = pick_driver("Driver", repo_root, race)
-    max_lap = max_lap_for_driver(repo_root, race, drv)
-    if max_lap is None or max_lap < 1:
+    drivers = _load_driver_data(repo_root, race)
+    driver_data = drivers.get(drv) if drivers else None
+    if driver_data is None:
         console.print(
             f"  [yellow]No raw lap data for {drv} at {race}; simulation was not started.[/yellow]"
         )
         return
-    laps = pick_laps(max_lap)
+    valid_laps = driver_data[1]
+    laps = pick_laps(max(valid_laps), valid_laps)
     provider = pick_provider()
 
     console.print()
@@ -134,8 +136,9 @@ def run_h2h(races: list[str], repo_root: Path, script_dir: Path) -> None:
 
     race = pick_race(races)
     drv1, tm1 = pick_driver("Driver 1  (full simulation)", repo_root, race)
-    max_lap = max_lap_for_driver(repo_root, race, drv1)
-    if max_lap is None or max_lap < 1:
+    drivers = _load_driver_data(repo_root, race)
+    driver_data = drivers.get(drv1) if drivers else None
+    if driver_data is None:
         console.print(
             f"  [yellow]No raw lap data for {drv1} at {race}; simulation was not started.[/yellow]"
         )
@@ -143,7 +146,8 @@ def run_h2h(races: list[str], repo_root: Path, script_dir: Path) -> None:
     drv2 = pick_rival_code(repo_root, race, drv1)
     if not drv2:
         return
-    laps = pick_laps(max_lap)
+    valid_laps = driver_data[1]
+    laps = pick_laps(max(valid_laps), valid_laps)
     provider = pick_provider()
 
     console.print()
