@@ -275,6 +275,7 @@ def _load_driver_data(
     repo_root: Path,
     gp_name: str,
     year: int = 2025,
+    parquet_path: Path | None = None,
 ) -> dict[str, tuple[str, int]]:
     """Return each race participant's team and final lap from the parquet.
 
@@ -284,7 +285,7 @@ def _load_driver_data(
     """
     from src.f1_strat_manager.gp_slugs import normalise_gp_key
 
-    parquet = _resolve_laps_parquet_path(repo_root, year)
+    parquet = parquet_path or _resolve_laps_parquet_path(repo_root, year)
     gp_key = normalise_gp_key(gp_name)
     cache_key = (str(parquet), gp_key)
     if cache_key in _DRIVER_DATA_CACHE:
@@ -322,9 +323,10 @@ def max_lap_for_driver(
     gp_name: str,
     driver: str,
     year: int = 2025,
+    parquet_path: Path | None = None,
 ) -> int | None:
     """Return the selected driver's final lap when the featured parquet is available."""
-    data = _load_driver_data(repo_root, gp_name, year)
+    data = _load_driver_data(repo_root, gp_name, year, parquet_path)
     return data.get(driver.upper(), ("", 0))[1] or None
 
 

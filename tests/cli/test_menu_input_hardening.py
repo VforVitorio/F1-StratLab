@@ -2,6 +2,7 @@
 
 import subprocess
 import sys
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -113,10 +114,29 @@ def test_f1_sim_rejects_ranges_outside_driver_data(monkeypatch, capsys):
     lap_range = f1_sim._parse_laps("8-11", parser)
     assert lap_range == (8, 11)
 
-    monkeypatch.setattr(pickers, "max_lap_for_driver", lambda *_args: 10)
-    monkeypatch.setattr("sys.argv", ["f1-sim", "Melbourne", "NOR", "McLaren", "--laps", "8-11"])
+    lookups = []
+
+    def max_lap(*args):
+        lookups.append(args)
+        return 10
+
+    monkeypatch.setattr(pickers, "max_lap_for_driver", max_lap)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "f1-sim",
+            "Melbourne",
+            "NOR",
+            "McLaren",
+            "--featured",
+            "custom.parquet",
+            "--laps",
+            "8-11",
+        ],
+    )
     with pytest.raises(SystemExit) as exc:
         f1_sim.main()
 
     assert exc.value.code == 2
+    assert lookups[0][4] == Path("custom.parquet")
     assert "this driver's data ends at lap 10" in capsys.readouterr().err

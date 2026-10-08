@@ -66,7 +66,14 @@ def main() -> None:
     if lap_range is not None:
         from scripts.cli.pickers import max_lap_for_driver
 
-        max_lap = max_lap_for_driver(_REPO_ROOT, args.gp_name, args.driver, args.year)
+        featured_path = Path(args.featured) if args.featured else None
+        max_lap = max_lap_for_driver(
+            _REPO_ROOT,
+            args.gp_name,
+            args.driver,
+            args.year,
+            featured_path,
+        )
         if max_lap is not None and lap_range[1] > max_lap:
             parser.error(f"this driver's data ends at lap {max_lap}")
 
