@@ -96,7 +96,13 @@ def run_single(races: list[str], repo_root: Path, script_dir: Path) -> None:
     """Collect params for one driver and delegate to run_simulation_cli.py."""
     race = pick_race(races)
     drv, team = pick_driver("Driver", repo_root, race)
-    laps = pick_laps(max_lap_for_driver(repo_root, race, drv))
+    max_lap = max_lap_for_driver(repo_root, race, drv)
+    if max_lap is None or max_lap < 1:
+        console.print(
+            f"  [yellow]No raw lap data for {drv} at {race}; simulation was not started.[/yellow]"
+        )
+        return
+    laps = pick_laps(max_lap)
     provider = pick_provider()
 
     console.print()
@@ -128,10 +134,16 @@ def run_h2h(races: list[str], repo_root: Path, script_dir: Path) -> None:
 
     race = pick_race(races)
     drv1, tm1 = pick_driver("Driver 1  (full simulation)", repo_root, race)
+    max_lap = max_lap_for_driver(repo_root, race, drv1)
+    if max_lap is None or max_lap < 1:
+        console.print(
+            f"  [yellow]No raw lap data for {drv1} at {race}; simulation was not started.[/yellow]"
+        )
+        return
     drv2 = pick_rival_code(repo_root, race, drv1)
     if not drv2:
         return
-    laps = pick_laps(max_lap_for_driver(repo_root, race, drv1))
+    laps = pick_laps(max_lap)
     provider = pick_provider()
 
     console.print()

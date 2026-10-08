@@ -16,9 +16,9 @@ def test_driver_and_rival_pickers_use_the_selected_race(tmp_path, monkeypatch):
     parquet.touch()
     frame = pd.DataFrame(
         [
-            {"GP_Name": "Miami", "Driver": "NOR", "Team": "McLaren", "LapNumber": 3},
-            {"GP_Name": "Miami", "Driver": "PIA", "Team": "McLaren", "LapNumber": 5},
-            {"GP_Name": "Silverstone", "Driver": "VER", "Team": "Red Bull", "LapNumber": 52},
+            {"GP_Name": "Miami", "Driver": "NOR", "Team": "McLaren"},
+            {"GP_Name": "Miami", "Driver": "PIA", "Team": "McLaren"},
+            {"GP_Name": "Silverstone", "Driver": "VER", "Team": "Red Bull"},
         ]
     )
     monkeypatch.setattr(pickers, "_resolve_laps_parquet_path", lambda *_args: parquet)
@@ -32,9 +32,31 @@ def test_driver_and_rival_pickers_use_the_selected_race(tmp_path, monkeypatch):
     monkeypatch.setattr(pickers, "_arrow_pick", choose)
 
     assert pickers.pick_driver("Driver", tmp_path, "Miami_Gardens") == ("PIA", "McLaren")
-    assert pickers.max_lap_for_driver(tmp_path, "Miami_Gardens", "PIA") == 5
     assert pickers.pick_rival_code(tmp_path, "Miami_Gardens", "NOR") == "PIA"
     assert selections == [["NOR  ·  McLaren", "PIA  ·  McLaren"], ["PIA  ·  McLaren"]]
+
+
+def test_lap_bound_comes_from_raw_race_data(tmp_path, monkeypatch):
+    race_dir = tmp_path / "raw" / "2025" / "Suzuka"
+    race_dir.mkdir(parents=True)
+    (race_dir / "laps.parquet").touch()
+    raw_laps = pd.DataFrame(
+        [
+            {"Driver": "NOR", "LapNumber": 52},
+            {"Driver": "NOR", "LapNumber": 53},
+            {"Driver": "VER", "LapNumber": 53},
+        ]
+    )
+    parquet_reads = []
+    monkeypatch.setattr(
+        pd,
+        "read_parquet",
+        lambda path, columns: parquet_reads.append((path, columns)) or raw_laps.copy(),
+    )
+
+    assert pickers.max_lap_for_driver(tmp_path, "Suzuka", "NOR", raw_dir=race_dir.parent) == 53
+    assert pickers.max_lap_for_driver(tmp_path, "Suzuka", "ZZZ", raw_dir=race_dir.parent) == 0
+    assert parquet_reads[0][0] == race_dir / "laps.parquet"
 
 
 def test_pick_laps_reprompts_for_malformed_reversed_and_out_of_range_values(monkeypatch, capsys):
@@ -116,6 +138,8 @@ def test_f1_sim_rejects_ranges_outside_driver_data(monkeypatch, capsys):
 
     lookups = []
 
+    monkeypatch.setattr(pickers, "_load_driver_data", lambda *_args: {"NOR": "McLaren"})
+
     def max_lap(*args):
         lookups.append(args)
         return 10
@@ -128,8 +152,10 @@ def test_f1_sim_rejects_ranges_outside_driver_data(monkeypatch, capsys):
             "Melbourne",
             "NOR",
             "McLaren",
+            "--raw-dir",
+            "custom-raw",
             "--featured",
-            "custom.parquet",
+            "custom-featured.parquet",
             "--laps",
             "8-11",
         ],
@@ -138,5 +164,16 @@ def test_f1_sim_rejects_ranges_outside_driver_data(monkeypatch, capsys):
         f1_sim.main()
 
     assert exc.value.code == 2
-    assert lookups[0][4] == Path("custom.parquet")
+    assert lookups[0][4] == Path("custom-raw")
     assert "this driver's data ends at lap 10" in capsys.readouterr().err
+
+
+def test_f1_sim_rejects_driver_missing_from_raw_race(monkeypatch, capsys):
+    monkeypatch.setattr(pickers, "_load_driver_data", lambda *_args: {"NOR": "McLaren"})
+    monkeypatch.setattr("sys.argv", ["f1-sim", "Miami_Gardens", "DOO", "Alpine"])
+
+    with pytest.raises(SystemExit) as exc:
+        f1_sim.main()
+
+    assert exc.value.code == 2
+    assert "driver DOO is not present at Miami_Gardens" in capsys.readouterr().err

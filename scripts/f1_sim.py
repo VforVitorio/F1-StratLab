@@ -63,19 +63,21 @@ def main() -> None:
     args = parser.parse_args()
 
     lap_range = _parse_laps(args.laps, parser)
-    if lap_range is not None:
-        from scripts.cli.pickers import max_lap_for_driver
+    from scripts.cli.pickers import _load_driver_data, max_lap_for_driver
 
-        featured_path = Path(args.featured) if args.featured else None
-        max_lap = max_lap_for_driver(
-            _REPO_ROOT,
-            args.gp_name,
-            args.driver,
-            args.year,
-            featured_path,
-        )
-        if max_lap is not None and lap_range[1] > max_lap:
-            parser.error(f"this driver's data ends at lap {max_lap}")
+    featured_path = Path(args.featured) if args.featured else None
+    driver_data = _load_driver_data(_REPO_ROOT, args.gp_name, args.year, featured_path)
+    if args.driver.upper() not in driver_data:
+        parser.error(f"driver {args.driver.upper()} is not present at {args.gp_name}")
+
+    raw_dir = Path(args.raw_dir) if args.raw_dir else None
+    max_lap = max_lap_for_driver(_REPO_ROOT, args.gp_name, args.driver, args.year, raw_dir)
+    if max_lap is None:
+        parser.error(f"cannot read raw lap data for {args.gp_name}; check --raw-dir")
+    if max_lap < 1:
+        parser.error(f"driver {args.driver.upper()} is not present at {args.gp_name}")
+    if lap_range is not None and lap_range[1] > max_lap:
+        parser.error(f"this driver's data ends at lap {max_lap}")
 
     from scripts.run_simulation_cli import main as simulation_main
 

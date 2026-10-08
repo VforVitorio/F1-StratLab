@@ -252,7 +252,7 @@ def discover_races(repo_root: Path, year: int = 2025) -> list[str]:
 # Driver → team auto-mapping
 # ─────────────────────────────────────────────────────────────────────────────
 
-_DRIVER_DATA_CACHE: dict[tuple[str, str], dict[str, tuple[str, int]]] = {}
+_DRIVER_DATA_CACHE: dict[tuple[str, str], dict[str, str]] = {}
 
 
 def _resolve_laps_parquet_path(repo_root: Path, year: int = 2025) -> Path:
@@ -276,8 +276,8 @@ def _load_driver_data(
     gp_name: str,
     year: int = 2025,
     parquet_path: Path | None = None,
-) -> dict[str, tuple[str, int]]:
-    """Return each race participant's team and final lap from the parquet.
+) -> dict[str, str]:
+    """Return each selected-race participant's team from the featured parquet.
 
     Best-effort only: any failure to read or parse the parquet (file
     missing, corrupt parquet, unexpected schema) degrades to an empty map
@@ -294,19 +294,15 @@ def _load_driver_data(
         import pandas as pd
 
         if parquet.exists():
-            df = pd.read_parquet(parquet, columns=["GP_Name", "Driver", "Team", "LapNumber"])
+            df = pd.read_parquet(parquet, columns=["GP_Name", "Driver", "Team"])
             df = df.dropna(subset=["GP_Name"])
             df = df[df["GP_Name"].map(normalise_gp_key) == gp_key]
-            df = df.dropna(subset=["Driver", "Team", "LapNumber"])
+            df = df.dropna(subset=["Driver", "Team"])
             df["Driver"] = df["Driver"].astype(str).str.strip().str.upper()
             df["Team"] = df["Team"].astype(str).str.strip()
-            df["LapNumber"] = pd.to_numeric(df["LapNumber"], errors="coerce")
-            df = df.dropna(subset=["LapNumber"])
-            teams = df.drop_duplicates("Driver", keep="last").set_index("Driver")["Team"]
-            laps = df.groupby("Driver")["LapNumber"].max()
-            _DRIVER_DATA_CACHE[cache_key] = {
-                code: (str(team), int(laps[code])) for code, team in teams.items()
-            }
+            _DRIVER_DATA_CACHE[cache_key] = (
+                df.drop_duplicates("Driver", keep="last").set_index("Driver")["Team"].to_dict()
+            )
         else:
             _DRIVER_DATA_CACHE[cache_key] = {}
     except Exception:
@@ -318,16 +314,46 @@ def _load_driver_data(
     return _DRIVER_DATA_CACHE[cache_key]
 
 
+def _resolve_raw_laps_path(
+    repo_root: Path,
+    gp_name: str,
+    year: int,
+    raw_dir: Path | None,
+) -> Path:
+    """Resolve the raw race parquet used by the replay runner."""
+    if raw_dir is None:
+        try:
+            from src.f1_strat_manager.data_cache import get_data_root
+
+            raw_dir = get_data_root() / "raw" / str(year)
+        except ImportError:
+            raw_dir = repo_root / "data" / "raw" / str(year)
+    return raw_dir / gp_name / "laps.parquet"
+
+
 def max_lap_for_driver(
     repo_root: Path,
     gp_name: str,
     driver: str,
     year: int = 2025,
-    parquet_path: Path | None = None,
+    raw_dir: Path | None = None,
 ) -> int | None:
-    """Return the selected driver's final lap when the featured parquet is available."""
-    data = _load_driver_data(repo_root, gp_name, year, parquet_path)
-    return data.get(driver.upper(), ("", 0))[1] or None
+    """Return the driver's last raw replay lap, 0 if absent, or None if unreadable."""
+    parquet = _resolve_raw_laps_path(repo_root, gp_name, year, raw_dir)
+    if not parquet.is_file():
+        return None
+    try:
+        import pandas as pd
+
+        df = pd.read_parquet(parquet, columns=["Driver", "LapNumber"])
+        code = driver.strip().upper()
+        rows = df[df["Driver"].astype(str).str.strip().str.upper() == code]
+        if rows.empty:
+            return 0
+        laps = pd.to_numeric(rows["LapNumber"], errors="coerce").dropna()
+        return int(laps.max()) if not laps.empty else None
+    except Exception:
+        return None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -367,9 +393,9 @@ def pick_driver(
     drivers = _load_driver_data(repo_root, gp_name) if repo_root is not None and gp_name else {}
     if drivers:
         codes = sorted(drivers)
-        options = [f"{code}  ·  {drivers[code][0]}" for code in codes]
+        options = [f"{code}  ·  {drivers[code]}" for code in codes]
         code = codes[_arrow_pick(f"{label} available at {gp_name}:", options)]
-        team = drivers[code][0]
+        team = drivers[code]
     else:
         console.print("  [dim]Race participants are unavailable; enter the driver manually.[/dim]")
         code = _prompt_driver_code(label)
@@ -418,7 +444,7 @@ def pick_rival_code(
     if drivers:
         codes = [code for code in sorted(drivers) if code != (driver_code or "").upper()]
         if codes:
-            options = [f"{code}  ·  {drivers[code][0]}" for code in codes]
+            options = [f"{code}  ·  {drivers[code]}" for code in codes]
             code = codes[_arrow_pick(f"Rival at {gp_name}:", options)]
         else:
             console.print(
@@ -433,7 +459,7 @@ def pick_rival_code(
             code = _prompt_driver_code("Rival driver")
 
     if drivers:
-        team = drivers[code][0]
+        team = drivers[code]
         if team:
             console.print(
                 f"  [dim]Team →[/dim] [{F1_WHITE}]{team}[/{F1_WHITE}]  "
