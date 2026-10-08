@@ -20,13 +20,13 @@ class _CallCountMismatch(AssertionError):
     """Identify a dispatch regression separately from import or assembly failures."""
 
     def __init__(self, actual: Counter, expected: Counter) -> None:
-        super().__init__(f"per-lap agent calls: {dict(actual)} != {dict(expected)}")
+        super().__init__(f"dispatch counts: {dict(actual)} != {dict(expected)}")
         self.actual = actual
         self.expected = expected
 
 
 def test_engine_agent_call_counts() -> None:
-    """Check both profiles and prove that an extra always-on dispatch is detected."""
+    """Check per-profile calls and reject duplicate or misrouted dispatches."""
     env = {
         **os.environ,
         "F1_STRAT_OFFLINE": "1",
@@ -35,7 +35,7 @@ def test_engine_agent_call_counts() -> None:
         "TRANSFORMERS_OFFLINE": "1",
         "PYTHONDONTWRITEBYTECODE": "1",
     }
-    for mode in ("normal", "duplicate"):
+    for mode in ("normal", "duplicate", "profile-mismatch"):
         child = subprocess.run(
             [sys.executable, "-B", str(Path(__file__).resolve()), mode],
             cwd=ROOT,
@@ -51,7 +51,7 @@ def test_engine_agent_call_counts() -> None:
         assert f"call-count guard: {mode} passed" in child.stdout
 
 
-def _exercise(engine, orchestrator, no_llm, profile, retain, duplicate=False):
+def _exercise(engine, orchestrator, no_llm, profile, retain, duplicate=False, misroute=None):
     """Run consecutive active/quiet laps, substituting only agent-stage boundaries."""
     import math
 
@@ -67,7 +67,9 @@ def _exercise(engine, orchestrator, no_llm, profile, retain, duplicate=False):
     from src.rag.retriever import RegulationChunk
 
     calls = Counter()
+    entry_calls = Counter()
     expected = Counter()
+    expected_entries = Counter()
     lock = Lock()
     prompts = []
     recommendations = []
@@ -158,6 +160,14 @@ def _exercise(engine, orchestrator, no_llm, profile, retain, duplicate=False):
             chunks=[RegulationChunk(passage, "Article 55.8", "sporting", 2025, 0.9)],
         )
 
+    def track_entry(agent, route, callback):
+        def tracked(*args, **kwargs):
+            with lock:
+                entry_calls[lap, route, agent] += 1
+            return callback(*args, **kwargs)
+
+        return tracked
+
     class Synthesis:
         def invoke(self, prompt):
             assert profile == "rich", "no-llm reached LLM synthesis"
@@ -198,21 +208,32 @@ def _exercise(engine, orchestrator, no_llm, profile, retain, duplicate=False):
         ]
     )
     with ExitStack() as patches:
-        for name, replacement in (
-            ("run_pace_agent_from_state", pace),
-            ("run_tire_agent_from_state", tire),
-            ("run_race_situation_agent_from_state", situation),
-            ("run_radio_agent_from_state", radio),
-            ("run_pit_strategy_agent_from_state", pit),
-            ("run_rag_agent", rag),
-        ):
+        rich_entries = {
+            "run_pace_agent_from_state": track_entry("N25", "shared", pace),
+            "run_tire_agent_from_state": track_entry("N26", "rich", tire),
+            "run_race_situation_agent_from_state": track_entry("N27", "rich", situation),
+            "run_radio_agent_from_state": track_entry("N29", "rich", radio),
+            "run_pit_strategy_agent_from_state": track_entry("N28", "rich", pit),
+            "run_rag_agent": track_entry("N30", "rich", rag),
+        }
+        for name, replacement in rich_entries.items():
             patches.enter_context(patch.object(orchestrator, name, replacement))
-        for name, replacement in (
-            ("run_pace_agent_from_state", pace),
-            ("_tire_no_llm", tire),
-            ("_situation_no_llm", situation),
-            ("_run_radio_no_llm", radio),
-        ):
+
+        no_llm_entries = {
+            "run_pace_agent_from_state": track_entry("N25", "shared", pace),
+            "_tire_no_llm": track_entry("N26", "no-llm", tire),
+            "_situation_no_llm": track_entry("N27", "no-llm", situation),
+            "_run_radio_no_llm": track_entry("N29", "no-llm", radio),
+        }
+        if misroute == "tire":
+            no_llm_entries["_tire_no_llm"] = rich_entries["run_tire_agent_from_state"]
+        elif misroute == "situation":
+            no_llm_entries["_situation_no_llm"] = rich_entries[
+                "run_race_situation_agent_from_state"
+            ]
+        elif misroute == "radio":
+            no_llm_entries["_run_radio_no_llm"] = rich_entries["run_radio_agent_from_state"]
+        for name, replacement in no_llm_entries.items():
             patches.enter_context(patch.object(no_llm, name, replacement))
         patches.enter_context(patch.object(engine, "_get_orchestrator_llm", Synthesis))
         if duplicate:
@@ -267,12 +288,19 @@ def _exercise(engine, orchestrator, no_llm, profile, retain, duplicate=False):
                 race, frame, state, profile=profile, return_agent_outputs=retain
             )
             expected.update({(lap, agent): 1 for agent in ALWAYS_ON})
+            expected_entries[(lap, "shared", "N25")] = 1
+            route = "rich" if profile == "rich" else "no-llm"
+            expected_entries.update({(lap, route, agent): 1 for agent in ("N26", "N27", "N29")})
             if profile == "rich" and lap == 20:
                 expected.update({(lap, "N28"): 1, (lap, "N30"): 1})
+                expected_entries.update({(lap, "rich", agent): 1 for agent in ("N28", "N30")})
             with lock:
                 actual = calls.copy()
+                actual_entries = entry_calls.copy()
             if actual != expected:
                 raise _CallCountMismatch(actual, expected.copy())
+            if actual_entries != expected_entries:
+                raise _CallCountMismatch(actual_entries, expected_entries)
 
             assert isinstance(rec, orchestrator.StrategyRecommendation)
             assert set(rec.scenario_scores) == {"STAY_OUT", "PIT_NOW", "UNDERCUT", "OVERCUT"}
@@ -413,6 +441,26 @@ def _child(mode: str) -> None:
                 )
             else:
                 raise AssertionError("duplicate always-on dispatch escaped the guard")
+        elif mode == "profile-mismatch":
+            agent_for = {"tire": "N26", "situation": "N27", "radio": "N29"}
+            for target, agent in agent_for.items():
+                try:
+                    _exercise(
+                        engine,
+                        orchestrator,
+                        no_llm,
+                        "no-llm",
+                        True,
+                        misroute=target,
+                    )
+                except _CallCountMismatch as failure:
+                    assert failure.actual != failure.expected
+                    assert any(
+                        route == "rich" and called_agent == agent
+                        for _, route, called_agent in failure.actual
+                    )
+                else:
+                    raise AssertionError(f"no-llm {target} entrypoint misroute escaped the guard")
         else:
             assert mode == "normal"
             for profile in ("rich", "no-llm"):
