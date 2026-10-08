@@ -1828,49 +1828,107 @@ def _joined(segments) -> str:
     return "".join(segment["text"] for segment in segments)
 
 
-def test_the_highlighter_loses_no_characters():
-    """A renderer that drops a run drops text, and prose is the whole panel."""
-    from src.pitwall.agents_view.reasoning import highlight
+@pytest.mark.parametrize("reasoning", ["", None, "  PIT_NOW on lap 24\nP10 is 34% and -0.42 s.  "])
+@pytest.mark.parametrize(
+    ("key", "metrics"),
+    [
+        ("orchestrator", ""),
+        (
+            "pace",
+            "lap_time_pred   = 81.000s\n"
+            "delta_vs_prev   = -0.204s\n"
+            "delta_vs_median = +0.118s\n"
+            "ci_p10          = 80.45s\n"
+            "ci_p90          = 81.55s",
+        ),
+        (
+            "tire",
+            "compound          = MEDIUM\n"
+            "current_tyre_life = 15 laps\n"
+            "deg_rate          = 0.031s/lap\n"
+            "deg_cost_s        = —s/lap\n"
+            "cumulative_deg_s  = —s/lap\n"
+            "laps_to_cliff_p10 = 4.0\n"
+            "laps_to_cliff_p50 = 6.0\n"
+            "laps_to_cliff_p90 = 9.0\n"
+            "warning_level     = MONITOR",
+        ),
+        (
+            "situation",
+            "overtake_prob =  34.0%\n"
+            "sc_prob_3lap  =   8.0%\n"
+            "threat_level  = MEDIUM\n"
+            "gap_ahead_s   = 1.42s\n"
+            "pace_delta_s  = -0.120s",
+        ),
+        ("radio", "radio_events = 0\nrcm_events   = 0\nalerts       = 0"),
+        (
+            "pit",
+            "action                  = —\n"
+            "recommended_lap         = —\n"
+            "compound_recommendation = HARD\n"
+            "stop_duration_p05       = 21.14s\n"
+            "stop_duration_p50       = 22.40s\n"
+            "stop_duration_p95       = 24.81s\n"
+            "undercut_prob           =  63.0%\n"
+            "undercut_target         = RUS\n"
+            "sc_reactive             = False",
+        ),
+    ],
+)
+def test_each_reasoning_body_is_exact_and_has_one_neutral_segment(key, metrics, reasoning):
+    """All six bodies retain their text and metric newlines without token styling."""
+    from src.pitwall.agents_view.reasoning import DEFAULT_COLOUR, build_reasoning
 
-    text = "PIT_NOW on lap 24: P10 is 34% and the delta is -0.42 s.\nSecond line."
+    latest = _latest()
+    latest["reasoning"] = reasoning
+    for block in latest["per_agent"].values():
+        if isinstance(block, dict):
+            block["reasoning"] = reasoning
+    tabs = {tab["key"]: tab for tab in build_reasoning(latest)}
 
-    assert _joined(highlight(text)) == text
-    assert highlight("") == []
+    prose = "PIT_NOW on lap 24 P10 is 34% and -0.42 s." if reasoning else ""
+    if key == "orchestrator":
+        expected = (prose or "— no reasoning —") + (
+            "\n\n--- why this call changed ---\nlap 22: STAY_OUT (0.58)"
+        )
+    else:
+        expected = f"{prose}\n\n{metrics}" if prose else metrics
+    segments = tabs[key]["segments"]
+    assert _joined(segments) == expected
+    assert segments == [{"text": expected, "colour": DEFAULT_COLOUR, "bold": False}]
 
 
-def test_the_highlighter_colours_the_five_things_qt_colours():
-    from src.pitwall.agents_view.reasoning import DEFAULT_COLOUR, highlight
+@pytest.mark.parametrize("latest", [None, {}])
+def test_without_a_decision_all_six_reasoning_tabs_have_no_body(latest):
+    from src.pitwall.agents_view.reasoning import build_reasoning
 
-    coloured = {
-        segment["text"]: (segment["colour"], segment["bold"])
-        for segment in highlight("lap 24 P10 34% -0.42 s PIT_NOW plain")
-        if segment["colour"] != DEFAULT_COLOUR
+    tabs = build_reasoning(latest)
+    assert [(tab["key"], tab["label"]) for tab in tabs] == [
+        ("orchestrator", "Orchestrator"),
+        ("pace", "Pace"),
+        ("tire", "Tire"),
+        ("situation", "Situation"),
+        ("radio", "Radio"),
+        ("pit", "Pit"),
+    ]
+    assert all(tab["segments"] == [] and _joined(tab["segments"]) == "" for tab in tabs)
+
+
+@pytest.mark.parametrize("block", [None, {}])
+def test_absent_agent_outputs_keep_all_six_fallback_bodies(block):
+    from src.pitwall.agents_view.reasoning import DEFAULT_COLOUR, build_reasoning
+
+    latest = {
+        "reasoning": None,
+        "per_agent": dict.fromkeys(("pace", "tire", "situation", "radio", "pit"), block),
     }
-
-    assert coloured["lap 24"] == ("#f472b6", False)
-    assert coloured["P10"] == ("#d946ef", False)
-    assert coloured["34%"] == ("#facc15", False)
-    assert coloured["-0.42 s"] == ("#22d3ee", False)
-    assert coloured["PIT_NOW"] == ("#facc15", True), "the action keywords are the bold rule"
-    assert "plain" not in coloured
-
-
-def test_a_later_rule_overwrites_an_earlier_one_where_they_overlap():
-    """Qt's `setFormat` overwrites, and the rules run in a fixed order.
-
-    Emitting the FIRST match instead would leave the action keyword
-    un-bolded wherever an earlier pattern happened to reach it, which is
-    a difference nobody would notice until the one lap it matters.
-    """
-    from src.pitwall.agents_view.reasoning import highlight
-
-    # `P10` is both a quantile and, inside this token, nothing else; the
-    # overlap case is a delta immediately followed by an action keyword.
-    segments = highlight("-0.42 s PIT_NOW")
-    bold = [segment for segment in segments if segment["bold"]]
-
-    assert [segment["text"] for segment in bold] == ["PIT_NOW"]
-    assert _joined(segments) == "-0.42 s PIT_NOW"
+    tabs = build_reasoning(latest)
+    assert len(tabs) == 6
+    for tab in tabs:
+        expected = "— no reasoning —" if tab["key"] == "orchestrator" else "— agent idle —"
+        assert _joined(tab["segments"]) == expected
+        assert tab["segments"] == [{"text": expected, "colour": DEFAULT_COLOUR, "bold": False}]
 
 
 def test_the_memory_block_appears_only_on_a_lap_where_the_call_changed():
@@ -2065,33 +2123,30 @@ def test_the_pace_series_are_independent_so_a_missing_prediction_draws_nothing()
     assert series["band"] == [[22.0, 80.6, 81.6]], "a band needs both bounds"
 
 
-def test_a_rule_cannot_paint_across_a_line_break():
-    r"""`QSyntaxHighlighter` runs per paragraph; two of the five rules match `\s`.
+@pytest.mark.parametrize("separator", ["\n", "\r\n", "\r"])
+@pytest.mark.parametrize("plan_changed", [False, True])
+@pytest.mark.parametrize("memory", [None, "", "lap 22: STAY_OUT (0.58)"])
+def test_reasoning_preserves_memory_text_and_line_breaks(separator, plan_changed, memory):
+    """Memory remains raw text, including whitespace and markup-like characters."""
+    from src.pitwall.agents_view.reasoning import DEFAULT_COLOUR, build_reasoning
 
-    Applying them over the whole string painted things Qt leaves plain.
-    Reachable, not theoretical: `clean()` collapses the newlines in
-    `reasoning`, but the orchestrator tab appends `memory_block` RAW, and
-    a memory block is multi-line free text.
-    """
-    from src.pitwall.agents_view.reasoning import DEFAULT_COLOUR, highlight
-
-    # `QTextDocument.setPlainText` starts a paragraph on \r\n and on a lone
-    # \r as well, so all three end a match. Splitting on \n alone left the
-    # carriage return, which is the separator an old-Mac memory block uses.
-    separators = ("\n", "\r\n", "\r")
-    for separator in separators:
-        for text in (
-            f"extend the lap{separator}22 target",
-            f"the delta is +0.42{separator}s behind",
-        ):
-            painted = [seg["text"] for seg in highlight(text) if seg["colour"] != DEFAULT_COLOUR]
-            assert painted == [], f"{text!r} must paint nothing, as Qt does"
-            assert "".join(seg["text"] for seg in highlight(text)) == text, "no character lost"
-
-    # The same tokens on one line still paint, so the fix did not disable them.
-    on_one_line = {seg["text"] for seg in highlight("lap 22 and +0.42 s") if seg["bold"] is False}
-    assert "lap 22" in on_one_line
-    assert "+0.42 s" in on_one_line
+    memory_block = (
+        f"{memory}{separator}  extend the lap{separator}22 target{separator}"
+        f"the delta is +0.42{separator}s behind <b>PIT_NOW</b>{separator}"
+        if memory
+        else memory
+    )
+    latest = {
+        "reasoning": "  UNDERCUT\nwindow opens now  ",
+        "memory_block": memory_block,
+        "plan_changed": plan_changed,
+    }
+    expected = "UNDERCUT window opens now"
+    if plan_changed and memory:
+        expected += "\n\n--- why this call changed ---\n" + memory_block
+    segments = build_reasoning(latest)[0]["segments"]
+    assert _joined(segments) == expected
+    assert segments == [{"text": expected, "colour": DEFAULT_COLOUR, "bold": False}]
 
 
 # --- A restarted producer must not leave the last race on the charts --------
