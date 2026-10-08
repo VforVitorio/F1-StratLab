@@ -1,4 +1,9 @@
-"""Headless CLI simulation demo that runs the shared inference engine lap by lap.
+"""Headless CLI simulation demo for the F1 StratLab agent pipeline.
+
+The command loads a race from ``data/raw/<year>/<gp_name>/`` and iterates lap
+by lap through ``RaceReplayEngine``. Each lap builds a ``RaceState``, runs one
+inference through the shared engine with either rich LLM synthesis or the
+deterministic ``--no-llm`` profile, and renders a live Rich table.
 
 Usage
 -----
@@ -6,12 +11,12 @@ Usage
 
 Examples
 --------
-    # No LLM synthesis, prints Monte Carlo scores only
+    # No LLM synthesis, prints Monte Carlo scores only (no LM Studio required)
     f1-sim Melbourne NOR McLaren --no-llm
 
     # Laps 15-25 with LLM synthesis (LM Studio must be running unless
-    # .env or --provider selects OpenAI)
-    f1-sim Sakhir NOR McLaren --laps 15-25 --provider lmstudio
+    # .env or --provider selects openai)
+    f1-sim Sakhir NOR McLaren --laps 15-25
 
     # Custom data paths
     f1-sim Monaco LEC Ferrari --raw-dir data/raw/2025 \\
@@ -92,7 +97,7 @@ def main() -> None:
     """Handle fast version/input checks, then delegate unchanged to the PMV runner."""
     parser = argparse.ArgumentParser(
         prog="f1-sim",
-        description="F1 StratLab headless race simulation",
+        description="F1 StratLab headless CLI simulation demo",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
@@ -103,7 +108,7 @@ def main() -> None:
         "--year",
         type=int,
         default=2025,
-        help="Season year used for compound allocation lookup (default: 2025)",
+        help="Season year, used for tyre compound allocation lookup (default: 2025)",
     )
     parser.add_argument(
         "--raw-dir",
@@ -118,7 +123,10 @@ def main() -> None:
     parser.add_argument(
         "--no-first-run",
         action="store_true",
-        help="Skip the first-run Hugging Face Hub check, useful for CI or a populated data cache",
+        help=(
+            "Skip the first-run Hugging Face Hub download check. Useful for CI "
+            "or when the data cache is already populated out-of-band."
+        ),
     )
     parser.add_argument(
         "--laps",
@@ -128,44 +136,64 @@ def main() -> None:
     parser.add_argument(
         "--no-llm",
         action="store_true",
-        help="Skip LLM synthesis and print Monte Carlo scores only (no LM Studio required)",
+        help="Skip LLM synthesis and print MC scores only (no LM Studio required)",
     )
     parser.add_argument(
         "--provider",
         default=None,
         choices=["lmstudio", "openai"],
-        help="LLM provider, overriding F1_LLM_PROVIDER from .env. Unset uses .env or the lmstudio default.",
+        help=(
+            "LLM provider, overriding F1_LLM_PROVIDER from .env. "
+            "Unset: use .env, falling back to 'lmstudio'."
+        ),
     )
     parser.add_argument(
         "--interval",
         type=float,
         default=0.0,
         metavar="SECONDS",
-        help="Pause between laps in seconds (default: 0.0, no pause). For example, --interval 2.0 pauses 2 seconds after each lap.",
+        help=(
+            "Pause between laps in seconds (default: 0.0, no pause). "
+            "E.g. --interval 2.0 pauses 2 s after each lap row is printed."
+        ),
     )
     parser.add_argument(
         "--radio-every",
         type=int,
         default=0,
         metavar="N",
-        help="Simulate a radio/RCM event every N laps. 0 disables it; the real radio corpus suppresses it when available.",
+        help=(
+            "Simulate a radio/RCM event every N laps to activate NLP agents "
+            "(e.g. --radio-every 5). 0 = disabled (default). Suppressed when "
+            "the real radio corpus loads successfully."
+        ),
     )
     parser.add_argument(
         "--no-real-radios",
         action="store_true",
-        help="Skip the OpenF1 radio corpus and Whisper. Falls back to synthetic --radio-every events.",
+        help=(
+            "Skip the static OpenF1 radio corpus and Whisper transcription. "
+            "Falls back to the synthetic --radio-every generator. Useful for "
+            "smoke tests on machines without the data tree or without GPU."
+        ),
     )
     parser.add_argument(
         "--whisper-model",
         default="turbo",
         metavar="NAME",
-        help="Whisper model name passed to RadioPipelineRunner (default: turbo)",
+        help=(
+            "Whisper model name passed to RadioPipelineRunner (default: turbo). "
+            "Smaller variants like 'base' or 'small' trade accuracy for speed."
+        ),
     )
     parser.add_argument(
         "--rival",
         default=None,
         metavar="CODE",
-        help="FIA three-letter code of a driver to track as a rival",
+        help=(
+            "FIA three-letter code of a driver to track as rival (e.g. VER). "
+            "Adds a Rival column and shows their position / compound / interval."
+        ),
     )
     parser.add_argument("--verbose", action="store_true", help="Print full per-lap tracebacks")
     parser.add_argument(
