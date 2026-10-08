@@ -33,26 +33,35 @@ def _parse_laps(value: str | None, parser: argparse.ArgumentParser) -> tuple[int
 
 def main() -> None:
     """Handle fast version/input checks, then delegate unchanged to the PMV runner."""
-    parser = argparse.ArgumentParser(prog="f1-sim", add_help=False)
-    parser.add_argument("gp_name", nargs="?")
-    parser.add_argument("driver", nargs="?")
-    parser.add_argument("team", nargs="?")
-    parser.add_argument("--year", type=int, default=2025)
+    parser = argparse.ArgumentParser(
+        prog="f1-sim",
+        description="F1 StratLab headless race simulation",
+    )
+    parser.add_argument("gp_name", help="Grand Prix folder name, such as Melbourne")
+    parser.add_argument("driver", help="FIA three-letter driver code, such as NOR")
+    parser.add_argument("team", help="Team name stored in the laps parquet")
+    parser.add_argument("--year", type=int, default=2025, help="Season year (default: 2025)")
+    parser.add_argument("--raw-dir", help="Base directory for raw race parquets")
+    parser.add_argument("--featured", help="Path to the featured laps parquet")
+    parser.add_argument("--no-first-run", action="store_true", help="Skip first-run Hub checks")
     parser.add_argument("--laps")
-    parser.add_argument("--version", action="store_true")
-    args, _ = parser.parse_known_args()
-    if args.version:
-        print(f"f1-sim {package_version()}")
-        return
+    parser.add_argument("--no-llm", action="store_true", help="Skip LLM synthesis")
+    parser.add_argument(
+        "--provider", choices=["lmstudio", "openai"], help="Override the LLM provider"
+    )
+    parser.add_argument("--interval", type=float, default=0.0, metavar="SECONDS")
+    parser.add_argument("--radio-every", type=int, default=0, metavar="N")
+    parser.add_argument("--no-real-radios", action="store_true", help="Skip the real radio corpus")
+    parser.add_argument("--whisper-model", default="turbo", metavar="NAME")
+    parser.add_argument("--rival", metavar="CODE", help="FIA code to track as a rival")
+    parser.add_argument("--verbose", action="store_true", help="Print full per-lap tracebacks")
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {package_version()}",
+    )
+    args = parser.parse_args()
 
-    if "--help" in sys.argv[1:] or "-h" in sys.argv[1:]:
-        from scripts.run_simulation_cli import main as simulation_main
-
-        simulation_main()
-        return
-
-    if not args.gp_name or not args.driver or not args.team:
-        parser.error("gp_name, driver, and team are required")
     lap_range = _parse_laps(args.laps, parser)
     if lap_range is not None:
         from scripts.cli.pickers import max_lap_for_driver
