@@ -532,15 +532,6 @@ def test_no_pitwall_source_file_carries_an_unregistered_hex():
     # `palette.py` - `orchestrator_card.py` wrote it straight into its own Qt
     # stylesheet too - and the guard above freezes it to exactly one rule.
     known.add("#282834")
-    # The Qt reasoning highlighter's five rule colours, ported verbatim from
-    # `reasoning_tabs.py` and living in `agents_view/reasoning.py`. They are a
-    # palette copy the named guards above never covered - this sweep is what
-    # found them - so they are pinned here rather than waved through.
-    #
-    # **Nothing renders them since #1020.** The tabs they coloured are gone;
-    # `build_reasoning` still splits six bodies into per-character runs on every
-    # tick and the segments' colours reach no element. Tracked in #1026.
-    known.update({"#f472b6", "#d946ef", "#facc15", "#22d3ee"})
 
     # Explicit globs, not one recursive root. `src/pitwall` contains `ui/dist`
     # and `ui/node_modules`, and sweeping from the top pulled the BUILT bundle
