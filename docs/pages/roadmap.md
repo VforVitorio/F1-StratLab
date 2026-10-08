@@ -469,7 +469,7 @@
   <div class="rl-card">
     <div class="rl-header">
       <span class="rl-version"><span class="sr-only">Version: </span>v2.6.0</span>
-      <span class="rl-date"><span class="sr-only">Date: </span>2026-08-29</span>
+      <span class="rl-date"><span class="sr-only">Date: </span>2026-09-03</span>
       <span class="rl-badge done-badge"><span class="sr-only">Status: </span>Shipped</span>
     </div>
     <p class="rl-title">PITWALL, a designed Arcade, and a startup that stops making you wait</p>
@@ -488,7 +488,7 @@
       <span class="rl-badge done-badge"><span class="sr-only">Status: </span>Shipped</span>
     </div>
     <p class="rl-title">Provider handling, RAG refresh and replay fixes</p>
-    <p class="rl-summary">No-LLM PLAN now distinguishes an absent future stop from an unknown plan. Requests that omit <code>provider</code> keep the configured default, and the FIA retrieval corpus covers the 2026 rules. The deterministic scorer and both five-lap horizons are unchanged after the #715/#724 evidence review. The <a href="https://github.com/VforVitorio/F1-StratLab/releases/tag/v2.7.0" target="_blank" rel="noopener noreferrer">release notes</a> list the complete changes.</p>
+    <p class="rl-summary">No-LLM PLAN now distinguishes an absent future stop from an unknown plan. Requests that omit <code>provider</code> keep the configured default. Season-scoped, article-aware FIA retrieval covers the 2026 rules, and replay caches load faster with lower memory use. The deterministic scorer and both five-lap horizons are unchanged after the #715/#724 evidence review. The <a href="https://github.com/VforVitorio/F1-StratLab/releases/tag/v2.7.0" target="_blank" rel="noopener noreferrer">release notes</a> list the complete changes.</p>
   </div>
 </li>
 
