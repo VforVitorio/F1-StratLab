@@ -4,8 +4,10 @@ The ``--no-llm`` mode of the PMV (``f1-sim``) was broken from 2026-05-09 to #236
 (a 3-tuple return the CLI consumer never adopted). #236 wired the CLI to the P2b
 shared engine (``run_lap(profile="no-llm")``), which fixes the crash by
 construction. This subprocess smoke is the executable regression net: it must now
-exit 0 with no ``[ERROR]`` row. It runs only where the Melbourne 2025 data is
-present (``data`` tier), so CI stays green.
+exit 0 with no ``[ERROR]`` row. Ordinary CI skips without Melbourne 2025 data;
+the opt-in workflow data tier prepares assets first and makes the smoke mandatory.
+``--no-first-run`` keeps the subprocess from hiding a missing-asset failure behind
+an unbounded first-run download.
 """
 
 from __future__ import annotations
@@ -21,10 +23,14 @@ ROOT = Path(__file__).parent.parent.parent
 _PARQUET = ROOT / "data" / "processed" / "laps_featured_2025.parquet"
 _RACE_DIR = ROOT / "data" / "raw" / "2025" / "Melbourne"
 _HAS_DATA = _PARQUET.exists() and _RACE_DIR.exists()
+_REQUIRE_DATA_TIER = os.environ.get("F1_REQUIRE_DATA_TIER") == "1"
 
 
 @pytest.mark.data
-@pytest.mark.skipif(not _HAS_DATA, reason="Melbourne 2025 parquet + race dir required")
+@pytest.mark.skipif(
+    not _HAS_DATA and not _REQUIRE_DATA_TIER,
+    reason="Melbourne 2025 parquet + race dir required",
+)
 def test_cli_no_llm_smoke():
     """`f1-sim Melbourne NOR McLaren --no-llm --laps 5-7` must exit 0 with no [ERROR]."""
     proc = subprocess.run(
@@ -34,8 +40,11 @@ def test_cli_no_llm_smoke():
             "Melbourne",
             "NOR",
             "McLaren",
+            "--year",
+            "2025",
             "--no-llm",
             "--no-real-radios",
+            "--no-first-run",
             "--laps",
             "5-7",
         ],

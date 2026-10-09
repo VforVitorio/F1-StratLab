@@ -43,6 +43,7 @@ from src.arcade.config import (
     FASTF1_CACHE_DIR,
     POOL_SIZE,
 )
+from src.arcade.track_status import track_status_banner
 from src.f1_strat_manager.tyre_stint_repair import repair_tyre_stints
 
 logger = logging.getLogger(__name__)
@@ -317,6 +318,66 @@ class SessionData:
             code: frames if isinstance(frames, DriverFrames) else DriverFrames.from_frames(frames)
             for code, frames in self.frames_by_driver.items()
         }
+
+
+def _build_race_events(
+    track_status_by_lap: dict[int, str],
+    frames_by_driver: dict[str, DriverFrames],
+    total_frames: int,
+) -> list[dict[str, Any]]:
+    """Build lap-level flag bands on the shared replay frame timeline.
+
+    TrackStatus is recorded per lap, while the replay progress bar uses frame
+    indices. Each lap boundary is the earliest frame at which any driver's
+    shared-timeline lap counter enters that lap, so markers do not depend on
+    the driver selected for viewing.
+    """
+    if total_frames <= 0 or not track_status_by_lap or not frames_by_driver:
+        return []
+
+    lap_start_frames: dict[int, int] = {}
+    for frames in frames_by_driver.values():
+        lap_numbers = frames.lap
+        if not lap_numbers.size:
+            continue
+        lap_starts = np.flatnonzero(np.concatenate(([True], lap_numbers[1:] != lap_numbers[:-1])))
+        for frame_index in lap_starts:
+            lap_number = int(lap_numbers[frame_index])
+            if lap_number < 1 or frame_index >= total_frames:
+                continue
+            current_start = lap_start_frames.get(lap_number)
+            if current_start is None or frame_index < current_start:
+                lap_start_frames[lap_number] = int(frame_index)
+
+    flagged_laps = []
+    for lap_number, code in sorted(track_status_by_lap.items()):
+        status = track_status_banner(code)
+        if status is not None:
+            flagged_laps.append((int(lap_number), status[0].lower().replace(" ", "_")))
+
+    groups: list[tuple[int, int, str]] = []
+    first_lap = last_lap = 0
+    active_type: str | None = None
+    for lap_number, event_type in flagged_laps:
+        if active_type == event_type and lap_number == last_lap + 1:
+            last_lap = lap_number
+            continue
+        if active_type is not None:
+            groups.append((first_lap, last_lap, active_type))
+        first_lap = last_lap = lap_number
+        active_type = event_type
+    if active_type is not None:
+        groups.append((first_lap, last_lap, active_type))
+
+    events = []
+    for first_lap, last_lap, event_type in groups:
+        start_frame = lap_start_frames.get(first_lap)
+        if start_frame is None:
+            continue
+        end_frame = min(lap_start_frames.get(last_lap + 1, total_frames), total_frames)
+        if end_frame > start_frame:
+            events.append({"type": event_type, "frame": start_frame, "end_frame": end_frame})
+    return events
 
 
 def _pedal_multiplier(results: list[dict], channel: str) -> float:
@@ -782,6 +843,11 @@ class SessionLoader:
             try:
                 sd = self._read_cache(cache_path)
                 if sd.version == CACHE_VERSION:
+                    sd.events = _build_race_events(
+                        sd.track_status_by_lap,
+                        sd.frames_by_driver,
+                        sd.total_frames,
+                    )
                     logger.info(
                         "Loaded session from cache: %s (%s %d)",
                         cache_path,
@@ -838,6 +904,7 @@ class SessionLoader:
         track_status_by_lap = self._extract_track_status_by_lap(session)
         weather_by_lap = self._extract_weather_by_lap(session)
         official_status = self._extract_official_status(session, driver_codes)
+        events = _build_race_events(track_status_by_lap, frames_by_driver, len(timeline))
 
         has_position = {
             code: bool(len(frames)) and frames.dist[-1] > frames.dist[0]
@@ -860,7 +927,7 @@ class SessionLoader:
             global_t_min=float(global_t_min),
             ref_lap_xy=(ref_x, ref_y),
             ref_lap_drs=ref_drs,
-            events=[],
+            events=events,
             track_status_by_lap=track_status_by_lap,
             weather_by_lap=weather_by_lap,
             has_position=has_position,

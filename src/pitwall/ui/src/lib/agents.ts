@@ -144,7 +144,7 @@ export interface ReasoningSegment {
 export interface ReasoningTab {
   key: string;
   label: string;
-  /** Already split into coloured runs by the Qt highlighter's own rules. */
+  /** One neutral body segment; retained for cross-surface content guards. */
   segments: ReasoningSegment[];
 }
 
