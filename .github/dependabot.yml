@@ -40,6 +40,28 @@ updates:
       - dependency-name: "xgboost"
         update-types: ["version-update:semver-major"]
 
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Madrid"
+    labels:
+      - "dependencies"
+      - "area: data"
+
+  - package-ecosystem: "npm"
+    directory: "/src/pitwall/ui"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Madrid"
+    labels:
+      - "dependencies"
+      - "area: deps"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

@@ -230,6 +230,7 @@ class F1ArcadeView(arcade.View):
         strategy_enabled: bool = False,
         team: str | None = None,
         no_llm: bool = False,
+        provider: str | None = None,
     ) -> None:
         super().__init__(window=window)
         arcade.set_background_color(BG_COLOR)
@@ -249,6 +250,7 @@ class F1ArcadeView(arcade.View):
         # Reaches `_init_strategy_layer`'s `SimulateRequestDTO`, which used to
         # hardcode `no_llm=False` regardless of what the caller wanted (#1155).
         self._no_llm = no_llm
+        self._provider = provider
         self._strategy_connector = None  # set by __init__ if strategy_enabled
         self._strategy_state = None
         self._stream_server = None
@@ -420,15 +422,8 @@ class F1ArcadeView(arcade.View):
         from src.arcade.stream import TelemetryStreamServer
 
         gp_name = self._resolve_gp_name()
-        # Provider defaults to OpenAI (what the agents load with
-        # ``F1_LLM_PROVIDER=openai``, ChatOpenAI model=gpt-4.1-mini for
-        # N26-N30 and the orchestrator model for N31; N25 has no LLM step
-        # since #778/#780). Both models resolve through
-        # ``src/agents/_shared_defaults.py`` and can be pointed elsewhere with
-        # ``F1_LLM_MODEL_AGENTS`` / ``F1_LLM_MODEL_ORCHESTRATOR``. ``F1_LLM_PROVIDER``
-        # env wins so a user running LM Studio locally (set it to
-        # "lmstudio") keeps working without a code edit.
-        provider = os.environ.get("F1_LLM_PROVIDER") or "openai"
+        # Keep an omitted CLI flag distinct from an explicit provider override.
+        provider = self._provider or os.environ.get("F1_LLM_PROVIDER") or "openai"
         request = SimulateRequestDTO(
             year=self._year,
             gp=gp_name,

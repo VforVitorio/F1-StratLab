@@ -1,7 +1,8 @@
 # Install Guide: F1 StratLab
 
-Three install paths, one per surface, each a **single command** once the
-prerequisites are on the machine.
+The CLI and Arcade can be installed as `uv` tools. The web app runs from a
+repository checkout with Docker Compose. The Arcade setup below builds the
+PITWALL UI before installing the tool.
 
 ---
 
@@ -17,17 +18,19 @@ prerequisites are on the machine.
   key is needed.
 - For the web app Docker flow: **Docker Desktop** (Windows/Mac) or
   `docker + compose` plugin (Linux).
-- For Arcade: a working OpenGL graphics stack (any modern laptop
-  qualifies; arcade auto-detects).
+- For Arcade: a working OpenGL graphics stack and a platform webview. Linux
+  also needs the WebKitGTK system dependency.
+- Node.js 20.19+ or 22.12+ and npm to build the PITWALL UI or run the web app
+  development server.
 - For CLI / Arcade wheel install: [`uv`](https://docs.astral.sh/uv/)
   (recommended) or plain `pip`. `uv` resolves the CUDA-specific PyTorch
   wheel automatically via the `[tool.uv.sources]` table in
   `pyproject.toml`.
-- **First-run budget**: models and race data download lazily from Hugging
-  Face on first use (~7-8 GB over a session; keep ~15-20 GB free disk). The
-  first launch also spends ~30 s warming imports before the first panel
-  paints, and the first GP replay may fetch an extra ~1.5 GB Whisper
-  checkpoint. Subsequent runs read a warm cache and start fast.
+- **First-run budget**: the CLI bootstrap downloads models and reference data
+  from Hugging Face (about 7-8 GB over a session; keep ~15-20 GB free). Arcade
+  reads model files from that cache and fetches race data and radio assets as
+  needed. The first replay may also fetch an extra ~1.5 GB Whisper checkpoint.
+  Cached assets are reused; another GP may need its radio corpus on first use.
 
 ---
 
@@ -40,9 +43,9 @@ fails when a value here stops matching the code.
 
 | Surface | Reads `.env` | Provider when nothing is set | Overridden by | Model |
 |---|---|---|---|---|
-| `f1-sim` | repo root, source checkout only (`scripts/run_simulation_cli.py`) | `lmstudio` (`src/agents/strategy_orchestrator.py`) | `--provider openai\|lmstudio`, or `--no-llm` to skip the step | sub-agents `gpt-4.1-mini` (`F1_LLM_MODEL_AGENTS`), orchestrator `gpt-5.4-mini` (`F1_LLM_MODEL_ORCHESTRATOR`) |
-| `f1-strat` | repo root, for `OPENAI_API_KEY` only (`scripts/f1_cli.py`) | the wizard's LLM-mode pick, which highlights "No LLM" | the wizard, always forwarded to `f1-sim` as `--provider` or `--no-llm` (`scripts/cli/runner.py`) | as `f1-sim` |
-| `f1-arcade`, `f1-pitwall` | repo root, source checkout only (`src/arcade/main.py`) | `openai` (`src/arcade/app.py`) | `F1_LLM_PROVIDER`, or `--no-llm` | as `f1-sim` |
+| `f1-sim` | repo root, source checkout only (`scripts/f1_sim.py`, then `scripts/run_simulation_cli.py`) | `lmstudio` (`src/agents/strategy_orchestrator.py`) | `--provider openai\|lmstudio`, or `--no-llm` to skip the step | sub-agents `gpt-4.1-mini` (`F1_LLM_MODEL_AGENTS`), orchestrator `gpt-5.4-mini` (`F1_LLM_MODEL_ORCHESTRATOR`) |
+| `f1-strat` | repo root in a source checkout (`scripts/f1_cli.py`) | the wizard's LLM-mode pick, which highlights "No LLM" | the wizard, always forwarded to `f1-sim` as `--provider` or `--no-llm` (`scripts/cli/runner.py`) | as `f1-sim` |
+| `f1-arcade`, `f1-pitwall` | `f1-arcade` uses python-dotenv's search from `src/arcade/main.py`; `f1-pitwall` inherits its process environment | `openai` for Arcade (`src/arcade/app.py`); PITWALL has no separate provider | `F1_LLM_PROVIDER`, or `--no-llm` for Arcade | as `f1-sim` for Arcade; none for PITWALL |
 | `f1-webapp` chat tab | repo root, then `src/telemetry/.env` as an override (`src/telemetry/backend/core/config.py`) | `lmstudio` (`src/telemetry/backend/services/chatbot/llm_service.py`) | `F1_LLM_PROVIDER`, then a bare `LLM_PROVIDER` | `gpt-5.4-mini`, or `OPENAI_CHAT_MODEL` |
 | backend `POST /simulate` | as the chat tab | `F1_LLM_PROVIDER`, then `lmstudio` | optional request `provider`; process-wide, not isolated per request (#1192, #1261) | as `f1-sim` |
 
@@ -58,20 +61,17 @@ environment, and N31 caches one client per process. Concurrent requests with
 different explicit providers are not isolated; use one provider for the backend
 process until #1261 is addressed.
 
-**A wheel install reads no `.env` at all.** `f1-sim` and `f1-arcade` locate
-the file by walking up from the source tree for a `.git` directory. After
-`uv tool install` there is none, so nothing is loaded and the built-in
-fallback applies. On that path the provider is set through the shell
-environment, or through `--provider` for `f1-sim`.
+**A global tool install does not read the checkout's `.env`.** In a source
+checkout, `f1-sim` and `f1-strat` load the repo-root file. `f1-arcade` uses
+python-dotenv's default search from its module path. Set variables in the
+process environment for a global install; `f1-sim` also accepts `--provider`.
 
-**The fallback is not the same on every surface**, LM Studio for the CLI and
-the backend, OpenAI for the arcade. That is issue #264; this table records
-the current behaviour rather than resolving it. Setting `F1_LLM_PROVIDER`
-explicitly makes the difference irrelevant.
+The CLI and backend default to LM Studio. Arcade defaults to OpenAI.
+`F1_LLM_PROVIDER` selects a provider explicitly on surfaces that read it.
 
-**The model names are constants**, sent unchanged on both provider paths.
-`OPENAI_CHAT_MODEL` is the only environment variable that changes one, and
-it applies to the web app chat tab alone.
+The model names in the table are defaults. `F1_LLM_MODEL_AGENTS` and
+`F1_LLM_MODEL_ORCHESTRATOR` override the strategy models. `OPENAI_CHAT_MODEL`
+configures the web app chat model.
 
 ---
 
@@ -82,12 +82,13 @@ uv tool install "git+https://github.com/VforVitorio/F1-StratLab.git"
 f1-strat
 ```
 
-`uv tool install` drops two global binaries: `f1-strat` (interactive
-wizard with ASCII banner + arrow-key pickers for race / driver / laps /
-provider / head-to-head rival) and `f1-sim` (the headless argparse
-form). The wizard auto-resolves the team from
-`laps_featured_2025.parquet`, shells out to `f1-sim` under the hood and
-turns Ctrl+C into a clean italic *Interrupted.* notice.
+This guide uses `f1-strat` (the interactive wizard with race, driver, lap,
+provider and rival pickers) and `f1-sim` (the headless argparse form). The
+wizard filters the driver and rival lists to the selected race and resolves
+each team from `data/raw/<year>/<gp>/laps.parquet`. Lap selections must be positive,
+ascending, and within the driver's recorded race data. The headless entry
+checks lap syntax and range before loading the simulation runner. Both commands
+support `--version`.
 
 Prefer the scripted form for demos and CI:
 
@@ -106,9 +107,20 @@ Already installed from a source checkout? `uv sync && uv run f1-strat`
 ## Arcade, 3-window race replay + live dashboard + telemetry
 
 ```bash
-uv tool install "git+https://github.com/VforVitorio/F1-StratLab.git"
+set -e
+git clone https://github.com/VforVitorio/F1-StratLab.git
+cd F1-StratLab
+cd src/pitwall/ui
+npm ci && npm run build
+cd ../../..
+uv tool install .
+# First run: populate the model cache used by Arcade strategy mode.
+f1-sim Suzuka VER "Red Bull Racing" --year 2025 --no-llm --no-real-radios --laps 1-1
 f1-arcade --viewer --year 2025 --round 3 --driver VER --team "Red Bull Racing" --driver2 LEC --strategy
 ```
+
+The PITWALL bundle is ignored build output, so it must be built from the
+checkout before installation for the two PITWALL windows to open.
 
 Three windows spawn from that one command:
 
@@ -142,9 +154,11 @@ uv run f1-webapp              # wraps `docker compose up` and prints the URLs
 
 `--recurse-submodules` is required: both containers build from `src/telemetry`,
 which is empty without it. `cp .env.example .env` is required too: Compose
-aborts with "env file ./.env not found" otherwise. The backend also serves race
-data from a **read-only** `./data` mount, so seed `data/` on the host first (see
-[Data bootstrap](#data-bootstrap)) or the data endpoints return 404.
+aborts with "env file ./.env not found" otherwise. The backend reads race data
+from `./data`; Compose mounts the dataset read-only and gives FastF1 and RAG
+their own writable cache mounts. Seed the required dataset and model assets on
+the host first (see [Data bootstrap](#data-bootstrap)) or the data endpoints
+return 404.
 
 Opens:
 
@@ -171,7 +185,9 @@ branch. `f1-webapp` is the single launcher for the post-race surface.
 
 ## Data bootstrap
 
-All three surfaces read from `data/`:
+Source checkouts use `data/`. Global CLI and Arcade installs use
+`~/.f1-strat/data/`, unless `F1_STRAT_DATA_ROOT` overrides the location.
+Docker maps the host's `./data` to `/app/data`.
 
 - `data/processed/laps_featured_<year>.parquet`, featured lap data
 - `data/raw/<year>/<Location>/`, per-race FastF1 pickle cache
@@ -180,14 +196,13 @@ All three surfaces read from `data/`:
 - `data/tire_compounds_by_race.json`, canonical per-year GP calendar
   and compound allocation
 
-The CLI and Arcade call `ensure_radio_corpus()` and FastF1's cache on
-first run; a warm cache is zero-cost. The Docker web app stack does not
-yet have an equivalent auto-download step for a production deploy without
-a host-side repo clone, that gap is a known, deferred follow-up; seed
-`data/` on the host as described below in the meantime.
+The CLI and Arcade call `ensure_radio_corpus()` and populate the FastF1 cache
+when needed, then reuse cached files. A different GP may still need its radio
+corpus on first use. Docker Compose does not bootstrap the Hugging Face
+dataset or model assets, so prepare them on the host before startup. The
+FastF1 and RAG cache mounts remain writable inside the backend container.
 
-For the **Docker web app stack**, `./data` is mounted read-only, so the
-container cannot populate it, seed it on the host before `docker compose up`,
+Prepare the dataset and model assets on the host before `docker compose up`,
 either by running the CLI path once (`uv run f1-sim Melbourne VER "Red Bull Racing" --year 2025 --no-llm --laps 1-1`)
 or directly:
 

@@ -469,13 +469,26 @@
   <div class="rl-card">
     <div class="rl-header">
       <span class="rl-version"><span class="sr-only">Version: </span>v2.6.0</span>
-      <span class="rl-date"><span class="sr-only">Date: </span>2026-08-29</span>
+      <span class="rl-date"><span class="sr-only">Date: </span>2026-09-03</span>
       <span class="rl-badge done-badge"><span class="sr-only">Status: </span>Shipped</span>
     </div>
     <p class="rl-title">PITWALL, a designed Arcade, and a startup that stops making you wait</p>
     <p class="rl-summary">The trackside surface is now <strong>PITWALL</strong>: two desktop windows built in React and hosted in a platform webview, a DATA window with the timing tower, the bests panel, the race-pace grid, the track ring and the radio feed, and an AGENTS window that shows the decision and the six consoles behind it. They run alongside the pyglet replay rather than replacing it, and the <code>lap_state</code> contract and the agents are unchanged. The replay itself got a design pass over the launch menu and the circuit layout, and every one of the 70 rounds of 2023 to 2025 now loads from the menu where only one did.</p>
     <p class="rl-summary">The AGENTS window also gained a <strong>PIT EXIT</strong> card, which answers the one question a pit wall asks before every stop: if we box on this lap, what position do we rejoin in, and which cars land either side. It reads <code>P1 &rarr; P3</code> under an <em>if we box now</em> header, with the car ahead and the car behind named and the gap to each. The number is the one the projection layer is graded on, <strong>86.1% within one position over 552 real green-flag stops of 2025</strong>, because it is computed at the same two-lap horizon the ground truth measures rather than at the five-lap one the strategy scoring uses. RADIO gave up one of its two columns to make room, so the bottom row now runs three columns wide.</p>
     <p class="rl-summary">Startup and per-lap cost came down with it. <code>f1-sim --help</code> went from 12.6 s to 3.6 s and a five-lap offline run from 15.6 s to 5.5 s, because importing an agent no longer drags the LLM stack in behind it; N25's confidence interval went from 660 ms to 5.9 ms a lap by scoring one perturbed block instead of two hundred single rows, returning the same numbers; loading an already-cached race got faster with the garbage collector held off during the read, and the pit-wall windows no longer pay 300 ms for the race on the first request they block on. Full detail in the <a href="https://github.com/VforVitorio/F1-StratLab/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">changelog</a>.</p>
+  </div>
+</li>
+
+<li class="rl-item">
+  <div class="rl-dot done"></div>
+  <div class="rl-card">
+    <div class="rl-header">
+      <span class="rl-version"><span class="sr-only">Version: </span>v2.7.0</span>
+      <span class="rl-date"><span class="sr-only">Date: </span>2026-09-29</span>
+      <span class="rl-badge done-badge"><span class="sr-only">Status: </span>Shipped</span>
+    </div>
+    <p class="rl-title">Provider handling, RAG refresh and replay fixes</p>
+    <p class="rl-summary">No-LLM PLAN now distinguishes an absent future stop from an unknown plan. Requests that omit <code>provider</code> keep the configured default. Season-scoped, article-aware FIA retrieval covers the 2026 rules, and replay caches load faster with lower memory use. The deterministic scorer and both five-lap horizons are unchanged after the #715/#724 evidence review. The <a href="https://github.com/VforVitorio/F1-StratLab/releases/tag/v2.7.0" target="_blank" rel="noopener noreferrer">release notes</a> list the complete changes.</p>
   </div>
 </li>
 
@@ -513,30 +526,30 @@
 
 ---
 
-## Side repos
+## Post-TFG project proposals
 
-These four projects ship independently of the core release train. Each is a dedicated public repository under the `f1stratlab` GitHub organisation. They share the F1 StratLab domain and Hugging Face org but have their own versioning and release cadence.
+The post-TFG plan proposes four projects outside the core release train. Their repository boundaries and release cadence are not committed.
 
 <div class="rl-side-grid">
 
 <div class="rl-side-card">
   <p class="rl-repo">gridmind</p>
-  <p class="rl-repo-desc">Unsloth LoRA fine-tune of a Gemma-family LLM on an F1 text corpus for F1-specific strategy reasoning.</p>
+  <p class="rl-repo-desc">Proposed Unsloth LoRA fine-tune of a Gemma-family LLM on an F1 text corpus for F1-specific strategy reasoning.</p>
 </div>
 
 <div class="rl-side-card">
   <p class="rl-repo">radiogate</p>
-  <p class="rl-repo-desc">Large-scale F1 team-radio NLP corpus with auto-labelling and a novel deception and bluffing signal detector.</p>
+  <p class="rl-repo-desc">Proposed large-scale F1 team-radio NLP corpus with auto-labelling and a deception and bluffing signal detector.</p>
 </div>
 
 <div class="rl-side-card">
   <p class="rl-repo">pitlab</p>
-  <p class="rl-repo-desc">Button-driven MLOps studio: download, merge, inspect, retrain. Clustering-aware and progressive per-GP.</p>
+  <p class="rl-repo-desc">Proposed MLOps studio for downloading, merging, inspecting and retraining data, with clustering-aware per-GP workflows.</p>
 </div>
 
 <div class="rl-side-card">
   <p class="rl-repo">box-bot</p>
-  <p class="rl-repo-desc">Automated X account narrating the orchestrator live during a Grand Prix.</p>
+  <p class="rl-repo-desc">Proposed automated X account that narrates the orchestrator during a Grand Prix.</p>
 </div>
 
 </div>
