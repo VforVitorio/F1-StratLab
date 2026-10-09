@@ -231,7 +231,7 @@ Two are declared today:
 
 The envelope earns its keep by what it surfaced rather than by what it prevents. Wiring it to N06 exposed that `mean_sector_speed` was carrying the **speed trap** on every real call, because the agent substituted `prev_speed_st` whenever no mean sector speed was supplied and nothing ever supplied one. Those are different physical quantities, 256.8 against 303.0 km/h on average, and the model had been reading the wrong one throughout. The value is a property of the circuit and was on disk all along; it is now looked up per GP, and a circuit that does not resolve reaches the model as missing rather than as a substituted reading.
 
-It also surfaced something not yet fixed: N06 is asked to predict on the opening laps of a race and on the first lap of every stint, and it was never trained on either, because its own feature pipeline drops exactly those rows.
+N04 removes race lap 1 before N06 training. N06 then drops rows without `LapTime_Delta` or `Prev_LapTime`, which removes the first retained lap of each stint. `PaceAgent.run_from_state()` still predicts on race lap 1 and stint openers; when `Prev_LapTime` is missing, it substitutes `MISSING_PREV_LAP_TIME_S` (90.0 seconds). N06 has no training examples for those lap states.
 
 ### N29: Radio Agent (`radio_agent.py`)
 

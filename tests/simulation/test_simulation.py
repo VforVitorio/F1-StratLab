@@ -326,3 +326,99 @@ def test_a_lap_with_no_memory_still_carries_both_fields():
 
     assert payload["memory_block"] is None
     assert payload["plan_changed"] is False
+
+
+@_skip_no_backend
+def test_tire_range_uses_the_current_raw_compound_for_stint_selection(monkeypatch):
+    """The tire chart must select the active stint, not the driver's later compound.
+
+    `_get_driver_stint` compares its session metadata against the raw `Compound`
+    column. The route also needs a model ID (`C2`), but that normalized ID is a
+    different value from the raw label (`MEDIUM`).
+    """
+    _ensure_backend_on_path()
+    import sys
+    from types import ModuleType, SimpleNamespace
+
+    import pandas as pd
+    from backend.api.v1.endpoints import strategy
+    from fastapi import FastAPI
+    from starlette.testclient import TestClient
+
+    laps = pd.DataFrame(
+        {
+            "GP_Name": ["Barcelona"] * 6,
+            "Driver": ["HAM"] * 6,
+            "LapNumber": [18, 19, 20, 21, 22, 23],
+            "Compound": ["MEDIUM"] * 4 + [None, "SOFT"],
+            "TyreLife": [1, 2, 3, 4, 5, 1],
+            "Stint": [2, 2, 2, 2, None, 3],
+            "LapTime_s": [90.0] * 6,
+            "Team": ["Mercedes"] * 6,
+        }
+    )
+    selected_laps = []
+
+    class Agent:
+        def _get_driver_stint(self, driver, tyre_life):
+            driver_laps = self.laps_df[self.laps_df["Driver"] == driver]
+            compound = self.session_meta.get(
+                f"{driver}_compound",
+                driver_laps["Compound"].iloc[-1] if not driver_laps.empty else "MEDIUM",
+            )
+            mask = (
+                (self.laps_df["Driver"] == driver)
+                & (self.laps_df["Compound"] == compound)
+                & (self.laps_df["TyreLife"] <= tyre_life)
+            )
+            current_stint = self.session_meta.get(f"{driver}_stint")
+            if current_stint is not None:
+                mask &= self.laps_df["Stint"] == current_stint
+            current_lap = self.session_meta.get("current_lap")
+            if current_lap is not None:
+                mask &= self.laps_df["LapNumber"] <= current_lap
+            stint = self.laps_df[mask].sort_values("LapNumber")
+            return stint if not stint.empty else None
+
+        def _build_stint_tensor(self, stint, _compound_id, _session_meta):
+            selected_laps.append(stint["LapNumber"].tolist())
+            return object()
+
+    class Model:
+        def eval(self):
+            return self
+
+        def __call__(self, _tensor):
+            return SimpleNamespace(item=lambda: 0.123)
+
+    agent = Agent()
+    agent.cfg = SimpleNamespace(cluster_for=lambda _gp, _default: 0, team_id_map={})
+    agent.bundles = {compound: {"model": Model()} for compound in ("C2", "C3")}
+
+    monkeypatch.setattr(strategy, "get_laps_df", lambda _year: laps)
+    tire_agent_module = ModuleType("src.agents.tire_agent")
+    tire_agent_module.TireAgentConfig = SimpleNamespace(_TRAINED_CLUSTER_MEAN_LAP_S={})
+    tire_agent_module._get_default_tire_agent = lambda: agent
+    tire_agent_module._compound_name_to_id = lambda name, *_args: {
+        "MEDIUM": "C2",
+        "SOFT": "C3",
+    }.get(name, "C2")
+    monkeypatch.setitem(sys.modules, "src.agents.tire_agent", tire_agent_module)
+
+    app = FastAPI()
+    app.include_router(strategy.router, prefix="/api/v1")
+    app.dependency_overrides[strategy._require_laps_df] = lambda year=2025: laps
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/strategy/tire-range",
+            json={"year": 2024, "gp": "Barcelona", "driver": "HAM", "lap_start": 20, "lap_end": 23},
+        )
+
+    assert response.status_code == 200, response.text
+    result = response.json()
+    predictions = {prediction["lap"]: prediction["pred"] for prediction in result["predictions"]}
+    assert predictions[20] == pytest.approx(0.123)
+    assert predictions[21] == pytest.approx(0.123)
+    assert predictions[22] is None
+    assert predictions[23] == pytest.approx(0.123)
+    assert selected_laps == [[18, 19, 20], [18, 19, 20, 21], [23]]

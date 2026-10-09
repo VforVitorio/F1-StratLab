@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Offline replay of a race from a stored parquet snapshot. Emits `lap_state` dicts, the canonical data contract consumed by all seven strategy agents.
+Offline replay of a race from a stored parquet snapshot. It emits `lap_state`, the shared input to the strategy inference pipeline. N31 coordinates six specialist agents, each of which receives call-specific inputs.
 
 This is the **demo path** for the thesis defence. The live path will replace the iterator at the **v3.0.0** milestone ([roadmap](#/roadmap)) without touching any agent code, because agents only see `lap_state` dicts regardless of source.
 
@@ -21,7 +21,7 @@ RaceReplayEngine
         ├── get_weather_state() ← track + weather snapshot
         └── get_lap_state()     ← merges all into lap_state dict
               ↓
-    lap_state dict → all 7 agents → strategy orchestrator
+    lap_state dict -> N31 routing + up to six selected specialist calls -> recommendation
 ```
 
 `RaceReplayEngine.to_arcade_frame()` still exists in `replay_engine.py`, but nothing calls it and its docstring's `/ws/replay` WebSocket route was never registered on the backend, the arcade's real live path is the direct in-process pipeline broadcasting over a local TCP socket, documented in [Arcade strategy pipeline](#/arcade-strategy-pipeline) and [Multi-agent system → Three-window arcade](#/multi-agent).
@@ -244,18 +244,18 @@ python -m src.simulation Silverstone VER "Red Bull Racing" --data-dir data/raw/2
 }
 ```
 
-## Future: live ingestion (v3.0.0)
+## Planned live ingestion (v3.0.0)
 
-Replace `RaceReplayEngine.replay()` with a consumer that emits the same `lap_state` dict from a live feed. Zero changes to agents or orchestrator.
+OpenF1 WebSocket ingestion is planned for v3.0.0. It will replace `RaceReplayEngine.replay()` with an adapter that emits the same `lap_state` contract, so the strategy agents will keep the same input.
 
-> The sketch below is written against Kafka because that was the assumed transport when this page was drafted; the [roadmap](#/roadmap)'s v3.0.0 entry names the **OpenF1 WebSocket**. The shape of the change is what matters and it is the same either way: swap the iterator, leave the contract alone. The old `v0.14` numbering here predated the 1.0 release and is long dead.
+The source changes; the consumer loop stays the same.
 
 ```python
-# Current (offline)
+# Current offline source
 for lap_state in engine.replay():
     ...
 
-# Future (live)
-for lap_state in kafka_consumer.consume_lap():
+# Planned OpenF1 adapter (conceptual)
+for lap_state in live_source:
     ...
 ```

@@ -102,7 +102,7 @@ The backend SSE endpoint is still live and smoke-tested; the arcade just does no
 
 ```bash
 # CLI path
-python scripts/run_simulation_cli.py Melbourne VER "Red Bull Racing" --no-llm
+f1-sim Melbourne VER "Red Bull Racing" --no-llm
 
 # Arcade path
 python -m src.arcade.main --viewer --year 2025 --round 3 --driver VER --team "Red Bull Racing" --strategy

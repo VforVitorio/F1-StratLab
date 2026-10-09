@@ -1,10 +1,10 @@
 # scripts/cli — Interactive CLI launcher
 
-Interactive arrow-key wrapper around the headless `scripts/run_simulation_cli.py`.
-Walks the user through race / driver / laps / provider selection, auto-resolves
-the driver's team from `data/processed/laps_featured_2025.parquet`, and shells
-out to the headless runner with the right argv. Pure UX layer — no simulation
-logic lives here.
+Interactive arrow-key wrapper around `scripts/f1_sim.py`, which validates the
+arguments before delegating to `scripts/run_simulation_cli.py`. Driver and rival
+menus use participants from the selected race's
+`data/raw/<year>/<gp>/laps.parquet`; team and lap limits come from those same
+rows. No simulation logic lives here.
 
 ## How to run
 
@@ -27,9 +27,9 @@ python scripts/f1_cli.py
   branches), all interactive prompts (`pick_mode`, `pick_race`, `pick_driver`,
   `pick_rival_code`, `pick_laps`, `pick_provider`,
   `ask_again`), plus `discover_races(repo_root, year)` and the
-  `_load_driver_team_map(repo_root)` parquet lookup.
+  race-scoped `_load_driver_data(repo_root, gp_name)` parquet lookup.
 - `runner.py` — `build_sim_cmd(...)` builds the argv for
-  `run_simulation_cli.py`, `run_subprocess(cmd)` executes it with
+  `f1_sim.py`, `run_subprocess(cmd)` executes it with
   `PYTHONIOENCODING=utf-8` + `PYTHONUTF8=1`, and `run_single` / `run_h2h` are
   the two wizard flows.
 - `../f1_cli.py` — top-level entry point. Loops `pick_mode` →

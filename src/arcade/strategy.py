@@ -30,7 +30,6 @@ from src.arcade.config import (
     DANGER,
     GP_TO_LOCATION,
     INFO,
-    REPO_ROOT,
     SUCCESS,
     TEXT_SECONDARY,
     WARNING,
@@ -749,11 +748,14 @@ class SimConnector(threading.Thread):
         The backend's loader had this fix and the CLI did not; the arcade did not either.
         `augment_featured_laps` is the one place that owns it now.
         """
-        path = REPO_ROOT / "data" / "processed" / f"laps_featured_{year}.parquet"
+        from src.f1_strat_manager.data_cache import get_data_root
+
+        data_root = get_data_root()
+        path = data_root / "processed" / f"laps_featured_{year}.parquet"
         if not path.exists():
             logger.error("Featured laps parquet missing: %s", path)
             return None
-        return augment_featured_laps(pd.read_parquet(path), year)
+        return augment_featured_laps(pd.read_parquet(path), year, data_root=data_root)
 
     @staticmethod
     def _resolve_race_dir(year: int, gp: str):
@@ -767,7 +769,9 @@ class SimConnector(threading.Thread):
         a Location so ``--gp Melbourne`` shortcuts keep working. Also
         tries the underscore variant because FastF1 emits ``Marina Bay``
         / ``São Paulo`` with spaces but the raw folders use underscores."""
-        base = REPO_ROOT / "data" / "raw" / str(year)
+        from src.f1_strat_manager.data_cache import get_data_root
+
+        base = get_data_root() / "raw" / str(year)
         folder = GP_TO_LOCATION.get(gp, gp)
         candidate = base / folder
         if candidate.exists():

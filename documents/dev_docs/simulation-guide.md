@@ -12,6 +12,8 @@ uv run f1-sim Melbourne NOR McLaren --year 2025 --no-llm --no-real-radios --laps
 
 `f1-sim` reads the race from `data/raw/<year>/<gp>/` and the agent frame from `data/processed/laps_featured_<year>.parquet`. The first run may download data or models from Hugging Face. Use `--verbose` to print full per-lap tracebacks.
 
+The `f1-sim` entry point checks lap syntax and the selected driver's recorded lap range before loading the runner. The `f1-strat` wizard lists only drivers in the selected race and applies the same lap-range check. Both commands accept `--version`.
+
 For a multi-lap run with LLM synthesis, select a configured provider and range:
 
 ```powershell

@@ -12,11 +12,12 @@ here and in the loader, which collapsed the outline into a pseudo-circle.
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from typing import Final, NamedTuple
 
 import numpy as np
 
-import arcade
+from arcade import shape_list
 from src.arcade.config import (
     DRS_COLOR,
     DRS_OPEN_CODES,
@@ -128,7 +129,7 @@ def track_inset(
 
 
 class Track:
-    """Static circuit geometry cached once; per-frame work is scale + transform."""
+    """Circuit geometry and GPU batches rebuilt when the viewport or style changes."""
 
     def __init__(
         self,
@@ -144,6 +145,8 @@ class Track:
         self._rotation_rad = float(np.deg2rad(rotation_deg))
         self._track_width = float(track_width)
         self._interp_edge = int(interp_edge)
+        self._render_batches: tuple[shape_list.ShapeElementList, ...] | None = None
+        self._render_style: tuple[object, ...] | None = None
 
         ref_x = np.asarray(ref_x, dtype=float)
         ref_y = np.asarray(ref_y, dtype=float)
@@ -220,6 +223,8 @@ class Track:
         if not self._has_geometry:
             return
 
+        self._render_batches = None
+        self._render_style = None
         inset_x, inset_y = track_inset(viewport, padding=padding)
         usable_w = viewport.width - 2.0 * inset_x
         usable_h = viewport.height - 2.0 * inset_y
@@ -263,18 +268,34 @@ class Track:
         """Render inner + outer edges, DRS overlays, and finish chequer."""
         if not self._has_geometry:
             return
-        if len(self._screen_inner) >= 2:
-            arcade.draw_line_strip([tuple(p) for p in self._screen_inner], edge_color, edge_width)
-        if len(self._screen_outer) >= 2:
-            arcade.draw_line_strip([tuple(p) for p in self._screen_outer], edge_color, edge_width)
+        style = (edge_color, edge_width, drs_color, drs_width)
+        if self._render_batches is None or self._render_style != style:
+            # Build on the render thread; projection also runs without a GL context.
+            self._render_batches = (
+                self._line_batch((self._screen_inner, self._screen_outer), edge_color, edge_width),
+                self._line_batch(self._screen_drs_segments, drs_color, drs_width),
+                self._finish_batch(),
+            )
+            self._render_style = style
+        edges, drs, finish = self._render_batches
+        edges.draw()
         if show_drs:
-            for seg in self._screen_drs_segments:
-                if len(seg) >= 2:
-                    arcade.draw_line_strip([tuple(p) for p in seg], drs_color, drs_width)
-        if show_finish_line and self._screen_finish is not None:
-            self._draw_finish_line(self._screen_finish, edge_width)
+            drs.draw()
+        if show_finish_line:
+            finish.draw()
 
     # --- Internals -------------------------------------------------------
+
+    @staticmethod
+    def _line_batch(
+        polylines: Iterable[np.ndarray], color: tuple[int, ...], width: int
+    ) -> shape_list.ShapeElementList:
+        """Upload each separate polyline once, retaining gaps between DRS runs."""
+        batch = shape_list.ShapeElementList()
+        for points in polylines:
+            if len(points) >= 2:
+                batch.append(shape_list.create_line_strip(points, color, width))
+        return batch
 
     @staticmethod
     def _resample(xs: np.ndarray, ys: np.ndarray, n: int) -> np.ndarray:
@@ -389,12 +410,12 @@ class Track:
         dy = y - py
         return (dx * cos_a - dy * sin_a + px, dx * sin_a + dy * cos_a + py)
 
-    def _draw_finish_line(
-        self,
-        endpoints: tuple[tuple[float, float], tuple[float, float]],
-        width: int,
-    ) -> None:
-        (ix, iy), (ox, oy) = endpoints
+    def _finish_batch(self) -> shape_list.ShapeElementList:
+        """Cache alternating chequer segments at their fixed pixel width."""
+        batch = shape_list.ShapeElementList()
+        if self._screen_finish is None:
+            return batch
+        (ix, iy), (ox, oy) = self._screen_finish
         dx = ox - ix
         dy = oy - iy
         segs = FINISH_CHEQUER_SEGMENTS
@@ -404,4 +425,5 @@ class Track:
             x0, y0 = ix + dx * t0, iy + dy * t0
             x1, y1 = ix + dx * t1, iy + dy * t1
             color = (255, 255, 255) if s % 2 == 0 else (20, 20, 20)
-            arcade.draw_line(x0, y0, x1, y1, color, FINISH_CHEQUER_WIDTH)
+            batch.append(shape_list.create_line(x0, y0, x1, y1, color, FINISH_CHEQUER_WIDTH))
+        return batch
