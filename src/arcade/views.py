@@ -72,6 +72,7 @@ class LaunchConfig:
     # the in-window menu has no row for it, so an interactive launch keeps the
     # LLM path by default. #1155.
     no_llm: bool = False
+    provider: str | None = None
 
 
 @dataclass
@@ -422,10 +423,10 @@ class MenuView(arcade.View):
     """Pre-replay keyboard form. On ENTER it loads the session and swaps
     to `F1ArcadeView`. Any validation error surfaces inline in DANGER red."""
 
-    def __init__(self, window: arcade.Window) -> None:
+    def __init__(self, window: arcade.Window, *, provider: str | None = None) -> None:
         super().__init__(window=window)
         arcade.set_background_color(BG_COLOR)
-        self._cfg = LaunchConfig()
+        self._cfg = LaunchConfig(provider=provider)
         self._error: str = ""
         self._loading: bool = False
         # Written by the preparation worker, read by on_draw and on_update.
@@ -915,5 +916,6 @@ class MenuView(arcade.View):
             strategy_enabled=self._cfg.strategy_mode,
             team=self._cfg.team,
             no_llm=self._cfg.no_llm,
+            provider=self._cfg.provider,
         )
         self.window.show_view(view)

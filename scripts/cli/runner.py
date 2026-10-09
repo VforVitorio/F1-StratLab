@@ -28,6 +28,7 @@ from rich.panel import Panel
 from rich.rule import Rule
 
 from .pickers import (
+    _load_driver_data,
     pick_driver,
     pick_laps,
     pick_provider,
@@ -56,7 +57,7 @@ def build_sim_cmd(
     if script_dir is None:
         script_dir = Path(__file__).resolve().parent.parent  # scripts/
 
-    sim_script = str(script_dir / "run_simulation_cli.py")
+    sim_script = str(script_dir / "f1_sim.py")
     cmd = [sys.executable, sim_script, race, driver, team, "--year", str(year)]
 
     if provider == "no-llm":
@@ -94,8 +95,16 @@ def run_subprocess(cmd: list[str]) -> int:
 def run_single(races: list[str], repo_root: Path, script_dir: Path) -> None:
     """Collect params for one driver and delegate to run_simulation_cli.py."""
     race = pick_race(races)
-    drv, team = pick_driver("Driver", repo_root)
-    laps = pick_laps()
+    drv, team = pick_driver("Driver", repo_root, race)
+    drivers = _load_driver_data(repo_root, race)
+    driver_data = drivers.get(drv) if drivers else None
+    if driver_data is None:
+        console.print(
+            f"  [yellow]No raw lap data for {drv} at {race}; simulation was not started.[/yellow]"
+        )
+        return
+    valid_laps = driver_data[1]
+    laps = pick_laps(max(valid_laps), valid_laps)
     provider = pick_provider()
 
     console.print()
@@ -126,9 +135,19 @@ def run_h2h(races: list[str], repo_root: Path, script_dir: Path) -> None:
     )
 
     race = pick_race(races)
-    drv1, tm1 = pick_driver("Driver 1  (full simulation)", repo_root)
-    drv2 = pick_rival_code(repo_root)
-    laps = pick_laps()
+    drv1, tm1 = pick_driver("Driver 1  (full simulation)", repo_root, race)
+    drivers = _load_driver_data(repo_root, race)
+    driver_data = drivers.get(drv1) if drivers else None
+    if driver_data is None:
+        console.print(
+            f"  [yellow]No raw lap data for {drv1} at {race}; simulation was not started.[/yellow]"
+        )
+        return
+    drv2 = pick_rival_code(repo_root, race, drv1)
+    if not drv2:
+        return
+    valid_laps = driver_data[1]
+    laps = pick_laps(max(valid_laps), valid_laps)
     provider = pick_provider()
 
     console.print()

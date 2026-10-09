@@ -21,6 +21,7 @@ Falls back to numbered Prompt.ask when stdin is not a tty.
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -251,58 +252,74 @@ def discover_races(repo_root: Path, year: int = 2025) -> list[str]:
 # Driver → team auto-mapping
 # ─────────────────────────────────────────────────────────────────────────────
 
-_DRIVER_TEAM_CACHE: dict[str, str] | None = None
+_DRIVER_DATA_CACHE: dict[tuple[str, str], dict[str, tuple[str, frozenset[int]]] | None] = {}
 
 
-def _resolve_laps_parquet_path(repo_root: Path) -> Path:
-    """Resolve the featured-laps parquet path, preferring ``get_data_root``.
+def _load_driver_data(
+    repo_root: Path,
+    gp_name: str,
+    year: int = 2025,
+    raw_dir: Path | None = None,
+) -> dict[str, tuple[str, frozenset[int]]] | None:
+    """Return participants, teams and lap limits from the selected raw race parquet.
 
-    Routes through ``get_data_root`` when the f1_strat_manager package is
-    importable so ``uv tool install`` cached layouts work; otherwise falls
-    back to the repo-relative path for bare dev checkouts (e.g. running
-    ``scripts/f1_cli.py`` before ``uv sync``).
+    A driver is selectable only when at least one lap has the position,
+    tyre-life and lap-time values the replay pipeline needs. Read failures
+    return ``None`` so callers can report a friendly preflight error.
     """
-    try:
-        from src.f1_strat_manager.data_cache import get_data_root
-
-        return get_data_root() / "processed" / "laps_featured_2025.parquet"
-    except ImportError:
-        return repo_root / "data" / "processed" / "laps_featured_2025.parquet"
-
-
-def _load_driver_team_map(repo_root: Path) -> dict[str, str]:
-    """Return {driver_code: team} built from laps_featured_2025.parquet (cached).
-
-    Best-effort only: any failure to read or parse the parquet (file
-    missing, corrupt parquet, unexpected schema) degrades to an empty map
-    rather than raising. ``pick_driver``/``pick_rival_code`` already fall
-    back to asking the user to type the team manually whenever the code is
-    not found in this map, so a read failure here is never fatal to the CLI.
-    """
-    global _DRIVER_TEAM_CACHE
-    if _DRIVER_TEAM_CACHE is not None:
-        return _DRIVER_TEAM_CACHE
+    parquet = _resolve_raw_laps_path(repo_root, gp_name, year, raw_dir)
+    cache_key = (str(parquet), gp_name)
+    if cache_key in _DRIVER_DATA_CACHE:
+        return _DRIVER_DATA_CACHE[cache_key]
     try:
         import pandas as pd
 
-        parquet = _resolve_laps_parquet_path(repo_root)
-        if parquet.exists():
-            df = pd.read_parquet(parquet, columns=["Driver", "Team"])
-            _DRIVER_TEAM_CACHE = (
-                df.dropna(subset=["Driver", "Team"])
-                .drop_duplicates("Driver", keep="last")
-                .set_index("Driver")["Team"]
-                .to_dict()
+        if parquet.is_file():
+            df = pd.read_parquet(
+                parquet,
+                columns=["Driver", "Team", "LapNumber", "LapTime", "Position", "TyreLife"],
             )
+            df = df.dropna(subset=["Driver", "Team", "LapNumber"])
+            df["Driver"] = df["Driver"].astype(str).str.strip().str.upper()
+            df["Team"] = df["Team"].astype(str).str.strip()
+            df["LapNumber"] = pd.to_numeric(df["LapNumber"], errors="coerce")
+            df = df.dropna(subset=["LapNumber"])
+            teams = df.drop_duplicates("Driver", keep="last").set_index("Driver")["Team"]
+            complete = df.dropna(subset=["LapTime", "Position", "TyreLife"])
+            valid_laps: dict[str, set[int]] = {}
+            for code, lap in complete[["Driver", "LapNumber"]].itertuples(index=False, name=None):
+                valid_laps.setdefault(code, set()).add(int(lap))
+            _DRIVER_DATA_CACHE[cache_key] = {
+                code: (str(team), frozenset(valid_laps[code]))
+                for code, team in teams.items()
+                if code in valid_laps
+            }
         else:
-            _DRIVER_TEAM_CACHE = {}
+            _DRIVER_DATA_CACHE[cache_key] = None
     except Exception:
         # pandas/pyarrow raise a wide, version-dependent set of types for a
         # malformed or unreadable parquet (OSError variants, pyarrow's own
         # ArrowInvalid/ArrowIOError, KeyError on an unexpected schema) - not
         # worth enumerating for a best-effort convenience lookup.
-        _DRIVER_TEAM_CACHE = {}
-    return _DRIVER_TEAM_CACHE
+        _DRIVER_DATA_CACHE[cache_key] = None
+    return _DRIVER_DATA_CACHE[cache_key]
+
+
+def _resolve_raw_laps_path(
+    repo_root: Path,
+    gp_name: str,
+    year: int,
+    raw_dir: Path | None,
+) -> Path:
+    """Resolve the raw race parquet used by the replay runner."""
+    if raw_dir is None:
+        try:
+            from src.f1_strat_manager.data_cache import get_data_root
+
+            raw_dir = get_data_root() / "raw" / str(year)
+        except ImportError:
+            raw_dir = repo_root / "data" / "raw" / str(year)
+    return raw_dir / gp_name / "laps.parquet"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -332,22 +349,23 @@ def pick_race(races: list[str]) -> str:
 def pick_driver(
     label: str = "Driver",
     repo_root: Path | None = None,
+    gp_name: str | None = None,
 ) -> tuple[str, str]:
-    """Ask for FIA three-letter code; auto-resolve team from parquet.
+    """Select a participant from the chosen race and resolve its team.
 
-    If the driver is not found in the parquet (new signing, typo, etc.) a
-    manual team entry is requested as fallback.
+    If race participants cannot be read, fall back to manual entry.
     """
     console.print()
-    code = (
-        Prompt.ask(f"  [bold {F1_RED}]›[/bold {F1_RED}] {label} code  [dim](e.g. NOR)[/dim]")
-        .upper()
-        .strip()
-    )
-
-    team = ""
-    if repo_root is not None:
-        team = _load_driver_team_map(repo_root).get(code, "")
+    drivers = _load_driver_data(repo_root, gp_name) if repo_root is not None and gp_name else {}
+    if drivers:
+        codes = sorted(drivers)
+        options = [f"{code}  ·  {drivers[code][0]}" for code in codes]
+        code = codes[_arrow_pick(f"{label} available at {gp_name}:", options)]
+        team = drivers[code][0]
+    else:
+        console.print("  [dim]Race participants are unavailable; enter the driver manually.[/dim]")
+        code = _prompt_driver_code(label)
+        team = ""
 
     if team:
         console.print(
@@ -355,27 +373,59 @@ def pick_driver(
             f"[dim](resolved from parquet)[/dim]"
         )
     else:
-        team = Prompt.ask(
-            f"  [bold {F1_RED}]›[/bold {F1_RED}] Team  "
-            f"[dim](not found in parquet — enter manually)[/dim]"
-        ).strip()
+        while not team:
+            team = Prompt.ask(
+                f"  [bold {F1_RED}]›[/bold {F1_RED}] Team  "
+                f"[dim](not found in parquet — enter manually)[/dim]"
+            ).strip()
+            if not team:
+                console.print("  [yellow]Enter a team name.[/yellow]")
 
     return code, team
 
 
-def pick_rival_code(repo_root: Path | None = None) -> str:
+def _prompt_driver_code(label: str) -> str:
+    """Read a three-letter FIA code for the rare manual-data fallback."""
+    while True:
+        code = (
+            Prompt.ask(
+                f"  [bold {F1_AMBER}]›[/bold {F1_AMBER}] {label} code  [dim](e.g. VER)[/dim]"
+            )
+            .strip()
+            .upper()
+        )
+        if re.fullmatch(r"[A-Z]{3}", code):
+            return code
+        console.print("  [yellow]Enter a three-letter FIA driver code.[/yellow]")
+
+
+def pick_rival_code(
+    repo_root: Path | None = None,
+    gp_name: str | None = None,
+    driver_code: str | None = None,
+) -> str:
     """Ask for a rival driver code; resolves and displays team for confirmation."""
     console.print()
-    code = (
-        Prompt.ask(
-            f"  [bold {F1_AMBER}]›[/bold {F1_AMBER}] Rival driver code  [dim](e.g. VER)[/dim]"
-        )
-        .upper()
-        .strip()
-    )
+    drivers = _load_driver_data(repo_root, gp_name) if repo_root is not None and gp_name else {}
+    if drivers:
+        codes = [code for code in sorted(drivers) if code != (driver_code or "").upper()]
+        if codes:
+            options = [f"{code}  ·  {drivers[code][0]}" for code in codes]
+            code = codes[_arrow_pick(f"Rival at {gp_name}:", options)]
+        else:
+            console.print(
+                "  [yellow]No other race participant is available to select as a rival.[/yellow]"
+            )
+            return ""
+    else:
+        console.print("  [dim]Race participants are unavailable; enter the rival manually.[/dim]")
+        code = _prompt_driver_code("Rival driver")
+        while code == (driver_code or "").upper():
+            console.print("  [yellow]The rival must be a different driver.[/yellow]")
+            code = _prompt_driver_code("Rival driver")
 
-    if repo_root is not None:
-        team = _load_driver_team_map(repo_root).get(code, "")
+    if drivers:
+        team = drivers[code][0]
         if team:
             console.print(
                 f"  [dim]Team →[/dim] [{F1_WHITE}]{team}[/{F1_WHITE}]  "
@@ -385,14 +435,45 @@ def pick_rival_code(repo_root: Path | None = None) -> str:
     return code
 
 
-def pick_laps() -> str | None:
-    """Ask for a lap range. Returns '15-40' string or None (all laps)."""
-    console.print()
-    raw = Prompt.ask(
-        f"  [bold {F1_RED}]›[/bold {F1_RED}] Lap range  [dim](e.g. 15-40, or Enter for all)[/dim]",
-        default="all",
-    ).strip()
-    return None if raw.lower() in ("all", "") else raw
+def pick_laps(
+    max_lap: int | None = None,
+    valid_laps: frozenset[int] | set[int] | None = None,
+) -> str | None:
+    """Ask for all laps, one positive lap, or an inclusive ascending range."""
+    while True:
+        console.print()
+        raw = Prompt.ask(
+            f"  [bold {F1_RED}]›[/bold {F1_RED}] Lap range  [dim](e.g. 15-40, or Enter for all)[/dim]",
+            default="all",
+        ).strip()
+        if raw.lower() in ("all", ""):
+            return None
+
+        match = re.fullmatch(r"([1-9]\d*)(?:-([1-9]\d*))?", raw)
+        if match is None:
+            console.print(
+                "  [yellow]Enter 'all', a positive lap, or an ascending range such as 15-40.[/yellow]"
+            )
+            continue
+
+        try:
+            start = int(match.group(1))
+            end = int(match.group(2) or start)
+        except ValueError:
+            console.print("  [yellow]Lap numbers are too large.[/yellow]")
+            continue
+        if end < start:
+            console.print(
+                "  [yellow]The last lap must be greater than or equal to the first.[/yellow]"
+            )
+            continue
+        if max_lap is not None and end > max_lap:
+            console.print(f"  [yellow]This driver's data ends at lap {max_lap}.[/yellow]")
+            continue
+        if valid_laps is not None and not any(start <= lap <= end for lap in valid_laps):
+            console.print("  [yellow]This range contains no complete lap for this driver.[/yellow]")
+            continue
+        return f"{start}-{end}" if match.group(2) else str(start)
 
 
 def pick_provider() -> str:

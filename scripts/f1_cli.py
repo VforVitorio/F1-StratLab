@@ -19,6 +19,7 @@ All UI logic lives in scripts/cli/:
 
 from __future__ import annotations
 
+import argparse
 import logging as _logging
 import sys
 import warnings
@@ -77,7 +78,7 @@ except ImportError:
 # ── CLI package imports ────────────────────────────────────────────────────────
 from cli.pickers import ask_again, discover_races, pick_mode  # noqa: E402
 from cli.runner import run_h2h, run_single  # noqa: E402
-from cli.theme import F1_GRAY, console, make_banner  # noqa: E402
+from cli.theme import F1_GRAY, console, make_banner, package_version  # noqa: E402
 from rich.rule import Rule  # noqa: E402
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -144,6 +145,17 @@ def main() -> None:
     italic dim and exits with status 130, the conventional SIGINT code,
     instead of leaking a stack trace.
     """
+    parser = argparse.ArgumentParser(
+        prog="f1-strat",
+        description="F1 StratLab interactive launcher",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {package_version()}",
+    )
+    parser.parse_args()
+
     try:
         _run_wizard()
     except KeyboardInterrupt:
