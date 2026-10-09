@@ -82,10 +82,12 @@ uv sync --all-extras
 Run the simulation against a saved race:
 
 ```bash
-uv run scripts/run_simulation_cli.py Sakhir NOR McLaren --no-llm
+uv run f1-sim Sakhir NOR McLaren --no-llm
 ```
 
 Drop `--no-llm` once an LLM provider is configured. Without `--provider`, `f1-sim` reads `F1_LLM_PROVIDER` from a repo-root `.env` and falls back to LM Studio at `http://localhost:1234/v1`; `--provider openai` selects OpenAI, which needs `OPENAI_API_KEY`.
+
+Both `f1-sim` and `f1-strat` support `--version`. Lap selections must be positive and ascending; the CLI rejects a range beyond the selected driver's recorded laps before model warmup.
 
 ## 3. Docker
 

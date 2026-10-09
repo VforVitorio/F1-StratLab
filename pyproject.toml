@@ -123,7 +123,7 @@ dependencies = [
 
 [project.scripts]
 f1-strat     = "scripts.f1_cli:main"
-f1-sim       = "scripts.run_simulation_cli:main"
+f1-sim       = "scripts.f1_sim:main"
 f1-arcade    = "src.arcade.main:main"
 f1-webapp    = "scripts.run_webapp:main"
 f1-eval      = "src.strategy.eval.cli:main"
