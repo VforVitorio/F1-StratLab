@@ -11,6 +11,40 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [2.7.1](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.0...v2.7.1) (2026-10-09)
+
+
+### Bug Fixes
+
+* **arcade:** render historical flag events and honor provider ([d58910b](https://github.com/VforVitorio/F1-StratLab/commit/d58910be61235ac38f029fa21fe638de751e876a))
+* **cli:** keep simulator help lightweight ([2c87191](https://github.com/VforVitorio/F1-StratLab/commit/2c8719105726bbd0c45ff45cd4f1de9ff78b4d89))
+* **cli:** normalize codes and reject oversized laps ([312695c](https://github.com/VforVitorio/F1-StratLab/commit/312695cb4c5af072a8e98611015d9975ae48085c))
+* **cli:** preserve help and custom lap bounds ([9b0243a](https://github.com/VforVitorio/F1-StratLab/commit/9b0243ae9f5801afbfde45563a276c635683fce1))
+* **cli:** reject empty rival selections ([a68736c](https://github.com/VforVitorio/F1-StratLab/commit/a68736c984f4edcc671e355db2e4ba256bb48bc1))
+* **cli:** reject missing raw race data ([7b57a01](https://github.com/VforVitorio/F1-StratLab/commit/7b57a01eda91ef7b3c6afa40398d296c1fbe8d49))
+* **cli:** select complete raw race participants ([9786944](https://github.com/VforVitorio/F1-StratLab/commit/9786944abf790392390366059764a9b5c7bf2096))
+* **cli:** validate drivers against raw race laps ([d6ab4ce](https://github.com/VforVitorio/F1-StratLab/commit/d6ab4ce85801acd8a3b703261d092845b5ad9116))
+* **cli:** validate headless teams and rivals ([24fb2e0](https://github.com/VforVitorio/F1-StratLab/commit/24fb2e090e26e7adf0a7fe749ec276918cd4351b))
+* **cli:** validate race and lap selections ([fff2f1d](https://github.com/VforVitorio/F1-StratLab/commit/fff2f1d81c471df625a766a76499c5fa4268226d))
+* honor shared data root and refresh runtime docs ([5604adc](https://github.com/VforVitorio/F1-StratLab/commit/5604adc54ccb95962f518fde127c1b62e28a3a0c))
+* **security:** contain raw augmentation paths ([0e62f37](https://github.com/VforVitorio/F1-StratLab/commit/0e62f372e7e40a43f2436b338f4dc99f5a111e68))
+* **strategy:** use current compound for tire range ([d4e89c4](https://github.com/VforVitorio/F1-StratLab/commit/d4e89c4ac545e4a86185c3d1fdffc4413e030064))
+
+
+### Performance
+
+* **arcade:** batch static track geometry ([992b623](https://github.com/VforVitorio/F1-StratLab/commit/992b623a56cd6f54819132351f3dc9c977f5741f))
+* **pitwall:** remove unused reasoning highlighting ([44ec6ef](https://github.com/VforVitorio/F1-StratLab/commit/44ec6eff2f2e2f0d0c2d8a435109e3497c2e3896))
+
+
+### Documentation
+
+* **cli:** restore simulator help details ([b069510](https://github.com/VforVitorio/F1-StratLab/commit/b069510c125aea3809a4fee477fd2bc5758ef23c))
+* **cli:** retain simulator help detail ([04d02ab](https://github.com/VforVitorio/F1-StratLab/commit/04d02ab4b10d3137ed3276bf550bab6df040c415))
+* **rag:** update v2.7.0 promotion status ([3da23a9](https://github.com/VforVitorio/F1-StratLab/commit/3da23a9953703581b780087b15e65dbd6b94286d))
+* refresh install and runtime guidance ([a489933](https://github.com/VforVitorio/F1-StratLab/commit/a489933ddf609b2df1f33033d10d1bafd4c2c6c2))
+* sync roadmaps with v2.7.0 release ([f9eec2d](https://github.com/VforVitorio/F1-StratLab/commit/f9eec2d179e187c45ef6ece483335f723703be83))
+
 ## [2.7.0](https://github.com/VforVitorio/F1-StratLab/compare/v2.6.1...v2.7.0) (2026-09-29)
 
 
