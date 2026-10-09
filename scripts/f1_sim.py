@@ -210,10 +210,26 @@ def main() -> None:
     driver_data = _load_driver_data(_REPO_ROOT, args.gp_name, args.year, raw_dir)
     if driver_data is None:
         parser.error(f"cannot read raw lap data for {args.gp_name}; check --raw-dir")
-    if args.driver.upper() not in driver_data:
-        parser.error(f"driver {args.driver.upper()} is not present at {args.gp_name}")
+    driver_code = args.driver.strip().upper()
+    if driver_code not in driver_data:
+        parser.error(f"driver {driver_code} is not present at {args.gp_name}")
+    expected_team, valid_laps = driver_data[driver_code]
+    if args.team.strip().casefold() != expected_team.casefold():
+        parser.error(
+            f"team {args.team!r} does not match driver {driver_code} at {args.gp_name}; "
+            f"expected {expected_team}"
+        )
+    args.driver = driver_code
+    args.team = expected_team
 
-    valid_laps = driver_data[args.driver.upper()][1]
+    if args.rival:
+        rival_code = args.rival.strip().upper()
+        if rival_code == driver_code:
+            parser.error("the rival must be a different driver")
+        if rival_code not in driver_data:
+            parser.error(f"rival {rival_code} is not present at {args.gp_name}")
+        args.rival = rival_code
+
     max_lap = max(valid_laps)
     if lap_range is not None:
         if lap_range[1] > max_lap:

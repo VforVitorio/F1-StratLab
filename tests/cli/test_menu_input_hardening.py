@@ -3,6 +3,7 @@
 import subprocess
 import sys
 from pathlib import Path
+from types import ModuleType
 
 import pandas as pd
 import pytest
@@ -304,6 +305,43 @@ def test_f1_sim_rejects_driver_missing_from_raw_race(monkeypatch, capsys):
 
     assert exc.value.code == 2
     assert "driver ZZZ is not present at Miami_Gardens" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    "arguments,expected_error",
+    [
+        (["Silverstone", "BOR", "McLaren", "--laps", "3"], "does not match driver BOR"),
+        (
+            ["Silverstone", "BOR", "Kick Sauber", "--rival", "ZZZ"],
+            "rival ZZZ is not present at Silverstone",
+        ),
+        (
+            ["Silverstone", "BOR", "Kick Sauber", "--rival", "bor"],
+            "the rival must be a different driver",
+        ),
+    ],
+)
+def test_f1_sim_rejects_wrong_team_or_rival_before_runner(
+    monkeypatch, capsys, arguments, expected_error
+):
+    monkeypatch.setattr(
+        pickers,
+        "_load_driver_data",
+        lambda *_args: {
+            "BOR": ("Kick Sauber", frozenset({1, 2, 3})),
+            "VER": ("Red Bull Racing", frozenset({1, 2, 3})),
+        },
+    )
+    monkeypatch.setattr("sys.argv", ["f1-sim", *arguments])
+    runner = ModuleType("scripts.run_simulation_cli")
+    runner.main = lambda: pytest.fail("invalid arguments reached the simulation runner")
+    monkeypatch.setitem(sys.modules, "scripts.run_simulation_cli", runner)
+
+    with pytest.raises(SystemExit) as exc:
+        f1_sim.main()
+
+    assert exc.value.code == 2
+    assert expected_error in capsys.readouterr().err
 
 
 def test_f1_sim_reports_missing_raw_data_without_traceback(monkeypatch, capsys):
