@@ -83,7 +83,20 @@ def _default_data_root() -> Path:
     return get_data_root()
 
 
-def _raw_race_dir(data_root: Path, year: int, gp_name: str) -> Path:
+def _resolve_within(path: Path, directory: Path) -> Optional[Path]:
+    """Resolve a path only when links keep it inside the intended data directory."""
+    try:
+        resolved = path.resolve()
+        boundary = directory.resolve()
+        if resolved == boundary:
+            return None
+        resolved.relative_to(boundary)
+    except (OSError, RuntimeError, ValueError):
+        return None
+    return resolved
+
+
+def _raw_race_dir(data_root: Path, year: int, gp_name: str) -> Optional[Path]:
     """Raw per-race directory for a featured `GP_Name`.
 
     Three forms have to be tried, and the third is not optional: the raw dirs mostly
@@ -93,15 +106,32 @@ def _raw_race_dir(data_root: Path, year: int, gp_name: str) -> Path:
     its whole augmentation on the first pass, 3.8% of the season silently unfixed, which
     is exactly the silent-miss class this work is about.
     """
-    base = data_root / "raw" / str(year)
-    for candidate in (
-        base / gp_name,
-        base / gp_name.replace(" ", "_"),
-        base / _FRIENDLY_TO_FOLDER.get(gp_name, gp_name),
-    ):
-        if candidate.exists():
-            return candidate
-    return base / gp_name
+    root = data_root.resolve()
+    raw_root = _resolve_within(root / "raw", root)
+    if raw_root is None:
+        return None
+    base = _resolve_within(raw_root / str(year), raw_root)
+    if base is None:
+        return None
+
+    names = dict.fromkeys(
+        (
+            gp_name,
+            gp_name.replace(" ", "_"),
+            _FRIENDLY_TO_FOLDER.get(gp_name, gp_name),
+        )
+    )
+    for name in names:
+        candidate = _resolve_within(base / name, base)
+        if candidate is None or not candidate.is_dir():
+            continue
+        if any(
+            _resolve_within(candidate / filename, candidate) is None
+            for filename in ("laps.parquet", "weather.parquet")
+        ):
+            continue
+        return candidate
+    return None
 
 
 STINT_COLUMNS = ("Stint", "TyreLife", "Compound")
@@ -216,8 +246,9 @@ def augment_featured_laps(
     corrections: list[pd.DataFrame] = []
     missing: list[str] = []
     for gp_name in df["GP_Name"].dropna().unique():
-        path = _raw_race_dir(root, year, str(gp_name)) / "laps.parquet"
-        if not path.exists():
+        race_dir = _raw_race_dir(root, year, str(gp_name))
+        path = _resolve_within(race_dir / "laps.parquet", race_dir) if race_dir else None
+        if path is None or not path.is_file():
             missing.append(str(gp_name))
             continue
         raw = pd.read_parquet(path)
