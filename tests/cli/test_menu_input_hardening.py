@@ -316,6 +316,10 @@ def test_f1_sim_rejects_driver_missing_from_raw_race(monkeypatch, capsys):
             "rival ZZZ is not present at Silverstone",
         ),
         (
+            ["Silverstone", "BOR", "Kick Sauber", "--rival", ""],
+            "the rival code cannot be empty",
+        ),
+        (
             ["Silverstone", "BOR", "Kick Sauber", "--rival", "bor"],
             "the rival must be a different driver",
         ),

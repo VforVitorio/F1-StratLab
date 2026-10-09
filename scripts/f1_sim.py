@@ -222,8 +222,10 @@ def main() -> None:
     args.driver = driver_code
     args.team = expected_team
 
-    if args.rival:
+    if args.rival is not None:
         rival_code = args.rival.strip().upper()
+        if not rival_code:
+            parser.error("the rival code cannot be empty")
         if rival_code == driver_code:
             parser.error("the rival must be a different driver")
         if rival_code not in driver_data:
