@@ -89,7 +89,7 @@ Seven entry points after install (`pyproject.toml::[project.scripts]`):
 | `f1-webapp` | Post-race web app (wraps `docker compose up`: FastAPI backend + React SPA) |
 | `f1-eval` | Regenerates the model evaluation reports (`registry`, `calibration`, `hygiene`, `nlp`, `models`, `projection`, `alert-llm` subcommands) under `documents/eval_reports/` |
 | `f1-pitwall` | Opens both PITWALL windows for an Arcade process that is already running |
-| `f1-prefetch` | Downloads and rebuilds selected race-replay cache entries |
+| `f1-prefetch` | Prepares selected race rounds for replay; cached rounds are skipped unless `--force` is used |
 
 ## Code style
 
