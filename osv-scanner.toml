@@ -93,7 +93,7 @@ reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app
 [[IgnoredVulns]]
 id = "GHSA-fj7v-r99m-22gq"
 ignoreUntil = 2026-11-10T00:00:00Z
-reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
+reason = "Pillow 12.3.0 fixes the TGA RLE mode-1 encoder issue, but arcade==3.3.3 pins Pillow<11.4. The offline augmenters convert inputs to RGB and save only JPEG files; no current code saves mode-1 images as TGA RLE. Recheck before adding TGA RLE output or when stable Arcade supports Pillow 12.3.0."
 
 [[IgnoredVulns]]
 id = "GHSA-jjj6-mw9f-p565"
