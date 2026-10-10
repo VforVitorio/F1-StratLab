@@ -11,6 +11,18 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [2.7.3](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.2...v2.7.3) (2026-10-10)
+
+
+### Bug Fixes
+
+* **ci:** map dependency PRs to area labels ([08b21cb](https://github.com/VforVitorio/F1-StratLab/commit/08b21cb0fb814aa02c667df6facb613e1b72cb2f))
+
+
+### Documentation
+
+* update roadmap for current web app ([e02ef29](https://github.com/VforVitorio/F1-StratLab/commit/e02ef2957a288513b51a4e5f35975c1dc129ba09))
+
 ## [2.7.2](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.1...v2.7.2) (2026-10-10)
 
 
