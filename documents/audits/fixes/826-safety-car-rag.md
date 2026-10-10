@@ -51,9 +51,28 @@ The Qatar 2025 stop pattern is independently visible in the [official Formula 1 
 - The full non-data suite passes: 1,454 tests passed, 4 optional dependency
   checks skipped, and 29 warnings.
 
-The rich LLM path was not run because the configured OpenAI account returns HTTP
-429 for exhausted credits. The retriever, prompt, and provenance changes are
-therefore verified; the post-fix LLM decision rate remains unmeasured.
+## Bounded rich-path check (2026-10-10)
+
+The first five rich laps were rehearsed with `--no-real-radios`. That suppressed
+the Race Control Messages, kept the Safety Car override inactive, and left N30
+idle. Those laps are not evidence for this issue.
+
+A no-LLM preflight with the real radio corpus loaded 24 radios and 66 RCMs for
+Lusail. Lap 7 applied the RCM Safety Car override and set SC probability to
+1.00.
+
+The first rich lap with RCM data failed before retrieval with `KeyError: 'year'`.
+RaceStateManager stores the season in `session_meta`, while the rich conditional
+path also reads a top-level `year`. The inference engine now supplies that alias
+from the session metadata. `tests/engine/test_engine_agent_call_counts.py` now
+uses the RSM-shaped state and failed before this adapter was added.
+
+The final rich lap reached the RCM override, but N30 degraded because the local
+Qdrant store reported that it was already open by another client. The recorded
+lap had `rag=false` and no retrieved passages. It therefore does not verify the
+RAG answer or its effect on the recommendation. Seven rich lap attempts were
+used in total, and no additional paid calls were made. Keep #826 open until a
+bounded run retrieves the conditional rule and confirms the rich response.
 
 ## Scope boundary
 
