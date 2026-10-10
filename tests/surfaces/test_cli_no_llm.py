@@ -13,6 +13,7 @@ an unbounded first-run download.
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -32,7 +33,7 @@ _REQUIRE_DATA_TIER = os.environ.get("F1_REQUIRE_DATA_TIER") == "1"
     reason="Melbourne 2025 parquet + race dir required",
 )
 def test_cli_no_llm_smoke():
-    """`f1-sim Melbourne NOR McLaren --no-llm --laps 5-7` must exit 0 with no [ERROR]."""
+    """The real CLI must complete each requested Melbourne lap without an error row."""
     proc = subprocess.run(
         [
             sys.executable,
@@ -69,5 +70,12 @@ def test_cli_no_llm_smoke():
     )
     assert proc.stdout is not None, "the CLI produced no capturable stdout"
     combined = proc.stdout + proc.stderr
+    normalized = " ".join(combined.split())
     assert proc.returncode == 0, f"exit {proc.returncode}\n{combined[-2000:]}"
     assert "[ERROR]" not in combined, "no-LLM run logged [ERROR]"
+    assert "Laps 5–7 /" in normalized, "the CLI did not confirm the requested lap range"
+    assert "Run complete" in normalized, "the CLI exited before printing its final summary"
+    assert "All 3 lap(s) OK" in normalized, "the final summary did not count all three laps"
+    assert not re.search(r"\d+ lap\(s\) · \d+ error\(s\)", normalized), (
+        "the final summary reports one or more lap errors"
+    )
