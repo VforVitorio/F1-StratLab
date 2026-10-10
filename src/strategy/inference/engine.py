@@ -179,6 +179,28 @@ def run_lap(
     raise ValueError(f"unknown profile {profile!r}; expected one of {PROFILES}")
 
 
+def _rich_lap_state_with_year(
+    lap_state: dict[str, Any],
+    laps_df: pd.DataFrame,
+) -> dict[str, Any]:
+    """Expose the season at the top level for the rich conditional-agent adapter.
+
+    RaceStateManager's public schema keeps it under ``session_meta``. The rich
+    path's RAG call still consumes ``lap_state["year"]``, so adapt a copy at
+    this boundary instead of changing the shared lap-state contract.
+    """
+    if lap_state.get("year") is not None:
+        return lap_state
+
+    session_meta = lap_state.get("session_meta") or {}
+    year = session_meta.get("year") if isinstance(session_meta, dict) else None
+    if year is None:
+        year = season_of(laps_df)
+
+    lap_state_with_year = {**lap_state, "year": int(year)}
+    return lap_state_with_year
+
+
 def _run_rich(
     race_state: RaceState,
     laps_df: pd.DataFrame,
@@ -206,6 +228,7 @@ def _run_rich(
     timings: dict[str, float] = {}
     if lap_state is None:
         lap_state = _build_default_lap_state(race_state, laps_df)
+    lap_state = _rich_lap_state_with_year(lap_state, laps_df)
 
     with _StageTimer(timings, "always_on"):
         pace_out, tire_out, situation_out, radio_out = _run_always_on_agents_from_state(
