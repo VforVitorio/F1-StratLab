@@ -66,7 +66,7 @@ Three entry points drive the replay engine today:
   orchestrator, and the Rich inference panel within a single Live render loop. The
   production path that ships with the R1 release.
 - **FastAPI backend SSE**: `src/telemetry/backend/services/simulation/` wraps
-  `RaceReplayEngine` inside the `simulate_race` async generator consumed by the
+  `RaceReplayEngine` inside the synchronous `simulate_race` generator consumed by the
   `POST /api/v1/strategy/simulate` SSE endpoint. Feeds the React web app and the
   TestClient smoke tests.
 - **Arcade**: `src/arcade/strategy.py::SimConnector`, a background thread in the Arcade
