@@ -2,18 +2,10 @@
 Race replay engine: loads a race directory and emits lap_state dicts one
 per lap at a configurable interval.
 
-This is the offline demo path for the strategy system. Usage::
-
-    engine = RaceReplayEngine("data/raw/2025/Melbourne", "NOR", "McLaren")
-    for lap_state in engine.replay():
-        recommendation = run_strategy_orchestrator_from_state(lap_state, laps_df)
-        frame = engine.to_arcade_frame(lap_state, recommendation)
-        await ws.send_json(frame)   # or process locally
-
-Kafka replacement (v0.14+): swap ``engine.replay()`` with a
-``LiveKafkaConsumer.consume_lap()`` iterator. Every downstream component
-(agents → orchestrator → to_arcade_frame) stays unchanged because they
-all consume the same ``lap_state`` dict contract.
+This is the offline demo path for the strategy system and reads stored
+parquet snapshots only. OpenF1 WebSocket ingestion is planned as a separate
+source for v3.0.0; this class does not implement that adapter. Both sources
+are intended to emit the same ``lap_state`` contract.
 """
 
 from __future__ import annotations
