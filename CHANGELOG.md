@@ -11,6 +11,14 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [2.7.4](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.3...v2.7.4) (2026-10-10)
+
+
+### Documentation
+
+* correct audit closeout evidence ([d9b561a](https://github.com/VforVitorio/F1-StratLab/commit/d9b561aa92489e4818afa31d6dd251a52804fbc8))
+* reconcile install and runtime audit findings ([098aff4](https://github.com/VforVitorio/F1-StratLab/commit/098aff4be8bd43609fb1f0030289a5a9ddabdbad))
+
 ## [2.7.3](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.2...v2.7.3) (2026-10-10)
 
 
