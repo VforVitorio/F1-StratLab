@@ -8,9 +8,9 @@ Timeline: legacy closure May 2025; TFG active development Feb 2026 - Apr 2026; t
 
 ## Overview
 
-This project develops an intelligent multi-agent system for Formula 1 telemetry analysis and race strategy optimization. The system integrates FastF1/OpenF1 historical telemetry, eight ML predictive models with circuit clustering, a coordinated multi-agent architecture using LangGraph, RAG-based FIA regulation knowledge, and three delivery surfaces (CLI wheel, Streamlit panel, Arcade replay). Kafka + WebSocket streaming was descoped during v0.12.
+This project develops an intelligent multi-agent system for Formula 1 telemetry analysis and race strategy optimization. The system integrates FastF1/OpenF1 historical telemetry, eight ML predictive models with circuit clustering, a coordinated multi-agent architecture using LangGraph, RAG-based FIA regulation knowledge, and three delivery surfaces (CLI, Arcade replay, and a React web app backed by FastAPI). Kafka + WebSocket streaming was descoped during v0.12.
 
-**Key Technologies:** FastAPI, FastMCP, XGBoost, LightGBM, PyTorch, LangGraph, Qdrant, BGE-M3, Streamlit, Arcade
+**Key Technologies:** FastAPI, React, Vite, TypeScript, FastMCP, XGBoost, LightGBM, PyTorch, LangGraph, Qdrant, BGE-M3, Arcade
 
 ---
 
@@ -21,7 +21,7 @@ Development follows an incremental approach. v0.1-v0.5 covered project setup and
 **Three-release distribution model (v0.12+):** The project ships as three independent artifacts because each has different distribution mechanics:
 - **R1: CLI wheel** (`f1-strat`, `f1-sim`): pip-installable wheel on GitHub Releases, lazy HF data download
 - **R2: Arcade**: `uv tool install` console script (`f1-arcade`) for interactive race replay visualization, container deploy was evaluated and descoped (pyglet + Qt need a host OpenGL context and native display; see `INSTALL.md`)
-- **R3: Streamlit + Backend**: Docker Compose (FastAPI + Streamlit; Qdrant runs on-disk in-process, no separate container) or Streamlit Cloud
+- **R3: Web app**: Docker Compose runs the React SPA and FastAPI backend in two services; Qdrant runs on disk inside the backend.
 
 ---
 
@@ -32,7 +32,7 @@ Development follows an incremental approach. v0.1-v0.5 covered project setup and
 
 Legacy iteration of the project, delivered as the final assignment for the third-year courses (Speech & NLP, Advanced ML, Computer Vision, Intelligent Systems). Integrated F1_Telemetry_Manager submodule and established modular project structure. Set up Docker Compose orchestration and configured base YAML configs for models and logging. A `legacy_version` branch (merged 2025-09-07) preserves this phase; TFG development proper starts at v0.6.
 
-**Note:** Kafka + WebSocket streaming was descoped entirely during v0.12 (April 2026). REST endpoints over parquet replay are sufficient for both Streamlit and Arcade.
+**Note:** Kafka + WebSocket streaming was descoped entirely during v0.12 (April 2026). At the time, REST endpoints over parquet replay served the Streamlit and Arcade surfaces.
 
 **Deliverables:**
 
@@ -507,11 +507,11 @@ At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). Thi
 - [ ] ~~MVP: /ws/replay endpoint for offline race replay @ 10Hz~~
 - [ ] ~~Extension: /ws/live endpoint with Kafka consumer for real-time data~~
 
-**Note:** Kafka + WebSocket streaming descoped from core TFG scope (April 2026). All data is historical replay from parquet; REST endpoints are sufficient for both Streamlit and Arcade. Kafka adds infrastructure complexity (ZooKeeper, broker, topics) without a real-time data source to justify it. If implemented, it would be as a final architectural demo showing the system could scale to live telemetry (e.g. OpenF1 API during a live race). See `documents/dev_docs/tasks/planning/PLANIFICACION_DETALLADA_TFG_v2.md` Phase 7.4 for full rationale.
+**Note:** Kafka + WebSocket streaming was descoped from the core TFG scope in April 2026. At the time, the application used historical parquet replay, and REST endpoints served the Streamlit and Arcade surfaces. Kafka would have added infrastructure complexity without a real-time data source. A live OpenF1 adapter remains a possible future architecture demo. See `documents/dev_docs/tasks/planning/PLANIFICACION_DETALLADA_TFG_v2.md` Phase 7.4 for the rationale.
 
-**R3: Streamlit + Backend Release:**
+**R3: Web app + backend release:**
 
-- [X] Docker Compose: FastAPI backend + Streamlit frontend (`docker-compose.yml`, two services). Qdrant runs on-disk in-process (no container); LM Studio/OpenAI is reached from the host via `host.docker.internal`. Kafka sidecar descoped (see note above)
+- [X] Docker Compose: FastAPI backend + React web app (`docker-compose.yml`, two services). Qdrant runs on disk inside the backend; Kafka was descoped (see note above).
 - [ ] Alternative: Streamlit Cloud + hosted FastAPI (documented as viable, not deployed)
 - [X] Legacy cleanup: archive `base_agent.py`, `strategy_agent.py`, `rules/` and the standalone NLP modules. Done in step 13 above (#591)
 
@@ -519,7 +519,7 @@ At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). Thi
 
 - [ ] Strategy endpoints return valid agent outputs via REST
 - [ ] FastMCP tools callable from `/chat/` with structured rendering
-- [ ] Streamlit load time <3 seconds
+- Streamlit load-time target (<3 seconds): retired when the legacy frontend was removed in v2.0.0.
 - [ ] Arcade maintains >30 FPS during race replay
 
 ---
@@ -555,7 +555,7 @@ Code freeze of the TFG software. Consolidates the interfaces closed in v0.12.0 (
 
 - [X] R1: CLI wheel on GitHub Releases (`f1-strat`, `f1-sim`), tagged under v0.1.1 and bundled with v0.12.0 assets
 - [X] R2: Arcade replay distributed via `uv tool install git+<repo>` → `f1-arcade` console script (OpenGL/Qt container path dropped)
-- [X] R3: Streamlit + FastAPI backend operational (Docker Compose reference bundle; Streamlit Cloud path available)
+- [X] R3: React web app + FastAPI backend operational through Docker Compose (two services)
 - [X] Seven coordinated LangGraph agents (N25-N31) with RAG grounding and Monte Carlo ranking
 - [X] End-to-end qualitative demo: Bahrain 2025 GP replay with 28 radio messages and 76 RCMs
 
