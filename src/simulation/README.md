@@ -7,10 +7,9 @@
 Offline replay path for the multi-agent strategy system. Loads a race
 parquet from disk, walks it lap by lap, and emits a `lap_state` dict per
 lap that the agents and the orchestrator can consume directly. The same
-contract is the planned drop-in for a future Kafka live-ingestion path
-(v0.14+), every downstream component (agents → orchestrator → Arcade
-frame) reads `lap_state` dicts and does not care whether they came from a
-parquet or a live topic.
+contract is intended for a separate OpenF1 WebSocket source planned for
+v3.0.0. This package reads stored race data only; Kafka ingestion was
+descoped.
 
 The `single-driver data boundary` enforced here is the critical
 architectural constraint: agents see full telemetry for *our* driver but
@@ -67,29 +66,20 @@ Three entry points drive the replay engine today:
   orchestrator, and the Rich inference panel within a single Live render loop. The
   production path that ships with the R1 release.
 - **FastAPI backend SSE**: `src/telemetry/backend/services/simulation/` wraps
-  `RaceReplayEngine` inside the `simulate_race` async generator consumed by the
+  `RaceReplayEngine` inside the synchronous `simulate_race` generator consumed by the
   `POST /api/v1/strategy/simulate` SSE endpoint. Feeds the React web app and the
   TestClient smoke tests.
-- **Arcade**: `src/arcade/strategy.py::SimConnector` drives `RaceReplayEngine.replay()`
-  locally inside the arcade subprocess and feeds the arcade's local strategy pipeline
-  (`src/arcade/strategy_pipeline.py`). No FastAPI involved; the arcade broadcasts the
-  merged state over TCP 127.0.0.1:9998 to the PySide6 dashboard.
+- **Arcade**: `src/arcade/strategy.py::SimConnector`, a background thread in the Arcade
+  process, drives `RaceReplayEngine.replay()` and feeds the local strategy pipeline
+  (`src/arcade/strategy_pipeline.py`). Arcade launches one `src.pitwall` subprocess,
+  which hosts the Agents and Data React windows through pywebview and consumes the
+  merged state over TCP 127.0.0.1:9998. No FastAPI process is involved.
 
 ---
 
-## Future Kafka swap
+## Planned OpenF1 source
 
-Substituting the offline replay for live ingestion is a one-line change:
-
-```python
-# Offline (today)
-for lap_state in engine.replay():
-    ...
-
-# Live (v0.14+)
-for lap_state in LiveKafkaConsumer.consume_lap():
-    ...
-```
-
-Every consumer downstream of the iterator already speaks the `lap_state`
-dict contract, so the agents and the orchestrator do not need to change.
+OpenF1 WebSocket ingestion is planned for v3.0.0. This package does not
+implement the live adapter. The design keeps `lap_state` as the consumer
+contract; adapter details remain future work. See the
+[simulation architecture page](../../docs/pages/simulation.md).

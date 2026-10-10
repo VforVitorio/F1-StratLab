@@ -123,14 +123,7 @@ f1-strat
 
 For a scripted, no-menu run use `f1-sim <gp_name> <driver> <team> --year <yyyy>` instead.
 
-**Arcade**: same install drops `f1-arcade` on PATH:
-
-```bash
-uv tool install "git+https://github.com/VforVitorio/F1-StratLab.git"
-f1-arcade
-f1-prefetch --year 2025   # optional: fill the replay cache ahead of time (a race the arcade has never built takes minutes)
-f1-prefetch --year 2025 --force   # after a release that changes the replay format
-```
+**Arcade**: build the PITWALL UI bundle from a source checkout before installing `f1-arcade`; the bundle is not committed. Follow the Arcade steps in [INSTALL.md](INSTALL.md), then run `f1-arcade`.
 
 **Web app**: clone **with the telemetry submodule**, add an env file, then bring the stack up with Docker (FastAPI + the React SPA):
 
