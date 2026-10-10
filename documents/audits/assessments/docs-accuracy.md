@@ -81,11 +81,11 @@ Priorities: **P0** = broken commands users copy-paste, or wrong published resear
 | F-09 | **P1** | ARCHITECTURE.md carries 11 dead relative links to a pre-React docs tree: `docs/architecture.md`, `docs/arcade/strategy-pipeline.md`, `docs/arcade/dashboard.md`, `docs/agents-api-reference.md`, `docs/backend-api.md`, `docs/streamlit-frontend.md`, `docs/simulation/overview.md`, `docs/diagrams/{strategy_pipeline_flow,arcade_3window_architecture,tcp_broadcast_dataflow,data_pipeline}.drawio`, `docs/diagrams/` | `ARCHITECTURE.md:24,32-33,47-49,61-63,69-73` | Real paths: `docs/pages/{architecture,arcade-strategy-pipeline,arcade-dashboard,agents-api,backend-api,streamlit,simulation}.md`; diagrams at `documents/dev_docs/diagrams/*.drawio` (`docs/diagrams/` does not exist; `site/` is gitignored) |
 | F-10 | **P1** | Same class of dead link: INSTALL points at `docs/arcade-quick-start.md`, CONTRIBUTING at `docs/agents-api-reference.md` | `INSTALL.md:73`; `CONTRIBUTING.md:126` | `docs/pages/arcade-quick-start.md`; `docs/pages/agents-api.md` |
 | F-11 | **P1** | LLM provider defaults contradict each other and the code. INSTALL says "Arcade and CLI paths use OpenAI gpt-4.1-mini by default"; the CLI default is **lmstudio** and gpt-4.1-mini is the sub-agent model (orchestrator uses gpt-5.4-mini). multi-agent.md and getting-started say "default is LM Studio" with no Arcade exception; the Arcade default is **openai** | `INSTALL.md:13-15`; `docs/pages/multi-agent.md:184`; `docs/pages/getting-started.md:75` | `scripts/run_simulation_cli.py:2350-2353` (`--provider` default `lmstudio`); `src/arcade/main.py:57` (default `openai`); thesis p. 80 (gpt-5.4-mini orchestrator / gpt-4.1-mini sub-agents) |
-| F-12 | **P1** | INSTALL "Data bootstrap" says the HF first-run download "would be downloaded ... deferred past the first release" - it shipped in v0.9 and is invoked automatically by the CLI entry points | `INSTALL.md:118-122` | `src/f1_strat_manager/data_cache.py:348-360` (`ensure_setup`, "Invoked by the CLI entry points"); `ROADMAP.md:324` ("Lazy first-run data download ✅") |
+| F-12 | **P1** | **Resolved 2026-10-10.** INSTALL describes `ensure_setup()` as the first-run path and documents the separate host setup needed before Docker startup | `INSTALL.md:186-210` | `src/f1_strat_manager/data_cache.py:208-222,348-360`; `ROADMAP.md:324` |
 | F-13 | **P1** | Backend API docs list an `auth` router at `endpoints/auth.py`; the file no longer exists and main.py registers six routers, not seven | `docs/pages/backend-api.md:13` | `src/telemetry/backend/main.py:48-63`; `src/telemetry/backend/api/v1/endpoints/` (no auth.py, only a stale .pyc) |
-| F-14 | **P2** | Old repo slug `VforVitorio/F1_Strat_Manager` in live install/clone commands (works only via GitHub redirect); canonical is `VforVitorio/F1-StratLab` | `INSTALL.md:30,58,81`; `CONTRIBUTING.md:24`; `ROADMAP.md:325`; `docs/pages/setup.md:15` | `git remote -v` (origin = F1-StratLab); README badges/URLs already correct |
-| F-15 | **P2** | Python version stated as "3.10 or 3.11" / "3.10 / 3.11" while the pin (quoted in the same sentence) allows 3.12 | `INSTALL.md:10`; `README.md:82` | `pyproject.toml:11` (`requires-python = ">=3.10,<3.13"`); CI typechecks on 3.12; `CLAUDE.md` §2 says 3.10-3.12 |
-| F-16 | **P2** | "uv tool install drops two global binaries" - it installs four entry points | `INSTALL.md:34-41` | `pyproject.toml:113-117` (f1-strat, f1-sim, f1-arcade, f1-streamlit); `docs/pages/getting-started.md:21-28` already says four |
+| F-14 | **P2** | **Resolved 2026-10-10.** Live install and clone commands use the canonical `F1-StratLab` slug | `INSTALL.md:81,111,149`; `CONTRIBUTING.md:69`; `ROADMAP.md:325`; `docs/pages/setup.md:16` | Search of those files found no live command using `F1_Strat_Manager` |
+| F-15 | **P2** | **Resolved 2026-10-10.** Install and setup docs state Python 3.10-3.12 | `INSTALL.md:11`; `README.md:143`; `docs/pages/setup.md:5` | `pyproject.toml:11` (`requires-python = ">=3.10,<3.13"`) |
+| F-16 | **P2** | **Resolved 2026-10-10.** INSTALL no longer makes the old binary-count claim, and CONTRIBUTING now lists all seven project scripts | `INSTALL.md:78-91`; `CONTRIBUTING.md:82-92`; `docs/pages/getting-started.md:21-30` | Parsed `pyproject.toml:125-132` has seven scripts: `f1-strat`, `f1-sim`, `f1-arcade`, `f1-webapp`, `f1-eval`, `f1-pitwall`, and `f1-prefetch` |
 | F-17 | **P2** | Simulation docs still present Kafka as the committed live path ("will replace the iterator in v0.14+", "Future - Kafka integration (v0.14)"); Kafka was descoped in v0.12 and the planned live path is the OpenF1 WebSocket | `docs/pages/simulation.md:7,178-180` | `ROADMAP.md:35,509` (descope note), `ROADMAP.md:643` (v1.8.0 OpenF1 WebSocket) |
 | F-18 | **P2** | Docker claims drift: getting-started says compose "boots the FastAPI backend, the Streamlit frontend and the Qdrant store"; ROADMAP's R3 bullet still lists "Qdrant + Kafka + LM Studio sidecar". The compose file has exactly two services (backend, frontend); Qdrant is an embedded on-disk client, LM Studio is reached via host.docker.internal | `docs/pages/getting-started.md:54`; `ROADMAP.md:513` | `docker-compose.yml:1-55`; `docs/pages/setup.md:95-98` (correct two-service description) |
 | F-19 | **P2** | Docs roadmap page still describes the docs site as "React + Babel"; Babel was dropped in #136/PR #157 | `docs/pages/roadmap.md:436` | `docs/index.html:136` ("no JSX, no Babel, no build step"); memory `project_docs_audit_plan` |
@@ -96,14 +96,18 @@ Priorities: **P0** = broken commands users copy-paste, or wrong published resear
 | F-24 | **P3** | backend-api.md strategy table omits three live GET endpoints: `/radio-available-gps`, `/radio-laps`, `/radio-transcript` (completeness, nothing wrong listed) | `docs/pages/backend-api.md:110-131` | `src/telemetry/backend/api/v1/endpoints/strategy.py:745,763,823` |
 | F-25 | **P3** | architecture.md (docs) names the 14-field orchestrator output `StrategyState`; the Pydantic contract is `StrategyRecommendation` (`StrategyState` is the Arcade snapshot dataclass). Naming conflation, risk of confusion in the paper era | `docs/pages/architecture.md:58-60` | `src/agents/strategy_orchestrator.py` (StrategyRecommendation, 14 fields); `src/arcade/` (StrategyState.snapshot_dict) |
 | F-26 | **P3** | README project-layout line says `docs/` contains "draw.io diagrams"; the .drawio sources live under `documents/dev_docs/diagrams/` | `README.md:94` | Glob: no `docs/**/*.drawio`; `documents/dev_docs/diagrams/*.drawio` |
+| F-27 | **P1** | README Arcade install recipe omits the PITWALL UI build; a fresh tool install without `src/pitwall/ui/dist` exits before opening the app | `README.md:126-132` | `INSTALL.md:107-123`; `src/pitwall/__main__.py:38` |
+| F-28 | **P2** | ROADMAP calls the Pirelli compound map a future enhancement although inference already reads the per-GP/year mapping and has a fallback | `ROADMAP.md:112-114` | `src/agents/tire_agent.py:892-920` |
+| F-29 | **P2** | **Resolved 2026-10-10.** The Streamlit Cloud option is retired; its load-time target is removed from the current UI target list | `ROADMAP.md:515,522`; `INSTALL.md:180-182` | Streamlit was removed with the v2.0.0 frontend migration |
+| F-30 | **P2** | The v0.13 test plan still names Streamlit and does not describe the current CI marker exclusions or nightly workflow | `ROADMAP.md:539-543` | `.github/workflows/ci.yml:101-107`; `.github/workflows/nightly-tests.yml:41-52` |
 
 **Verified accurate (spot-checked, no action):** project `CLAUDE.md` factual claims (Python 3.10-3.12, command examples, CI jobs, agent/orchestrator description); CI description in CONTRIBUTING (jobs, `--frozen`, mypy scope, cache strategy); `docker-compose.yml` vs INSTALL's Streamlit section (ports 8000/8501, mounts); `f1-arcade` example flags vs `src/arcade/main.py` argparse; `~/.f1-strat/` first-run location (`data_cache.py:168`); `uv tool uninstall f1-strat-manager` (pyproject name); backend router map minus auth; strategy endpoint list vs `strategy.py` decorators; agents-api entry-point table (`run_*_from_state` adapters exist across `src/agents/`); nav.js page registry vs `docs/pages/*.md`; README badges and repo URLs; docs home/getting-started/multi-agent/architecture count framing; MkDocs references fully purged from live docs pages (#156).
 
 ---
 
-## 4. Phased fix plan (each phase = one future GitHub sub-issue)
+## 4. Phased fix plan (original audit plan)
 
-All phases are docs-only PRs (`docs:` commits). No code changes anywhere. Suggested order = listed order; phases 1-3 are the ones that matter before any paper/award submission links back to the repo.
+The original plan was documentation-only. This closeout also corrects a Python module docstring without changing runtime behavior. Suggested order is listed below; phases 1-3 are the ones that matter before any paper or award submission links back to the repo.
 
 ### Phase 1 — Fix broken copy-paste commands (P0) — **S**
 - `README.md:53` and `INSTALL.md:132`: swap to `f1-sim Melbourne VER "Red Bull Racing" --year 2025`.
@@ -143,9 +147,20 @@ All phases are docs-only PRs (`docs:` commits). No code changes anywhere. Sugges
 ### Phase 7 — Freshness sweep on install/runtime claims (P2) — **M**
 - Repo slug normalization to `F1-StratLab` (F-14: INSTALL x3, CONTRIBUTING, ROADMAP, setup.md).
 - Python "3.10-3.12" wording (F-15: INSTALL, README).
-- "four console entry points" in INSTALL (F-16).
+- Script-count wording in INSTALL and CONTRIBUTING (F-16).
 - INSTALL data-bootstrap section rewritten around `ensure_setup()` automatic first-run + `~/.f1-strat/` (F-12); setup.md gains the automatic path as the primary flow (F-20).
 - Kafka -> OpenF1 WebSocket in `docs/pages/simulation.md` (F-17); Docker service list corrected in getting-started + ROADMAP R3 (F-18); "React + Babel" -> "React (no build step)" in docs roadmap (F-19).
+
+### Phase 7 closeout (2026-10-10)
+
+The findings register above preserves the original audit snapshot. Current checks on the promoted documentation and implementation give these dispositions:
+
+- F-12, F-14, F-15, F-16, F-18, F-19, and F-20 are corrected. `CONTRIBUTING.md` and `docs/pages/getting-started.md` now list seven scripts, matching `pyproject.toml`.
+- F-17 and the package-level consumer description now match the code. `SimConnector` runs in the Arcade process, which launches a PITWALL subprocess for the Agents and Data React windows. OpenF1 v3.0.0 remains planned; no Kafka consumer is claimed.
+- F-27: the README Arcade instructions now direct users to build the ignored PITWALL bundle before installing the tool.
+- F-28: the roadmap now describes the per-year, per-GP tire-compound data and the inference fallback.
+- F-29: the old Streamlit Cloud option is marked retired, and the load-time target is removed from the current UI list.
+- F-30: the v0.13 test note now describes current push and nightly workflows. Push CI excludes `data`, `slow`, and `network`; nightly pytest can still skip data-dependent tests when assets are absent. The 7-8 GB CLI data-tier smoke remains manual.
 
 ### Phase 8 — Two-lineage metrics note + naming polish (P2/P3) — **S**
 - `docs/pages/thesis.md`: add a short "published vs regenerated" note (published: mean 47.8 ms / P95 59.4 ms, IEEE report; regenerated on current hardware: 42.1 / 44.2 ms from `data/eval/`), so the page cannot be read as contradicting the paper (F-21).
