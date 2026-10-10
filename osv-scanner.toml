@@ -7,126 +7,108 @@
 # `osv-scanner scan --lockfile uv.lock` after any dependency change and prune
 # entries whose fix has become reachable.
 
-# --- Pillow x6 (blocked by arcade's hard pin) ---------------------------------
-# The fix is Pillow 12.2.0, but arcade==3.3.3 pins `pillow>=11.3.0,<11.4`, so the
-# fix is unreachable without a pre-release arcade (4.0.0.dev5). All six require
-# DECODING A MALICIOUSLY-CRAFTED IMAGE (PSD/PDF/GZIP/heap/OOB). F1 StratLab only
-# decodes its own bundled tyre-icon assets and FastF1-sourced telemetry plots —
-# never untrusted user-supplied images — so the vulnerable path is not reachable.
-# Revisit when arcade permits pillow>=12.2.0.
+# --- Pillow image parsing (stable Arcade pin blocks Pillow 12.x) -----------------
+# The active application has no image-upload route. Two archived offline YOLO
+# augmentation modules call Image.open on files in a local dataset directory.
+# Those scripts are not part of the application path and must not be run on
+# untrusted image archives. Arcade 3.3.3 pins pillow>=11.3.0,<11.4, while the
+# fixed Pillow releases require 12.x. Revisit before using those scripts on
+# external data and when a stable Arcade release supports Pillow 12.x.
 [[IgnoredVulns]]
 id = "GHSA-wjx4-4jcj-g98j"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.2.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-5xmw-vc9v-4wf2"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.2.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-cfh3-3jmp-rvhc"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.1.1 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-pwv6-vv43-88gr"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.2.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-r73j-pqj5-w3x7"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.2.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-whj4-6x5x-4v2j"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.2.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 # --- Pillow x5 (later disclosures, same arcade block) -------------------------
-# Five more Pillow CVEs disclosed after the six above; their fix landed in
-# Pillow 12.3.0, still unreachable under arcade==3.3.3's `pillow>=11.3.0,<11.4`
-# pin. Like the six above they all require DECODING A MALICIOUSLY-CRAFTED IMAGE,
-# which F1 StratLab never does (only its own bundled tyre-icon assets and
-# FastF1-sourced telemetry plots). Revisit when arcade permits pillow>=12.3.0.
+# These advisories have fixes in Pillow 12.x and share the same Arcade version
+# constraint and local-only image-processing boundary described above.
 [[IgnoredVulns]]
 id = "PYSEC-2026-2253"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "PYSEC-2026-2254"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "PYSEC-2026-2255"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "PYSEC-2026-2256"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "PYSEC-2026-2257"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
-# --- Pillow x9 (further disclosures, same arcade block) -----------------------
-# Nine more Pillow CVEs disclosed after the eleven above (surfaced on the main
-# scheduled scan and the v2 promotion). Same story: the fix is in Pillow 12.3.0,
-# still unreachable under arcade==3.3.3's `pillow>=11.3.0,<11.4` pin, and every
-# one requires DECODING A MALICIOUSLY-CRAFTED IMAGE, which F1 StratLab never does
-# (only its own bundled tyre-icon assets and FastF1-sourced telemetry plots).
-# Both the PYSEC id and its GHSA alias are listed so the match holds regardless
-# of which id OSV reports. Revisit when arcade permits pillow>=12.3.0.
-[[IgnoredVulns]]
-id = "PYSEC-2026-3451"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
-
+# --- Pillow later disclosures, same Arcade block ------------------------------
+# Active Pillow advisory IDs from later disclosures. The latest scan reported
+# PYSEC-2026-3451 and PYSEC-2026-3453 as unused, so they are omitted here.
 [[IgnoredVulns]]
 id = "GHSA-6r8x-57c9-28j4"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
-
-[[IgnoredVulns]]
-id = "PYSEC-2026-3453"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-9hw9-ch79-4vh6"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-62p4-gmf7-7g93"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-fj7v-r99m-22gq"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-jjj6-mw9f-p565"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-vjc4-5qp5-m44j"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-xj96-63gp-2gmr"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "Pillow: fix in 12.3.0 blocked by arcade==3.3.3 (<11.4 pin); no untrusted-image decode path in this app. Revisit when arcade allows pillow>=12."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 # --- torch (no upstream fix) --------------------------------------------------
 # GHSA-rrmf-rvhw-rf47 has no fixed version. torch is CUDA-pinned (cu128) for the
@@ -144,18 +126,16 @@ reason = "torch: no upstream fix; CUDA-pinned; requires attacker-controlled in-p
 # codebase imported python-jose at all. Dropping it took ecdsa, rsa and pyasn1
 # out of the lock with it, so there is no longer a vulnerability to ignore.
 
-# --- setuptools (fix blocked by torch's setuptools<82 pin) --------------------
-# The fix is setuptools 83.0.0, but torch 2.11/2.12 (the CUDA-pinned wheel this
-# project ships, cu128) require `setuptools<82`, so 83.0.0 is unreachable without
-# moving torch (only torch>=2.13 lifts the cap, and the cu128 index would force a
-# win32 downgrade to 2.10.0+cu128). The flaw itself only affects MANIFEST.in
-# exclude/prune normalization when BUILDING a source distribution on macOS
-# APFS/HFS+ (an NFD name bypassing an NFC exclusion) — a code path this runtime
-# ML app never exercises. Revisit when the CUDA-pinned torch allows setuptools>=83.
+# --- setuptools (fixed release blocked by CUDA-pinned Torch) -------------------
+# Torch 2.11.0+cu128 requires setuptools<82, so the fixed 83.0.0 cannot resolve
+# without changing the CUDA-pinned Torch stack. The advisory affects sdist builds
+# on macOS APFS/HFS+ using MANIFEST.in exclude/prune rules. This repository has no
+# MANIFEST.in, and release builds run on Ubuntu. Revisit if packaging inputs or
+# supported build platforms change, or when a compatible Torch release lifts the cap.
 [[IgnoredVulns]]
 id = "PYSEC-2026-3447"
-ignoreUntil = 2026-10-12T00:00:00Z
-reason = "setuptools: fix in 83.0.0 blocked by torch 2.11/2.12 (setuptools<82 pin); flaw only affects MANIFEST.in exclude normalization when building an sdist on macOS APFS/HFS+, never exercised here. Revisit when CUDA-pinned torch allows setuptools>=83."
+ignoreUntil = 2026-11-10T00:00:00Z
+reason = "Setuptools 83.0.0 is blocked by torch 2.11.0+cu128 requiring setuptools<82. The flaw affects macOS APFS/HFS+ sdist builds using MANIFEST.in exclude/prune rules; this repository has no MANIFEST.in and release builds run on Ubuntu. Recheck if build inputs/platforms change or compatible Torch lifts the cap."
 
 # --- nltk: waiver removed, the dependency is gone -----------------------------
 # GHSA-8mgp-746c-j5xp (CVE-2026-81726) had nothing to bump to: last_affected
