@@ -20,6 +20,13 @@
       - any-glob-to-any-file:
           - "pyproject.toml"
           - "uv.lock"
+          - "src/pitwall/ui/package.json"
+          - "src/pitwall/ui/package-lock.json"
+
+"area: data":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/telemetry"
 
 "area: ci-cd":
   - changed-files:

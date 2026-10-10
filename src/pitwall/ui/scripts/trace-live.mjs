@@ -4,12 +4,14 @@ import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 
-const [baseUrl, runId, lapText = "7", gp = "Lusail", driver = "NOR"] = process.argv.slice(2);
+const [baseUrl, runId, lapText = "7", gp = "Lusail", driver = "NOR", yearText = "2025"] =
+  process.argv.slice(2);
 if (!baseUrl || !runId || !/^[\w.-]+$/.test(runId)) {
-  throw new Error("Usage: node scripts/trace-live.mjs <base-url> <run-id> [lap] [gp] [driver]");
+  throw new Error("Usage: node scripts/trace-live.mjs <base-url> <run-id> [lap] [gp] [driver] [year]");
 }
 
 const targetLap = Number(lapText);
+const targetYear = Number(yearText);
 const ACTION_LABELS = {
   STAY_OUT: "STAY OUT",
   PIT_NOW: "PIT NOW",
@@ -82,9 +84,10 @@ function targetTick(tick) {
   const arcade = tick?.arcade ?? {};
   const decision = tick?.strategy?.latest ?? {};
   return (
-    arcade.year === 2025 &&
+    arcade.year === targetYear &&
     String(arcade.location ?? "").toLowerCase() === gp.toLowerCase() &&
     String(arcade.driver_main ?? "").toUpperCase() === driver.toUpperCase() &&
+    arcade.lap === targetLap &&
     decision.lap_number === targetLap
   );
 }
@@ -97,6 +100,11 @@ async function visibleTrace() {
   const rendered = await renderedValues();
   const expectedDataLap = `L ${tick?.arcade?.lap}/${tick?.arcade?.total_laps}`;
   const code = driver.toUpperCase();
+  const expectedSession = `${gp} · ${targetYear}`;
+  const plan = agents?.plan_timeline;
+  const expectedPlanLap = `Lap ${targetLap} of ${tick?.arcade?.total_laps}`;
+  const sourceAction = String(tick?.strategy?.latest?.action ?? "").toUpperCase();
+  const expectedAction = ACTION_LABELS[sourceAction] ?? sourceAction;
   const bulkDriver = bulk?.drivers?.[code];
   const liveDriver = live?.drivers?.[code];
   const lastLap = bulkDriver?.laps?.at(-1);
@@ -137,8 +145,18 @@ async function visibleTrace() {
     Number.isInteger(agents?.seq) &&
     agents.seq > 0 &&
     tick?.strategy?.start?.no_llm === true &&
-    agents?.seq === tick.seq &&
+    typeof tick?.strategy?.latest?.action === "string" &&
     typeof agents?.orchestrator?.action === "string" &&
+    sourceAction.length > 0 &&
+    agents.orchestrator.action === expectedAction &&
+    agents?.header?.session === expectedSession &&
+    agents?.header?.driver === code &&
+    agents?.header?.lap === expectedDataLap &&
+    agents?.header?.connection === "Connected" &&
+    plan?.current_lap === targetLap &&
+    plan?.total_laps === tick?.arcade?.total_laps &&
+    typeof plan?.caption === "string" &&
+    plan.caption.trim().length > 0 &&
     bulk?.available === true &&
     Boolean(bulk?.drivers?.[driver.toUpperCase()]) &&
     Boolean(live?.drivers?.[driver.toUpperCase()]) &&
@@ -149,11 +167,13 @@ async function visibleTrace() {
     bulkDriver?.laps_revealed === tick.arcade.drivers?.[code]?.laps_completed &&
     liveDriver?.lap === tick.arcade.lap &&
     dataRowMatches &&
-    rendered.agents.session === `${gp} · 2025` &&
-    rendered.agents.driver === driver &&
+    rendered.agents.session === expectedSession &&
+    rendered.agents.driver === code &&
     rendered.agents.lap === expectedDataLap &&
     rendered.agents.connection === "Connected" &&
     rendered.agents.action === agents.orchestrator.action &&
+    rendered.agents.plan.length > 0 &&
+    rendered.agents.planTimeline.startsWith(expectedPlanLap) &&
     errors.length === 0
   )
     ? { tick, agents, bulk, live, rendered }
@@ -193,6 +213,8 @@ async function renderedValues() {
         document.querySelector(".header-bar .chip:last-child")?.innerText.replace(/\s+/g, " ").trim() ?? "",
       connection: document.querySelector(".header-conn")?.innerText.trim() ?? "",
       action: document.querySelector(".orch-action")?.innerText.trim() ?? "",
+      plan: document.querySelector(".plan-caption")?.innerText.trim() ?? "",
+      planTimeline: document.querySelector(".plan-track")?.getAttribute("aria-label") ?? "",
       text: document.body.innerText,
     })),
   ]);
@@ -238,7 +260,7 @@ try {
   rendered = coherent.rendered;
 
   const expectedDataLap = `L ${browserTick.arcade.lap}/${browserTick.arcade.total_laps}`;
-  const expectedSession = `${gp} · 2025`;
+  const expectedSession = `${gp} · ${targetYear}`;
   const sourceAction = String(browserTick.strategy.latest.action ?? "").toUpperCase();
   const expectedAction = ACTION_LABELS[sourceAction] ?? sourceAction;
   if (rendered.data.lap !== expectedDataLap) {
@@ -247,7 +269,10 @@ try {
   if (rendered.data.connection !== "Connected") {
     throw new Error(`DATA DOM connection is ${JSON.stringify(rendered.data.connection)}`);
   }
-  if (rendered.agents.session !== expectedSession || rendered.agents.driver !== driver) {
+  if (
+    rendered.agents.session !== expectedSession ||
+    rendered.agents.driver !== driver.toUpperCase()
+  ) {
     throw new Error(`AGENTS DOM identity mismatch: ${JSON.stringify(rendered.agents)}`);
   }
   if (rendered.agents.connection !== "Connected") {
@@ -302,11 +327,10 @@ const report = {
   run_id: runId,
   status,
   failure: failure || null,
-  target: { gp, driver, decision_lap: targetLap },
+  target: { year: targetYear, gp, driver: driver.toUpperCase(), decision_lap: targetLap },
   sequences: {
     data_tick: browserTick?.seq ?? null,
     agents_view: browserAgents?.seq ?? null,
-    same_seq: browserTick?.seq === browserAgents?.seq,
   },
   host_values: {
     tick: browserTick,

@@ -2,8 +2,9 @@
 
 Run this while ``f1-arcade --strategy --no-llm`` is replaying the selected race.
 The browser port must match ``F1_PITWALL_BROWSER_PORT`` in the Arcade process.
-The report contains one complete wire message and the corresponding host/API
-values; browser-rendered evidence is captured separately with the Playwright page probe.
+The report contains a complete wire message and independently sampled host/API
+values for the same decision. Sequence gaps and resets are valid between samples.
+Browser-rendered evidence is captured separately with the Playwright page probe.
 """
 
 from __future__ import annotations
@@ -43,14 +44,16 @@ def _matches_target(payload: dict[str, Any], year: int, gp: str, driver: str, la
         arcade.get("year") == year
         and str(arcade.get("location", "")).casefold() == gp.casefold()
         and str(arcade.get("driver_main", "")).upper() == driver.upper()
+        and arcade.get("lap") == lap
         and latest.get("lap_number") == lap
     )
 
 
-def _read_target_tick(args: argparse.Namespace) -> tuple[bytes, dict[str, Any]]:
-    """Read newline-delimited JSON until the real stream carries the target lap."""
+def _read_target_tick(args: argparse.Namespace) -> tuple[bytes, dict[str, Any], list[int]]:
+    """Read two increasing sequence values for one target lap from the live stream."""
     deadline = time.monotonic() + args.timeout
     buffer = b""
+    target_sequences: list[int] = []
     with socket.create_connection((args.stream_host, args.stream_port), timeout=10) as sock:
         sock.settimeout(1)
         while time.monotonic() < deadline:
@@ -67,10 +70,25 @@ def _read_target_tick(args: argparse.Namespace) -> tuple[bytes, dict[str, Any]]:
                     continue
                 payload = json.loads(line)
                 if _matches_target(payload, args.year, args.gp, args.driver, args.lap):
-                    return line, payload
+                    sequence = payload.get("seq")
+                    if isinstance(sequence, int) and not isinstance(sequence, bool):
+                        if not target_sequences or sequence > target_sequences[-1]:
+                            target_sequences.append(sequence)
+                            if len(target_sequences) == 2:
+                                return line, payload, target_sequences
     raise TimeoutError(
         f"No {args.gp} {args.year} {args.driver} decision for lap {args.lap} "
         f"arrived within {args.timeout}s"
+    )
+
+
+def _sequence_advanced(sequences: list[int]) -> bool:
+    """Require two increasing producer sequences while the target decision is live."""
+    valid = all(isinstance(value, int) and not isinstance(value, bool) for value in sequences)
+    return (
+        valid
+        and len(sequences) >= 2
+        and all(current > previous for previous, current in zip(sequences, sequences[1:]))
     )
 
 
@@ -88,13 +106,12 @@ def _get_json(base_url: str, route: str) -> Any:
 
 
 def _capture_routes(args: argparse.Namespace, wire: dict[str, Any]) -> dict[str, Any]:
+    """Sample each latest-value route independently, including after a producer restart."""
     base_url = f"http://{args.browser_host}:{args.browser_port}"
     tick = _get_json(base_url, "/api/tick?since=-1")
-    seq = tick.get("seq") if isinstance(tick, dict) else None
-    agents_since = seq - 1 if isinstance(seq, int) else -1
     agents = _get_json(
         base_url,
-        f"/api/agents?since={agents_since}&connection=Connected",
+        "/api/agents?since=-1&connection=Connected",
     )
     bulk = _get_json(base_url, "/api/bulk?since=-1")
     live = _get_json(base_url, "/api/live?since=-1")
@@ -135,12 +152,6 @@ def _capture_routes(args: argparse.Namespace, wire: dict[str, Any]) -> dict[str,
             "agents_action": agents_orchestrator.get("action"),
             "source_action": wire_latest.get("action"),
             "same_wire_host_action": wire_latest.get("action") == tick_latest.get("action"),
-            "same_wire_host_seq": isinstance(tick, dict) and tick.get("seq") == wire.get("seq"),
-            "same_host_agents_seq": (
-                isinstance(tick, dict)
-                and isinstance(agents, dict)
-                and tick.get("seq") == agents.get("seq")
-            ),
         },
     }
 
@@ -148,7 +159,7 @@ def _capture_routes(args: argparse.Namespace, wire: dict[str, Any]) -> dict[str,
 def _evaluate_trace_checks(
     args: argparse.Namespace, wire: dict[str, Any], routes: dict[str, Any]
 ) -> dict[str, bool]:
-    """Require the captured channels to describe one real tick and its display values."""
+    """Match target decision and display values without ordering independent sequences."""
     tick = routes.get("tick") if isinstance(routes.get("tick"), dict) else {}
     agents = routes.get("agents") if isinstance(routes.get("agents"), dict) else {}
     bulk = routes.get("data_bulk") if isinstance(routes.get("data_bulk"), dict) else {}
@@ -170,6 +181,7 @@ def _evaluate_trace_checks(
     agent_orchestrator = (
         agents.get("orchestrator") if isinstance(agents.get("orchestrator"), dict) else {}
     )
+    plan = agents.get("plan_timeline") if isinstance(agents.get("plan_timeline"), dict) else {}
     bulk_race = bulk.get("race") if isinstance(bulk.get("race"), dict) else {}
     bulk_driver = bulk.get("driver") if isinstance(bulk.get("driver"), dict) else {}
     bulk_laps = bulk_driver.get("laps") if isinstance(bulk_driver.get("laps"), list) else []
@@ -177,6 +189,8 @@ def _evaluate_trace_checks(
     live_driver = live.get("driver") if isinstance(live.get("driver"), dict) else {}
     wire_car = (wire_arcade.get("drivers") or {}).get(args.driver.upper())
     wire_laps = wire_car.get("laps_completed") if isinstance(wire_car, dict) else None
+    host_car = (tick_arcade.get("drivers") or {}).get(args.driver.upper())
+    host_laps = host_car.get("laps_completed") if isinstance(host_car, dict) else None
     source_action = wire_latest.get("action")
     action_label = ACTION_LABELS.get(str(source_action).upper(), source_action)
     wire_seq = wire.get("seq")
@@ -191,8 +205,8 @@ def _evaluate_trace_checks(
 
     return {
         "wire_seq_valid": valid_sequence(wire_seq),
-        "host_seq_matches_wire": valid_sequence(host_seq) and host_seq == wire_seq,
-        "agents_seq_matches_wire": valid_sequence(agents_seq) and agents_seq == wire_seq,
+        "host_seq_valid": valid_sequence(host_seq),
+        "agents_seq_valid": valid_sequence(agents_seq),
         "wire_identity_matches_target": (
             wire_arcade.get("year") == args.year
             and is_location(wire_arcade.get("location"))
@@ -203,8 +217,12 @@ def _evaluate_trace_checks(
             and tick_arcade.get("location") == wire_arcade.get("location")
             and tick_arcade.get("driver_main") == wire_arcade.get("driver_main")
         ),
+        "host_data_progress_matches_wire": isinstance(wire_laps, int) and host_laps == wire_laps,
         "wire_and_host_decision_match": (
-            wire_latest.get("lap_number") == args.lap
+            wire_arcade.get("lap") == args.lap
+            and tick_arcade.get("lap") == args.lap
+            and tick_arcade.get("total_laps") == wire_arcade.get("total_laps")
+            and wire_latest.get("lap_number") == args.lap
             and tick_latest.get("lap_number") == wire_latest.get("lap_number")
             and tick_latest.get("action") == source_action
         ),
@@ -219,7 +237,16 @@ def _evaluate_trace_checks(
             and agent_header.get("connection") == "Connected"
         ),
         "agents_action_matches_wire": (
-            isinstance(source_action, str) and agent_orchestrator.get("action") == action_label
+            isinstance(source_action, str)
+            and bool(source_action)
+            and agent_orchestrator.get("action") == action_label
+        ),
+        "agents_plan_matches_wire": (
+            plan.get("current_lap") == args.lap
+            and plan.get("total_laps") == wire_arcade.get("total_laps")
+            and isinstance(plan.get("caption"), str)
+            and bool(plan.get("caption", "").strip())
+            and plan.get("caption") == agent_orchestrator.get("plan")
         ),
         "data_bulk_matches_wire": (
             bulk.get("available") is True
@@ -295,7 +322,7 @@ def main() -> int:
         },
     }
     try:
-        wire_line, wire = _read_target_tick(args)
+        wire_line, wire, wire_sequences = _read_target_tick(args)
         report["wire"] = {
             "sha256": hashlib.sha256(wire_line + b"\n").hexdigest(),
             "bytes": len(wire_line) + 1,
@@ -304,6 +331,8 @@ def main() -> int:
         report["host_routes"] = _capture_routes(args, wire)
         routes = report["host_routes"]
         checks = _evaluate_trace_checks(args, wire, routes)
+        checks["wire_sequence_advanced"] = _sequence_advanced(wire_sequences)
+        report["wire_sequence_samples"] = wire_sequences
         report["checks"] = checks
         failures = [name for name, passed in checks.items() if not passed]
         if failures:

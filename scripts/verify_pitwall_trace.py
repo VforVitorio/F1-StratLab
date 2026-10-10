@@ -25,6 +25,10 @@ def _mapping(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _valid_sequence(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value > 0
+
+
 def _same_race(value: Any, year: int, gp: str) -> bool:
     race = _mapping(value)
     return race.get("year") == year and str(race.get("location", "")).casefold() == gp.casefold()
@@ -80,7 +84,7 @@ def evaluate_trace_reports(
     browser_report: dict[str, Any],
     screenshot_sizes: dict[str, int],
 ) -> dict[str, bool]:
-    """Fail closed unless wire, host, DATA, AGENTS, and saved screenshots agree."""
+    """Match sampled decision and display values; each poller may skip or reset sequences."""
     run_id = api_report.get("run_id")
     config = _mapping(api_report.get("config"))
     year, gp, driver, target_lap = (
@@ -104,6 +108,7 @@ def evaluate_trace_reports(
     host_agents = _mapping(routes.get("agents"))
     host_header = _mapping(host_agents.get("header"))
     host_orchestrator = _mapping(host_agents.get("orchestrator"))
+    host_plan = _mapping(host_agents.get("plan_timeline"))
     data_summary = _mapping(routes.get("data_bulk"))
     data_driver = _mapping(data_summary.get("driver"))
     data_live_summary = _mapping(routes.get("data_live_lap"))
@@ -130,6 +135,7 @@ def evaluate_trace_reports(
     browser_agents = _mapping(browser_values.get("agents"))
     browser_header = _mapping(browser_agents.get("header"))
     browser_orchestrator = _mapping(browser_agents.get("orchestrator"))
+    browser_plan = _mapping(browser_agents.get("plan_timeline"))
     rendered = _mapping(browser_report.get("rendered"))
     rendered_data = _mapping(rendered.get("data"))
     rendered_agents = _mapping(rendered.get("agents"))
@@ -137,6 +143,7 @@ def evaluate_trace_reports(
     row_fields = _row_from_text(str(rendered_data.get("text", "")), driver)
 
     wire_seq = wire.get("seq")
+    wire_sequences = api_report.get("wire_sequence_samples")
     action = wire_latest.get("action")
     expected_action = ACTION_LABELS.get(str(action).upper(), action)
     laps_completed = _mapping(wire_arcade.get("drivers")).get(driver, {})
@@ -212,23 +219,46 @@ def evaluate_trace_reports(
             and hashlib.sha256(canonical_wire).hexdigest() == wire_report.get("sha256")
             and len(canonical_wire) == wire_report.get("bytes")
         ),
-        "all_five_sequences_match": (
-            isinstance(wire_seq, int)
-            and not isinstance(wire_seq, bool)
-            and wire_seq > 0
-            and host_tick.get("seq") == wire_seq
-            and host_agents.get("seq") == wire_seq
-            and browser_tick.get("seq") == wire_seq
-            and browser_agents.get("seq") == wire_seq
-            and browser_sequences.get("same_seq") is True
+        "sampled_sequences_valid": all(
+            _valid_sequence(sequence)
+            for sequence in (
+                wire_seq,
+                host_tick.get("seq"),
+                host_agents.get("seq"),
+                browser_tick.get("seq"),
+                browser_agents.get("seq"),
+            )
+        ),
+        "wire_sequence_advanced": (
+            isinstance(wire_sequences, list)
+            and len(wire_sequences) >= 2
+            and all(_valid_sequence(sequence) for sequence in wire_sequences)
+            and wire_sequences[-1] == wire_seq
+            and all(
+                current > previous for previous, current in zip(wire_sequences, wire_sequences[1:])
+            )
+        ),
+        "reported_window_sequences_match_samples": (
+            _valid_sequence(browser_sequences.get("data_tick"))
+            and _valid_sequence(browser_sequences.get("agents_view"))
+            and browser_sequences.get("data_tick") == browser_tick.get("seq")
+            and browser_sequences.get("agents_view") == browser_agents.get("seq")
+        ),
+        "sampled_data_progress_matches_wire": (
+            isinstance(laps_completed, int)
+            and _mapping(_mapping(host_arcade.get("drivers")).get(driver)).get("laps_completed")
+            == laps_completed
+            and _mapping(_mapping(browser_arcade.get("drivers")).get(driver)).get("laps_completed")
+            == laps_completed
         ),
         "browser_target_matches_api_trace": (
-            browser_target.get("gp") == gp
+            browser_target.get("year") == year
+            and browser_target.get("gp") == gp
             and browser_target.get("driver") == driver
             and browser_target.get("decision_lap") == target_lap
         ),
         "scenario_and_no_llm_match": (
-            year == 2025
+            wire_arcade.get("year") == year
             and str(gp).casefold() == str(wire_arcade.get("location", "")).casefold()
             and host_arcade.get("year") == wire_arcade.get("year")
             and wire_arcade.get("driver_main") == driver
@@ -236,10 +266,16 @@ def evaluate_trace_reports(
             and browser_arcade.get("location") == wire_arcade.get("location")
             and browser_arcade.get("driver_main") == driver
             and wire_arcade.get("lap") == target_lap
+            and host_arcade.get("lap") == target_lap
+            and browser_arcade.get("lap") == target_lap
+            and host_arcade.get("total_laps") == wire_arcade.get("total_laps")
+            and browser_arcade.get("total_laps") == wire_arcade.get("total_laps")
             and wire_latest.get("lap_number") == target_lap
             and host_latest.get("lap_number") == target_lap
             and browser_latest.get("lap_number") == target_lap
             and browser_latest.get("action") == action
+            and isinstance(action, str)
+            and bool(action)
             and wire_start.get("no_llm") is True
             and host_start.get("no_llm") is True
             and browser_start.get("no_llm") is True
@@ -268,6 +304,20 @@ def evaluate_trace_reports(
             and connection.get("label") == "Connected"
             and rendered_agents.get("connection") == "Connected"
         ),
+        "agents_plan_matches_target_lap": (
+            host_plan.get("current_lap") == target_lap
+            and browser_plan.get("current_lap") == target_lap
+            and host_plan.get("total_laps") == wire_arcade.get("total_laps")
+            and browser_plan.get("total_laps") == wire_arcade.get("total_laps")
+            and isinstance(host_plan.get("caption"), str)
+            and bool(host_plan.get("caption", "").strip())
+            and browser_plan.get("caption") == host_plan.get("caption")
+            and host_plan.get("caption") == host_orchestrator.get("plan")
+            and rendered_agents.get("plan")
+            and str(rendered_agents.get("planTimeline", "")).startswith(
+                f"Lap {target_lap} of {wire_arcade.get('total_laps')}"
+            )
+        ),
         "data_routes_match_wire_and_display": (
             data_summary.get("available") is True
             and data_summary.get("error") is None
@@ -281,6 +331,7 @@ def evaluate_trace_reports(
             and browser_driver.get("stops") == data_driver.get("stops")
             and browser_last_lap.get("lap_time") == expected_last_time
             and browser_last_lap.get("lap") == last_lap.get("lap")
+            and last_lap.get("lap") == laps_completed
             and browser_last_lap.get("compound") == last_lap.get("compound")
             and browser_last_lap.get("tyre_life") == last_lap.get("tyre_life")
             and all(
@@ -349,7 +400,18 @@ def main() -> int:
     report = {
         "run_id": args.run_id,
         "status": "pass" if not failures else "fail",
-        "sequence": _mapping(_mapping(api_report.get("wire")).get("payload")).get("seq"),
+        "sequences": {
+            "wire": _mapping(_mapping(api_report.get("wire")).get("payload")).get("seq"),
+            "wire_producer_samples": api_report.get("wire_sequence_samples"),
+            "host_data_tick": _mapping(_mapping(api_report.get("host_routes")).get("tick")).get(
+                "seq"
+            ),
+            "host_agents_view": _mapping(_mapping(api_report.get("host_routes")).get("agents")).get(
+                "seq"
+            ),
+            "browser_data_tick": _mapping(browser_report.get("sequences")).get("data_tick"),
+            "browser_agents_view": _mapping(browser_report.get("sequences")).get("agents_view"),
+        },
         "decision": {
             "lap_number": _mapping(
                 _mapping(_mapping(api_report.get("wire")).get("payload")).get("strategy")

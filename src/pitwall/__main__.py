@@ -13,7 +13,9 @@ Run it directly to develop against a running arcade:
 from __future__ import annotations
 
 import logging
+import os
 import sys
+from threading import Event
 
 from src.pitwall.config import (
     STREAM_HOST,
@@ -37,8 +39,6 @@ def main() -> int:
         print(build_hint(), file=sys.stderr)
         return 1
 
-    import webview  # imported here so the module stays importable without a webview
-
     host = PitwallHost(ArcadeStreamClient(STREAM_HOST, STREAM_PORT), window_count=len(WINDOWS))
     host.start()
 
@@ -57,6 +57,22 @@ def main() -> int:
             "The loopback server did not start; the windows fall back to file paths, "
             "which pywebview serves through its own static server (see #995)."
         )
+
+    if os.environ.get("F1_PITWALL_BROWSER_ONLY") == "1":
+        if not url:
+            browser.stop()
+            host.shutdown()
+            return 1
+        try:
+            Event().wait()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            browser.stop()
+            host.shutdown()
+        return 0
+
+    import webview  # imported here so the module stays importable without a webview
 
     # The geometry in `WINDOWS` is what the layout wants; the screen decides
     # what it gets. A window taller than the desktop is not scrolled, it is
