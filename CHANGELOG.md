@@ -11,6 +11,14 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [2.7.2](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.1...v2.7.2) (2026-10-10)
+
+
+### Bug Fixes
+
+* **deps:** remediate OSV findings ([f61aa18](https://github.com/VforVitorio/F1-StratLab/commit/f61aa186e885b937f03328e1e666dd39d2e0a8e2))
+* **security:** clarify Pillow TGA waiver ([b9da0df](https://github.com/VforVitorio/F1-StratLab/commit/b9da0dfec7f9553ebbdb5324e4bd5e9a0cd803ad))
+
 ## [2.7.1](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.0...v2.7.1) (2026-10-09)
 
 
