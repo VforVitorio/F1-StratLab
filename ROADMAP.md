@@ -110,7 +110,7 @@ Developed and trained the first two ML models: lap time prediction (XGBoost) and
 - [X] Target R² >0.85: **missed**. Final tire-deg MAE 0.7078s on 2025 holdout (best compound C2 0.5501s)
 
 **Important Note - Tire Compound Mapping:**
-Current data (FastF1/OpenF1) only provides relative compound names (SOFT/MEDIUM/HARD) per race. For accurate degradation predictions, actual Pirelli compounds (C1-C5) are critical since the same "MEDIUM" can be C2 (harder) or C4 (softer) depending on circuit. Future enhancement: manual mapping from [Pirelli press releases](https://press.pirelli.com) into `data/tire_compounds_by_race.json`.
+The runtime reads per-year, per-GP assignments from `data/tire_compounds_by_race.json` and maps SOFT/MEDIUM/HARD to the Pirelli C1-C6 IDs before selecting the tire model. If the file or a GP assignment is missing, inference uses its C3/C2/C1 fallback. The mapping is data-backed, not a future manual enhancement.
 
 **Success Metrics:**
 
@@ -512,7 +512,7 @@ At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). Thi
 **R3: Web app + backend release:**
 
 - [X] Docker Compose: FastAPI backend + React web app (`docker-compose.yml`, two services). Qdrant runs on disk inside the backend; Kafka was descoped (see note above).
-- [ ] Alternative: Streamlit Cloud + hosted FastAPI (documented as viable, not deployed)
+- [X] Streamlit Cloud + hosted FastAPI alternative retired with the Streamlit frontend in v2.0.0; it is not a supported deployment path.
 - [X] Legacy cleanup: archive `base_agent.py`, `strategy_agent.py`, `rules/` and the standalone NLP modules. Done in step 13 above (#591)
 
 **Success Metrics:**
@@ -536,11 +536,12 @@ At session start, the user selects `TEAM` and `DRIVER` (e.g. McLaren / NOR). Thi
 - [X] FastAPI + FastMCP integration path validated via `TestClient` and manual chat interactions
 - [X] Historical replay of the Bahrain 2025 GP used as the primary qualitative demo
 
+**Current test workflows:** Push CI excludes `data`, `slow`, and `network` markers. The scheduled nightly workflow runs pytest without those exclusions, but data-dependent tests may skip when assets are absent. The 7-8 GB real CLI data-tier smoke is an on-demand workflow input.
+
 **Work originally planned here that remains open for future iterations (outside the TFG scope):**
 
 - [ ] Systematic per-cluster validation (Monaco, Monza, Spielberg, Singapore 2025) with documented tolerances
 - [ ] Load and memory profiling targets (>100 req/s, p95 <50ms, <4 GB peak)
-- [ ] CI pipeline running the full test suite across agents + arcade + streamlit
 
 ---
 
@@ -628,7 +629,6 @@ Code freeze of the TFG software. Consolidates the interfaces closed in v0.12.0 (
 
 **User Interfaces:**
 
-- Streamlit load time: <3 seconds
 - Arcade frame rate: >30 FPS
 
 ---

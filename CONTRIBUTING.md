@@ -79,7 +79,7 @@ Run once to pre-populate the data cache on first launch:
 python -c "from src.f1_strat_manager.data_cache import ensure_setup; ensure_setup(show_progress=True)"
 ```
 
-Five entry points after install (`pyproject.toml::[project.scripts]`):
+Seven entry points after install (`pyproject.toml::[project.scripts]`):
 
 | Command | What it runs |
 |---|---|
@@ -88,6 +88,8 @@ Five entry points after install (`pyproject.toml::[project.scripts]`):
 | `f1-arcade --strategy` | 2D replay + the two PITWALL windows (AGENTS and DATA) |
 | `f1-webapp` | Post-race web app (wraps `docker compose up`: FastAPI backend + React SPA) |
 | `f1-eval` | Regenerates the model evaluation reports (`registry`, `calibration`, `hygiene`, `nlp`, `models`, `projection`, `alert-llm` subcommands) under `documents/eval_reports/` |
+| `f1-pitwall` | Opens both PITWALL windows for an Arcade process that is already running |
+| `f1-prefetch` | Prepares selected race rounds for replay; cached rounds are skipped unless `--force` is used |
 
 ## Code style
 
