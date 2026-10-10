@@ -1,0 +1,3 @@
+# Notebook outputs dominate GitHub Linguist's byte-based language totals.
+# Keep the notebooks tracked and visible in diffs, but exclude them from the language bar.
+*.ipynb -linguist-detectable
