@@ -72,15 +72,15 @@ const VIEW = {
   },
   orchestrator: {
     action: "PIT NOW",
-    action_colour: "#ef4444",
+    action_colour: "#a78bfa",
     confidence: 0.71,
     confidence_fill: 71.0,
     confidence_text: "71%",
     confidence_colour: "#10b981",
     pace: "Pace: PUSH",
-    pace_colour: "#ef4444",
+    pace_colour: "#d1d5db",
     risk: "Risk: AGGRESSIVE",
-    risk_colour: "#ef4444",
+    risk_colour: "#d1d5db",
     plan: "Pit: L24 · Next: HARD · UCUT: RUS",
     why: "the undercut window against RUS opens now.",
     why_detail: {
@@ -471,22 +471,23 @@ check(
 
 // --- The action is text, not a button ---------------------------------------
 //
-// It was a 200x70 filled pill: 14,000 px2 of the action's colour, which for
-// PIT_NOW is the same DANGER red that means a fault everywhere else on the
-// window. Asserted as PAINTED AREA rather than as "the pill class is gone",
-// because the class going away is not the point and a differently-named fill
-// would pass that.
+// It was a 200x70 filled pill: 14,000 px2 of the action's colour. PIT_NOW also
+// used DANGER red and read like a fault. Assert the new action colour and the
+// painted area, not merely that a particular pill class is gone.
 const banner = await page.evaluate(() => {
   const action = document.querySelector(".orch-action");
   const card = document.querySelector(".orchestrator");
   const style = getComputedStyle(action);
   const cardStyle = getComputedStyle(card);
   const rect = action.getBoundingClientRect();
+  const postureColours = [...document.querySelectorAll(".orch-facts > span:not(.orch-facts-sep)")]
+    .map((el) => getComputedStyle(el).color);
   const bandText = [...document.querySelectorAll(".agents-band *")]
     .map((el) => parseFloat(getComputedStyle(el).fontSize))
     .filter((size) => Number.isFinite(size));
   return {
     colour: style.color,
+    postureColours,
     fill: style.backgroundColor,
     rule: cardStyle.borderLeftColor,
     ruleWidth: parseFloat(cardStyle.borderLeftWidth),
@@ -509,6 +510,14 @@ check(
 check(
   banner.colour === banner.rule,
   `the rule and the word carry one identity colour (${banner.colour} vs ${banner.rule})`,
+);
+check(
+  banner.colour === "rgb(167, 139, 250)",
+  `PIT NOW uses the action accent, not alarm red (${banner.colour})`,
+);
+check(
+  banner.postureColours.length === 2 && banner.postureColours.every((colour) => colour === "rgb(209, 213, 219)"),
+  `posture facts use secondary text colour (${banner.postureColours})`,
 );
 // The identity survives at the rule's area instead of the pill's. 4 px times
 // the card height against the 14,000 px2 the badge painted.
