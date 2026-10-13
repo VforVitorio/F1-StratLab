@@ -201,7 +201,6 @@ class RaceSituationConfig:
             fires on 13.59% of laps.
     """
 
-
     high_overtake: float = 0.65
     medium_overtake: float = 0.40
     high_sc: float = 0.0864
@@ -284,7 +283,13 @@ class RaceSituationConfig:
         """
         if year is None or pd.isna(year):
             return 0.10
-        year_rates = self.circuit_sc_rate_map_by_year.get(int(year), {})
+        try:
+            year_key = int(year)
+        except (TypeError, ValueError, OverflowError):
+            return 0.10
+        if year_key != year:
+            return 0.10
+        year_rates = self.circuit_sc_rate_map_by_year.get(year_key, {})
         key = resolve_gp_key(year_rates, event_name)
         return year_rates.get(key, 0.10)
 
@@ -1561,7 +1566,9 @@ class RaceSituationAgent:
                 max_retries=LLM_MAX_RETRIES,
             )
         else:
-            llm = ChatOpenAI(model=model_name, temperature=0, timeout=120, max_retries=LLM_MAX_RETRIES)
+            llm = ChatOpenAI(
+                model=model_name, temperature=0, timeout=120, max_retries=LLM_MAX_RETRIES
+            )
 
         self._react_agent = create_agent(
             model=llm,

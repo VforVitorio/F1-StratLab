@@ -35,6 +35,7 @@ import pytest
 
 RACE_DIR = Path("data/raw/2025/Lusail")
 ROOT = Path(__file__).parent.parent.parent
+SC_RATE_RACE_DIR = ROOT / "data" / "raw" / "2024" / "Marina_Bay"
 
 _HAS_OVERTAKE_MODEL = (
     ROOT / "data" / "models" / "overtake_probability" / "model_config.json"
@@ -43,6 +44,7 @@ _HAS_SC_MODEL = (
     ROOT / "data" / "models" / "safety_car_probability" / "feature_list_v1.json"
 ).exists()
 _HAS_RACE_DATA = (RACE_DIR / "laps.parquet").exists()
+_HAS_SC_RATE_RACE_DATA = (SC_RATE_RACE_DIR / "laps.parquet").exists()
 _SC_RATE_DATA = ROOT / "data" / "processed" / "sc_labeled" / "sc_labeled_2023_2025.parquet"
 _HAS_SC_RATE_DATA = (
     _SC_RATE_DATA.exists()
@@ -58,7 +60,13 @@ _HAS_SC_RATE_DATA = (
 pytestmark = [
     pytest.mark.data,
     pytest.mark.skipif(
-        not (_HAS_OVERTAKE_MODEL and _HAS_SC_MODEL and _HAS_RACE_DATA and _HAS_SC_RATE_DATA),
+        not (
+            _HAS_OVERTAKE_MODEL
+            and _HAS_SC_MODEL
+            and _HAS_RACE_DATA
+            and _HAS_SC_RATE_DATA
+            and _HAS_SC_RATE_RACE_DATA
+        ),
         reason="needs data/models/{overtake_probability,safety_car_probability}/ "
         "the raw Lusail parquet, and processed SC-rate data (data/ comes from HF, not git)",
     ),
@@ -95,6 +103,8 @@ def test_sc_rate_lookup_resolves_aliases_and_preserves_missing_data_fallback():
 
     assert CFG.sc_rate_for("Qatar Grand Prix", 2025) == pytest.approx(0.10)
     assert CFG.sc_rate_for("Singapore Grand Prix", None) == pytest.approx(0.10)
+    assert CFG.sc_rate_for("Singapore Grand Prix", "") == pytest.approx(0.10)
+    assert CFG.sc_rate_for("Singapore Grand Prix", 2024.9) == pytest.approx(0.10)
 
 
 def test_both_serving_paths_use_the_race_year_without_calling_an_llm(monkeypatch):
@@ -102,14 +112,14 @@ def test_both_serving_paths_use_the_race_year_without_calling_an_llm(monkeypatch
     from src.agents.race_situation_agent import RaceSituationAgent, _ensure_timedelta_laps
     from src.simulation.replay_engine import RaceReplayEngine
 
-    laps = _ensure_timedelta_laps(pd.read_parquet(RACE_DIR / "laps.parquet"))
+    laps = _ensure_timedelta_laps(pd.read_parquet(SC_RATE_RACE_DIR / "laps.parquet"))
     agent = RaceSituationAgent()
     monkeypatch.setattr(agent, "_run_core", lambda *_args: None)
 
     session = SimpleNamespace(
         laps=SimpleNamespace(pick_accurate=lambda: laps),
         weather_data=pd.DataFrame(),
-        total_laps=57,
+        total_laps=62,
     )
     agent.run(
         {
@@ -117,24 +127,21 @@ def test_both_serving_paths_use_the_race_year_without_calling_an_llm(monkeypatch
             "driver": "NOR",
             "rival_ahead": None,
             "lap_number": 50,
-            "gp_name": "Lusail",
-            "event_name": "Qatar Grand Prix",
-            "year": 2025,
+            "gp_name": "Marina Bay",
+            "event_name": "Singapore Grand Prix",
+            "year": 2024,
         }
     )
-    assert agent.session_meta["circuit_sc_rate"] == pytest.approx(0.10)
+    assert agent.session_meta["circuit_sc_rate"] == pytest.approx(0.0)
     result = _tool(agent, "predict_sc_tool").invoke({"lap_number": 50})
-    assert "circuit_sc_rate=0.10" in result
+    assert "circuit_sc_rate=0.00" in result
 
-    replay = RaceReplayEngine(RACE_DIR, driver_code="NOR", team="McLaren")
+    replay = RaceReplayEngine(SC_RATE_RACE_DIR, driver_code="NOR", team="McLaren")
     lap_state = next(islice(replay.replay(), 49, 50))
-    lap_state["session_meta"].update(
-        driver="NOR", gp_name="Lusail", event_name="Lusail", year=2025, total_laps=57
-    )
     agent.run_from_state(lap_state, laps)
-    assert agent.session_meta["circuit_sc_rate"] == pytest.approx(0.10)
+    assert agent.session_meta["circuit_sc_rate"] == pytest.approx(0.0)
     result = _tool(agent, "predict_sc_tool").invoke({"lap_number": 50})
-    assert "circuit_sc_rate=0.10" in result
+    assert "circuit_sc_rate=0.00" in result
 
 
 def test_bands_are_never_the_raw_classifier_operating_points():
