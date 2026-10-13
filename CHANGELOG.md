@@ -11,6 +11,23 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [2.7.5](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.4...v2.7.5) (2026-10-13)
+
+
+### Bug Fixes
+
+* **backend:** reject per-request provider switching ([a8bfec9](https://github.com/VforVitorio/F1-StratLab/commit/a8bfec9fb561f947166aec1f03484e77bfb53f00))
+* **pitwall:** use action colour for PIT NOW badge ([d16e769](https://github.com/VforVitorio/F1-StratLab/commit/d16e76998533a7179854962afe33b779404db905))
+* **rag:** serialize OpenAI retrieval tool calls ([2e7cd15](https://github.com/VforVitorio/F1-StratLab/commit/2e7cd154d792a0a75529c743d30bd5d870ad5264))
+* **sc:** reject invalid circuit rate years ([f7ac55d](https://github.com/VforVitorio/F1-StratLab/commit/f7ac55d84199ef4d98ca0fa929f8fa80110c6825))
+* **sc:** scope circuit rate lookup by race year ([9bd68cd](https://github.com/VforVitorio/F1-StratLab/commit/9bd68cd2dfa67d6039ba4e6f8a136341033873ed))
+* **strategy:** supply rich RAG season from session metadata ([cd07615](https://github.com/VforVitorio/F1-StratLab/commit/cd0761514cda8f861d50629db8413973d11bd7bb))
+
+
+### Documentation
+
+* **rag:** record verified Safety Car retrieval ([26b5fe7](https://github.com/VforVitorio/F1-StratLab/commit/26b5fe71553b21e962104ca05b20b2c5c03b0daf))
+
 ## [2.7.4](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.3...v2.7.4) (2026-10-10)
 
 
