@@ -23,6 +23,29 @@ def _tool_result(call_id: str, content, name: str = "query_rag_tool") -> ToolMes
 
 
 @pytest.mark.unit
+def test_openai_rag_agent_disables_parallel_qdrant_tool_calls(monkeypatch) -> None:
+    from langchain import agents
+
+    from src.agents import rag_agent
+
+    captured = {}
+    sentinel = object()
+
+    def capture_agent(*, model, tools, system_prompt):
+        captured.update(model=model, tools=tools, system_prompt=system_prompt)
+        return sentinel
+
+    monkeypatch.setenv("F1_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-only-no-network")
+    monkeypatch.setattr(agents, "create_agent", capture_agent)
+    monkeypatch.setattr(rag_agent, "_rag_agent", None)
+
+    assert rag_agent.get_rag_react_agent() is sentinel
+    assert captured["tools"] == [rag_agent.query_rag_tool]
+    assert captured["model"].model_kwargs.get("parallel_tool_calls") is False
+
+
+@pytest.mark.unit
 def test_rag_context_uses_the_actual_tool_result_not_a_second_query(monkeypatch) -> None:
     from src.agents import rag_agent
 

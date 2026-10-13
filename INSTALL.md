@@ -47,7 +47,7 @@ fails when a value here stops matching the code.
 | `f1-strat` | repo root in a source checkout (`scripts/f1_cli.py`) | the wizard's LLM-mode pick, which highlights "No LLM" | the wizard, always forwarded to `f1-sim` as `--provider` or `--no-llm` (`scripts/cli/runner.py`) | as `f1-sim` |
 | `f1-arcade`, `f1-pitwall` | `f1-arcade` uses python-dotenv's search from `src/arcade/main.py`; `f1-pitwall` inherits its process environment | `openai` for Arcade (`src/arcade/app.py`); PITWALL has no separate provider | `F1_LLM_PROVIDER`, or `--no-llm` for Arcade | as `f1-sim` for Arcade; none for PITWALL |
 | `f1-webapp` chat tab | repo root, then `src/telemetry/.env` as an override (`src/telemetry/backend/core/config.py`) | `lmstudio` (`src/telemetry/backend/services/chatbot/llm_service.py`) | `F1_LLM_PROVIDER`, then a bare `LLM_PROVIDER` | `gpt-5.4-mini`, or `OPENAI_CHAT_MODEL` |
-| backend `POST /simulate` | as the chat tab | `F1_LLM_PROVIDER`, then `lmstudio` | optional request `provider`; process-wide, not isolated per request (#1192, #1261) | as `f1-sim` |
+| backend `POST /simulate` | repo root, then `src/telemetry/.env` as an override | `F1_LLM_PROVIDER`, then `lmstudio` | `F1_LLM_PROVIDER`; optional request `provider` must match, otherwise HTTP 409 | as `f1-sim` |
 
 Four things the table cannot fit:
 
@@ -55,11 +55,11 @@ Four things the table cannot fit:
 `override=True` except the second one in
 `src/telemetry/backend/core/config.py`, so an exported `F1_LLM_PROVIDER`
 beats the repo-root `.env` everywhere. For the backend only, a
-`src/telemetry/.env` beats both. An omitted `provider` in `POST /simulate`
-leaves the resolved value alone. An explicit value changes the process
-environment, and N31 caches one client per process. Concurrent requests with
-different explicit providers are not isolated; use one provider for the backend
-process until #1261 is addressed.
+`src/telemetry/.env` beats both. `POST /simulate` uses the provider configured
+for the backend process. Its optional `provider` field must match that value;
+a different value returns HTTP 409 before the SSE stream starts. To change the
+provider, update `F1_LLM_PROVIDER` and restart the backend. Requests never change
+the process environment or cached strategy clients.
 
 **A global tool install does not read the checkout's `.env`.** In a source
 checkout, `f1-sim` and `f1-strat` load the repo-root file. `f1-arcade` uses

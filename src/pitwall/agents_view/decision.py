@@ -35,26 +35,11 @@ from src.arcade.strategy import classify_action
 from src.arcade.track_status import _NOT_RACING
 from src.pitwall.reasoning_lines import clean
 
-# The two posture chips are FACTS, not warnings, so they wear text colour and
-# the word carries the meaning (#964).
-#
-# A severity scale would put `Risk: AGGRESSIVE` - a setting
-# somebody chose - in the same DANGER red as `⚠ Guardrail: minimum stint
-# length not met`, a constraint violation, one line below it. Counting the
-# window's reds found six different meanings on one colour: imperative action,
-# posture, low confidence, radio alert, dead link, rule violation. The whole
-# point of an alarm colour is pre-attentive triage, and six semantics deny the
-# reader exactly that at the moment they need it.
-#
-# DANGER's owners now, enumerated rather than described, since this comment
-# once named two while the file carries four: the ALERT glyph, a dead
-# connection, the imperative ACTION text (`classify_action` paints PIT_NOW and
-# ERROR red, and the band renders that as the word plus its 4 px rule), and the
-# confidence floor below 0.33. A HIGH threat headline is a fifth site one module
-# over. What the posture chips must NOT be is a sixth. The dicts stay rather than
-# collapsing into a constant, because a posture the producer has never sent
-# must still fall to TEXT_TERTIARY - which is what says "not reported" as
-# against "reported and unremarkable".
+# Posture is a reported setting, not a warning. Its word carries the meaning,
+# so keep known states in text colour and unknown states in tertiary text.
+# PIT_NOW is also a strategy instruction rather than a fault; `classify_action`
+# uses ACCENT for its word and rule. The confidence traffic-light and status-
+# alert colours keep their existing bands.
 _PACE_COLOURS: dict[str, tuple[int, int, int]] = {
     "PUSH": TEXT_SECONDARY,
     "NEUTRAL": TEXT_SECONDARY,

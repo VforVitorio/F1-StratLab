@@ -273,8 +273,8 @@ def _exercise(engine, orchestrator, no_llm, profile, retain, duplicate=False, mi
             )
             state = {
                 "lap_number": lap,
-                "year": 2025,
                 "driver": {"driver": "NOR", "position": 2, "compound": "MEDIUM", "tyre_life": lap},
+                # Mirror RaceStateManager: year belongs under session_meta.
                 "session_meta": {
                     "driver": "NOR",
                     "gp_name": "Lusail",

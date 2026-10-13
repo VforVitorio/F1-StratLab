@@ -843,7 +843,7 @@ class SimConnector(threading.Thread):
 
 _ACTION_STYLE: dict[str, tuple[tuple[int, int, int], str]] = {
     "STAY_OUT": (SUCCESS, "STAY OUT"),
-    "PIT_NOW": (DANGER, "PIT NOW"),
+    "PIT_NOW": (ACCENT, "PIT NOW"),
     "UNDERCUT": (WARNING, "UNDERCUT"),
     "OVERCUT": (WARNING, "OVERCUT"),
     "ALERT": (INFO, "ALERT"),
@@ -858,10 +858,9 @@ def classify_action(action: str) -> tuple[tuple[int, int, int], str]:
     ``action`` was typed as a plain ``str`` but neither this function's original
     body nor its theme.py twin (deduplicated 2026-08-01) actually guarded a
     ``None`` -- both called ``.upper()`` on it unguarded as the dict lookup key
-    and crashed identically. No live caller currently passes ``None``
-    (`orchestrator_card.py` sanitises with `str(... or "--")` first), but the
-    signature invites it, so this is fixed now rather than left as a latent
-    crash the next caller could trigger.
+    and crashed identically. Current callers normalize missing actions before
+    lookup, but the signature invites ``None``, so the function keeps its own
+    guard rather than leaving a latent crash for a future caller.
     """
     action = (action or "--").upper()
     return _ACTION_STYLE.get(action, (ACCENT, action))
