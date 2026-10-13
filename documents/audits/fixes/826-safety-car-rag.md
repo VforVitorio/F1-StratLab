@@ -71,8 +71,31 @@ The final rich lap reached the RCM override, but N30 degraded because the local
 Qdrant store reported that it was already open by another client. The recorded
 lap had `rag=false` and no retrieved passages. It therefore does not verify the
 RAG answer or its effect on the recommendation. Seven rich lap attempts were
-used in total, and no additional paid calls were made. Keep #826 open until a
-bounded run retrieves the conditional rule and confirms the rich response.
+used in that run, and no additional paid calls were made.
+
+## Rich-path recheck (2026-10-13)
+
+The OpenAI-backed N30 client now disables parallel tool calls, matching the
+LM Studio configuration. The embedded Qdrant store is single-writer. One lock
+seen during this recheck came from a standalone N30 diagnostic process that was
+still running after it printed its answer. Once that process exited, a separate
+process opened the store and queried it successfully. No Docker container was
+needed for the local index.
+
+The 2025 production question returned Article 55.12 for pit entry during an
+ordinary Safety Car and Article 30.5 with the formation-lap and race-resumption
+conditions in the same chunk. N30's answer said tyre changes are allowed during
+an ordinary Safety Car and distinguished that procedure from the conditional
+wet-tyre rule. The citation checker flagged `30.5n` and `54.3d`, although the
+retrieved Article 30.5 passage contains those sub-articles.
+
+A real rich PIA run over Lusail laps 7–9 completed with `rag=3`. Lap 7 carried the
+Safety Car deployment event and set the SC probability to 1.00. Both rich and
+no-LLM selected `PIT_NOW` on lap 8. On lap 9, rich selected `STAY_OUT` while
+no-LLM selected `PIT_NOW`, so this single window does not establish general
+action agreement. The condition-free tyre prohibition did not appear in the
+retrieved answer for this Safety Car case. #826 remains open until the verified
+changes reach `main` with green post-merge CI.
 
 ## Scope boundary
 
