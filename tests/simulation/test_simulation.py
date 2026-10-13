@@ -23,6 +23,7 @@ full data set still get a green suite.
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -147,7 +148,7 @@ def test_simulate_race_emits_start_lap_summary():
 
 @_skip_no_data
 @_skip_no_backend
-def test_simulate_endpoint_streams_sse_frames():
+def test_simulate_endpoint_streams_sse_frames(monkeypatch):
     """POST /api/v1/strategy/simulate must return an SSE stream with 4+ frames.
 
     Mounts only ``strategy.router`` on a bare FastAPI app so the test does not
@@ -168,6 +169,7 @@ def test_simulate_endpoint_streams_sse_frames():
     from fastapi import FastAPI
     from starlette.testclient import TestClient
 
+    monkeypatch.setenv("F1_LLM_PROVIDER", "lmstudio")
     app = FastAPI()
     app.include_router(strategy.router, prefix="/api/v1")
 
@@ -178,6 +180,7 @@ def test_simulate_endpoint_streams_sse_frames():
         "team": "McLaren",
         "lap_range": [5, 7],
         "no_llm": True,
+        "provider": "lmstudio",
         "interval_s": 0.0,
     }
 
@@ -197,6 +200,8 @@ def test_simulate_endpoint_streams_sse_frames():
 
     first = json.loads(data_frames[0])
     assert first.get("type") == "start"
+    assert first["data"]["provider"] == "lmstudio"
+    assert os.environ["F1_LLM_PROVIDER"] == "lmstudio"
     last = json.loads(data_frames[-1])
     assert last.get("type") == "summary"
 
@@ -213,8 +218,8 @@ def test_simulate_request_schema_defaults():
     Protects the public API contract documented in ``project_sim_sse_endpoint_plan.md``:
     callers posting the minimum payload (year + gp + driver + team) must get a
     well-formed request with the expected defaults — ``risk_tolerance=0.5``,
-    ``provider=None``, ``interval_s=0.0``. This keeps the API from overwriting
-    ``F1_LLM_PROVIDER`` when the request omits a provider.
+    ``provider=None``, ``interval_s=0.0``. A supplied provider must match the
+    backend process configuration and cannot overwrite ``F1_LLM_PROVIDER``.
     """
     _ensure_backend_on_path()
     from backend.api.v1.endpoints.strategy import SimulateRequest

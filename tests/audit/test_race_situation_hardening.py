@@ -28,12 +28,14 @@ from __future__ import annotations
 import json
 from itertools import islice
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
 
 RACE_DIR = Path("data/raw/2025/Lusail")
 ROOT = Path(__file__).parent.parent.parent
+SC_RATE_RACE_DIR = ROOT / "data" / "raw" / "2024" / "Marina_Bay"
 
 _HAS_OVERTAKE_MODEL = (
     ROOT / "data" / "models" / "overtake_probability" / "model_config.json"
@@ -42,6 +44,14 @@ _HAS_SC_MODEL = (
     ROOT / "data" / "models" / "safety_car_probability" / "feature_list_v1.json"
 ).exists()
 _HAS_RACE_DATA = (RACE_DIR / "laps.parquet").exists()
+_HAS_SC_RATE_RACE_DATA = (SC_RATE_RACE_DIR / "laps.parquet").exists()
+_SC_RATE_DATA = ROOT / "data" / "processed" / "sc_labeled" / "sc_labeled_2023_2025.parquet"
+_HAS_SC_RATE_DATA = (
+    _SC_RATE_DATA.exists()
+    and (
+        ROOT / "data" / "processed" / "circuit_clustering" / "circuit_clusters_k4.parquet"
+    ).exists()
+)
 
 # Importing race_situation_agent builds the module-level CFG singleton at import
 # time (loads both LightGBM models + calibrators + the circuit parquets), and the
@@ -50,11 +60,86 @@ _HAS_RACE_DATA = (RACE_DIR / "laps.parquet").exists()
 pytestmark = [
     pytest.mark.data,
     pytest.mark.skipif(
-        not (_HAS_OVERTAKE_MODEL and _HAS_SC_MODEL and _HAS_RACE_DATA),
+        not (_HAS_OVERTAKE_MODEL and _HAS_SC_MODEL and _HAS_RACE_DATA and _HAS_SC_RATE_DATA),
         reason="needs data/models/{overtake_probability,safety_car_probability}/ "
-        "and the raw Lusail parquet (data/ comes from HF, not git)",
+        "the raw Lusail parquet, and processed SC-rate data (data/ comes from HF, not git)",
     ),
 ]
+
+
+def test_sc_rate_lookup_matches_n13_values_for_each_year_and_event():
+    """Serving must reproduce N13's feature, not another season's value."""
+    from src.agents.race_situation_agent import CFG
+
+    rates = pd.read_parquet(
+        _SC_RATE_DATA,
+        columns=["year", "event_name", "circuit_sc_rate"],
+    ).drop_duplicates()
+    assert not rates.duplicated(["year", "event_name"]).any()
+
+    for row in rates.itertuples(index=False):
+        assert CFG.sc_rate_for(row.event_name, int(row.year)) == pytest.approx(
+            row.circuit_sc_rate
+        ), f"wrong SC-rate feature for {row.event_name} {row.year}"
+
+
+def test_sc_rate_lookup_resolves_aliases_and_preserves_missing_data_fallback():
+    from src.agents.race_situation_agent import CFG
+
+    for official_name, aliases, year in (
+        ("Singapore Grand Prix", ("Marina Bay", "Marina_Bay"), 2024),
+        ("Abu Dhabi Grand Prix", ("Yas Island", "Yas_Island"), 2024),
+        ("Miami Grand Prix", ("Miami", "Miami Gardens", "Miami_Gardens"), 2023),
+    ):
+        expected = CFG.sc_rate_for(official_name, year)
+        for alias in aliases:
+            assert CFG.sc_rate_for(alias, year) == pytest.approx(expected), alias
+
+    assert CFG.sc_rate_for("Qatar Grand Prix", 2025) == pytest.approx(0.10)
+    assert CFG.sc_rate_for("Singapore Grand Prix", None) == pytest.approx(0.10)
+    assert CFG.sc_rate_for("Singapore Grand Prix", "") == pytest.approx(0.10)
+    assert CFG.sc_rate_for("Singapore Grand Prix", 2024.9) == pytest.approx(0.10)
+
+
+@pytest.mark.skipif(
+    not _HAS_SC_RATE_RACE_DATA,
+    reason="needs the 2024 Singapore race parquet from HF data",
+)
+def test_both_serving_paths_use_the_race_year_without_calling_an_llm(monkeypatch):
+    """Run both adapters through metadata construction, stopping before the LLM boundary."""
+    from src.agents.race_situation_agent import RaceSituationAgent, _ensure_timedelta_laps
+    from src.simulation.replay_engine import RaceReplayEngine
+
+    laps = _ensure_timedelta_laps(pd.read_parquet(SC_RATE_RACE_DIR / "laps.parquet"))
+    agent = RaceSituationAgent()
+    monkeypatch.setattr(agent, "_run_core", lambda *_args: None)
+
+    session = SimpleNamespace(
+        laps=SimpleNamespace(pick_accurate=lambda: laps),
+        weather_data=pd.DataFrame(),
+        total_laps=62,
+    )
+    agent.run(
+        {
+            "session": session,
+            "driver": "NOR",
+            "rival_ahead": None,
+            "lap_number": 50,
+            "gp_name": "Marina Bay",
+            "event_name": "Singapore Grand Prix",
+            "year": 2024,
+        }
+    )
+    assert agent.session_meta["circuit_sc_rate"] == pytest.approx(0.0)
+    result = _tool(agent, "predict_sc_tool").invoke({"lap_number": 50})
+    assert "circuit_sc_rate=0.00" in result
+
+    replay = RaceReplayEngine(SC_RATE_RACE_DIR, driver_code="NOR", team="McLaren")
+    lap_state = next(islice(replay.replay(), 49, 50))
+    agent.run_from_state(lap_state, laps)
+    assert agent.session_meta["circuit_sc_rate"] == pytest.approx(0.0)
+    result = _tool(agent, "predict_sc_tool").invoke({"lap_number": 50})
+    assert "circuit_sc_rate=0.00" in result
 
 
 def test_bands_are_never_the_raw_classifier_operating_points():
