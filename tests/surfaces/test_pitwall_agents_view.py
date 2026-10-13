@@ -1485,17 +1485,15 @@ def test_nothing_to_render_is_none_rather_than_an_empty_view():
 # --- The decision panel -----------------------------------------------------
 
 
-def test_the_orchestrator_card_is_the_qt_one_field_for_field():
+def test_orchestrator_view_uses_semantic_action_colour_and_keeps_decision_fields():
     view = _host(_payload()).get_agents_view(-1)["orchestrator"]
 
     assert view["action"] == "PIT NOW"
-    assert view["action_colour"] == "#ef4444"
+    assert view["action_colour"] == "#a78bfa"
     assert view["confidence_text"] == "71%"
     assert view["confidence_colour"] == "#10b981", "0.71 is over the 0.66 green tier"
     assert view["pace"] == "Pace: PUSH"
-    # Text colour, not DANGER: a posture is a setting somebody chose, and
-    # wearing the alarm colour put `Risk: AGGRESSIVE` in the same red as the
-    # guardrail violation one line below it (#964).
+    # Text colour, not DANGER: a posture is a setting somebody chose (#964).
     assert view["pace_colour"] == "#d1d5db"
     assert view["risk"] == "Risk: AGGRESSIVE"
     assert view["risk_colour"] == "#d1d5db"
@@ -1544,12 +1542,9 @@ def test_the_lap_the_call_moves_says_what_it_moved_from():
 def test_no_posture_wears_the_alarm_colour():
     """DANGER means an alarm, and a posture is a setting somebody chose (#964).
 
-    The sprint-8 gate counted six meanings on one red - imperative action,
-    posture, low confidence, radio alert, dead link, rule violation - and
-    the sharpest instance was `Risk: AGGRESSIVE` sitting one line above
-    `⚠ Guardrail: minimum stint length not met` in the same colour. An
-    alarm colour exists for pre-attentive triage; six semantics deny the
-    reader exactly that.
+    The sprint-8 gate found that posture and alarm states shared DANGER. The
+    action badge is checked separately because PIT_NOW is also a strategy
+    instruction, not an alarm.
 
     Every posture the two maps know plus an unknown one, because a table
     half-migrated is this repo's most expensive defect shape.
@@ -1564,9 +1559,8 @@ def test_no_posture_wears_the_alarm_colour():
         built = build_orchestrator({"action": "STAY_OUT", "risk_posture": posture})
         assert built["risk_colour"] != danger, f"risk {posture} wears the alarm colour"
 
-    # DANGER is left with two owners on this window, both alarm-class facts:
-    # the ALERT glyph and the dead-producer chip. The guardrail line was the
-    # third until #974.
+    # PIT_NOW's action colour is pinned separately in
+    # test_pit_now_badge_uses_action_identity_not_alarm_colour.
 
 
 def test_the_confidence_tiers_are_the_three_qt_paints():
@@ -1819,6 +1813,20 @@ def test_the_action_badge_comes_from_classify_action_and_is_not_a_second_table()
         view = build_orchestrator({"action": action, "confidence": 0.5})
         assert view["action"] == label
         assert view["action_colour"] == "#{:02x}{:02x}{:02x}".format(*colour)
+
+
+def test_pit_now_badge_uses_action_identity_not_alarm_colour():
+    from src.arcade.palette import ACCENT, DANGER, hex_str
+    from src.arcade.strategy import classify_action
+    from src.pitwall.agents_view.decision import build_orchestrator
+
+    colour, label = classify_action("PIT_NOW")
+    view = build_orchestrator({"action": "PIT_NOW", "confidence": 0.71})
+
+    assert colour == ACCENT
+    assert colour != DANGER
+    assert label == "PIT NOW"
+    assert view["action_colour"] == hex_str(ACCENT)
 
 
 # --- The reasoning tabs -----------------------------------------------------

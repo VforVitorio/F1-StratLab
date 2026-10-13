@@ -192,7 +192,11 @@ def get_rag_react_agent():
         model_name = subagent_model()
         if provider == "openai":
             llm = ChatOpenAI(
-                model=model_name, temperature=0, timeout=120, max_retries=LLM_MAX_RETRIES
+                model=model_name,
+                temperature=0,
+                model_kwargs={"parallel_tool_calls": False},
+                timeout=120,
+                max_retries=LLM_MAX_RETRIES,
             )
         else:
             llm = ChatOpenAI(
