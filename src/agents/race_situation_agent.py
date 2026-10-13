@@ -67,7 +67,6 @@ except (ImportError, OSError, RuntimeError):
 from src.f1_strat_manager.gp_slugs import (  # noqa: E402
     rekey_by_slug,
     resolve_gp_key,
-    slug_from_event_name,
 )
 
 _MODELS = _DATA_ROOT / "models"
@@ -202,7 +201,6 @@ class RaceSituationConfig:
             fires on 13.59% of laps.
     """
 
-
     high_overtake: float = 0.65
     medium_overtake: float = 0.40
     high_sc: float = 0.0864
@@ -259,37 +257,41 @@ class RaceSituationConfig:
         _cl = pd.read_parquet(_PROCESSED / "circuit_clustering" / "circuit_clusters_k4.parquet")
         self.circuit_cluster_map: dict = dict(zip(_cl["GP_Name"], _cl["Cluster"].astype(int)))
 
-        # Circuit SC base rates (from N13 labeled parquet)
+        # Circuit SC base rates (from N13 labeled parquet), scoped to the race year.
         _sc_df = pd.read_parquet(
             _PROCESSED / "sc_labeled" / "sc_labeled_2023_2025.parquet",
-            columns=["event_name", "circuit_sc_rate"],
+            columns=["year", "event_name", "circuit_sc_rate"],
         )
-        # Re-key to the SLUG keyspace the replay path queries with. This table ships
-        # keyed by FastF1 event names, which the FastF1 session path supplies but the
-        # replay path (CLI / arcade / webapp, all fed by RaceStateManager) does not:
-        # it passes session_meta.gp_name, a slug. The keyspaces do not overlap, so on
-        # every replay lap this lookup missed and returned the 0.10 default: a trained
-        # per-circuit feature frozen to a constant for every race (#448). Lookups go
-        # through `sc_rate_for`, which resolves EITHER keyspace, so the FastF1 path
-        # keeps working too.
-        self.circuit_sc_rate_map: dict = rekey_by_slug(
-            _sc_df.drop_duplicates("event_name")
-            .set_index("event_name")["circuit_sc_rate"]
-            .to_dict(),
-            "circuit_sc_rate_map",
-        )
+        # N13 computes this feature from prior seasons. A circuit-only map silently
+        # serves an earlier year's value for later races, so keep one keyspace per year.
+        self.circuit_sc_rate_map_by_year: dict[int, dict[str, float]] = {
+            int(year): rekey_by_slug(
+                year_df.drop_duplicates("event_name")
+                .set_index("event_name")["circuit_sc_rate"]
+                .to_dict(),
+                f"circuit_sc_rate_map_by_year[{year}]",
+            )
+            for year, year_df in _sc_df.groupby("year", sort=True)
+        }
 
-    def sc_rate_for(self, event_name: str) -> float:
-        """Circuit SC base rate for a GP given in EITHER keyspace.
+    def sc_rate_for(self, event_name: str, year: int | None) -> float:
+        """Return N13's trained feature for this event and race year.
 
-        The two callers disagree: the FastF1 session path passes a full event name
-        ('Qatar Grand Prix'), the replay path passes the parquet slug ('Lusail').
-        `slug_from_event_name` is reentrant, so it normalises both. Falls back to the
-        0.10 training-set mean when a GP is genuinely unknown, the same default as
-        before, but now only for real misses instead of on every replay lap.
+        ``event_name`` may be a FastF1 name or a replay key. A missing year or an
+        event absent from that year's labeled data uses the existing 0.10 fallback;
+        it never substitutes a different season's feature.
         """
-        slug = slug_from_event_name(event_name) or event_name
-        return self.circuit_sc_rate_map.get(slug, 0.10)
+        if year is None or pd.isna(year):
+            return 0.10
+        try:
+            year_key = int(year)
+        except (TypeError, ValueError, OverflowError):
+            return 0.10
+        if year_key != year:
+            return 0.10
+        year_rates = self.circuit_sc_rate_map_by_year.get(year_key, {})
+        key = resolve_gp_key(year_rates, event_name)
+        return year_rates.get(key, 0.10)
 
     def cluster_for(self, gp_name: str, default: Optional[int] = None) -> Optional[int]:
         """This circuit's cluster, whichever of its four spellings the caller holds.
@@ -1564,7 +1566,9 @@ class RaceSituationAgent:
                 max_retries=LLM_MAX_RETRIES,
             )
         else:
-            llm = ChatOpenAI(model=model_name, temperature=0, timeout=120, max_retries=LLM_MAX_RETRIES)
+            llm = ChatOpenAI(
+                model=model_name, temperature=0, timeout=120, max_retries=LLM_MAX_RETRIES
+            )
 
         self._react_agent = create_agent(
             model=llm,
@@ -1589,7 +1593,7 @@ class RaceSituationAgent:
                 rival_ahead  : Abbreviation of the car directly ahead. None = skip overtake.
                 lap_number   : Current lap number (int).
                 gp_name      : GP name matching circuit_cluster_map keys (e.g. 'Sakhir').
-                event_name   : Event name matching circuit_sc_rate_map keys.
+                event_name   : Event name used with year for the SC-rate feature.
                 year         : Race year (int).
 
         Returns:
@@ -1630,7 +1634,7 @@ class RaceSituationAgent:
             # predict_overtake_tool turns it into the missing value LightGBM handles
             # natively. Latent today, since every race resolves, but the collision was real.
             "circuit_cluster": self.cfg.cluster_for(gp_name, _UNKNOWN_CIRCUIT_CLUSTER),
-            "circuit_sc_rate": self.cfg.sc_rate_for(event_name),
+            "circuit_sc_rate": self.cfg.sc_rate_for(event_name, lap_state.get("year")),
             "total_laps": int(session.total_laps),
             "fastest_lap_s": _clean["LapTime"].min().total_seconds(),
             # The last bare temperature literal #789 left behind, two lines from
@@ -1730,7 +1734,7 @@ class RaceSituationAgent:
             # predict_overtake_tool turns it into the missing value LightGBM handles
             # natively. Latent today, since every race resolves, but the collision was real.
             "circuit_cluster": self.cfg.cluster_for(gp_name, _UNKNOWN_CIRCUIT_CLUSTER),
-            "circuit_sc_rate": self.cfg.sc_rate_for(event_name),
+            "circuit_sc_rate": self.cfg.sc_rate_for(event_name, meta.get("year")),
             "total_laps": total_laps,
             "fastest_lap_s": float(self.laps_df["LapTime"].dt.total_seconds().min())
             if len(self.laps_df) > 0

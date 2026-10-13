@@ -81,3 +81,29 @@ def test_simulate_generator_preserves_environment_provider_when_omitted(monkeypa
         next(simulator.simulate_race(config))
 
     assert os.environ["F1_LLM_PROVIDER"] == "openai"
+
+
+def test_simulate_generator_rejects_a_provider_change_before_setup(monkeypatch):
+    simulator = _load_simulator_or_skip(monkeypatch)
+    config = simulator.SimConfig(
+        year=2025,
+        gp="Lusail",
+        driver="NOR",
+        team="McLaren",
+        no_llm=True,
+        provider="openai",
+    )
+    race_path_lookups = []
+
+    monkeypatch.setenv("F1_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setattr(
+        simulator,
+        "_resolve_race_dir",
+        lambda *_args: race_path_lookups.append("called"),
+    )
+
+    with pytest.raises(ValueError, match="conflicts with backend process provider"):
+        simulator.simulate_race(config)
+
+    assert os.environ["F1_LLM_PROVIDER"] == "lmstudio"
+    assert race_path_lookups == []
