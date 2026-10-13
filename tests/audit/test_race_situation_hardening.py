@@ -60,13 +60,7 @@ _HAS_SC_RATE_DATA = (
 pytestmark = [
     pytest.mark.data,
     pytest.mark.skipif(
-        not (
-            _HAS_OVERTAKE_MODEL
-            and _HAS_SC_MODEL
-            and _HAS_RACE_DATA
-            and _HAS_SC_RATE_DATA
-            and _HAS_SC_RATE_RACE_DATA
-        ),
+        not (_HAS_OVERTAKE_MODEL and _HAS_SC_MODEL and _HAS_RACE_DATA and _HAS_SC_RATE_DATA),
         reason="needs data/models/{overtake_probability,safety_car_probability}/ "
         "the raw Lusail parquet, and processed SC-rate data (data/ comes from HF, not git)",
     ),
@@ -107,6 +101,10 @@ def test_sc_rate_lookup_resolves_aliases_and_preserves_missing_data_fallback():
     assert CFG.sc_rate_for("Singapore Grand Prix", 2024.9) == pytest.approx(0.10)
 
 
+@pytest.mark.skipif(
+    not _HAS_SC_RATE_RACE_DATA,
+    reason="needs the 2024 Singapore race parquet from HF data",
+)
 def test_both_serving_paths_use_the_race_year_without_calling_an_llm(monkeypatch):
     """Run both adapters through metadata construction, stopping before the LLM boundary."""
     from src.agents.race_situation_agent import RaceSituationAgent, _ensure_timedelta_laps
