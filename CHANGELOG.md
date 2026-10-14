@@ -11,6 +11,13 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [2.7.6](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.5...v2.7.6) (2026-10-14)
+
+
+### Bug Fixes
+
+* promote telemetry exception guard ([a6ec9d4](https://github.com/VforVitorio/F1-StratLab/commit/a6ec9d4c8eeac56c4b25a92a19f537d615f652af))
+
 ## [2.7.5](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.4...v2.7.5) (2026-10-13)
 
 
