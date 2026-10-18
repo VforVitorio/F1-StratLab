@@ -103,6 +103,8 @@ Only the RAG agent (N30) exposes a module-level `get_rag_react_agent()` factory 
 | `chunks` | list | Raw retrieved text chunks |
 | `reasoning` | str | Alias for `answer` |
 
+The retrieval tool labels FIA passages as untrusted evidence and tells the model not to follow instructions embedded in them. It preserves each passage verbatim in `chunks`; the warning is separate from the source text.
+
 ### StrategyRecommendation (N31)
 
 The v2 schema (frozen at 14 fields) surrounds the primary `action` with execution detail, driver-side instructions and a contingency list, see [Multi-agent system](#/multi-agent) for the full rationale.
