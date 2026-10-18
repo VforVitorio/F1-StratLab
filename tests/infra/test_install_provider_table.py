@@ -40,8 +40,8 @@ _ROWS: dict[str, tuple[str, str, str]] = {
         "openai",
     ),
     "`f1-webapp` chat tab": (
-        "src/telemetry/backend/services/chatbot/llm_service.py",
-        'os.getenv("F1_LLM_PROVIDER", os.getenv("LLM_PROVIDER", "lmstudio"))',
+        "src/telemetry/backend/core/config.py",
+        'configured = os.getenv("F1_LLM_PROVIDER", os.getenv("LLM_PROVIDER", "lmstudio"))',
         "lmstudio",
     ),
     "backend `POST /simulate`": (
@@ -91,3 +91,10 @@ def test_the_documented_fallback_is_the_one_in_the_code(surface: str) -> None:
         f"INSTALL.md says {surface} falls back to {_fallback_cell(surface)!r}, but "
         f"{source_path} resolves to {documented!r}."
     )
+
+
+def test_webapp_chat_uses_the_central_provider_configuration() -> None:
+    source = ROOT / "src/telemetry/backend/services/chatbot/llm_service.py"
+    if not source.exists():
+        pytest.skip("telemetry submodule not initialised")
+    assert "configured_chat_provider()" in source.read_text(encoding="utf-8")
