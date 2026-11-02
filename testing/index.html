@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- FOUC guard: each deployed page ships prerendered HTML inside #root (for
+       crawlers / no-JS). React mounts with createRoot (replace, not hydrate),
+       so without this the raw placeholder flashes before the app renders. Mark
+       JS as available so docs.css can hide that placeholder until React mounts.
+       Crawlers run no JS, so they keep the prerendered content. Safety net:
+       reveal it again if React never mounts. -->
+  <script>
+    (function () {
+      var d = document.documentElement;
+      d.classList.add("js");
+      setTimeout(function () { d.classList.remove("js"); }, 3000);
+
+      /* The theme, stamped before the first paint.
+         It shares this block with the .js gate because both have the same deadline: land before
+         the body paints. A stored choice wins over the system preference, which is only the
+         opening guess. Both reads are wrapped, because a browser set to block site data throws on
+         the property access itself rather than returning null.
+         This runs before the stylesheet links below, so the page paints in the right colour
+         rather than painting dark and correcting. prerender_docs.mjs uses this file verbatim as
+         the shell for all 22 routes, so the guard covers every one of them. */
+      var stored = null;
+      try { stored = localStorage.getItem("f1sl.docs.theme"); } catch (e) {}
+      var theme = stored === "light" || stored === "dark" ? stored
+        : window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      d.setAttribute("data-theme", theme);
+    })();
+  </script>
+
+  <title>Testing &amp; QA · F1 StratLab docs</title>
+  <meta name="description" content="Test tiers, fast gates, scheduled checks, and review rules." />
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://docs.f1stratlab.com/testing/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://docs.f1stratlab.com/testing/" />
+  <meta property="og:title" content="Testing &amp; QA · F1 StratLab docs" />
+  <meta property="og:description" content="Test tiers, fast gates, scheduled checks, and review rules." />
+  <meta property="og:image" content="https://docs.f1stratlab.com/assets/og-card.jpg" />
+  <meta property="og:image:alt" content="F1 StratLab documentation banner with purple gradient and the F1 StratLab wordmark" />
+  <meta property="og:site_name" content="F1 StratLab Documentation" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://docs.f1stratlab.com/testing/" />
+  <meta name="twitter:title" content="Testing &amp; QA · F1 StratLab docs" />
+  <meta name="twitter:description" content="Test tiers, fast gates, scheduled checks, and review rules." />
+  <meta name="twitter:image" content="https://docs.f1stratlab.com/assets/og-card.jpg" />
+
+  <!-- Structured data — entity graph for AI/search discovery.
+       Global (site-level) graph: lives in the shell so it ships in the initial
+       HTML and survives client-side rendering. Per-page TechArticle/BreadcrumbList
+       is added by the deploy-time prerender step (see .github/workflows/docs.yml). -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://docs.f1stratlab.com/#website",
+        "url": "https://docs.f1stratlab.com/",
+        "name": "F1 StratLab Documentation",
+        "description": "Open-source multi-agent AI for real-time F1 race strategy. Architecture, agent API, arcade dashboard and deployment guides.",
+        "inLanguage": "en",
+        "about": { "@id": "https://docs.f1stratlab.com/#software" },
+        "publisher": { "@id": "https://docs.f1stratlab.com/#author" }
+      },
+      {
+        "@type": "SoftwareSourceCode",
+        "@id": "https://docs.f1stratlab.com/#software",
+        "name": "F1 StratLab",
+        "alternateName": "F1 Strategy Manager",
+        "description": "Multi-agent AI system that turns public Formula 1 telemetry and FIA regulations into real-time race-strategy recommendations, combining seven ML predictors, an NLP radio pipeline, a RAG layer over FIA rules and a LangGraph orchestrator.",
+        "url": "https://f1stratlab.com",
+        "codeRepository": "https://github.com/VforVitorio/F1-StratLab",
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "programmingLanguage": "Python",
+        "applicationCategory": "DeveloperApplication",
+        "author": { "@id": "https://docs.f1stratlab.com/#author" },
+        "sameAs": [
+          "https://github.com/VforVitorio/F1-StratLab",
+          "https://deepwiki.com/VforVitorio/F1-StratLab",
+          "https://huggingface.co/datasets/VforVitorio/f1-strategy-dataset"
+        ]
+      },
+      {
+        "@type": "Person",
+        "@id": "https://docs.f1stratlab.com/#author",
+        "name": "Víctor Vega Sobral",
+        "alternateName": "VforVitorio",
+        "url": "https://victorvegasobral.com",
+        "jobTitle": "Intelligent Systems Engineering student; AI & Data Intern",
+        "affiliation": "UIE Campus Coruña",
+        "sameAs": [
+          "https://github.com/VforVitorio",
+          "https://www.linkedin.com/in/victorvegasobral/",
+          "https://huggingface.co/VforVitorio",
+          "https://victorvegasobral.com",
+          "https://f1stratlab.com"
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <!-- Theme color (mobile browsers). One tag, no media query: a manual theme choice cannot be
+       expressed as prefers-color-scheme, and both values here used to be the same dark hex
+       anyway. components.js keeps it in step with data-theme. -->
+  <meta name="theme-color" content="#0c0d14" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Inter (body) uses display=swap; the secondary display families use
+       display=optional so they never hold up first paint. Split into two
+       requests so each family can set its own font-display. -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=optional" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/styles/tokens.css" />
+  <link rel="stylesheet" href="/styles/docs.css" />
+
+  <!-- Favicon — F1 StratLab brand icon -->
+  <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Testing & QA",
+  "name": "Testing & QA",
+  "description": "Test tiers, fast gates, scheduled checks, and review rules.",
+  "url": "https://docs.f1stratlab.com/testing/",
+  "inLanguage": "en",
+  "isPartOf": {
+    "@id": "https://docs.f1stratlab.com/#website"
+  },
+  "about": {
+    "@id": "https://docs.f1stratlab.com/#software"
+  },
+  "author": {
+    "@id": "https://docs.f1stratlab.com/#author"
+  },
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [
+      "h1",
+      ".prerender-content > p"
+    ]
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://docs.f1stratlab.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Testing & QA",
+      "item": "https://docs.f1stratlab.com/testing/"
+    }
+  ]
+}
+</script>
+</head>
+<body>
+  <div id="root"><main class="prerender-content">
+<h1>Testing &amp; QA</h1>
+<p>F1 StratLab keeps the pull-request gate fast without deleting the tests that
+need real data, expensive measurement, or an external service. The gate runs
+the hermetic tiers in parallel; scheduled and local commands cover the rest.</p>
+<h2>Run the suite</h2>
+<pre><code class="language-bash"># The fast PR-equivalent gate
+uv run pytest -v -n 4 --dist=loadfile \
+  -m &quot;not data and not slow and not network&quot; \
+  --cov=src --cov-report=term-missing
+
+# The complete collected suite
+uv run pytest -v -n 4 --dist=loadfile \
+  --cov=src --cov-report=term-missing
+</code></pre>
+<h2>PITWALL real-path trace</h2>
+<p>Issue #1252 has a local trace for one measured Lusail 2025 tick. It captures
+one message from the live Arcade TCP server and the real <code>/api/tick</code>,
+<code>/api/bulk</code>, <code>/api/live</code>, and <code>/api/agents</code> responses. The JSON report records
+the complete wire message and each sequence. Check the rendered DATA and
+AGENTS pages separately in a browser.</p>
+<p>Build the bundle, then choose unused loopback ports. In one PowerShell window,
+launch the no-LLM replay:</p>
+<pre><code class="language-powershell">Push-Location src/pitwall/ui
+npm run build
+Pop-Location
+
+$env:F1_STREAM_PORT = &quot;55998&quot;
+$env:F1_PITWALL_BROWSER_PORT = &quot;55999&quot;
+$env:OPENAI_API_KEY = &quot;&quot;
+$env:HF_HUB_OFFLINE = &quot;1&quot;
+$env:TRANSFORMERS_OFFLINE = &quot;1&quot;
+uv run f1-arcade --viewer --year 2025 --round 23 --driver NOR --team McLaren --strategy --no-llm
+</code></pre>
+<p>Raise playback to 8x with five Up-arrow presses. In two other windows, set the
+same ports and start both captures with one fresh run ID. Run them at the same
+time so the pages can be matched to the wire sequence.</p>
+<pre><code class="language-powershell">$env:F1_STREAM_PORT = &quot;55998&quot;
+$env:F1_PITWALL_BROWSER_PORT = &quot;55999&quot;
+uv run python scripts/trace_pitwall_real_path.py --run-id 1252-lusail-nor-l7-run1
+</code></pre>
+<p>In the third window, run the Playwright page probe:</p>
+<pre><code class="language-powershell">node src/pitwall/ui/scripts/trace-live.mjs `
+  http://127.0.0.1:55999 1252-lusail-nor-l7-run1 7 Lusail NOR
+</code></pre>
+<p>It saves the API responses, rendered page text, console errors, and screenshots
+beside the report. After both capture commands finish, verify the files
+together:</p>
+<pre><code class="language-powershell">uv run python scripts/verify_pitwall_trace.py --run-id 1252-lusail-nor-l7-run1
+</code></pre>
+<p>The verifier checks the five sequences, strategy action, DATA values, browser
+errors, and screenshot files, then writes a separate <code>_verified.json</code>. Use a
+new run ID for each retry. This local run needs 2025 data and model weights.
+<code>--no-llm</code> and the empty API key prevent paid model calls. It is a local data
+run, not part of the PR gate.</p>
+<h2>RAG retrieval evaluation</h2>
+<p>The shared <code>f1-eval rag</code> command evaluates the production BGE-M3 retriever over
+the 30 manually verified queries in
+<a href="https://github.com/VforVitorio/F1-StratLab/blob/dev/data/rag_eval/queries_v2.json"><code>data/rag_eval/queries_v2.json</code></a>:</p>
+<pre><code class="language-bash">uv run f1-eval rag
+</code></pre>
+<p>It reports conventional P@1/P@3/P@5, hit@5 for comparison with the historical
+N30B notebook, MRR, retrieval-level citation match, wrong-year rate, and P50/P95
+latency. The command runs the season-scoped production path and an unscoped
+control. It loads BGE-M3 once and makes no LLM calls. The Markdown and JSON
+reports land in <code>documents/eval_reports/rag.{md,json}</code>. The complete run needs
+the local FIA PDFs and Qdrant index, so it stays outside the fast CI gate.</p>
+<p>Issue #323 adds five verified 2026 questions and a separate A/B command. It
+compares the production article-aware 512/64 index with a temporary 1024/128
+candidate using the same BGE-M3 encoder and never mutates <code>data/rag/</code>:</p>
+<pre><code class="language-bash">uv run python scripts/benchmark_rag_chunking.py
+</code></pre>
+<p>The candidate is adopted only when P@5, MRR, citation match, and wrong-year
+safety do not regress and at least one quality metric improves.</p>
+<p>The fast gate took <strong>56.24 seconds</strong> on the development machine used for the
+2026-09-16 audit. The complete suite took <strong>245.64 seconds</strong> with four workers,
+down from <strong>276.82 seconds</strong> before this cleanup and <strong>383.27 seconds</strong> before
+the tier split. The earlier serial comparison fell from <strong>670.47 seconds</strong> to
+<strong>525.48 seconds</strong>. These figures are local wall-clock
+measurements, so they are not a promise about every runner. On GitHub, the PR
+test job fell from <strong>127 seconds</strong> to <strong>100 seconds</strong>. The previous feature push
+also ran a duplicate <strong>194-second</strong> test job; feature branches no longer trigger
+that push workflow, reducing the two-run cost from <strong>321</strong> to <strong>100
+job-seconds</strong>, a <strong>68.8%</strong> reduction.</p>
+<h2>Markers</h2>
+<p>Markers are declared in <code>pyproject.toml</code>. They explain why a test is excluded,
+not whether the test is less important.</p>
+<table>
+<thead>
+<tr>
+<th>Marker</th>
+<th>Meaning</th>
+<th>Default gate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>unit</code></td>
+<td>Pure hermetic logic</td>
+<td>Included</td>
+</tr>
+<tr>
+<td><code>contract</code></td>
+<td>API, schema, serialization, or fixture boundary</td>
+<td>Included</td>
+</tr>
+<tr>
+<td><code>data</code></td>
+<td>HF dataset, model weights, or measured tables</td>
+<td>Excluded</td>
+</tr>
+<tr>
+<td><code>gpu</code></td>
+<td>CUDA-dependent execution</td>
+<td>Excluded</td>
+</tr>
+<tr>
+<td><code>llm</code></td>
+<td>Live or hermetic LLM backend</td>
+<td>Excluded until a stubbed tier exists</td>
+</tr>
+<tr>
+<td><code>slow</code></td>
+<td>Expensive measurement or real-path check</td>
+<td>Excluded</td>
+</tr>
+<tr>
+<td><code>network</code></td>
+<td>Public service or external artefact</td>
+<td>Excluded</td>
+</tr>
+</tbody></table>
+<p>Pytest&#39;s <code>-ra</code> setting prints skipped tests. A skipped data test means that its
+artefacts were not present and that measurement did not run.</p>
+<h2>CI and scheduled checks</h2>
+<p>The <code>test</code> job in <a href="https://github.com/VforVitorio/F1-StratLab/blob/main/.github/workflows/ci.yml"><code>ci.yml</code></a>
+uses four xdist workers, <code>--dist=loadfile</code>, coverage, and the fast marker
+expression. Its collection floor uses the same expression, guarding against a
+broken import or accidental mass skip. The push trigger covers <code>main</code>, <code>dev</code>,
+and <code>test</code>; feature branches use the pull-request trigger, so one commit does
+not run both workflows.</p>
+<p>The excluded checks remain explicit:</p>
+<ul>
+<li><code>nightly-tests.yml</code> runs the complete collected parent suite with coverage,
+Monday to Friday at 03:00 UTC and on demand.</li>
+<li><code>network-contracts.yml</code> checks the published Hugging Face cards every Monday
+at 03:30 UTC and on demand.</li>
+<li>Data-backed evaluation runs locally on a machine with the HF dataset and
+model artefacts. Those files are intentionally not committed to the repo.</li>
+</ul>
+<h2>What the efficiency pass changed</h2>
+<ul>
+<li>MC-table regeneration now writes into pytest&#39;s temporary directory through
+<code>--json-out</code> and <code>--eval-dir</code>, so tests do not mutate committed artefacts.</li>
+<li>Raw-data and model-recompute measurements are marked <code>slow</code>.</li>
+<li>The registry tests call the specific metric they protect and use a cheap
+aggregator-wiring test for the join itself.</li>
+<li>The RAG-index script lazily imports PDF, Qdrant, and embedding dependencies,
+keeping import smoke tests lightweight.</li>
+<li>Six low-signal test cases were removed, plus one tautological assertion. No
+whole test module was removed.</li>
+<li>The parent repository carries a deterministic <code>mini_race.parquet</code> fixture;
+the telemetry submodule carries the FakeOpenAI server and recorded SSE
+fixtures. Its latest hermetic run is 107 passed, 4 skipped, with no warnings.</li>
+<li>Interactive voice I/O is retired from the active tree. Team-radio audio and
+Whisper transcription remain active because they feed N29; the former voice
+implementation is preserved on the submodule&#39;s <a href="https://github.com/VforVitorio/F1_Telemetry_Manager/tree/legacy_version"><code>legacy_version</code> branch</a>.</li>
+</ul>
+<h2>Dependency cleanup</h2>
+<p>The parent lock updates <code>accelerate</code> to 1.15.0 and <code>pytorch-lightning</code> to 2.6.6,
+and removes unused <code>passlib</code> and <code>bcrypt</code>. Test environments use <code>httpx2</code> for
+Starlette&#39;s current <code>TestClient</code>. The latest local pip-audit run reports 37
+findings in Pillow 11.3.0 and setuptools 81.0.0. Their fixes remain constrained
+by the Arcade and CUDA PyTorch graphs; the exact waivers stay in
+<code>osv-scanner.toml</code>.</p>
+<p>When a production contract changes, update the matching guide under
+<code>documents/dev_docs/</code> and this page in the same pull request. When deleting a
+test, state which remaining assertion protects the behaviour and why the old
+case was redundant.</p>
+<p>Treat <code>src/agents/</code> as a protected path. Do not edit it for routine cleanup or
+simplification. A feature change may touch it only after its impact is mapped,
+the scope is minimal, and extra regression checks cover the affected contract.</p>
+<h2>Further reading</h2>
+<ul>
+<li><a href="https://docs.pytest.org/en/stable/example/markers.html">pytest markers</a></li>
+<li><a href="https://pytest-xdist.readthedocs.io/en/stable/">pytest-xdist</a></li>
+<li><a href="https://coverage.readthedocs.io/en/latest/">Coverage.py</a></li>
+</ul>
+
+</main></div>
+
+  <!-- React (pinned + integrity) — production builds: smaller, faster, no dev warnings -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+
+  <!-- Markdown + diagrams + syntax highlighting -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-yaml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js"></script>
+
+  <!-- App — plain React.createElement scripts (no JSX, no Babel, no build step).
+       Loaded in dependency order; they share window globals. -->
+  <script src="/app/nav.js?v=11"></script>
+  <script src="/app/markdown.js?v=9"></script>
+  <script src="/app/components.js?v=10"></script>
+  <script src="/app/graph.js?v=9"></script>
+  <script src="/app/home.js?v=7"></script>
+  <script src="/app/main.js?v=7"></script>
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "990410867d3e4ee5afb262861e771b0e"}'></script>
+</body>
+</html>
