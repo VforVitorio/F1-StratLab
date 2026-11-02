@@ -187,7 +187,7 @@ def extract_openf1_intervals(year, gp_name, max_interval=None):
                 try:
                     # Try to convert to numeric
                     intervals_df[col] = pd.to_numeric(intervals_df[col])
-                except:
+                except (TypeError, ValueError, OverflowError):
                     # If it fails, ensure it's string
                     intervals_df[col] = intervals_df[col].astype(str)
 

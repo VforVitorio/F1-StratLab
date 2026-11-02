@@ -90,6 +90,23 @@ PDF uses `B5.13.1`-style article identifiers; the builder preserves those
 identifiers instead of treating them as page metadata. The source is the
 [official FIA regulations page](https://www.fia.com/regulations/category/110).
 
+## Trusting the regulation corpus
+
+The downloader accepts HTTPS links on `fia.com` and its subdomains, including
+redirects. It checks the same boundary for manually maintained entries in
+`data/rag/fia_known_urls.json`. The index builder reads local PDFs named
+`sporting_regs_<year>.pdf` or `technical_regs_<year>.pdf`; names and hashes do
+not prove where a manually copied file came from. Before indexing a manual copy,
+verify its FIA source, season, and correction status. The corpus is maintained
+locally and has no user-upload path.
+
+Retrieved passages remain untrusted as instructions, even when their source is
+official. The RAG tool labels the retrieval as untrusted source data, preserves
+the passage text verbatim, and its tool description tells the model to use that
+text as evidence only. This prompt boundary does not prove model immunity. Other
+prompts that consume radio or RCM text need the same explicit instruction at their
+own prompt entry point.
+
 ---
 
 ## Developed in

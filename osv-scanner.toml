@@ -16,32 +16,32 @@
 # external data and when a stable Arcade release supports Pillow 12.x.
 [[IgnoredVulns]]
 id = "GHSA-wjx4-4jcj-g98j"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-5xmw-vc9v-4wf2"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-cfh3-3jmp-rvhc"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-pwv6-vv43-88gr"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-r73j-pqj5-w3x7"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-whj4-6x5x-4v2j"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 # --- Pillow x5 (later disclosures, same arcade block) -------------------------
@@ -49,27 +49,27 @@ reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app
 # constraint and local-only image-processing boundary described above.
 [[IgnoredVulns]]
 id = "PYSEC-2026-2253"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "PYSEC-2026-2254"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "PYSEC-2026-2255"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "PYSEC-2026-2256"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "PYSEC-2026-2257"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 # --- Pillow later disclosures, same Arcade block ------------------------------
@@ -77,46 +77,47 @@ reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app
 # PYSEC-2026-3451 and PYSEC-2026-3453 as unused, so they are omitted here.
 [[IgnoredVulns]]
 id = "GHSA-6r8x-57c9-28j4"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-9hw9-ch79-4vh6"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-62p4-gmf7-7g93"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-fj7v-r99m-22gq"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.3.0 fixes the TGA RLE mode-1 encoder issue, but arcade==3.3.3 pins Pillow<11.4. The offline augmenters convert inputs to RGB and save only JPEG files; no current code saves mode-1 images as TGA RLE. Recheck before adding TGA RLE output or when stable Arcade supports Pillow 12.3.0."
 
 [[IgnoredVulns]]
 id = "GHSA-jjj6-mw9f-p565"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-vjc4-5qp5-m44j"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
 [[IgnoredVulns]]
 id = "GHSA-xj96-63gp-2gmr"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
-# --- torch (no upstream fix) --------------------------------------------------
-# GHSA-rrmf-rvhw-rf47 has no fixed version. torch is CUDA-pinned (cu128) for the
-# training/dev box; the flaw needs an attacker-controlled model/input executed
-# in-process, which a single-user local tool does not expose.
+# --- torch (patched release needs a CUDA migration) ----------------------------
+# GHSA-rrmf-rvhw-rf47 is fixed in Torch 2.13.0. The Windows training setup is
+# pinned to 2.11.0+cu128; the official cu128 index has no matching 2.13.0 wheel.
+# Recheck when a compatible CUDA wheel is available or the CUDA pin is migrated.
 [[IgnoredVulns]]
 id = "GHSA-rrmf-rvhw-rf47"
-reason = "torch: no upstream fix; CUDA-pinned; requires attacker-controlled in-process model input, outside the single-user local threat model."
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Torch 2.13.0 fixes this advisory, but the Windows training environment is pinned to 2.11.0+cu128 and no matching 2.13.0 wheel is listed on the official cu128 index. Recheck when a compatible CUDA wheel is available or the CUDA pin is migrated."
 
 # --- ecdsa: waiver removed, the dependency is gone ----------------------------
 # GHSA-wj6h-64fc-37mp was waived here on the grounds that ecdsa arrived
@@ -134,8 +135,248 @@ reason = "torch: no upstream fix; CUDA-pinned; requires attacker-controlled in-p
 # supported build platforms change, or when a compatible Torch release lifts the cap.
 [[IgnoredVulns]]
 id = "PYSEC-2026-3447"
-ignoreUntil = 2026-11-10T00:00:00Z
+ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Setuptools 83.0.0 is blocked by torch 2.11.0+cu128 requiring setuptools<82. The flaw affects macOS APFS/HFS+ sdist builds using MANIFEST.in exclude/prune rules; this repository has no MANIFEST.in and release builds run on Ubuntu. Recheck if build inputs/platforms change or compatible Torch lifts the cap."
+
+# --- current compatibility-bound advisories (review by 2026-12-02) -----------
+# Pillow 13 fixes these advisories but requires Python >=3.11. Stable Arcade
+# 3.3.3 pins Pillow <11.4, and this repository retains Python 3.10. The active
+# app has no image-upload route; archived augmentation scripts read local data.
+
+[[IgnoredVulns]]
+id = "GHSA-22hg-r758-rrw9"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-254f-3936-288h"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-27h8-gf7j-v5hc"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-332p-7hrc-92wf"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-4558-3h8r-v8xp"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-462x-pgg6-55fp"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-4rr5-89j8-mwwm"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-58r4-6rv3-gfh8"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-5x8w-8jj5-q52h"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-5xm2-6676-qcp9"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-65qm-jvmh-6pqg"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-74r2-7ff9-mjj2"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-7mwm-ghpf-9vrm"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-8g5g-8vmr-9782"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-c6hw-5grf-ff96"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-f2g6-542v-9j58"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-fc9g-5qg7-mf45"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-gg2r-wvfm-q9rx"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-j4m9-6w36-pw47"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-jg86-v3jv-hrpm"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-p4wg-p73j-c528"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-pchr-8j38-3x4p"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-q45j-58j2-45rg"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-rfgq-q3w2-pmv2"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-vx6w-vv9f-6gvg"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-w889-685w-c8fh"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-xgh8-jp6q-p5x8"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-xvh5-g6gv-559v"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-654x-cwwv-5j9c"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-p8hx-v2p6-rp84"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-g842-9rc4-69pw"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-24rc-8hj2-v98c"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-v9pv-5gc8-w2m6"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-mrfp-p49p-3hf2"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-4rm8-3hmm-39fg"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-3j72-p6qg-6xp7"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-g4qv-2jxx-769h"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-9v9v-9qvf-h2hj"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-g7cr-3p24-7wf7"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+[[IgnoredVulns]]
+id = "GHSA-78g4-xqwv-q3g8"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Pillow 13.0.0 fixes this advisory but requires Python >=3.11; Arcade 3.3.3 pins Pillow <11.4 and this repository retains Python 3.10. Recheck when either constraint changes; the active app has no image-upload route and archived augmenters read local data."
+
+# filelock 4.2.1 and Tornado 6.6 require Python >=3.11; keep the Python 3.10 floor.
+
+[[IgnoredVulns]]
+id = "GHSA-69hj-f68j-2879"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "The patched release filelock 4.2.1 requires Python >=3.11; this repository keeps Python 3.10. Recheck when the Python floor changes or a compatible fix is published."
+
+[[IgnoredVulns]]
+id = "GHSA-8mx5-7m5m-r77g"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "The patched release filelock 4.2.1 requires Python >=3.11; this repository keeps Python 3.10. Recheck when the Python floor changes or a compatible fix is published."
+
+[[IgnoredVulns]]
+id = "GHSA-pcg2-g6cj-q92c"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "The patched release Tornado 6.6 requires Python >=3.11; this repository keeps Python 3.10. Recheck when the Python floor changes or a compatible fix is published."
+
+[[IgnoredVulns]]
+id = "GHSA-pw9p-v7r6-gx4p"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "The patched release Tornado 6.6 requires Python >=3.11; this repository keeps Python 3.10. Recheck when the Python floor changes or a compatible fix is published."
+
+[[IgnoredVulns]]
+id = "GHSA-r4j5-9xpp-3985"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "The patched release Tornado 6.6 requires Python >=3.11; this repository keeps Python 3.10. Recheck when the Python floor changes or a compatible fix is published."
+
+# Separate Windows advisory from PYSEC-2026-3447. The fixed release is blocked
+# by the CUDA-pinned Torch requirement; the vulnerable legacy wheel path is not
+# used by this repository's uv-based dependency installation.
+[[IgnoredVulns]]
+id = "GHSA-xmj3-9gf7-h52w"
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Setuptools 84.1.0 fixes this Windows path escape in the legacy Wheel.install_as_egg path. This repository installs dependencies with uv and does not invoke that legacy path; Torch 2.11.0+cu128 requires setuptools<82. Recheck before using legacy wheel installation or when the Torch constraint changes."
 
 # --- nltk: waiver removed, the dependency is gone -----------------------------
 # GHSA-8mgp-746c-j5xp (CVE-2026-81726) had nothing to bump to: last_affected
