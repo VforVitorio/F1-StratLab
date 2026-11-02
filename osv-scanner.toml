@@ -110,13 +110,14 @@ id = "GHSA-xj96-63gp-2gmr"
 ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
-# --- torch (no upstream fix) --------------------------------------------------
-# GHSA-rrmf-rvhw-rf47 has no fixed version. torch is CUDA-pinned (cu128) for the
-# training/dev box; the flaw needs an attacker-controlled model/input executed
-# in-process, which a single-user local tool does not expose.
+# --- torch (patched release needs a CUDA migration) ----------------------------
+# GHSA-rrmf-rvhw-rf47 is fixed in Torch 2.13.0. The Windows training setup is
+# pinned to 2.11.0+cu128; the official cu128 index has no matching 2.13.0 wheel.
+# Recheck when a compatible CUDA wheel is available or the CUDA pin is migrated.
 [[IgnoredVulns]]
 id = "GHSA-rrmf-rvhw-rf47"
-reason = "torch: no upstream fix; CUDA-pinned; requires attacker-controlled in-process model input, outside the single-user local threat model."
+ignoreUntil = 2026-12-02T00:00:00Z
+reason = "Torch 2.13.0 fixes this advisory, but the Windows training environment is pinned to 2.11.0+cu128 and no matching 2.13.0 wheel is listed on the official cu128 index. Recheck when a compatible CUDA wheel is available or the CUDA pin is migrated."
 
 # --- ecdsa: waiver removed, the dependency is gone ----------------------------
 # GHSA-wj6h-64fc-37mp was waived here on the grounds that ecdsa arrived
@@ -369,11 +370,13 @@ id = "GHSA-r4j5-9xpp-3985"
 ignoreUntil = 2026-12-02T00:00:00Z
 reason = "The patched release Tornado 6.6 requires Python >=3.11; this repository keeps Python 3.10. Recheck when the Python floor changes or a compatible fix is published."
 
-# New GHSA alias for the existing setuptools waiver.
+# Separate Windows advisory from PYSEC-2026-3447. The fixed release is blocked
+# by the CUDA-pinned Torch requirement; the vulnerable legacy wheel path is not
+# used by this repository's uv-based dependency installation.
 [[IgnoredVulns]]
 id = "GHSA-xmj3-9gf7-h52w"
 ignoreUntil = 2026-12-02T00:00:00Z
-reason = "Torch 2.11.0+cu128 requires setuptools<82, while the fixed release is 84.1.0. This repository has no MANIFEST.in and builds releases on Ubuntu, outside the affected macOS sdist path. Recheck if the Torch cap or build path changes."
+reason = "Setuptools 84.1.0 fixes this Windows path escape in the legacy Wheel.install_as_egg path. This repository installs dependencies with uv and does not invoke that legacy path; Torch 2.11.0+cu128 requires setuptools<82. Recheck before using legacy wheel installation or when the Torch constraint changes."
 
 # --- nltk: waiver removed, the dependency is gone -----------------------------
 # GHSA-8mgp-746c-j5xp (CVE-2026-81726) had nothing to bump to: last_affected
