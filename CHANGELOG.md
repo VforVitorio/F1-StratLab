@@ -11,6 +11,51 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [2.7.5](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.4...v2.7.5) (2026-10-13)
+
+
+### Bug Fixes
+
+* **backend:** reject per-request provider switching ([a8bfec9](https://github.com/VforVitorio/F1-StratLab/commit/a8bfec9fb561f947166aec1f03484e77bfb53f00))
+* **pitwall:** use action colour for PIT NOW badge ([d16e769](https://github.com/VforVitorio/F1-StratLab/commit/d16e76998533a7179854962afe33b779404db905))
+* **rag:** serialize OpenAI retrieval tool calls ([2e7cd15](https://github.com/VforVitorio/F1-StratLab/commit/2e7cd154d792a0a75529c743d30bd5d870ad5264))
+* **sc:** reject invalid circuit rate years ([f7ac55d](https://github.com/VforVitorio/F1-StratLab/commit/f7ac55d84199ef4d98ca0fa929f8fa80110c6825))
+* **sc:** scope circuit rate lookup by race year ([9bd68cd](https://github.com/VforVitorio/F1-StratLab/commit/9bd68cd2dfa67d6039ba4e6f8a136341033873ed))
+* **strategy:** supply rich RAG season from session metadata ([cd07615](https://github.com/VforVitorio/F1-StratLab/commit/cd0761514cda8f861d50629db8413973d11bd7bb))
+
+
+### Documentation
+
+* **rag:** record verified Safety Car retrieval ([26b5fe7](https://github.com/VforVitorio/F1-StratLab/commit/26b5fe71553b21e962104ca05b20b2c5c03b0daf))
+
+## [2.7.4](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.3...v2.7.4) (2026-10-10)
+
+
+### Documentation
+
+* correct audit closeout evidence ([d9b561a](https://github.com/VforVitorio/F1-StratLab/commit/d9b561aa92489e4818afa31d6dd251a52804fbc8))
+* reconcile install and runtime audit findings ([098aff4](https://github.com/VforVitorio/F1-StratLab/commit/098aff4be8bd43609fb1f0030289a5a9ddabdbad))
+
+## [2.7.3](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.2...v2.7.3) (2026-10-10)
+
+
+### Bug Fixes
+
+* **ci:** map dependency PRs to area labels ([08b21cb](https://github.com/VforVitorio/F1-StratLab/commit/08b21cb0fb814aa02c667df6facb613e1b72cb2f))
+
+
+### Documentation
+
+* update roadmap for current web app ([e02ef29](https://github.com/VforVitorio/F1-StratLab/commit/e02ef2957a288513b51a4e5f35975c1dc129ba09))
+
+## [2.7.2](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.1...v2.7.2) (2026-10-10)
+
+
+### Bug Fixes
+
+* **deps:** remediate OSV findings ([f61aa18](https://github.com/VforVitorio/F1-StratLab/commit/f61aa186e885b937f03328e1e666dd39d2e0a8e2))
+* **security:** clarify Pillow TGA waiver ([b9da0df](https://github.com/VforVitorio/F1-StratLab/commit/b9da0dfec7f9553ebbdb5324e4bd5e9a0cd803ad))
+
 ## [2.7.1](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.0...v2.7.1) (2026-10-09)
 
 
