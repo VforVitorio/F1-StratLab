@@ -28,6 +28,7 @@ import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urljoin, urlsplit
 
 import requests
 from bs4 import BeautifulSoup
@@ -96,6 +97,29 @@ CFG = DownloadConfig()
 FIA_CATEGORY_URLS: dict[str, str] = {
     "sporting_regs": "https://www.fia.com/regulation/category/110",
 }
+SUPPORTED_DOC_TYPES = frozenset({"sporting_regs", "technical_regs"})
+MAX_FIA_REDIRECTS = 5
+
+
+def is_official_fia_url(url: str) -> bool:
+    """Accept HTTPS URLs hosted on fia.com or one of its subdomains."""
+    if not isinstance(url, str):
+        return False
+    try:
+        parsed = urlsplit(url)
+        port = parsed.port
+    except (TypeError, ValueError):
+        return False
+    host = (parsed.hostname or "").lower().rstrip(".")
+    fia_host = host == "fia.com" or (host.endswith(".fia.com") and all(host.split(".")))
+    return (
+        parsed.scheme == "https"
+        and port in (None, 443)
+        and parsed.username is None
+        and parsed.password is None
+        and fia_host
+    )
+
 
 # Patterns that identify an F1 regulation PDF link on the FIA website.
 # The FIA uses "Formula 1" and either "Sporting" or "Technical" in document titles.
@@ -161,13 +185,46 @@ def _get(url: str, session: requests.Session) -> requests.Response | None:
                  session reuses the TCP connection and shares cookies across
                  requests to the same host.
     """
+    if not is_official_fia_url(url):
+        log.warning("Refusing request outside fia.com")
+        return None
+
     for attempt in range(1, CFG.max_retries + 1):
         try:
-            resp = session.get(url, timeout=CFG.request_timeout)
-            resp.raise_for_status()
-            return resp
+            current_url = url
+            for redirect_count in range(MAX_FIA_REDIRECTS + 1):
+                resp = session.get(
+                    current_url,
+                    timeout=CFG.request_timeout,
+                    allow_redirects=False,
+                )
+                if 300 <= resp.status_code < 400:
+                    location = resp.headers.get("Location")
+                    resp.close()
+                    if not location or redirect_count == MAX_FIA_REDIRECTS:
+                        log.warning("FIA request refused an invalid or excessive redirect")
+                        return None
+                    target_url = urljoin(current_url, location)
+                    if not is_official_fia_url(target_url):
+                        log.warning("FIA request refused a redirect outside fia.com")
+                        return None
+                    current_url = target_url
+                    continue
+
+                resp.raise_for_status()
+                if not is_official_fia_url(getattr(resp, "url", current_url)):
+                    resp.close()
+                    log.warning("FIA response resolved outside fia.com")
+                    return None
+                return resp
+            return None
         except requests.RequestException as exc:
-            log.warning("Attempt %d/%d failed for %s: %s", attempt, CFG.max_retries, url, exc)
+            log.warning(
+                "FIA request attempt %d/%d failed (%s)",
+                attempt,
+                CFG.max_retries,
+                type(exc).__name__,
+            )
             if attempt < CFG.max_retries:
                 time.sleep(CFG.retry_delay)
     return None
@@ -241,6 +298,9 @@ def scrape_regulation_links(
     if resp is None:
         log.warning("Could not fetch category page for '%s'", doc_type)
         return links
+    if not is_official_fia_url(getattr(resp, "url", base_url)):
+        log.warning("Refusing redirected non-FIA regulation page")
+        return links
 
     soup = BeautifulSoup(resp.text, "html.parser")
 
@@ -257,6 +317,8 @@ def scrape_regulation_links(
         if href.startswith("/"):
             href = "https://www.fia.com" + href
         elif not href.startswith("http"):
+            continue
+        if not is_official_fia_url(href):
             continue
 
         year = _extract_year_from_text(title) or _extract_year_from_text(href)
@@ -299,16 +361,25 @@ def load_known_urls() -> list[RegulationLink]:
         if "_comment" in entry:  # skip template/example entries
             continue
         try:
+            url = entry["url"]
+            doc_type = entry["doc_type"]
+            year = int(entry["year"])
+            if doc_type not in SUPPORTED_DOC_TYPES or year not in CFG.supported_years:
+                log.warning("Skipping known regulation URL with unsupported type or year")
+                continue
+            if not is_official_fia_url(url):
+                log.warning("Skipping known regulation URL outside fia.com")
+                continue
             links.append(
                 RegulationLink(
-                    url=entry["url"],
-                    doc_type=entry["doc_type"],
-                    year=int(entry["year"]),
+                    url=url,
+                    doc_type=doc_type,
+                    year=year,
                     title=entry.get("title", ""),
                 )
             )
-        except KeyError as exc:
-            log.warning("Skipping malformed entry in known_urls (missing key %s)", exc)
+        except (KeyError, TypeError, ValueError):
+            log.warning("Skipping malformed entry in known regulation URLs")
 
     log.info("Loaded %d known URLs from %s", len(links), CFG.known_urls_file.name)
     return links
@@ -378,6 +449,8 @@ def output_path(link: RegulationLink) -> Path:
     Args:
         link: A ``RegulationLink`` with valid ``doc_type`` and ``year``.
     """
+    if link.doc_type not in SUPPORTED_DOC_TYPES or link.year not in CFG.supported_years:
+        raise ValueError("Unsupported regulation document type or year")
     return CFG.docs_dir / f"{link.doc_type}_{link.year}.pdf"
 
 
@@ -404,25 +477,30 @@ def download_link(
         ``True`` if the file was downloaded (or would be in dry-run), ``False``
         if it was skipped because it already exists or the download failed.
     """
+    if link.doc_type not in SUPPORTED_DOC_TYPES or link.year not in CFG.supported_years:
+        log.warning("Refusing regulation document with unsupported type or year")
+        return False
+    if not is_official_fia_url(link.url):
+        log.warning("Refusing non-FIA regulation URL")
+        return False
+
     dest = output_path(link)
 
     if dest.exists():
         log.info("Already exists — skipping %s", dest.name)
         return False
 
-    log.info(
-        "%s%s → %s",
-        "[DRY RUN] Would download" if dry_run else "Downloading",
-        f" {link.title[:60]!r}" if link.title else f" {link.url[:80]}",
-        dest.name,
-    )
+    log.info("%s %s", "[DRY RUN] Would download" if dry_run else "Downloading", dest.name)
 
     if dry_run:
         return True
 
     resp = _get(link.url, session)
     if resp is None:
-        log.error("Failed to download %s", link.url)
+        log.error("Failed to download FIA regulation PDF")
+        return False
+    if not is_official_fia_url(getattr(resp, "url", link.url)):
+        log.error("FIA regulation download redirected outside fia.com")
         return False
 
     content_type = resp.headers.get("Content-Type", "")
