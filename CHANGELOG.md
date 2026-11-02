@@ -11,6 +11,23 @@ above v1.1.0 was seeded retroactively from the GitHub Releases history.
 
 <!-- next-version-placeholder -->
 
+## [2.7.6](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.5...v2.7.6) (2026-11-02)
+
+
+### Bug Fixes
+
+* promote telemetry exception guard ([a6ec9d4](https://github.com/VforVitorio/F1-StratLab/commit/a6ec9d4c8eeac56c4b25a92a19f537d615f652af))
+* **security:** harden FIA sources and untrusted data boundaries ([9ff9c9e](https://github.com/VforVitorio/F1-StratLab/commit/9ff9c9eb18fd89286f27b072f905ed707efc9522))
+* **security:** include bounded telemetry parquet import ([3d476b3](https://github.com/VforVitorio/F1-StratLab/commit/3d476b31a1bd3ce1968d678e56ab405cd4a2017d))
+* **security:** stop swallowing interrupts in data extraction ([790bba6](https://github.com/VforVitorio/F1-StratLab/commit/790bba6f58478cb2b78556ba65b087e0980f452c))
+* **security:** update compatible dependency locks ([dc44ebb](https://github.com/VforVitorio/F1-StratLab/commit/dc44ebb2cd06dc0e2ef6d9964d39e56525408552))
+* sync telemetry exception guard to dev ([258d532](https://github.com/VforVitorio/F1-StratLab/commit/258d532da38f5ad342525f851e45cb44df26b78d))
+
+
+### Documentation
+
+* **security:** record scan and promotion outcomes ([f48ab8a](https://github.com/VforVitorio/F1-StratLab/commit/f48ab8ad90c6f75655ae7ce1c25e57c8e570ea8c))
+
 ## [2.7.5](https://github.com/VforVitorio/F1-StratLab/compare/v2.7.4...v2.7.5) (2026-10-13)
 
 
