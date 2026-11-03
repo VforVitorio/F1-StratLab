@@ -120,8 +120,8 @@ Grounding for everything downstream. All paths are in the core repo.
 - Validated GPs from the TFG defense (Hungary, Qatar, Australia demo cases) and the
   temporal 2023-24 train / 2025 test discipline of the ML notebooks give the natural
   eval-holdout backbone (section 4.5).
-- The environment: Windows, uv-managed, torch pinned to cu128 via
-  `[tool.uv.sources]` in `pyproject.toml` (RTX 40/50 class GPU). Training must not
+- The environment: Windows, uv-managed, torch pinned to cu130 via
+  `[tool.uv.sources]` in `pyproject.toml` (RTX 5070 GPU). Training must not
   disturb this environment (section 5.6).
 
 ---
@@ -398,16 +398,16 @@ repo and mirrored in the model card. When pitlab (initiative 4) lands a tracker 
 or MLflow), runs log there too, but the manifest file is the portable source of truth
 and exists from run one, before any tracker.
 
-### 5.6 Environment isolation (the cu128 note)
+### 5.6 Environment isolation (the CUDA 13.0 note)
 
-The core repo pins torch to cu128 through `[tool.uv.sources]` and that lockfile must not
+The core repo pins torch to cu130 through `[tool.uv.sources]` and that lockfile must not
 be disturbed by training dependencies (Unsloth pins its own torch/triton/bitsandbytes
 constellation and moves fast). Therefore:
 
 - Training lives in the **gridmind repo with its own uv environment**, never in the core
   repo's environment. The two only meet at the HF Hub and the LM Studio endpoint.
 - Default training OS is **WSL2 (Ubuntu) on the same machine**, where Unsloth and Triton
-  are first-class; the cu128-class driver on the Windows host serves both worlds. If
+  are first-class; the CUDA 13.0-capable driver on the Windows host serves both worlds. If
   Unsloth's Windows-native path is green at execution time, native is acceptable, but
   WSL2 is the assumption the design makes.
 - Serving needs neither environment: LM Studio consumes the exported GGUF directly on

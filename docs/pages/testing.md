@@ -168,11 +168,12 @@ The excluded checks remain explicit:
 ## Dependency cleanup
 
 The parent lock updates `accelerate` to 1.15.0 and `pytorch-lightning` to 2.6.6,
-and removes unused `passlib` and `bcrypt`. Test environments use `httpx2` for
-Starlette's current `TestClient`. The latest local pip-audit run reports 37
-findings in Pillow 11.3.0 and setuptools 81.0.0. Their fixes remain constrained
-by the Arcade and CUDA PyTorch graphs; the exact waivers stay in
-`osv-scanner.toml`.
+uses Torch 2.13.0 with CUDA 13.0 on Windows and CPU wheels elsewhere, and removes
+unused `passlib` and `bcrypt`. Test environments use `httpx2` for Starlette's
+current `TestClient`. Filelock 4.2.7, Tornado 6.6, and setuptools 84.2.1 address
+their locked dependency advisories. Pillow remains at 11.3.0 because stable
+Arcade 3.3.3 requires `pillow~=11.3.0`; its dated exceptions remain in
+`osv-scanner.toml` pending a compatible stable Arcade release.
 
 When a production contract changes, update the matching guide under
 `documents/dev_docs/` and this page in the same pull request. When deleting a
