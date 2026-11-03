@@ -12,9 +12,9 @@ updates:
       - "dependencies"
       - "area: deps"
     ignore:
-      # torch / torchvision are routed through CUDA-specific indexes in
-      # pyproject.toml [tool.uv.sources]. Dependabot bumps would break the
-      # cu128 wheel routing on Windows / Linux. Bump these manually if needed.
+      # torch / torchvision are routed through CUDA 13.0 on Windows and CPU
+      # wheels elsewhere. Dependabot bumps would break the paired versions and
+      # index routing. Bump these manually with their CUDA variant.
       - dependency-name: "torch"
       - dependency-name: "torchvision"
       # transformers and sentence-transformers are pinned to versions that

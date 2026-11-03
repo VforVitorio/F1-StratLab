@@ -110,15 +110,6 @@ id = "GHSA-xj96-63gp-2gmr"
 ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 12.x fixes are blocked by arcade==3.3.3 (<11.4). The active app has no image-upload route; archived offline augmentation scripts read local dataset files and must not process untrusted image archives. Recheck when stable Arcade supports Pillow 12.x or before external image input is added."
 
-# --- torch (patched release needs a CUDA migration) ----------------------------
-# GHSA-rrmf-rvhw-rf47 is fixed in Torch 2.13.0. The Windows training setup is
-# pinned to 2.11.0+cu128; the official cu128 index has no matching 2.13.0 wheel.
-# Recheck when a compatible CUDA wheel is available or the CUDA pin is migrated.
-[[IgnoredVulns]]
-id = "GHSA-rrmf-rvhw-rf47"
-ignoreUntil = 2026-12-02T00:00:00Z
-reason = "Torch 2.13.0 fixes this advisory, but the Windows training environment is pinned to 2.11.0+cu128 and no matching 2.13.0 wheel is listed on the official cu128 index. Recheck when a compatible CUDA wheel is available or the CUDA pin is migrated."
-
 # --- ecdsa: waiver removed, the dependency is gone ----------------------------
 # GHSA-wj6h-64fc-37mp was waived here on the grounds that ecdsa arrived
 # transitively through python-jose and was never exercised, since the backend
@@ -126,17 +117,6 @@ reason = "Torch 2.13.0 fixes this advisory, but the Windows training environment
 # argument for deleting the dependency, not for tolerating it: nothing in the
 # codebase imported python-jose at all. Dropping it took ecdsa, rsa and pyasn1
 # out of the lock with it, so there is no longer a vulnerability to ignore.
-
-# --- setuptools (fixed release blocked by CUDA-pinned Torch) -------------------
-# Torch 2.11.0+cu128 requires setuptools<82, so the fixed 83.0.0 cannot resolve
-# without changing the CUDA-pinned Torch stack. The advisory affects sdist builds
-# on macOS APFS/HFS+ using MANIFEST.in exclude/prune rules. This repository has no
-# MANIFEST.in, and release builds run on Ubuntu. Revisit if packaging inputs or
-# supported build platforms change, or when a compatible Torch release lifts the cap.
-[[IgnoredVulns]]
-id = "PYSEC-2026-3447"
-ignoreUntil = 2026-12-02T00:00:00Z
-reason = "Setuptools 83.0.0 is blocked by torch 2.11.0+cu128 requiring setuptools<82. The flaw affects macOS APFS/HFS+ sdist builds using MANIFEST.in exclude/prune rules; this repository has no MANIFEST.in and release builds run on Ubuntu. Recheck if build inputs/platforms change or compatible Torch lifts the cap."
 
 # --- current compatibility-bound advisories (review by 2026-12-02) -----------
 # The project now supports Python >=3.11, but stable Arcade 3.3.3 still pins
@@ -342,14 +322,6 @@ reason = "Pillow 13.0.0 fixes this advisory and the project now supports Python 
 id = "GHSA-78g4-xqwv-q3g8"
 ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 13.0.0 fixes this advisory and the project now supports Python >=3.11, but Arcade 3.3.3 pins Pillow <11.4. Recheck after a stable Arcade release permits Pillow 13 and the local image paths are verified; the active app has no image-upload route."
-
-# Separate Windows advisory from PYSEC-2026-3447. The fixed release is blocked
-# by the CUDA-pinned Torch requirement; the vulnerable legacy wheel path is not
-# used by this repository's uv-based dependency installation.
-[[IgnoredVulns]]
-id = "GHSA-xmj3-9gf7-h52w"
-ignoreUntil = 2026-12-02T00:00:00Z
-reason = "Setuptools 84.1.0 fixes this Windows path escape in the legacy Wheel.install_as_egg path. This repository installs dependencies with uv and does not invoke that legacy path; Torch 2.11.0+cu128 requires setuptools<82. Recheck before using legacy wheel installation or when the Torch constraint changes."
 
 # --- nltk: waiver removed, the dependency is gone -----------------------------
 # GHSA-8mgp-746c-j5xp (CVE-2026-81726) had nothing to bump to: last_affected

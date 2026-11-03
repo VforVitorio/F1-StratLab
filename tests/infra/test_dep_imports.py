@@ -184,9 +184,9 @@ def test_catboost_fit():
 def test_torch_tensor_basic():
     """torch.tensor + reduction still works without requiring CUDA.
 
-    CI runs on Linux CPU runners, so the cu128 wheel falls back to the
-    CPU index there. We only check the tensor API; CUDA assertions live
-    in manual smoke scripts.
+    CI runs on Linux CPU runners and resolves the CPU wheel explicitly.
+    This checks the shared tensor API; CUDA assertions run on the Windows
+    development GPU.
     """
     pytest.importorskip("torch")
     import torch
