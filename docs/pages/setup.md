@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Python 3.10-3.12 for the root project. The standalone telemetry submodule
+- Python 3.11-3.12 for the root project. The standalone telemetry submodule
   requires Python 3.11-3.12.
 - Node.js 20.19+ or 22.12+ and npm (for the React and PITWALL builds / dev servers)
 - Docker and Docker Compose (for containerized deployment)

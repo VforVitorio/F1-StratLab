@@ -4,7 +4,7 @@
 
 ### *Race strategy, decided by six agents.*
 
-[![License](https://img.shields.io/github/license/VforVitorio/F1-StratLab)](LICENSE) [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/) [![Latest release](https://img.shields.io/github/v/release/VforVitorio/F1-StratLab)](https://github.com/VforVitorio/F1-StratLab/releases) [![CI](https://img.shields.io/github/actions/workflow/status/VforVitorio/F1-StratLab/ci.yml?branch=main&label=CI)](https://github.com/VforVitorio/F1-StratLab/actions/workflows/ci.yml) [![Docs](https://img.shields.io/github/actions/workflow/status/VforVitorio/F1-StratLab/docs.yml?branch=main&label=docs)](https://docs.f1stratlab.com/)
+[![License](https://img.shields.io/github/license/VforVitorio/F1-StratLab)](LICENSE) [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/) [![Latest release](https://img.shields.io/github/v/release/VforVitorio/F1-StratLab)](https://github.com/VforVitorio/F1-StratLab/releases) [![CI](https://img.shields.io/github/actions/workflow/status/VforVitorio/F1-StratLab/ci.yml?branch=main&label=CI)](https://github.com/VforVitorio/F1-StratLab/actions/workflows/ci.yml) [![Docs](https://img.shields.io/github/actions/workflow/status/VforVitorio/F1-StratLab/docs.yml?branch=main&label=docs)](https://docs.f1stratlab.com/)
 
 [![React](https://img.shields.io/badge/React-19-149eca)](https://react.dev/) [![Vite](https://img.shields.io/badge/Vite-7-646cff)](https://vite.dev/) [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-orange)](https://pytorch.org/) [![FastF1](https://img.shields.io/badge/FastF1-3.1%2B-red)](https://github.com/theOehrly/Fast-F1) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/VforVitorio/F1-StratLab)
 
@@ -133,7 +133,7 @@ cp .env.example .env          # add OPENAI_API_KEY, or set F1_LLM_PROVIDER=lmstu
 docker compose up
 ```
 
-Requires Python 3.10-3.12 and an `OPENAI_API_KEY` (or `F1_LLM_PROVIDER=lmstudio`). Full options (pip fallback, local web-app dev server, data bootstrap) in [`INSTALL.md`](INSTALL.md).
+Requires Python 3.11-3.12 and an `OPENAI_API_KEY` (or `F1_LLM_PROVIDER=lmstudio`). Full options (pip fallback, local web-app dev server, data bootstrap) in [`INSTALL.md`](INSTALL.md).
 
 ## Project layout
 

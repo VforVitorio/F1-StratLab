@@ -22,9 +22,9 @@ env:
   # findings without a commit, which makes a red run impossible to bisect.
   PIP_AUDIT_VERSION: "2.10.1"
 
-# Notes on dependency strategy across the three jobs:
-#   - All three jobs enable uv's built-in cache (`enable-cache: true`) and
-#     key it off `uv.lock`. uv.lock is now committed so the cache only
+# Notes on dependency strategy across the Python test matrix and quality jobs:
+#   - Each dependency-installing job enables uv's built-in cache and keys it
+#     off `uv.lock`. The lockfile is committed so the cache only
 #     invalidates when the resolved graph actually changes — cosmetic
 #     edits to pyproject.toml (re-ordering, tool config, comments) reuse
 #     the wheel store.
@@ -41,13 +41,26 @@ env:
 #   - `typecheck` calls `uv sync --extra dev` (mypy lives in the only declared
 #     extra). It also caches `.mypy_cache/` so incremental runs only
 #     re-check files whose hash actually changed.
-#   - `test` keeps `uv sync --all-extras` so the full optional test surface is
+#   - `test_matrix` keeps `uv sync --all-extras` so the full optional test surface is
 #     installed, including the arcade and compatibility probes.
 
 jobs:
   test:
     name: test
+    if: always()
+    needs: test_matrix
     runs-on: ubuntu-latest
+    steps:
+      - name: Require successful Python test matrix
+        run: test "${{ needs.test_matrix.result }}" = "success"
+
+  test_matrix:
+    name: test-suite (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
     steps:
       # checkout MUST run before paths-filter: on `push` events the filter
       # falls back to `git diff` and needs the repo + history (fetch-depth:0).
@@ -85,7 +98,7 @@ jobs:
           version: "latest"
           enable-cache: true
           cache-dependency-glob: "uv.lock"
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         if: steps.changes.outputs.backend == 'true'
