@@ -343,8 +343,8 @@ id = "GHSA-78g4-xqwv-q3g8"
 ignoreUntil = 2026-12-02T00:00:00Z
 reason = "Pillow 13.0.0 fixes this advisory and the project now supports Python >=3.11, but Arcade 3.3.3 pins Pillow <11.4. Recheck after a stable Arcade release permits Pillow 13 and the local image paths are verified; the active app has no image-upload route."
 
-# Python 3.11 is now the project minimum. Keep these waivers until the targeted
-# lock updates are completed and verified.
+# Filelock 4.2.x supports the project floor. Keep these waivers until its lock
+# update and model-cache path are verified.
 
 [[IgnoredVulns]]
 id = "GHSA-69hj-f68j-2879"
@@ -355,21 +355,6 @@ reason = "The project now supports Python >=3.11, but uv.lock still contains a v
 id = "GHSA-8mx5-7m5m-r77g"
 ignoreUntil = 2026-12-02T00:00:00Z
 reason = "The project now supports Python >=3.11, but uv.lock still contains a vulnerable filelock release. Remove this exception after the targeted upgrade to filelock 4.2.1 or later is merged and validated."
-
-[[IgnoredVulns]]
-id = "GHSA-pcg2-g6cj-q92c"
-ignoreUntil = 2026-12-02T00:00:00Z
-reason = "The project now supports Python >=3.11, but uv.lock still contains Tornado 6.5.9. Remove this exception after the targeted upgrade to Tornado 6.6 is merged and validated."
-
-[[IgnoredVulns]]
-id = "GHSA-pw9p-v7r6-gx4p"
-ignoreUntil = 2026-12-02T00:00:00Z
-reason = "The project now supports Python >=3.11, but uv.lock still contains Tornado 6.5.9. Remove this exception after the targeted upgrade to Tornado 6.6 is merged and validated."
-
-[[IgnoredVulns]]
-id = "GHSA-r4j5-9xpp-3985"
-ignoreUntil = 2026-12-02T00:00:00Z
-reason = "The project now supports Python >=3.11, but uv.lock still contains Tornado 6.5.9. Remove this exception after the targeted upgrade to Tornado 6.6 is merged and validated."
 
 # Separate Windows advisory from PYSEC-2026-3447. The fixed release is blocked
 # by the CUDA-pinned Torch requirement; the vulnerable legacy wheel path is not
