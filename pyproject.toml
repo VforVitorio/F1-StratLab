@@ -8,7 +8,7 @@ version = "2.7.1"
 description = "F1 StratLab — multi-agent race strategy intelligence system"
 authors = [{name = "Victor Vega Sobral", email = "victorvegasobral@gmail.com"}]
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.11,<3.13"
 dependencies = [
     # ===================
     # CORE DATA
@@ -54,10 +54,9 @@ dependencies = [
     # ===================
     "opencv-python>=4.8.0",
     "ultralytics>=8.0.0",
-    # Arcade 3.3.3 requires pillow~=11.3.0, but the fixed release, Pillow 13.0.0,
-    # requires Python >=3.11. Keep the upstream constraint while the project
-    # supports Python 3.10. The app has no image-upload route; archived image
-    # augmentation scripts read local dataset images only.
+    # Pillow 13.0.0 requires Python >=3.11, which the project now supports.
+    # Arcade 3.3.3 still pins Pillow to ~=11.3.0, so keep that compatible
+    # resolution until a stable Arcade release supporting Pillow 13 is verified.
     # Time-bounded scanner waivers and review triggers live in osv-scanner.toml.
     "pillow>=11.3.0",
     # ===================
@@ -218,7 +217,7 @@ torchvision = [
 
 [tool.black]
 line-length = 100
-target-version = ['py310', 'py311']
+target-version = ['py311', 'py312']
 
 [tool.ruff]
 line-length = 100
@@ -262,7 +261,7 @@ ignore = ["E501"]
 "src/shared/**" = ["E", "I", "W", "F401", "F811", "F541", "F841", "F601", "F632"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 ignore_missing_imports = true
 no_strict_optional = true
 warn_unused_ignores = false

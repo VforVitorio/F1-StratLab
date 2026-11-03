@@ -28,12 +28,8 @@ Two properties are checked here, and they are not the same kind of check:
 from __future__ import annotations
 
 import re
+import tomllib
 from pathlib import Path
-
-try:  # 3.11+
-    import tomllib
-except ModuleNotFoundError:  # 3.10, which this project still supports
-    import tomli as tomllib
 
 import pytest
 

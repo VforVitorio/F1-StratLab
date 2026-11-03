@@ -14,7 +14,7 @@ One command launches everything. The arcade process owns the simulation loop and
 
 ## Prerequisites
 
-- Python: 3.10 or newer. The project pins dependencies with `uv`.
+- Python: 3.11 or 3.12. The project pins dependencies with `uv`.
 - Dependencies: run `uv sync` from the repo root. The lockfile pulls `arcade`, `pywebview`, `fastf1`, `langchain-openai`, the model stack (`xgboost`, `lightgbm`, `torch`), and the NLP stack (`transformers`, `sentence-transformers`, `setfit`). No manual install steps required beyond `uv sync`.
 - LLM credentials: the arcade reads `F1_LLM_PROVIDER` from a repo-root `.env` and falls back to `openai`, so `OPENAI_API_KEY` is required unless that variable is set to `lmstudio` with LM Studio serving on `http://localhost:1234/v1`. The `f1-arcade --provider` flag is parsed and never read, so it selects nothing (#201). Per-surface table in [INSTALL.md](https://github.com/VforVitorio/F1-StratLab/blob/main/INSTALL.md#llm-provider-per-surface). Only the wording of the orchestrator's reasoning changes.
 - Race data cache: the replay reads `data/raw/{year}/{Location}/laps.parquet` and optionally `weather.parquet`. The parquet files are produced by FastF1 on first run. Expect a 20-40 second delay on the first launch of a round.

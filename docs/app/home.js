@@ -67,7 +67,7 @@ function HomePage({ onNav, onOpenGraph, pagesReady }) {
       React.createElement("div", { className: "home-meta" },
         React.createElement("span", null, React.createElement("strong", null, "v__DOCS_VERSION__"), " current release"),
         React.createElement("span", null, "Apache-2.0"),
-        React.createElement("span", null, React.createElement("strong", null, "Python 3.10+")),
+        React.createElement("span", null, React.createElement("strong", null, "Python 3.11+")),
         React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 6 } },
           React.createElement("span", { className: "pill pill-live" },
             React.createElement("span", { className: "pill-dot" }),

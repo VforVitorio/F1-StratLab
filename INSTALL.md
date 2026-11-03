@@ -8,8 +8,8 @@ PITWALL UI before installing the tool.
 
 ## Prerequisites
 
-- Python **3.10, 3.11, or 3.12** (the project pins `>=3.10,<3.13` in
-  `pyproject.toml`; CI runs on 3.12).
+- Python **3.11 or 3.12** (the project pins `>=3.11,<3.13` in
+  `pyproject.toml`; CI tests both versions).
 - `OPENAI_API_KEY` in a `.env` at the repo root (or exported in the shell)
   when the resolved provider is OpenAI. `.env.example` ships
   `F1_LLM_PROVIDER=openai`; which surface reads it, and what each one falls
